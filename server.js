@@ -104,7 +104,7 @@ function applyAutoGain(audio, startGain) {		// Auto gain control
 
 // Network code
 var SSLPORT = 443; //Default 443
-var HTTPPORT = 80; //Default 80 (Only used to redirect to SSL port)
+var HTTPPORT = process.env.PORT; //Default 80 (Only used to redirect to SSL port)
 var privateKeyPath = "./cert/key.pem"; //Default "./cert/key.pem"
 var certificatePath = "./cert/cert.pem"; //Default "./cert/cert.pem"
 
@@ -118,18 +118,18 @@ app.use(express.static(__dirname + '/public'));
 var privateKey = fs.readFileSync( privateKeyPath );
 var certificate = fs.readFileSync( certificatePath );
 
-var server = https.createServer({
-    key: privateKey,
-    cert: certificate
-}, app).listen(SSLPORT);
+//var server = https.createServer({
+//    key: privateKey,
+//    cert: certificate
+//}, app).listen(SSLPORT);
 
 var io  = require('socket.io').listen(server, { log: false });
 
 // Redirect from http to https
 var http = require('http');
 http.createServer(function (req, res) {
-    res.writeHead(301, { "Location": "https://" + req.headers['host'] + ":"+ SSLPORT + "" + req.url });
-    res.end();
+//    res.writeHead(301, { "Location": "https://" + req.headers['host'] + ":"+ SSLPORT + "" + req.url });
+//    res.end();
 }).listen(HTTPPORT);
 
 console.log("Webserver & Socketserver running on port: "+SSLPORT+ " and "+ HTTPPORT);
