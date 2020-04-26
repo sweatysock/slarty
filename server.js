@@ -123,14 +123,14 @@ var certificate = fs.readFileSync( certificatePath );
 //    cert: certificate
 //}, app).listen(SSLPORT);
 
-var io  = require('socket.io').listen(server, { log: false });
-
 // Redirect from http to https
 var http = require('http');
 http.createServer(function (req, res) {
 //    res.writeHead(301, { "Location": "https://" + req.headers['host'] + ":"+ SSLPORT + "" + req.url });
 //    res.end();
 }).listen(HTTPPORT);
+
+var io  = require('socket.io').listen(http, { log: false });
 
 console.log("Webserver & Socketserver running on port: "+SSLPORT+ " and "+ HTTPPORT);
 
