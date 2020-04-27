@@ -3,9 +3,17 @@
 var counter=0;
 
 class AudenceProcessor extends AudioWorkletProcessor {
+	static get parameterDescriptors() {
+	      return [{
+	            name: 'size',
+	            defaultValue: 1024,
+	            minValue: 128,
+	            maxValue: 16384,
+		}];
+	}
+
 	constructor(options) {
 		super(options);
-console.log("Options: ", options.parameterData.size);
 		this.micBuffer = []; 			// Mic audio accumulates here until enough to send
 		this.sendBuffer = []; 			// Mic audio to send is moved into here and sent to main.js
 		this.receiveBuffer = []; 		// Multiple client buffers to store audio from server
@@ -21,7 +29,6 @@ console.log("Options: ", options.parameterData.size);
 //				console.log("BUFFER OVERFLOW. Removing oldest audio");
 				receiveBuffer.shift();
 			}
-if (counter < 10) {counter++; console.log("RECEIVED chunk = ",voiceData.length);}
 		}
 	}
 
@@ -40,7 +47,6 @@ if (counter < 10) {counter++; console.log("RECEIVED chunk = ",voiceData.length);
 				this.port.postMessage({ 	// send a chunk to main thread
 					"audio": sendBuffer,
 				});                   
-if (counter < 10) {console.log("SENDING chunk = ", sendBuffer.length);}
 			}
 		}
 		// 2. Output audio. 
