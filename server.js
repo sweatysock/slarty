@@ -103,7 +103,7 @@ function applyAutoGain(audio, startGain) {		// Auto gain control
 }
 
 // Network code
-//var SSLPORT = 443; //Default 443
+var SSLPORT = 443; //Default 443
 var HTTPPORT = process.env.PORT; //Default 80 (Only used to redirect to SSL port)
 var privateKeyPath = "./cert/key.pem"; //Default "./cert/key.pem"
 var certificatePath = "./cert/cert.pem"; //Default "./cert/cert.pem"
