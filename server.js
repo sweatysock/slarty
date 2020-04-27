@@ -113,8 +113,8 @@ app.use(express.static('public'));
 
 var http = require('http');
 var server = http.Server(app);
-server.listen(HTTPPORT, function() {
-	console.log("Server running on ",HTTPPORT);
+server.listen(PORT, function() {
+	console.log("Server running on ",PORT);
 });
 
 var io  = require('socket.io').listen(server, { log: false });
