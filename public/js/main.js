@@ -101,10 +101,7 @@ console.log("CHUNK SIZE = ",chunkSize," soundcardSampleRate = ", soundcardSample
 			// And then we need a worklet to inject our audio into the browser audio stream
 			context.audioWorklet.addModule('js/audenceWorker.js').then(() => {
 				audenceNode = new AudioWorkletNode(
-					context, 
-					'audence-processor', {
-						chunkSize, 
-					}
+					context, 'audence-processor', {paramterData:{ size: chunkSize } }
 				);
 				// connect source to audenceNode to destination
 				source.connect(audenceNode);

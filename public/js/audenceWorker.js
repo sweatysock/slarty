@@ -5,15 +5,15 @@ var counter=0;
 class AudenceProcessor extends AudioWorkletProcessor {
 	static get parameterDescriptors() {
 	      return [{
-	            name: 'chunkSize',
+	            name: 'size',
 	            defaultValue: 1024,
 	            minValue: 128,
 	            maxValue: 16384,
 		}];
 	}
 
-	constructor() {
-		super();
+	constructor(options) {
+		super(options);
 		this.micBuffer = []; 			// Mic audio accumulates here until enough to send
 		this.sendBuffer = []; 			// Mic audio to send is moved into here and sent to main.js
 		this.receiveBuffer = []; 		// Multiple client buffers to store audio from server
@@ -37,7 +37,7 @@ if (counter < 10) {counter++; console.log("RECEIVED chunk = ",voiceData.length);
 		// There are two tasks here: 1. buffer mic audio & 2. output buffered server audio
 		// 1. Buffer and send Mic audio. 
 		const input = inputs[0][0];			// Single input from Mic
-		const chunkSize = parameters.chunkSize;		// data amount needed to send
+		const chunkSize = parameters.size;		// data amount needed to send
 		let micBuffer = this.micBuffer;
 		let sendBuffer = this.sendBuffer;
 		if (input.length > 0) {
