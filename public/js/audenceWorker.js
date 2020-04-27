@@ -13,6 +13,7 @@ class AudenceProcessor extends AudioWorkletProcessor {
 	}
 
 	constructor(options) {
+console.log("Options: ", options.parameterData.size);
 		super(options);
 		this.micBuffer = []; 			// Mic audio accumulates here until enough to send
 		this.sendBuffer = []; 			// Mic audio to send is moved into here and sent to main.js
