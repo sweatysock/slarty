@@ -29,6 +29,7 @@ class AudenceProcessor extends AudioWorkletProcessor {
 //				console.log("BUFFER OVERFLOW. Removing oldest audio");
 				receiveBuffer.shift();
 			}
+if (counter < 10) {counter++; console.log("RECEIVED chunk = ",voiceData.length);}
 		}
 	}
 
@@ -47,6 +48,7 @@ class AudenceProcessor extends AudioWorkletProcessor {
 				this.port.postMessage({ 	// send a chunk to main thread
 					"audio": sendBuffer,
 				});                   
+if (counter < 10) {console.log("SENDING chunk = ", sendBuffer.length);}
 			}
 		}
 		// 2. Output audio. 

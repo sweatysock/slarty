@@ -51,6 +51,7 @@ socketIO.on('connect', function (socket) {
 //			finalMix[i] = finalMix[i] - buffer.audio[i] * gain;
 		// Mix group member, zone and stadium audio streams according to mix table
 		
+if (counter < 10) {console.log("RECEIVING packet of size = ",finalMix.length);}
 		// Expand the audio data up to the soundcard sample rate
 		resampledData = resample(finalMix, SampleRate, soundcardSampleRate, chunkSize);
 		if (audenceNode != null)
@@ -81,7 +82,7 @@ socketIO.on('disconnect', function () {
 
 
 // Audio setup when user hits start talking button
-
+var counter =0;
 function startTalking() { 				// Get mic access and connect it up
 	if (navigator.mediaDevices) {
 		console.log('getUserMedia supported.');
@@ -93,6 +94,7 @@ function startTalking() { 				// Get mic access and connect it up
 			soundcardSampleRate = context.sampleRate; //Sample rate from the soundcard 
 			// How many samples are needed from this soundcard to fill a packet
 			chunkSize = Math.round(soundcardSampleRate * PacketSize / SampleRate);
+console.log("CHUNK SIZE = ",chunkSize," soundcardSampleRate = ", soundcardSampleRate);
 			// Next create a MediaStreamAudioSourceNode = Mic input = source
 			var source = context.createMediaStreamSource(stream);
 			let supported = navigator.mediaDevices.getSupportedConstraints();
@@ -117,6 +119,7 @@ function startTalking() { 				// Get mic access and connect it up
 						socketIO.emit("u", {
 								"audio": Data,
 						});
+if (counter < 10) {counter++; console.log("SENDING packet of size = ",Data.length);}
 						// Update UI now
 					}
 				}
