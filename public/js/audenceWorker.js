@@ -1,6 +1,6 @@
 // Code for the Audio Context real time thread
 //
-var debugCount=0;
+var counter=0;
 
 class AudenceProcessor extends AudioWorkletProcessor {
 	static get parameterDescriptors() {
