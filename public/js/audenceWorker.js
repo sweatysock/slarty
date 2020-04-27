@@ -3,15 +3,6 @@
 var counter=0;
 
 class AudenceProcessor extends AudioWorkletProcessor {
-	static get parameterDescriptors() {
-	      return [{
-	            name: 'size',
-	            defaultValue: 1024,
-	            minValue: 128,
-	            maxValue: 16384,
-		}];
-	}
-
 	constructor(options) {
 		super(options);
 console.log("Options: ", options.parameterData.size);
