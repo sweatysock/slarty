@@ -7,16 +7,16 @@
 //
 function ClientBuffer() { 	// Object to buffer audio from a specific client
 	this.clientID = 0;	// ID of the socket in the client and server
-	this.chunks = [];	// buffer of audio chunks
+	this.packets = [];	// buffer of audio packets
 }
 var upstreamServer = null;	// socket ID for upstram server if connected
-var upstreamBuffer = []; 	// Audio chunks coming down from our upstream server 
-var oldUpstreamBuffer = [];	// previous upstream chunk kept in case more is needed
-var receiveBuffer = []; 	// All client audio chunks are held in this 2D buffer
-const maxBufferSize = 5;	// Max number of chunks to store per client
-const mixTriggerLevel = 1;	// When all clients have this many chunks we create a mix
-var chunkSize = 7;		// Number of samples that go into a mix
-const HQSampleRate = 16000; 	// All audio in audence runs at this sample rate. 
+var upstreamBuffer = []; 	// Audio packets coming down from our upstream server 
+var oldUpstreamBuffer = [];	// previous upstream packet kept in case more is needed
+var receiveBuffer = []; 	// All client audio packets are held in this 2D buffer
+const maxBufferSize = 5;	// Max number of packets to store per client
+const mixTriggerLevel = 1;	// When all clients have this many packets we create a mix
+var packetSize = 7;		// Number of samples that go into a mix
+const SampleRate = 16000; 	// All audio in audence runs at this sample rate. 
 const MaxOutputLevel = 1;	// Max output level for INT16, for auto gain control
 var gain = 1;			// The gain applied to the mix 
 var upstreamGain = 1;		// Gain applied to the final mix after adding upstream
@@ -145,14 +145,14 @@ io.sockets.on('connection', function (socket) {
 	});
 
 	// Audio coming down from our upstream server. It is a mix of all the audio above and beside us
-	socket.on('d', function (chunk) {
+	socket.on('d', function (packet) {
 		enterState( upstreamState );
-		// If no downstream clients ignore chunk and empty upstream buffers
+		// If no downstream clients ignore packet and empty upstream buffers
 		if (receiveBuffer.length == 0) { upstreamBuffer = []; oldUpstreamBuffer = []; }
 		else {
 			// TODO: Remove my audio from mix to avoid echo
-			upstreamBuffer.push(chunk); 
-			chunkSize = chunk.length;
+			upstreamBuffer.push(packet); 
+			packetSize = packet.length;
 			enterState( genMixState );
 			generateMix();
 		}
@@ -163,10 +163,10 @@ io.sockets.on('connection', function (socket) {
 	socket.on('u', function (data) {
 		enterState( downstreamState );
 		let client = socket.id;
-		let chunk = data["HQ"];
+		let packet = data["audio"];
 		let b = 0;
 		let buffer = null;
-		chunkSize = chunk.length;
+		packetSize = packet.length;
 		if (receiveBuffer.length == 0) {	// First client, so create buffer right now
 			buffer = createClientBuffer(client);
 			nextMixTimeLimit = 0;		// Stop sample timer until audio buffered
@@ -174,12 +174,12 @@ io.sockets.on('connection', function (socket) {
 			receiveBuffer.forEach( b => { if ( b.clientID == client ) buffer = b; });
 		if (buffer == null)  			// New client but not the first. Create buffer 
 			buffer = createClientBuffer(client);
-		buffer.chunks.push( chunk );
+		buffer.packets.push( packet );
 //io.sockets.in('downstream').emit('d', {
-//"a": chunk,
-//"c": chunk,
+//"a": packet,
+//"c": packet,
 //"g": 1 });
-		if (buffer.chunks.length > maxBufferSize) 
+		if (buffer.packets.length > maxBufferSize) 
 			console.log("BUFFER over maxBufferSize. Doing nothing!");
 		enterState( genMixState );
 		generateMix();
@@ -193,18 +193,18 @@ function generateMix () {
 	else {				// It isn't time to mix but is there enough data to mix anyway?
 		let b;
 		readyToMix = true;	// Assume there IS enough data, but if any buffer is short, no mix
-		receiveBuffer.forEach( b => { if (b.chunks.length < mixTriggerLevel) readyToMix = false; });
+		receiveBuffer.forEach( b => { if (b.packets.length < mixTriggerLevel) readyToMix = false; });
 	}
 	if (readyToMix) {
 		let numberOfClients = receiveBuffer.length;
-		let mix = new Array(chunkSize).fill(0); // The mixed audio we will return to all clients
-		let clientAudio = []; 			// All client audio chunks that are part of the mix
+		let mix = new Array(packetSize).fill(0); // The mixed audio we will return to all clients
+		let clientAudio = []; 			// All client audio packets that are part of the mix
 		let client = receiveBuffer.length -1;	// We start at the end of the array going backwards
 		while (client >=0) { 			// mix all client (downstream) audio together
 			let newTrack = { audio: [], clientID: 0 };	// A track is audio + client ID
 			let clientBuffer = receiveBuffer[client];	// Shorthand
 			newTrack.clientID = clientBuffer.clientID;	// Get clientID for audio
-			newTrack.audio = clientBuffer.chunks.shift();	// Get first chunk of audio
+			newTrack.audio = clientBuffer.packets.shift();	// Get first packet of audio
 			if (newTrack.audio == undefined) {			// If no audio remove client buffer
 				console.log("AUDIO SHORTAGE for client ");
 				receiveBuffer.splice(client, 1); 	// Remove client buffer
@@ -224,7 +224,7 @@ function generateMix () {
 				if (upstreamBuffer == []) { 			// if no upstream audio
 					upstreamAudio = oldUpstreamBuffer;	// Use old buffer
 				} else {
-					upstreamAudio = upstreamBuffer.shift();	// Get new chunk from buffer
+					upstreamAudio = upstreamBuffer.shift();	// Get new packet from buffer
 					oldUpstreamBuffer = upstreamAudio;	// and store it in old buffer
 				}
 				for (let i = 0; i < upstreamAudio.length; ++i) 
@@ -250,7 +250,7 @@ function generateMix () {
 			let now = d.getTime();		
 			nextMixTimeLimit = now;
 		}
-		nextMixTimeLimit = nextMixTimeLimit + (mix.length * 1000)/HQSampleRate;
+		nextMixTimeLimit = nextMixTimeLimit + (mix.length * 1000)/SampleRate;
 	}
 }
 

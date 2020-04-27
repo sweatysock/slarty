@@ -19,8 +19,9 @@ $(document).ready(function () {
 var counter = 0;
 
 //Global variables
-const HQSampleRate = 16000; 	// Used for direct person to person communications
-var chunkSize = 1024; 		// Audio data block size for client-server comms
+const SampleRate = 16000; 	// Global sample rate used for all audio
+const PacketSize = 500; 	// Global packet size (bytes) to/from server
+var chunkSize; 			// Samples needed to send 500 samples at SampleRate
 var soundcardSampleRate; 	// Set this value when we get our AudioContext
 var audenceNode; 		// Our audio processing node
 
@@ -51,7 +52,7 @@ socketIO.on('connect', function (socket) {
 		// Mix group member, zone and stadium audio streams according to mix table
 		
 		// Expand the audio data up to the soundcard sample rate
-		resampledData = resample(finalMix, HQSampleRate, soundcardSampleRate, chunkSize);
+		resampledData = resample(finalMix, SampleRate, soundcardSampleRate, chunkSize);
 		if (audenceNode != null)
 			audenceNode.port.postMessage({
 				"audio": resampledData,
@@ -90,6 +91,8 @@ function startTalking() { 				// Get mic access and connect it up
 			// First get an audio context
 			var context = new (window.AudioContext || window.webkitAudioContext)();
 			soundcardSampleRate = context.sampleRate; //Sample rate from the soundcard 
+			// How many samples are needed from this soundcard to fill a packet
+			chunkSize = Math.round(soundcardSampleRate * packetSize / SampleRate);
 			// Next create a MediaStreamAudioSourceNode = Mic input = source
 			var source = context.createMediaStreamSource(stream);
 			let supported = navigator.mediaDevices.getSupportedConstraints();
@@ -109,10 +112,10 @@ function startTalking() { 				// Get mic access and connect it up
 					if (socketConnected) { // Only send audio if we are connected
 						var audioData = e.data.audio;
 						// Raw data needs to be down sampled before sending to server
-						let HQData = resample(audioData, soundcardSampleRate, HQSampleRate, chunkSize);
+						let Data = resample(audioData, soundcardSampleRate, SampleRate, chunkSize);
 						// Sending audio UP to our upstream server
 						socketIO.emit("u", {
-								"HQ": HQData,
+								"audio": Data,
 						});
 						// Update UI now
 					}
