@@ -92,7 +92,7 @@ function startTalking() { 				// Get mic access and connect it up
 			var context = new (window.AudioContext || window.webkitAudioContext)();
 			soundcardSampleRate = context.sampleRate; //Sample rate from the soundcard 
 			// How many samples are needed from this soundcard to fill a packet
-			chunkSize = Math.round(soundcardSampleRate * packetSize / SampleRate);
+			chunkSize = Math.round(soundcardSampleRate * PacketSize / SampleRate);
 			// Next create a MediaStreamAudioSourceNode = Mic input = source
 			var source = context.createMediaStreamSource(stream);
 			let supported = navigator.mediaDevices.getSupportedConstraints();
