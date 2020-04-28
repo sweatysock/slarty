@@ -6,13 +6,13 @@ $(document).ready(function () {
 		startTalking();
 	});
 
-	var micaudio = document.getElementById("micaudio");
-	var micctx = micaudio.getContext("2d");
-	micctx.fillStyle = "#FF0000";
-
-	var incaudio = document.getElementById("incaudio");
-	var incctx = incaudio.getContext("2d");
-	incctx.fillStyle = "#FF0000";
+//	var micaudio = document.getElementById("micaudio");
+//	var micctx = micaudio.getContext("2d");
+//	micctx.fillStyle = "#FF0000";
+//
+//	var incaudio = document.getElementById("incaudio");
+//	var incctx = incaudio.getContext("2d");
+//	incctx.fillStyle = "#FF0000";
 
 });
 
