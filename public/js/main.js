@@ -35,10 +35,10 @@ socketIO.on('connect', function (socket) {
   		let gain = data["g"];			// Gain needed for subtracting
 		let myID = socketIO.id;	// myID = my buffer
 		let b, buffer = null;			// Find my buffer in clientBuffers
-//		clientBuffers.forEach( b => { if ( b.clientID == myID ) buffer = b; });
+		clientBuffers.forEach( b => { if ( b.clientID == myID ) buffer = b; });
 		// subtract my gain adjusted audio buffer from the finalMix to stop feedback
-//		if ( buffer != null ) for ( i=0; i < buffer.audio.length; i++ )
-//			finalMix[i] = finalMix[i] - buffer.audio[i] * gain;
+		if ( buffer != null ) for ( i=0; i < buffer.audio.length; i++ )
+			finalMix[i] = finalMix[i] - buffer.audio[i] * gain;
 		// Mix group member, zone and stadium audio streams according to mix table
 		
 		// Expand the audio data up to the soundcard sample rate
