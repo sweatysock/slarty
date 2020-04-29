@@ -103,20 +103,37 @@ function applyAutoGain(audio, startGain) {		// Auto gain control
 }
 
 // Network code
-var PORT = process.env.PORT; 
-
 var fs = require('fs');
 var express = require('express');
 var app = express();
-
 app.use(express.static('public'));
 
-var http = require('http');
-var server = http.Server(app);
-server.listen(PORT, function() {
-	console.log("Server running on ",PORT);
-});
-
+var PORT = process.env.PORT; 
+if (PORT == undefined) {		// Not running on heroku so use SSL
+	var https = require('https');
+	var SSLPORT = 443; //Default 443
+	var HTTPPORT = 80; //Default 80 (Only used to redirect to SSL port)
+	var privateKeyPath = "./cert/key.pem"; //Default "./cert/key.pem"
+	var certificatePath = "./cert/cert.pem"; //Default "./cert/cert.pem"
+	var privateKey = fs.readFileSync( privateKeyPath );
+	var certificate = fs.readFileSync( certificatePath );
+	var server = https.createServer({
+    		key: privateKey,
+    		cert: certificate
+	}, app).listen(SSLPORT);
+	// Redirect from http to https
+	var http = require('http');
+	http.createServer(function (req, res) {
+    		res.writeHead(301, { "Location": "https://" + req.headers['host'] + ":"+ SSLPORT + "" + req.url });
+    		res.end();
+	}).listen(HTTPPORT);
+} else {				// On Heroku. No SSL needed
+	var http = require('http');
+	var server = http.Server(app);
+	server.listen(PORT, function() {
+		console.log("Server running on ",PORT);
+	});
+}
 var io  = require('socket.io').listen(server, { log: false });
 
 
