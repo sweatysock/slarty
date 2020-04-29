@@ -101,7 +101,7 @@ function startTalking() { 				// Get mic access and connect it up
 						// Raw data needs to be down sampled before sending to server
 						let Data = resample(audioData, soundcardSampleRate, SampleRate, chunkSize);
 						// Sending audio UP to our upstream server
-						socketIO.volatile.emit("u", {
+						socketIO.emit("u", {
 								"audio": Data,
 						});
 						// Update UI now
