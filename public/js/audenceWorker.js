@@ -26,7 +26,7 @@ class AudenceProcessor extends AudioWorkletProcessor {
 			receiveBuffer.push( voiceData );
 			// If the buffer has backlogged too much audio remove oldest audio down to maxBufferSize
 			if (receiveBuffer.length > maxBufferSize) {
-//				console.log("BUFFER OVERFLOW. Removing oldest audio");
+				console.log("BUFFER OVERFLOW. Removing oldest audio");
 				receiveBuffer.shift();
 			}
 		}

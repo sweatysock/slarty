@@ -196,8 +196,10 @@ io.sockets.on('connection', function (socket) {
 //"a": packet,
 //"c": packet,
 //"g": 1 });
-		if (buffer.packets.length > maxBufferSize) 
-			console.log("BUFFER over maxBufferSize. Doing nothing!");
+		if (buffer.packets.length > maxBufferSize) {
+			console.log("BUFFER overflow for  ",client);
+			buffer.packets.shift();
+		}
 		enterState( genMixState );
 		generateMix();
 		enterState( idleState );
