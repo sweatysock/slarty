@@ -252,13 +252,13 @@ function generateMix () {
 			}
 		}
 		if (finalMix.length > 0) {	// Send final mix and source audio tracks to all downstream clients
-			upstreamServer.emit("u", mix); // THIS MAY NOT WORK... try io.sockets.socket(upstreamServer).emit
-			io.sockets.in('downstream').emit('d', {
+			upstreamServer.volatile.emit("u", mix); // THIS MAY NOT WORK... try io.sockets.socket(upstreamServer).emit
+			io.sockets.in('downstream').volatile.emit('d', {
 					"a": finalMix,
 					"c": clientAudio,
 					"g": (gain * upstreamGain) });
 		} else { 				// Send mix with no upstream audio to all downstream clients
-			io.sockets.in('downstream').emit('d', {
+			io.sockets.in('downstream').volatile.emit('d', {
 					"a": mix,
 					"c": clientAudio,
 					"g": gain });
