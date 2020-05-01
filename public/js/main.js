@@ -37,13 +37,12 @@ ws.onmessage = function(msg,req) {
 		let resampledData = []; 		// Final output audio array
   		let finalMix = message.a;		// Mix from server
   		let clientBuffers = message.c;		// All client audio that is in the mix
-//  		let gain = data["g"];			// Gain needed for subtracting
   		let gain = message.g;			// Gain needed for subtracting
 		let b, buffer = null;			// Find my buffer in clientBuffers
 		clientBuffers.forEach( b => { if ( b.clientID == ID ) buffer = b; });
 		// subtract my gain adjusted audio buffer from the finalMix to stop feedback
-//		if ( buffer != null ) for ( i=0; i < buffer.audio.length; i++ )
-//			finalMix[i] = finalMix[i] - buffer.audio[i] * gain;
+		if ( buffer != null ) for ( i=0; i < buffer.audio.length; i++ )
+			finalMix[i] = finalMix[i] - buffer.audio[i] * gain;
 		// Mix group member, zone and stadium audio streams according to mix table
 		
 		// Expand the audio data up to the soundcard sample rate
