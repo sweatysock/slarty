@@ -20,7 +20,7 @@ const SampleRate = 16000; 	// All audio in audence runs at this sample rate.
 const MaxOutputLevel = 1;	// Max output level for INT16, for auto gain control
 var gain = 1;			// The gain applied to the mix 
 var upstreamGain = 1;		// Gain applied to the final mix after adding upstream
-const MaxGain = 4;		// Don't want to amplify more than x2
+const MaxGain = 1;		// Don't want to amplify more than x2
 
 // Timing counters
 //
@@ -192,10 +192,6 @@ io.sockets.on('connection', function (socket) {
 		if (buffer == null)  			// New client but not the first. Create buffer 
 			buffer = createClientBuffer(client);
 		buffer.packets.push( packet );
-//io.sockets.in('downstream').emit('d', {
-//"a": packet,
-//"c": packet,
-//"g": 1 });
 		if (buffer.packets.length > maxBufferSize) {
 			console.log("BUFFER overflow for  ",client);
 			buffer.packets.shift();
