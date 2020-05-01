@@ -268,7 +268,7 @@ function generateMix () {
 			let now = d.getTime();		
 			nextMixTimeLimit = now;
 		}
-		nextMixTimeLimit = nextMixTimeLimit + (mix.length * 1000)/SampleRate;
+		nextMixTimeLimit = nextMixTimeLimit + (mix.length * 900)/SampleRate;
 	}
 }
 
