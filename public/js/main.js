@@ -14,31 +14,36 @@ const PacketSize = 500; 	// Global packet size (bytes) to/from server
 var chunkSize; 			// Samples needed to send 500 samples at SampleRate
 var soundcardSampleRate; 	// Set this value when we get our AudioContext
 var audenceNode; 		// Our audio processing node
+var ID = new Date().getTime();	// ID used to identify us with the server
 
 // First task is to connect to the server. Without this we are going nowhere.
-var socketIO = io();
+var ws = new WebSocket("wss://"+window.location.host+"/");
 var socketConnected = false; 	// true if client is connected
 
-
-
-socketIO.on('connect', function (socket) {
-	console.log('socket connected!');
+ws.onopen = function() {
+	console.log("Socket connected ");
 	socketConnected = true;
 	// Say hi to the server letting it know we consider it upstream 
-	socketIO.emit("upstreamHi");
+	ws.send(JSON.stringify({type:"upstreamHi", ID:ID}));
+}
 
-	// Data coming down from upstream server: Group mix plus separate member audios
-	socketIO.on('d', function (data) { 
+ws.onerror = function(e) {
+	console.log("WS Error ",e);
+}
+
+ws.onmessage = function(msg,req) {
+	let message = JSON.parse(msg.data);
+	if (message.type == "d") { 			// Data coming down from upstream server
 		let resampledData = []; 		// Final output audio array
-  		let finalMix = data["a"];		// Mix from server
-  		let clientBuffers = data["c"];		// All client audio that is mix
-  		let gain = data["g"];			// Gain needed for subtracting
-		let myID = socketIO.id;	// myID = my buffer
+  		let finalMix = message.a;		// Mix from server
+  		let clientBuffers = message.c;		// All client audio that is in the mix
+//  		let gain = data["g"];			// Gain needed for subtracting
+  		let gain = message.g;			// Gain needed for subtracting
 		let b, buffer = null;			// Find my buffer in clientBuffers
-		clientBuffers.forEach( b => { if ( b.clientID == myID ) buffer = b; });
+		clientBuffers.forEach( b => { if ( b.clientID == ID ) buffer = b; });
 		// subtract my gain adjusted audio buffer from the finalMix to stop feedback
-		if ( buffer != null ) for ( i=0; i < buffer.audio.length; i++ )
-			finalMix[i] = finalMix[i] - buffer.audio[i] * gain;
+//		if ( buffer != null ) for ( i=0; i < buffer.audio.length; i++ )
+//			finalMix[i] = finalMix[i] - buffer.audio[i] * gain;
 		// Mix group member, zone and stadium audio streams according to mix table
 		
 		// Expand the audio data up to the soundcard sample rate
@@ -48,21 +53,13 @@ socketIO.on('connect', function (socket) {
 				"audio": resampledData,
 			});
 		// Update UI with audio data now
-	});
+	}
+}
 
-	socketIO.on('clients', function (cnt) {
-		console.log("CLIENT data from server");
-		$("#clients").text(cnt);
-		// Get client position update.
-		// Update UI and audio mix table with client data updated
-		// Send audio mix table to worker
-	});
-});
-
-socketIO.on('disconnect', function () {
+ws.onclose = function() {
 	console.log('socket disconnected!');
 	socketConnected = false;
-});
+}
 
 
 
@@ -101,9 +98,11 @@ function startTalking() { 				// Get mic access and connect it up
 						// Raw data needs to be down sampled before sending to server
 						let Data = resample(audioData, soundcardSampleRate, SampleRate, chunkSize);
 						// Sending audio UP to our upstream server
-						socketIO.emit("u", {
-								"audio": Data,
-						});
+						ws.send( JSON.stringify({
+								"type"	: "u",
+								"ID"	: ID,
+								"audio"	: Data })
+						);
 						// Update UI now
 					}
 				}

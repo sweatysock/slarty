@@ -134,75 +134,70 @@ if (PORT == undefined) {		// Not running on heroku so use SSL
 		console.log("Server running on ",PORT);
 	});
 }
-var io  = require('socket.io').listen(server, { log: false });
+const WebSocket = require('ws').Server;
+const wss = new WebSocket({ server });
 
 
 
 
 
 // socket event and audio handling area
-io.sockets.on('connection', function (socket) {
-	console.log("New connected:", socket.id);
+wss.on('connection', function (ws,req) {
+	console.log("New connection");
 
-	socket.on('disconnect', function () {
-		console.log("User disconnected:", socket.id);
+	ws.on('close', function () {
+		console.log("User disconnected:");
 		console.log("Idle = ", idleState.total, " upstream = ", upstreamState.total, " downstream = ", downstreamState.total, " genMix = ", genMixState.total);
 		// No need to remove the client's buffer as it will happen automatically
 	});
 
-	socket.on('downstreamHi', function (data) {
-		// The upstream server is registering with us
-		// There can only be one upstream server
-		upstreamServer = socket.id; 
-	});
-	socket.on('upstreamHi', function (data) {
-		// A downstream server or client is registering with us
-		// Add the downstream node to the group for notifications
-		socket.join('downstream');
-	});
-
-	// Audio coming down from our upstream server. It is a mix of all the audio above and beside us
-	socket.on('d', function (packet) {
-		enterState( upstreamState );
-		// If no downstream clients ignore packet and empty upstream buffers
-		if (receiveBuffer.length == 0) { upstreamBuffer = []; oldUpstreamBuffer = []; }
-		else {
-			// TODO: Remove my audio from mix to avoid echo
-			upstreamBuffer.push(packet); 
-			packetSize = packet.length;
-			enterState( genMixState );
-			generateMix();
+	ws.on('message', function (msg) {
+		let message = JSON.parse(msg);
+		switch (message.type) {
+			case 'downstreamHi': 		// The upstream server is registering with us
+				console.log("Upstream node ",message.ID," registred");
+				upstreamServer = ws; 	// There can only be one upstream server
+				break;
+			case 'upstreamHi': 		// A downstream server or client is registering with us
+				console.log("Downstream node ",message.ID," registred");
+				break; 			// With web sockets we won't do anything here.
+			case 'd':			// Data coming down from our upstream server
+				enterState( upstreamState );
+				// If no downstream clients ignore packet and empty upstream buffers
+				if (receiveBuffer.length == 0) { upstreamBuffer = []; oldUpstreamBuffer = []; }
+				else {
+					// TODO: Remove my audio from mix to avoid echo
+					upstreamBuffer.push(message.a); 
+					packetSize = message.a.length;
+					enterState( genMixState );
+					generateMix();
+				}
+				enterState( idleState );
+				break;
+			case 'u': 			// Audio coming up from one of our downstream clients
+				enterState( downstreamState );
+				let packet = message.audio;
+				let b = 0;
+				let buffer = null;
+				packetSize = packet.length;
+				client = message.ID;
+				if (receiveBuffer.length == 0) {	// First client, so create buffer right now
+					buffer = createClientBuffer(client);
+					nextMixTimeLimit = 0;		// Stop sample timer until audio buffered
+				} else					// Find this client's buffer
+					receiveBuffer.forEach( b => { if ( b.clientID == client ) buffer = b; });
+				if (buffer == null)  			// New client but not the first. Create buffer 
+					buffer = createClientBuffer(client);
+				buffer.packets.push( packet );
+				if (buffer.packets.length > maxBufferSize) {
+					console.log("BUFFER overflow for  ",client);
+					buffer.packets.shift();
+				}
+				enterState( genMixState );
+				generateMix();
+				enterState( idleState );
+				break;
 		}
-		enterState( idleState );
-	});
-
-	// Audio coming up from one of our downstream clients
-	socket.on('u', function (data) {
-		enterState( downstreamState );
-		let client = socket.id;
-		let packet = data["audio"];
-		let b = 0;
-		let buffer = null;
-		packetSize = packet.length;
-		if (receiveBuffer.length == 0) {	// First client, so create buffer right now
-			buffer = createClientBuffer(client);
-			nextMixTimeLimit = 0;		// Stop sample timer until audio buffered
-		} else					// Find this client's buffer
-			receiveBuffer.forEach( b => { if ( b.clientID == client ) buffer = b; });
-		if (buffer == null)  			// New client but not the first. Create buffer 
-			buffer = createClientBuffer(client);
-		buffer.packets.push( packet );
-//io.sockets.in('downstream').emit('d', {
-//"a": packet,
-//"c": packet,
-//"g": 1 });
-		if (buffer.packets.length > maxBufferSize) {
-			console.log("BUFFER overflow for  ",client);
-			buffer.packets.shift();
-		}
-		enterState( genMixState );
-		generateMix();
-		enterState( idleState );
 	});
 });
 
@@ -252,16 +247,20 @@ function generateMix () {
 			}
 		}
 		if (finalMix.length > 0) {	// Send final mix and source audio tracks to all downstream clients
-			upstreamServer.volatile.emit("u", mix); // THIS MAY NOT WORK... try io.sockets.socket(upstreamServer).emit
-			io.sockets.in('downstream').volatile.emit('d', {
-					"a": finalMix,
-					"c": clientAudio,
-					"g": (gain * upstreamGain) });
+//			upstreamServer.volatile.emit("u", mix); // THIS MAY NOT WORK... try io.sockets.socket(upstreamServer).emit
+//			io.sockets.in('downstream').volatile.emit('d', {
+//					"a": finalMix,
+//					"c": clientAudio,
+//					"g": (gain * upstreamGain) });
 		} else { 				// Send mix with no upstream audio to all downstream clients
-			io.sockets.in('downstream').volatile.emit('d', {
+			wss.clients.forEach((client) => {
+				let json=JSON.stringify({
+					"type": "d",
 					"a": mix,
 					"c": clientAudio,
 					"g": gain });
+				client.send( json);
+			});
 		}
 		// Finally, note when the next mix needs to go out (in mS from now) to avoid glitches
 		if (nextMixTimeLimit == 0) {
