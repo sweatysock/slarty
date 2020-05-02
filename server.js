@@ -169,7 +169,7 @@ io.sockets.on('connection', function (socket) {
 		else {
 			// TODO: Remove my audio from mix to avoid echo
 			upstreamBuffer.push(packet); 
-			packetSize = packet.length;
+			packetSize = packet.a.length;
 			enterState( genMixState );
 			generateMix();
 		}
