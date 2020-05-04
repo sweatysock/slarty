@@ -75,9 +75,17 @@ var counter =0;
 function startTalking() { 				// Get mic access and connect it up
 	if (navigator.mediaDevices) {
 		console.log('getUserMedia supported.');
+		var constraints = {
+			mandatory: {
+				googEchoCancellation: false,
+				googAutoGainControl: false,
+				googNoiseSuppression: false,
+				googHighpassFilter: false
+			},
+			optional: []
+		};
 		navigator.getUserMedia = (navigator.getUserMedia || navigator.webkitGetUserMedia || navigator.mozGetUserMedia || navigator.msGetUserMedia);
-		navigator.mediaDevices.getUserMedia ({audio:{latency:0.4,echoCancellation:true,autoGainControl:false,noiseSuppression:false} , video: false})
-		.then(function(stream) {
+		navigator.mediaDevices.getUserMedia ({audio: constraints}).then(function(stream) {
 			// First get an audio context
 			var context = new (window.AudioContext || window.webkitAudioContext)();
 			soundcardSampleRate = context.sampleRate; //Sample rate from the soundcard 
