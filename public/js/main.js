@@ -80,12 +80,17 @@ function startTalking() { 				// Get mic access and connect it up
 				googEchoCancellation: true,
 				googAutoGainControl: true,
 				googNoiseSuppression: false,
-				googHighpassFilter: false
+				googHighpassFilter: false,
+				autoGainControl: true,
+				channelCount: 2,
+				echoCancellation: true,
+				latency: 0,
+				noiseSuppression: false,
 			},
 			optional: []
 		};
-		navigator.getUserMedia = (navigator.getUserMedia || navigator.webkitGetUserMedia || navigator.mozGetUserMedia || navigator.msGetUserMedia);
-		navigator.getUserMedia ({audio: constraints}).then(function(stream) {
+//		navigator.getUserMedia = (navigator.getUserMedia || navigator.webkitGetUserMedia || navigator.mozGetUserMedia || navigator.msGetUserMedia);
+		navigator.mediaDevices.getUserMedia ({audio: constraints}).then(function(stream) {
 			// First get an audio context
 			var context = new (window.AudioContext || window.webkitAudioContext)();
 			soundcardSampleRate = context.sampleRate; //Sample rate from the soundcard 
