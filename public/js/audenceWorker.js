@@ -67,7 +67,6 @@ console.log("RECEIVE... Added ", voiceData.length, " Buffer is ",receiveBuffer.l
 					receiveBuffer.shift();
 					this.pointer = 0;
 					if (receiveBuffer[0] == undefined) {
-console.log("OUT OF AUDIO");
 						break;		// Out of audio so leave rest blank
 					}
 					else {
