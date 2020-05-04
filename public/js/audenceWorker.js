@@ -36,7 +36,7 @@ console.log("RECEIVE... Added ", voiceData.length, " Buffer is ",receiveBuffer.l
 	process (inputs, outputs, parameters) {
 		// There are two tasks here: 1. buffer mic audio & 2. output buffered server audio
 		// 1. Buffer and send Mic audio. 
-		const input = inputs[0][0];			// Single input from Mic
+		const input = inputs[1][0];			// Single input from Mic
 		const chunkSize = parameters.size;		// data amount needed to send
 		let micBuffer = this.micBuffer;
 		let sendBuffer = this.sendBuffer;
