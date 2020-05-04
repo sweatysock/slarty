@@ -13,7 +13,7 @@ var upstreamServer = null;	// socket ID for upstram server if connected
 var upstreamBuffer = []; 	// Audio packets coming down from our upstream server 
 var oldUpstreamBuffer = [];	// previous upstream packet kept in case more is needed
 var receiveBuffer = []; 	// All client audio packets are held in this 2D buffer
-const maxBufferSize = 8;	// Max number of packets to store per client
+const maxBufferSize = 6;	// Max number of packets to store per client
 const mixTriggerLevel = 3;	// When all clients have this many packets we create a mix
 var packetSize;			// Number of samples in the client audio packets
 const SampleRate = 16000; 	// All audio in audence runs at this sample rate. 
