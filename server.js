@@ -13,8 +13,8 @@ var upstreamServer = null;	// socket ID for upstram server if connected
 var upstreamBuffer = []; 	// Audio packets coming down from our upstream server 
 var oldUpstreamBuffer = [];	// previous upstream packet kept in case more is needed
 var receiveBuffer = []; 	// All client audio packets are held in this 2D buffer
-const maxBufferSize = 5;	// Max number of packets to store per client
-const mixTriggerLevel = 2;	// When all clients have this many packets we create a mix
+const maxBufferSize = 8;	// Max number of packets to store per client
+const mixTriggerLevel = 3;	// When all clients have this many packets we create a mix
 var packetSize;			// Number of samples in the client audio packets
 const SampleRate = 16000; 	// All audio in audence runs at this sample rate. 
 const MaxOutputLevel = 1;	// Max output level for INT16, for auto gain control
@@ -142,7 +142,7 @@ var io  = require('socket.io').listen(server, { log: false });
 
 // socket event and audio handling area
 io.sockets.on('connection', function (socket) {
-	console.log("New connected:", socket.id);
+	console.log("New connection V1.01:", socket.id);
 
 	socket.on('disconnect', function () {
 		console.log("User disconnected:", socket.id);
