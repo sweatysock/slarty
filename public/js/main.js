@@ -10,7 +10,7 @@ $(document).ready(function () {
 
 //Global variables
 const SampleRate = 16000; 	// Global sample rate used for all audio
-const PacketSize = 8000; 	// Global packet size (bytes) to/from server
+const PacketSize = 16000; 	// Global packet size (bytes) to/from server
 var chunkSize; 			// Samples needed to send 500 samples at SampleRate
 var soundcardSampleRate; 	// Set this value when we get our AudioContext
 var audenceNode; 		// Our audio processing node
