@@ -81,11 +81,7 @@ function startTalking() { 				// Get mic access and connect it up
 				googAutoGainControl: true,
 				googNoiseSuppression: false,
 				googHighpassFilter: false,
-				autoGainControl: true,
-				channelCount: 2,
 				echoCancellation: true,
-				latency: 0,
-				noiseSuppression: false,
 			},
 			optional: []
 		};
