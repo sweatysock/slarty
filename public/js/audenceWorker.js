@@ -57,17 +57,18 @@ console.log("RECEIVE... Added ", voiceData.length, " Buffer is ",receiveBuffer.l
 		let receiveBuffer = this.receiveBuffer;		
 		let buffer = [];				// output audio buffer
 		// take audio from oldest receiveBuffer. If empty shift to next and continue until enough
-		if (receiveBuffer[0] != undefined)		//If no audio leave output blank
+		if (receiveBuffer[0] != undefined) {		//If no audio leave output blank
 			for (let i=0; i < framesToOutput; i++) {
 				if (this.pointer < receiveBuffer[0].length) {
 					outputL[i] = receiveBuffer[0][this.pointer];
 					this.pointer++;
 				}
 				else {
-console.log("Emptied a buffer, getting another ",receiveBuffer[0].length," of audio leaving ",receiveBuffer.length," buffers to go.");
 					receiveBuffer.shift();
+console.log("Emptied a buffer, getting another ",receiveBuffer[0].length," of audio leaving ",receiveBuffer.length," buffers to go.");
 					this.pointer = 0;
 					if (receiveBuffer[0] == undefined) {
+console.log("OUT OF AUDIO");
 						break;		// Out of audio so leave rest blank
 					}
 					else {
@@ -77,6 +78,7 @@ console.log("Emptied a buffer, getting another ",receiveBuffer[0].length," of au
 				}
 				outputR[i] = outputL[i];
 			}
+		}
 		return true;
 	}
 
