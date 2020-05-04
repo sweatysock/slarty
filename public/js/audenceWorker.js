@@ -8,7 +8,7 @@ class AudenceProcessor extends AudioWorkletProcessor {
 	            name: 'size',
 	            defaultValue: 1024,
 	            minValue: 128,
-	            maxValue: 16384,
+	            maxValue: 100000,
 		}];
 	}
 
