@@ -77,7 +77,7 @@ function startTalking() { 				// Get mic access and connect it up
 		console.log('getUserMedia supported.');
 		var constraints = {
 			mandatory: {
-				googEchoCancellation: true,
+				googEchoCancellation: false,
 				googAutoGainControl: false,
 				googNoiseSuppression: false,
 				googHighpassFilter: false
