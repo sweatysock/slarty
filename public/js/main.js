@@ -78,7 +78,7 @@ function startTalking() { 				// Get mic access and connect it up
 		var constraints = {
 			mandatory: {
 				googEchoCancellation: true,
-				googAutoGainControl: false,
+				googAutoGainControl: true,
 				googNoiseSuppression: true,
 				googHighpassFilter: false
 			},
