@@ -84,7 +84,7 @@ function startTalking() { 				// Get mic access and connect it up
 			// How many samples are needed from this soundcard to fill a packet
 			chunkSize = Math.round(soundcardSampleRate * PacketSize / SampleRate);
 			// Next create a MediaStreamAudioSourceNode = Mic input = source
-			var source = context.createMediaStreamTrackSource(stream);
+			var source = context.createMediaStreamSource(stream);
 			let supported = navigator.mediaDevices.getSupportedConstraints();
 			// And then we need a worklet to inject our audio into the browser audio stream
 			context.audioWorklet.addModule('js/audenceWorker.js').then(() => {
