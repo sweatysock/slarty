@@ -14,8 +14,8 @@ var upstreamBuffer = []; 	// Audio packets coming down from our upstream server
 var oldUpstreamBuffer = [];	// previous upstream packet kept in case more is needed
 var receiveBuffer = []; 	// All client audio packets are held in this 2D buffer
 const maxBufferSize = 5;	// Max number of packets to store per client
-const mixTriggerLevel = 1;	// When all clients have this many packets we create a mix
-var packetSize = 7;		// Number of samples that go into a mix
+const mixTriggerLevel = 2;	// When all clients have this many packets we create a mix
+var packetSize;			// Number of samples in the client audio packets
 const SampleRate = 16000; 	// All audio in audence runs at this sample rate. 
 const MaxOutputLevel = 1;	// Max output level for INT16, for auto gain control
 var gain = 1;			// The gain applied to the mix 
