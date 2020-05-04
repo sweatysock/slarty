@@ -79,7 +79,7 @@ function startTalking() { 				// Get mic access and connect it up
 			mandatory: {
 				googEchoCancellation: true,
 				googAutoGainControl: false,
-				googNoiseSuppression: false,
+				googNoiseSuppression: true,
 				googHighpassFilter: false
 			},
 			optional: []
