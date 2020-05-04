@@ -64,6 +64,7 @@ console.log("RECEIVE... Added ", voiceData.length, " Buffer is ",receiveBuffer.l
 					this.pointer++;
 				}
 				else {
+console.log("Emptied a buffer, getting another ",receiveBuffer[0].length," of audio leaving ",receiveBuffer.length," buffers to go.");
 					receiveBuffer.shift();
 					this.pointer = 0;
 					if (receiveBuffer[0] == undefined) {
