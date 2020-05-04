@@ -36,13 +36,14 @@ console.log("RECEIVE... Added ", voiceData.length, " Buffer is ",receiveBuffer.l
 	process (inputs, outputs, parameters) {
 		// There are two tasks here: 1. buffer mic audio & 2. output buffered server audio
 		// 1. Buffer and send Mic audio. 
-		const input = inputs[0][1];			// Single input from Mic
+		const inputL = inputs[0][0];			// Input from Mic
+		const inputR = inputs[0][1];			
 		const chunkSize = parameters.size;		// data amount needed to send
 		let micBuffer = this.micBuffer;
 		let sendBuffer = this.sendBuffer;
-		if (input.length > 0) {
-			for (let i=0; i<input.length; i++)	// Buffer audio up
-				micBuffer.push(input[i]);
+		if (inputR.length > 0) {
+			for (let i=0; i<inputR.length; i++)	// Buffer mono audio up 
+				micBuffer.push((inputR[i]+inputL[i])/2);
 			if (micBuffer.length >= chunkSize) {	// enough audio to send?
 				sendBuffer = micBuffer.splice(0, chunkSize);
 				this.port.postMessage({ 	// send a chunk to main thread
@@ -53,7 +54,7 @@ console.log("RECEIVE... Added ", voiceData.length, " Buffer is ",receiveBuffer.l
 		// 2. Output audio. 
 		const outputL = outputs[0][0];			// left channel output
 		const outputR = outputs[0][1];			// right channel output
-		let framesToOutput = input.length;		// send as much audio as we receive
+		let framesToOutput = inputR.length;		// send as much audio as we receive
 		let receiveBuffer = this.receiveBuffer;		
 		let buffer = [];				// output audio buffer
 		// take audio from oldest receiveBuffer. If empty shift to next and continue until enough
