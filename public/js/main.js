@@ -169,14 +169,15 @@ function startTalking() {
 						packetSequence++;
 					}
 				}
-				if (spkrBuffer.length > resampledChunkSize) {	// Server audio can be sent to speaker
+				if (spkrBuffer.length > resampledChunkSize) 
 					audio = spkrBuffer.splice(0,resampledChunkSize);
-					audio = upSample(audio, SampleRate, soundcardSampleRate);
-					for (let i in audio) 
-						outData[i] = audio[i];
-				} else {
+				else {	
+					audio.fill(0,0,(resampledChunkSize-1));
 					shortages++;
 				}
+				audio = upSample(audio, SampleRate, soundcardSampleRate);
+				for (let i in audio) 
+					outData[i] = audio[i];
 				enterState( idleState );
 			}
 			liveSource.connect(node);
