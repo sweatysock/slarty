@@ -266,7 +266,7 @@ let dummyAudio = new Array(500).fill(0);
 let packet = {audio: dummyAudio, sequence: 4444, timeEmitted: 12345678};
 dummyTrack.clientID = "DUMMY";
 dummyTrack.packet = packet;
-for (let i=0; i<10; i++)
+for (let i=0; i<20; i++)
 	clientPackets.push( dummyTrack );
 //		gain = applyAutoGain(mix, gain); 	// Apply auto gain to mix starting at the current gain level 
 //		let finalMix = [];			// Final audio mix with upstream audio to send downstream
