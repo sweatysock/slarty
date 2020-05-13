@@ -151,8 +151,9 @@ function startTalking() {
 				enterState( audioInOutState );
 				var inData = e.inputBuffer.getChannelData(0);
 				var outData = e.outputBuffer.getChannelData(0);
+				let audio = [];
 				if (socketConnected) {		// Mic audio can be sent to server
-					let audio = downSample(inData, soundcardSampleRate, SampleRate);
+					audio = downSample(inData, soundcardSampleRate, SampleRate);
 					resampledChunkSize = audio.length;
 					for (let i in audio) micBuffer.push(audio[i]);
 					if (micBuffer.length > PacketSize) {
