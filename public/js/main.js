@@ -51,15 +51,13 @@ var packetsIn = 0;
 var packetsOut = 0;
 var overflows = 0;
 var shortages = 0;
-var packetSequence = 0;			// Tracing packet ordering
-var currentSeq = 0;			// Last packet sequence received
-var seqGap = 0;				// Accumulators for round trip measurements
 var timeGap = 0;
-var seqStep = 0;
+var packetSequence = 0;			// Tracing packet ordering
 const updateTimer = 10000;
 function printReport() {
 	console.log("Idle = ", idleState.total, " data in = ", dataInState.total, " audio in/out = ", audioInOutState.total);
 	console.log("Sent = ",packetsOut," Heard = ",packetsIn," avg data paylod = ",(dataIn/packetsIn)," speaker buffer size ",spkrBuffer.length," mic buffer size ", micBuffer.length," overflows = ",overflows," shortages = ",shortages);
+	dataIn = 0;
 	packetsIn = 0;
 	packetsOut = 0;
 	overflows = 0;
@@ -83,6 +81,8 @@ socketIO.on('connect', function (socket) {
 		enterState( dataInState );
 		packetsIn++;
 		dataIn += Object.keys(data).length;
+console.log(dataIn);
+console.log(data);
 		let d = new Date();
 		let now = d.getTime();
 		if (micAccessAllowed) {	// Need access to audio before outputing
