@@ -8,6 +8,7 @@
 function ClientBuffer() { 	// Object to buffer audio from a specific client
 	this.clientID = 0;	// ID of the socket in the client and server
 	this.packets = [];	// buffer of audio packets
+	this.newBuf = true;	// Flag used to allow buffer filling at start
 }
 var upstreamServer = null;	// socket ID for upstram server if connected
 var upstreamBuffer = []; 	// Audio packets coming down from our upstream server 
@@ -21,6 +22,9 @@ const MaxOutputLevel = 1;	// Max output level for INT16, for auto gain control
 var gain = 1;			// The gain applied to the mix 
 var upstreamGain = 1;		// Gain applied to the final mix after adding upstream
 const MaxGain = 1;		// Don't want to amplify more than x2
+// Mix generation is done as fast as data comes in, but should keep up a rhythmn
+// even if downstream audio isn't sufficient. The time the last mix was sent is here:
+var nextMixTimeLimit = 0;
 
 // Timing counters
 //
@@ -46,9 +50,57 @@ function enterState( newState ) {
 	currentState = newState;
 }
 
-// Mix generation is done as fast as data comes in, but should keep up a rythmn
-// even if downstream audio isn't sufficient. The time the last mix was sent is here:
-var nextMixTimeLimit = 0;
+// Accumulators for reporting purposes
+//
+var packetsIn = 0;
+var packetsOut = 0;
+var overflows = 0;
+var shortages = 0;
+var clientsLive = 0;
+var forcedMixes = 0;
+var threadCount = 0;
+var packetClassifier = [];
+packetClassifier.fill(0,0,30);
+
+
+
+
+// Network code
+//
+//
+var fs = require('fs');
+var express = require('express');
+var app = express();
+app.use(express.static('public'));
+
+var PORT = process.env.PORT; 
+if (PORT == undefined) {		// Not running on heroku so use SSL
+	var https = require('https');
+	var SSLPORT = 443; //Default 443
+	var HTTPPORT = 80; //Default 80 (Only used to redirect to SSL port)
+	var privateKeyPath = "./cert/key.pem"; //Default "./cert/key.pem"
+	var certificatePath = "./cert/cert.pem"; //Default "./cert/cert.pem"
+	var privateKey = fs.readFileSync( privateKeyPath );
+	var certificate = fs.readFileSync( certificatePath );
+	var server = https.createServer({
+    		key: privateKey,
+    		cert: certificate
+	}, app).listen(SSLPORT);
+	// Redirect from http to https
+	var http = require('http');
+	http.createServer(function (req, res) {
+    		res.writeHead(301, { "Location": "https://" + req.headers['host'] + ":"+ SSLPORT + "" + req.url });
+    		res.end();
+	}).listen(HTTPPORT);
+} else {				// On Heroku. No SSL needed
+	var http = require('http');
+	var server = http.Server(app);
+	server.listen(PORT, function() {
+		console.log("Server running on ",PORT);
+	});
+}
+var io  = require('socket.io').listen(server, { log: false });
+
 
 function createClientBuffer(client) {
 	let buffer = new ClientBuffer();
@@ -57,6 +109,80 @@ function createClientBuffer(client) {
 	return buffer;
 }
 
+
+// socket event and audio handling area
+io.sockets.on('connection', function (socket) {
+	console.log("New connection:", socket.id);
+	clientsLive++;
+
+	socket.on('disconnect', function () {
+		console.log("User disconnected:", socket.id);
+		console.log("Idle = ", idleState.total, " upstream = ", upstreamState.total, " downstream = ", downstreamState.total, " genMix = ", genMixState.total);
+		// No need to remove the client's buffer as it will happen automatically
+		clientsLive--;
+	});
+
+	socket.on('downstreamHi', function (data) {
+		// The upstream server is registering with us
+		// There can only be one upstream server
+		upstreamServer = socket.id; 
+	});
+	socket.on('upstreamHi', function (data) {
+		// A downstream server or client is registering with us
+		// Add the downstream node to the group for notifications
+		console.log("New client ", socket.id);
+		socket.join('downstream');
+	});
+
+	// Audio coming down from our upstream server. It is a mix of all the audio above and beside us
+	socket.on('d', function (packet) {
+		enterState( upstreamState );
+		// If no downstream clients ignore packet and empty upstream buffers
+		if (receiveBuffer.length == 0) { upstreamBuffer = []; oldUpstreamBuffer = []; }
+		else {
+			// TODO: Remove my audio from mix to avoid echo
+			upstreamBuffer.push(packet); 
+			packetSize = packet.a.length;
+			enterState( genMixState );
+			generateMix();
+		}
+		enterState( idleState );
+	});
+
+	// Audio coming up from one of our downstream clients
+	socket.on('u', function (data) {
+		enterState( downstreamState );
+		threadCount++;
+		let client = socket.id;
+		let packet = {audio: data["audio"], sequence: data["sequence"], timeEmitted: data["timeEmitted"]};
+		let b = 0;
+		let buffer = null;
+		packetSize = packet.audio.length;	// Need to know how much audio we are processing
+		if (receiveBuffer.length == 0) {	// First client, so create buffer right now
+			buffer = createClientBuffer(client);
+			nextMixTimeLimit = 0;		// Stop sample timer until audio buffered
+		} else					// Find this client's buffer
+			receiveBuffer.forEach( b => { if ( b.clientID == client ) buffer = b; });
+		if (buffer == null)  			// New client but not the first. Create buffer 
+			buffer = createClientBuffer(client);
+		buffer.packets.push( packet );
+		if (buffer.packets.length > maxBufferSize) {
+			buffer.packets.shift();
+			overflows++;
+		}
+		if (buffer.packets.length >= mixTriggerLevel) 
+			buffer.newBuf = false;		// Buffer has filled enough to form part of mix
+		packetsIn++;
+		enterState( genMixState );
+		generateMix();
+		enterState( idleState );
+	});
+});
+
+
+// Audio management, marshalling and manipulation code
+//
+//
 function isTimeToMix() {	// Test if we must generate a mix regardless
 	let d = new Date();
 	let now = d.getTime();		
@@ -102,106 +228,7 @@ function applyAutoGain(audio, startGain) {		// Auto gain control
 	return endGain;
 }
 
-// Network code
-var fs = require('fs');
-var express = require('express');
-var app = express();
-app.use(express.static('public'));
-
-var PORT = process.env.PORT; 
-if (PORT == undefined) {		// Not running on heroku so use SSL
-	var https = require('https');
-	var SSLPORT = 443; //Default 443
-	var HTTPPORT = 80; //Default 80 (Only used to redirect to SSL port)
-	var privateKeyPath = "./cert/key.pem"; //Default "./cert/key.pem"
-	var certificatePath = "./cert/cert.pem"; //Default "./cert/cert.pem"
-	var privateKey = fs.readFileSync( privateKeyPath );
-	var certificate = fs.readFileSync( certificatePath );
-	var server = https.createServer({
-    		key: privateKey,
-    		cert: certificate
-	}, app).listen(SSLPORT);
-	// Redirect from http to https
-	var http = require('http');
-	http.createServer(function (req, res) {
-    		res.writeHead(301, { "Location": "https://" + req.headers['host'] + ":"+ SSLPORT + "" + req.url });
-    		res.end();
-	}).listen(HTTPPORT);
-} else {				// On Heroku. No SSL needed
-	var http = require('http');
-	var server = http.Server(app);
-	server.listen(PORT, function() {
-		console.log("Server running on ",PORT);
-	});
-}
-var io  = require('socket.io').listen(server, { log: false });
-
-
-
-
-
-// socket event and audio handling area
-io.sockets.on('connection', function (socket) {
-	console.log("New connection V1.01:", socket.id);
-
-	socket.on('disconnect', function () {
-		console.log("User disconnected:", socket.id);
-		console.log("Idle = ", idleState.total, " upstream = ", upstreamState.total, " downstream = ", downstreamState.total, " genMix = ", genMixState.total);
-		// No need to remove the client's buffer as it will happen automatically
-	});
-
-	socket.on('downstreamHi', function (data) {
-		// The upstream server is registering with us
-		// There can only be one upstream server
-		upstreamServer = socket.id; 
-	});
-	socket.on('upstreamHi', function (data) {
-		// A downstream server or client is registering with us
-		// Add the downstream node to the group for notifications
-		socket.join('downstream');
-	});
-
-	// Audio coming down from our upstream server. It is a mix of all the audio above and beside us
-	socket.on('d', function (packet) {
-		enterState( upstreamState );
-		// If no downstream clients ignore packet and empty upstream buffers
-		if (receiveBuffer.length == 0) { upstreamBuffer = []; oldUpstreamBuffer = []; }
-		else {
-			// TODO: Remove my audio from mix to avoid echo
-			upstreamBuffer.push(packet); 
-			packetSize = packet.a.length;
-			enterState( genMixState );
-			generateMix();
-		}
-		enterState( idleState );
-	});
-
-	// Audio coming up from one of our downstream clients
-	socket.on('u', function (data) {
-		enterState( downstreamState );
-		let client = socket.id;
-		let packet = data["audio"];
-		let b = 0;
-		let buffer = null;
-		packetSize = packet.length;
-		if (receiveBuffer.length == 0) {	// First client, so create buffer right now
-			buffer = createClientBuffer(client);
-			nextMixTimeLimit = 0;		// Stop sample timer until audio buffered
-		} else					// Find this client's buffer
-			receiveBuffer.forEach( b => { if ( b.clientID == client ) buffer = b; });
-		if (buffer == null)  			// New client but not the first. Create buffer 
-			buffer = createClientBuffer(client);
-		buffer.packets.push( packet );
-		if (buffer.packets.length > maxBufferSize) {
-			console.log("BUFFER overflow for  ",client);
-			buffer.packets.shift();
-		}
-		enterState( genMixState );
-		generateMix();
-		enterState( idleState );
-	});
-});
-
+// The main working function where audio marsahlling, mixing and sending happens
 function generateMix () {
 	let readyToMix = false;
 	if (isTimeToMix()) readyToMix = true;
@@ -212,62 +239,90 @@ function generateMix () {
 	}
 	if (readyToMix) {
 		let numberOfClients = receiveBuffer.length;
-		let mix = new Array(packetSize).fill(0); // The mixed audio we will return to all clients
-		let clientAudio = []; 			// All client audio packets that are part of the mix
-		let client = receiveBuffer.length -1;	// We start at the end of the array going backwards
-		while (client >=0) { 			// mix all client (downstream) audio together
-			let newTrack = { audio: [], clientID: 0 };	// A track is audio + client ID
-			let clientBuffer = receiveBuffer[client];	// Shorthand
-			newTrack.clientID = clientBuffer.clientID;	// Get clientID for audio
-			newTrack.audio = clientBuffer.packets.shift();	// Get first packet of audio
-			if (newTrack.audio == undefined) {			// If no audio remove client buffer
-				console.log("AUDIO SHORTAGE for client ");
-				receiveBuffer.splice(client, 1); 	// Remove client buffer
-			}
-			else {
-				for (let i = 0; i < newTrack.audio.length; ++i) 
-					mix[i] = (mix[i] + newTrack.audio[i]);	
-				clientAudio.push( newTrack );		// Store piece of source audio 
-			}
-			client--;			// next client down in buffer
-		}
-		gain = applyAutoGain(mix, gain); 	// Apply auto gain to mix starting at the current gain level 
-		let finalMix = [];			// Final audio mix with upstream audio to send downstream
-		if (upstreamServer != null) { 		// We have an upstream server. Send it audio
-			if ((upstreamBuffer.length >= mixTriggerLevel) || (oldUpstreamBuffer.length > 0 )) { 
-				let upstreamAudio = [];				// Piece of upstream audio to mix in
-				if (upstreamBuffer == []) { 			// if no upstream audio
-					upstreamAudio = oldUpstreamBuffer;	// Use old buffer
-				} else {
-					upstreamAudio = upstreamBuffer.shift();	// Get new packet from buffer
-					oldUpstreamBuffer = upstreamAudio;	// and store it in old buffer
+		let mix = new Array(packetSize).fill(0); 		// The mixed audio we will return to all clients
+		let clientAudio = []; 					// All client audio packets that are part of the mix
+		let client = receiveBuffer.length -1;			// We start at the end of the array going backwards
+		while (client >=0) { 					// mix all client (downstream) audio together
+			let clientBuffer = receiveBuffer[client];	
+			if (clientBuffer.newBuf == false) {			// Ignore new buffers that are filling up
+				let newTrack = { packet: [], clientID: 0 };	// A track is an audio packet + client ID
+				newTrack.clientID = clientBuffer.clientID;	// Get clientID for audio packet
+				newTrack.packet = clientBuffer.packets.shift();	// Get first packet of audio
+				if (newTrack.packet == undefined) {		// If this client buffer has been emptied...
+					receiveBuffer.splice(client, 1); 	// remove client buffer
+					shortages++;
 				}
-				for (let i = 0; i < upstreamAudio.length; ++i) 
-					finalMix[i] = mix[i] + upstreamAudio[i];
-				upstreamGain = applyAutoGain(finalMix, upstreamGain); // Apply auto gain to final mix 
+				else {
+//					for (let i = 0; i < newTrack.audio.length; ++i) 
+//						mix[i] = (mix[i] + newTrack.audio[i]);	
+					clientPackets.push( newTrack );		// Store packet of source audio 
+				}
 			}
+			client--;						// next client down in buffer
 		}
-		if (finalMix.length > 0) {	// Send final mix and source audio tracks to all downstream clients
-			upstreamServer.volatile.emit("u", mix); // THIS MAY NOT WORK... try io.sockets.socket(upstreamServer).emit
-			io.sockets.in('downstream').volatile.emit('d', {
-					"a": finalMix,
-					"c": clientAudio,
-					"g": (gain * upstreamGain) });
-		} else { 				// Send mix with no upstream audio to all downstream clients
-			io.sockets.in('downstream').volatile.emit('d', {
-					"a": mix,
-					"c": clientAudio,
-					"g": gain });
+//		gain = applyAutoGain(mix, gain); 	// Apply auto gain to mix starting at the current gain level 
+//		let finalMix = [];			// Final audio mix with upstream audio to send downstream
+//		if (upstreamServer != null) { 		// We have an upstream server. Send it audio
+//			if ((upstreamBuffer.length >= mixTriggerLevel) || (oldUpstreamBuffer.length > 0 )) { 
+//				let upstreamAudio = [];				// Piece of upstream audio to mix in
+//				if (upstreamBuffer == []) { 			// if no upstream audio
+//					upstreamAudio = oldUpstreamBuffer;	// Use old buffer
+//				} else {
+//					upstreamAudio = upstreamBuffer.shift();	// Get new packet from buffer
+//					oldUpstreamBuffer = upstreamAudio;	// and store it in old buffer
+//				}
+//				for (let i = 0; i < upstreamAudio.length; ++i) 
+//					finalMix[i] = mix[i] + upstreamAudio[i];
+//				upstreamGain = applyAutoGain(finalMix, upstreamGain); // Apply auto gain to final mix 
+//			}
+//		}
+//		if (finalMix.length > 0) {	// Send final mix and source audio tracks to all downstream clients
+//			upstreamServer.volatile.emit("u", mix); // THIS MAY NOT WORK... try io.sockets.socket(upstreamServer).emit
+//			io.sockets.in('downstream').volatile.emit('d', {
+//					"a": finalMix,
+//					"c": clientAudio,
+//					"g": (gain * upstreamGain) });
+//		} else { 				// Send mix with no upstream audio to all downstream clients
+	
+		if (clientPackets.length != 0) {		// Only send audio if we have some to send
+			packetClassifier[clientPackets.length] = packetClassifier[clientPackets.length] + 1;
+			io.sockets.in('downstream').emit('d', {
+				"c": clientPackets,
+			});
+			packetsOut++;			// Sent data so log it and set time limit for next send
+			if (nextMixTimeLimit == 0) {	// If this is the first send event then start at now
+				let d = new Date();
+				let now = d.getTime();		
+				nextMixTimeLimit = now;
+			}
+			nextMixTimeLimit = nextMixTimeLimit + (mix.length * 1000)/SampleRate;
 		}
-		// Finally, note when the next mix needs to go out (in mS from now) to avoid glitches
-		if (nextMixTimeLimit == 0) {
-			let d = new Date();
-			let now = d.getTime();		
-			nextMixTimeLimit = now;
-		}
-		nextMixTimeLimit = nextMixTimeLimit + (mix.length * 1000)/SampleRate;
 	}
+	threadCount--;
 }
+
+
+// Reporting code
+// 
+const updateTimer = 10000;	// Frequency of updates to the console
+function printReport() {
+	console.log("Idle = ", idleState.total, " upstream = ", upstreamState.total, " downstream = ", downstreamState.total, " genMix = ", genMixState.total);
+	console.log("Clients = ",clientsLive,"  active = ", receiveBuffer.length,"In = ",packetsIn," Out = ",packetsOut," overflows = ",overflows," shortages = ",shortages," forced mixes = ",forcedMixes," threads = ",threadCount);
+	let s = "Client buffer lengths: ";
+	for (c in receiveBuffer)
+		s = s + receiveBuffer[c].packets.length +" ";
+	console.log(s);
+	console.log(packetClassifier);
+	packetClassifier.fill(0,0,30);
+	packetsIn = 0;
+	packetsOut = 0;
+	overflows = 0;
+	shortages = 0;
+	forcedMixes = 0;
+}
+setInterval(printReport, updateTimer);
+
+
 
 // We are all set up so let the idling begin!
 enterState( idleState );
