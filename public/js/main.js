@@ -46,6 +46,7 @@ function enterState( newState ) {
 
 // Reporting code. Accumulators, interval timer and report generator
 //
+var dataIn = 0;
 var packetsIn = 0;
 var packetsOut = 0;
 var overflows = 0;
@@ -58,7 +59,7 @@ var seqStep = 0;
 const updateTimer = 10000;
 function printReport() {
 	console.log("Idle = ", idleState.total, " data in = ", dataInState.total, " audio in/out = ", audioInOutState.total);
-	console.log("Sent = ",packetsOut," Heard = ",packetsIn," speaker buffer size ",spkrBuffer.length," mic buffer size ", micBuffer.length," overflows = ",overflows," shortages = ",shortages);
+	console.log("Sent = ",packetsOut," Heard = ",packetsIn," avg data paylod = ",(dataIn/packetsIn)," speaker buffer size ",spkrBuffer.length," mic buffer size ", micBuffer.length," overflows = ",overflows," shortages = ",shortages);
 	packetsIn = 0;
 	packetsOut = 0;
 	overflows = 0;
@@ -81,6 +82,7 @@ socketIO.on('connect', function (socket) {
 	socketIO.on('d', function (data) { 
 		enterState( dataInState );
 		packetsIn++;
+		dataIn += Object.keys(data).length;
 		let d = new Date();
 		let now = d.getTime();
 		if (micAccessAllowed) {	// Need access to audio before outputing
