@@ -133,7 +133,6 @@ function startTalking() {
 		var context = new window.AudioContext || new window.webkitAudioContext;
 		soundcardSampleRate = context.sampleRate;
 		let constraints = { mandatory: {
-					echoCancellationType: "browser",
 		      			googEchoCancellation: true,
 		      			googAutoGainControl: false,
 		      			googNoiseSuppression: false,
