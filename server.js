@@ -240,7 +240,7 @@ function generateMix () {
 	if (readyToMix) {
 		let numberOfClients = receiveBuffer.length;
 		let mix = new Array(packetSize).fill(0); 		// The mixed audio we will return to all clients
-		let clientAudio = []; 					// All client audio packets that are part of the mix
+		let clientPackets = []; 				// All client audio packets that are part of the mix
 		let client = receiveBuffer.length -1;			// We start at the end of the array going backwards
 		while (client >=0) { 					// mix all client (downstream) audio together
 			let clientBuffer = receiveBuffer[client];	
