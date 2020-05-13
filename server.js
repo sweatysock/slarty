@@ -260,6 +260,14 @@ function generateMix () {
 			}
 			client--;						// next client down in buffer
 		}
+// Add 5 simulated clients to test payload impact on sending
+let dummyTrack = { packet: [], clientID: 0 };	
+let dummyAudio = new Array(500).fill(0);
+let packet = {audio: dummyAudio, sequence: 4444, timeEmitted: 12345678};
+dummyTrack.clientID = "DUMMY";
+dummyTrack.packet = packet;
+for (let i=0; i<5; i++)
+	clientPackets.push( dummyTrack );
 //		gain = applyAutoGain(mix, gain); 	// Apply auto gain to mix starting at the current gain level 
 //		let finalMix = [];			// Final audio mix with upstream audio to send downstream
 //		if (upstreamServer != null) { 		// We have an upstream server. Send it audio
