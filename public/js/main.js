@@ -87,7 +87,7 @@ socketIO.on('connect', function (socket) {
 			let mix = [];	// Build up a mix of client audio 
 			let clients = data.c; 
 			for (let c=0; c < clients.length; c++) {
-				if (clients[c].clientID != socketIO.id) {
+				if (clients[c].clientID == socketIO.id) {
 					let a = clients[c].packet.audio;
 					timeGap += now - clients[c].packet.timeEmitted;
 					if (mix.length == 0)
@@ -151,8 +151,9 @@ function startTalking() {
 				enterState( audioInOutState );
 				var inData = e.inputBuffer.getChannelData(0);
 				var outData = e.outputBuffer.getChannelData(0);
+				let audio = [];
 				if (socketConnected) {		// Mic audio can be sent to server
-					let audio = downSample(inData, soundcardSampleRate, SampleRate);
+					audio = downSample(inData, soundcardSampleRate, SampleRate);
 					resampledChunkSize = audio.length;
 					for (let i in audio) micBuffer.push(audio[i]);
 					if (micBuffer.length > PacketSize) {
@@ -171,12 +172,13 @@ function startTalking() {
 				}
 				if (spkrBuffer.length > resampledChunkSize) {	// Server audio can be sent to speaker
 					audio = spkrBuffer.splice(0,resampledChunkSize);
-					audio = upSample(audio, SampleRate, soundcardSampleRate);
-					for (let i in audio) 
-						outData[i] = audio[i];
 				} else {
+					audio.fill(0,0,(resampledChunkSize-1));
 					shortages++;
 				}
+				audio = upSample(audio, SampleRate, soundcardSampleRate);
+				for (let i in audio) 
+					outData[i] = audio[i];
 				enterState( idleState );
 			}
 			liveSource.connect(node);
