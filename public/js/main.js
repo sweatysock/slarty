@@ -99,7 +99,7 @@ socketIO.on('connect', function (socket) {
 				}
 			}
 			if (mix.length != 0) {
-				for (let i in mix) spkrBuffer.push(mix[i]);
+				spkrBuffer.push(...mix);
 				if (spkrBuffer.length > maxBuffSize) {
 					spkrBuffer.splice(0, (spkrBuffer.length-maxBuffSize)); 	
 					overflows++;
@@ -155,7 +155,7 @@ function startTalking() {
 				if (socketConnected) {		// Mic audio can be sent to server
 					audio = downSample(inData, soundcardSampleRate, SampleRate);
 					resampledChunkSize = audio.length;
-					for (let i in audio) micBuffer.push(audio[i]);
+					micBuffer.push(...audio);
 					if (micBuffer.length > PacketSize) {
 						audio = micBuffer.splice(0, PacketSize);
 						let d = new Date();
