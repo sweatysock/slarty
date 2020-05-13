@@ -87,7 +87,7 @@ socketIO.on('connect', function (socket) {
 			let mix = [];	// Build up a mix of client audio 
 			let clients = data.c; 
 			for (let c=0; c < clients.length; c++) {
-				if (clients[c].clientID == socketIO.id) {
+				if (clients[c].clientID != socketIO.id) {
 					let a = clients[c].packet.audio;
 					timeGap += now - clients[c].packet.timeEmitted;
 					if (mix.length == 0)
