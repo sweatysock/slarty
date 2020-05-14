@@ -10,7 +10,6 @@ function ClientBuffer() { 	// Object to buffer audio from a specific client
 	this.packets = [];	// buffer of audio packets
 	this.newBuf = true;	// Flag used to allow buffer filling at start
 }
-var upstreamServer = null;	// socket ID for upstram server if connected
 var upstreamBuffer = []; 	// Audio packets coming down from our upstream server 
 var oldUpstreamBuffer = [];	// previous upstream packet kept in case more is needed
 var receiveBuffer = []; 	// All client audio packets are held in this 2D buffer
@@ -109,6 +108,15 @@ function createClientBuffer(client) {
 	return buffer;
 }
 
+var upstreamServer = null;	// socket ID for upstream server if connected
+
+function connectUpstreamServer(server) {
+	upstreamServer = require('socket.io-client')(server);
+	upstreamServer.on('connect', function(socket){
+		console.log("upstream server connected ",server);
+		upstreamServer.emit("upstreamHi");
+	});
+}
 
 // socket event and audio handling area
 io.sockets.on('connection', function (socket) {
@@ -120,12 +128,6 @@ io.sockets.on('connection', function (socket) {
 		console.log("Idle = ", idleState.total, " upstream = ", upstreamState.total, " downstream = ", downstreamState.total, " genMix = ", genMixState.total);
 		// No need to remove the client's buffer as it will happen automatically
 		clientsLive--;
-	});
-
-	socket.on('downstreamHi', function (data) {
-		// The upstream server is registering with us
-		// There can only be one upstream server
-		upstreamServer = socket.id; 
 	});
 
 	socket.on('superHi', function (data) {
@@ -140,6 +142,12 @@ io.sockets.on('connection', function (socket) {
 		// Add the downstream node to the group for notifications
 		console.log("New client ", socket.id);
 		socket.join('downstream');
+	});
+
+	socket.on('nus', function (data) {
+		// A super has sent us a new upstream server to connect to
+		console.log("New upstream server ",data["upstreamServer"]," from ", socket.id);
+		connectUpstreamServer(data["upstreamServer"]);
 	});
 
 	// Audio coming down from our upstream server. It is a mix of all the audio above and beside us
