@@ -266,12 +266,13 @@ function generateMix () {
 		receiveBuffer.forEach( b => {
 			if ((b.newBuf == false) && (b.packets.length > mixTriggerLevel)) readyToMix = true;
 		});
+console.log("STARTING");
+receiveBuffer.forEach( b => {
+if (b.packets.length <= mixTriggerLevel) {console.log("MIXING with buffer below trigger level");console.log(b)}
+});
+console.log("FINISHED");
 	}
 	if (readyToMix) {
-receiveBuffer.forEach( b => {
-if (b.newBuf == true) {console.log("MIXING with new buffer ,");console.log(b)}
-if (b.packets.length < mixTriggerLevel) {console.log("MIXING with buffer below trigger level");console.log(b)}
-});
 		let numberOfClients = receiveBuffer.length;
 		let mix = new Array(packetSize).fill(0); 		// The mixed audio we will return to all clients
 		let clientPackets = []; 				// All client audio packets that are part of the mix
