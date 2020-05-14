@@ -107,6 +107,7 @@ var io  = require('socket.io').listen(server, { log: false });
 function createClientBuffer(client) {
 	let buffer = new ClientBuffer();
 	buffer.clientID = client;
+	buffer.newBuf = true;
 	receiveBuffer.push(buffer);
 	return buffer;
 }
@@ -165,7 +166,11 @@ io.sockets.on('connection', function (socket) {
 		else {
 			// TODO: Remove my audio from mix to avoid echo
 			upstreamBuffer.push(packet); 
-			packetSize = packet.a.length;
+			if (upstreamBuffer.length > maxBufferSize) {
+				upstreamBuffer.shift();
+				overflows++;
+			}
+			packetSize = packet.audio.length;
 			enterState( genMixState );
 			generateMix();
 		}
@@ -257,8 +262,8 @@ function generateMix () {
 	if (isTimeToMix()) readyToMix = true;
 	else {				// It isn't time to mix but is there enough data to mix anyway?
 		let b;
-		readyToMix = true;	// Assume there IS enough data, but if any buffer is short, no mix
-		receiveBuffer.forEach( b => { if (b.packets.length < mixTriggerLevel) readyToMix = false; });
+		receiveBuffer.forEach( b => {
+			if ((b.newBuf == false) && (b.packets.length > mixTriggerLevel)) readyToMix = true;
 	}
 	if (readyToMix) {
 		let numberOfClients = receiveBuffer.length;
