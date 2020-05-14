@@ -98,6 +98,7 @@ if (PORT == undefined) {		// Not running on heroku so use SSL
 		console.log("Server running on ",PORT);
 	});
 }
+
 var io  = require('socket.io').listen(server, { log: false });
 
 
@@ -301,8 +302,6 @@ function generateMix () {
 					finalMix[i] = mix[i] + upstreamAudio[i];
 				upstreamGain = applyAutoGain(finalMix, upstreamGain); // Apply auto gain to final mix 
 			}
-		}
-		if (finalMix.length > 0) {	// Send final mix and source audio tracks to all downstream clients
 			let d = new Date();
 			let now = d.getTime();
 			let packetSequence = 0;
@@ -312,23 +311,24 @@ function generateMix () {
 				"timeEmitted": now
 			});
 			io.sockets.in('downstream').volatile.emit('d', {
-					"a": finalMix,
-					"c": clientAudio,
-					"g": (gain * upstreamGain) });
-		} else { 				// Send mix with no upstream audio to all downstream clients
-	
-		if (clientPackets.length != 0) {		// Only send audio if we have some to send
-			packetClassifier[clientPackets.length] = packetClassifier[clientPackets.length] + 1;
-			io.sockets.in('downstream').emit('d', {
+				"a": finalMix,
 				"c": clientPackets,
+				"g": (gain * upstreamGain) 
 			});
-			packetsOut++;			// Sent data so log it and set time limit for next send
-			if (nextMixTimeLimit == 0) {	// If this is the first send event then start at now
-				let d = new Date();
-				let now = d.getTime();		
-				nextMixTimeLimit = now;
+		} else { 				// Send mix with no upstream audio to all downstream clients
+			if (clientPackets.length != 0) {		// Only send audio if we have some to send
+				packetClassifier[clientPackets.length] = packetClassifier[clientPackets.length] + 1;
+				io.sockets.in('downstream').emit('d', {
+					"c": clientPackets,
+				});
+				packetsOut++;			// Sent data so log it and set time limit for next send
+				if (nextMixTimeLimit == 0) {	// If this is the first send event then start at now
+					let d = new Date();
+					let now = d.getTime();		
+					nextMixTimeLimit = now;
+				}
+				nextMixTimeLimit = nextMixTimeLimit + (mix.length * 1000)/SampleRate;
 			}
-			nextMixTimeLimit = nextMixTimeLimit + (mix.length * 1000)/SampleRate;
 		}
 	}
 	threadCount--;
