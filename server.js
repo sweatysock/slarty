@@ -216,6 +216,7 @@ function isTimeToMix() {	// Test if we must generate a mix regardless
 	let now = d.getTime();		
 	if ((nextMixTimeLimit != 0) && (now >= nextMixTimeLimit))  {
 		forcedMixes++;
+console.log("FORCING");
 		return true;
 	} else
 		return false;
