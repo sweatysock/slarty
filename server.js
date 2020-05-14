@@ -273,7 +273,7 @@ function generateMix () {
 				}
 				else {
 					for (let i = 0; i < newTrack.audio.length; ++i) 
-						mix[i] = (mix[i] + newTrack.audio[i]);	
+						mix[i] = (mix[i] + newTrack.packet.audio[i]);	
 					clientPackets.push( newTrack );		// Store packet of source audio 
 				}
 			}
