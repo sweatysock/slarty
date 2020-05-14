@@ -123,6 +123,26 @@ function connectUpstreamServer(server) {
 		upstreamName = server;
 		upstreamServer.emit("upstreamHi");
 	});
+
+	// Audio coming down from our upstream server. It is a mix of all the audio above and beside us
+	socket.on('x', function (packet) { // MARK  put 'd' when ready
+		enterState( upstreamState );
+		upstreamIn++;
+		// If no downstream clients ignore packet and empty upstream buffers
+		if (receiveBuffer.length == 0) { upstreamBuffer = []; oldUpstreamBuffer = []; }
+		else {
+			// TODO: Remove my audio from mix to avoid echo
+			upstreamBuffer.push(packet); 
+			if (upstreamBuffer.length > maxBufferSize) {
+				upstreamBuffer.shift();
+				overflows++;
+			}
+			packetSize = packet.audio.length;
+			enterState( genMixState );
+			generateMix();
+		}
+		enterState( idleState );
+	});
 }
 
 // socket event and audio handling area
@@ -155,26 +175,6 @@ io.sockets.on('connection', function (socket) {
 		// A super has sent us a new upstream server to connect to
 		console.log("New upstream server ",data["upstreamServer"]," from ", socket.id);
 		connectUpstreamServer(data["upstreamServer"]);
-	});
-
-	// Audio coming down from our upstream server. It is a mix of all the audio above and beside us
-	socket.on('d', function (packet) {
-		enterState( upstreamState );
-		upstreamIn++;
-		// If no downstream clients ignore packet and empty upstream buffers
-		if (receiveBuffer.length == 0) { upstreamBuffer = []; oldUpstreamBuffer = []; }
-		else {
-			// TODO: Remove my audio from mix to avoid echo
-			upstreamBuffer.push(packet); 
-			if (upstreamBuffer.length > maxBufferSize) {
-				upstreamBuffer.shift();
-				overflows++;
-			}
-			packetSize = packet.audio.length;
-			enterState( genMixState );
-			generateMix();
-		}
-		enterState( idleState );
 	});
 
 	// Audio coming up from one of our downstream clients
@@ -267,6 +267,10 @@ function generateMix () {
 		});
 	}
 	if (readyToMix) {
+receiveBuffer.forEach( b => {
+if (b.newBuf == true) {console.log("MIXING with new buffer ,");console.log(b)}
+if (b.packets.length < mixTriggerLevel) {console.log("MIXING with buffer below trigger level");console.log(b)}
+});
 		let numberOfClients = receiveBuffer.length;
 		let mix = new Array(packetSize).fill(0); 		// The mixed audio we will return to all clients
 		let clientPackets = []; 				// All client audio packets that are part of the mix
