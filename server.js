@@ -53,6 +53,8 @@ function enterState( newState ) {
 //
 var packetsIn = 0;
 var packetsOut = 0;
+var upstreamIn = 0;
+var upstreamOut = 0;
 var overflows = 0;
 var shortages = 0;
 var clientsLive = 0;
@@ -111,6 +113,7 @@ function createClientBuffer(client) {
 
 var upstreamServer = null;	// socket ID for upstream server if connected
 var upstreamName = "no upstream server";
+var packetSequence = 0;
 
 function connectUpstreamServer(server) {
 	upstreamServer = require('socket.io-client')(server);
@@ -156,6 +159,7 @@ io.sockets.on('connection', function (socket) {
 	// Audio coming down from our upstream server. It is a mix of all the audio above and beside us
 	socket.on('d', function (packet) {
 		enterState( upstreamState );
+		upstreamIn++;
 		// If no downstream clients ignore packet and empty upstream buffers
 		if (receiveBuffer.length == 0) { upstreamBuffer = []; oldUpstreamBuffer = []; }
 		else {
@@ -272,7 +276,7 @@ function generateMix () {
 					shortages++;
 				}
 				else {
-					for (let i = 0; i < newTrack.audio.length; ++i) 
+					for (let i = 0; i < newTrack.packet.audio.length; ++i) 
 						mix[i] = (mix[i] + newTrack.packet.audio[i]);	
 					clientPackets.push( newTrack );		// Store packet of source audio 
 				}
@@ -288,47 +292,50 @@ function generateMix () {
 //for (let i=0; i<30; i++)
 //	clientPackets.push( dummyTrack );
 		gain = applyAutoGain(mix, gain); 	// Apply auto gain to mix starting at the current gain level 
-		let finalMix = [];			// Final audio mix with upstream audio to send downstream
-		if (upstreamServer != null) { 		// We have an upstream server. Send it audio
-			if ((upstreamBuffer.length >= mixTriggerLevel) || (oldUpstreamBuffer.length > 0 )) { 
-				let upstreamAudio = [];				// Piece of upstream audio to mix in
-				if (upstreamBuffer == []) { 			// if no upstream audio
-					upstreamAudio = oldUpstreamBuffer;	// Use old buffer
-				} else {
-					upstreamAudio = upstreamBuffer.shift();	// Get new packet from buffer
-					oldUpstreamBuffer = upstreamAudio;	// and store it in old buffer
+		if (clientPackets.length != 0) {		// Only send audio if we have some to send
+			if (upstreamServer != null) { 		// We have an upstream server. Add to mix and send
+				let finalMix = [];			// Final audio mix with upstream audio to send downstream
+				if ((upstreamBuffer.length >= mixTriggerLevel) || (oldUpstreamBuffer.length > 0 )) { 
+					let upstreamAudio = [];				// Piece of upstream audio to mix in
+					if (upstreamBuffer == []) { 			// if no upstream audio
+						upstreamAudio = oldUpstreamBuffer;	// Use old buffer
+					} else {
+						upstreamAudio = upstreamBuffer.shift();	// Get new packet from buffer
+						oldUpstreamBuffer = upstreamAudio;	// and store it in old buffer
+					}
+					for (let i = 0; i < upstreamAudio.length; ++i) 
+						finalMix[i] = mix[i] + upstreamAudio[i];
+					upstreamGain = applyAutoGain(finalMix, upstreamGain); // Apply auto gain to final mix 
 				}
-				for (let i = 0; i < upstreamAudio.length; ++i) 
-					finalMix[i] = mix[i] + upstreamAudio[i];
-				upstreamGain = applyAutoGain(finalMix, upstreamGain); // Apply auto gain to final mix 
-			}
-			let d = new Date();
-			let now = d.getTime();
-			let packetSequence = 0;
-			upstreamServer.emit("u", {
-				"audio": mix,
-				"sequence": packetSequence,
-				"timeEmitted": now
-			});
-			io.sockets.in('downstream').volatile.emit('d', {
-				"a": finalMix,
-				"c": clientPackets,
-				"g": (gain * upstreamGain) 
-			});
-		} else { 				// Send mix with no upstream audio to all downstream clients
-			if (clientPackets.length != 0) {		// Only send audio if we have some to send
-				packetClassifier[clientPackets.length] = packetClassifier[clientPackets.length] + 1;
-				io.sockets.in('downstream').emit('d', {
-					"c": clientPackets,
+				let d = new Date();
+				let now = d.getTime();
+				upstreamServer.emit("u", {
+					"audio": finalMix,
+					"sequence": packetSequence,
+					"timeEmitted": now
 				});
-				packetsOut++;			// Sent data so log it and set time limit for next send
-				if (nextMixTimeLimit == 0) {	// If this is the first send event then start at now
-					let d = new Date();
-					let now = d.getTime();		
-					nextMixTimeLimit = now;
-				}
-				nextMixTimeLimit = nextMixTimeLimit + (mix.length * 1000)/SampleRate;
+				packetSequence++;
+				upstreamOut++;
+				io.sockets.in('downstream').emit('d', {
+					"a": finalMix,
+					"c": clientPackets,
+					"g": (gain * upstreamGain) 
+				});
+			} else {
+				io.sockets.in('downstream').emit('d', {
+					"a": mix,
+					"c": clientPackets,
+					"g": gain 
+				});
 			}
+			packetsOut++;			// Sent data so log it and set time limit for next send
+			packetClassifier[clientPackets.length] = packetClassifier[clientPackets.length] + 1;
+			if (nextMixTimeLimit == 0) {	// If this is the first send event then start at now
+				let d = new Date();
+				let now = d.getTime();		
+				nextMixTimeLimit = now;
+			}
+			nextMixTimeLimit = nextMixTimeLimit + (mix.length * 1000)/SampleRate;
 		}
 	}
 	threadCount--;
@@ -340,7 +347,7 @@ function generateMix () {
 const updateTimer = 10000;	// Frequency of updates to the console
 function printReport() {
 	console.log("Idle = ", idleState.total, " upstream = ", upstreamState.total, " downstream = ", downstreamState.total, " genMix = ", genMixState.total);
-	console.log("Clients = ",clientsLive,"  active = ", receiveBuffer.length,"In = ",packetsIn," Out = ",packetsOut," overflows = ",overflows," shortages = ",shortages," forced mixes = ",forcedMixes," threads = ",threadCount);
+	console.log("Clients = ",clientsLive,"  active = ", receiveBuffer.length,"Upstream In =",upstreamIn,"Upstream Out = ",upstreamOut,"In = ",packetsIn," Out = ",packetsOut," overflows = ",overflows," shortages = ",shortages," forced mixes = ",forcedMixes," threads = ",threadCount);
 	let cbs = [];
 	for (let c in receiveBuffer)
 		cbs.push(receiveBuffer[c].packets.length);
@@ -355,6 +362,8 @@ function printReport() {
 		"active":	receiveBuffer.length,
 		"in":		packetsIn,
 		"out":		packetsOut,
+		"upIn":		upstramIn,
+		"upOut":	upstreamOut,
 		"overflows":	overflows,
 		"shortages":	shortages,
 		"forcedMixes":	forcedMixes,
@@ -367,6 +376,8 @@ function printReport() {
 	packetClassifier.fill(0,0,30);
 	packetsIn = 0;
 	packetsOut = 0;
+	upstreamIn = 0;
+	upstreamOut = 0;
 	overflows = 0;
 	shortages = 0;
 	forcedMixes = 0;
