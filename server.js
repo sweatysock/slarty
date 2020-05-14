@@ -264,6 +264,7 @@ function generateMix () {
 		let b;
 		receiveBuffer.forEach( b => {
 			if ((b.newBuf == false) && (b.packets.length > mixTriggerLevel)) readyToMix = true;
+		});
 	}
 	if (readyToMix) {
 		let numberOfClients = receiveBuffer.length;
