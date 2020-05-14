@@ -24,6 +24,8 @@ socketIO.on('connect', function (socket) {
 		document.getElementById("cbs").innerHTML = data["cbs"]
 		document.getElementById("pacClass").innerHTML = data["pacClass"]
 		document.getElementById("upServer").innerHTML = data["upServer"]
+		document.getElementById("upIn").innerHTML = data["upIn"]
+		document.getElementById("upOut").innerHTML = data["upOut"]
 	});
 });
 
