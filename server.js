@@ -127,6 +127,14 @@ io.sockets.on('connection', function (socket) {
 		// There can only be one upstream server
 		upstreamServer = socket.id; 
 	});
+
+	socket.on('superHi', function (data) {
+		// A downstream server or client is registering with us
+		// Add the downstream node to the group for notifications
+		console.log("New super ", socket.id);
+		socket.join('supers');
+	});
+
 	socket.on('upstreamHi', function (data) {
 		// A downstream server or client is registering with us
 		// Add the downstream node to the group for notifications
@@ -316,11 +324,28 @@ const updateTimer = 10000;	// Frequency of updates to the console
 function printReport() {
 	console.log("Idle = ", idleState.total, " upstream = ", upstreamState.total, " downstream = ", downstreamState.total, " genMix = ", genMixState.total);
 	console.log("Clients = ",clientsLive,"  active = ", receiveBuffer.length,"In = ",packetsIn," Out = ",packetsOut," overflows = ",overflows," shortages = ",shortages," forced mixes = ",forcedMixes," threads = ",threadCount);
-	let s = "Client buffer lengths: ";
-	for (c in receiveBuffer)
-		s = s + receiveBuffer[c].packets.length +" ";
-	console.log(s);
+	let cbs = [];
+	for (let c in receiveBuffer)
+		cbs.push(receiveBuffer[c].packets.length);
+	console.log("Client buffer lengths: ",cbs);
 	console.log(packetClassifier);
+	io.sockets.in('supers').emit('s',{
+		"idle":		idleState.total,
+		"upstream":	upstreamState.total,
+		"downstream":	downstreamState.total,
+		"genMix":	genMixState.total,
+		"clients":	clientsLive,
+		"active":	receiveBuffer.length,
+		"in":		packetsIn,
+		"out":		packetsOut,
+		"overflows":	overflows,
+		"shortages":	shortages,
+		"forcedMixes":	forcedMixes,
+		"threads":	threadCount,
+		"cbs":		cbs,
+		"pacClass":	packetClassifier
+	});
+
 	packetClassifier.fill(0,0,30);
 	packetsIn = 0;
 	packetsOut = 0;

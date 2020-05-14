@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+	<meta charset='utf-8'>
+	<title>Audence guts</title>
+	<script type="text/javascript" src="./js/jquery-2.1.3.min.js"></script>
+	<script type="text/javascript" src="./js/socket.io.js"></script>
+	<script type="text/javascript" src="./js/slartyguts.js"></script>
+
+	<link rel="stylesheet" href="./css/main.css">
+</head>
+
+<body style="background-color:#000000; font-family: Impact, Charcoal, sans-serif;font-size: 200%;">
+	<div id="main" style="position:fixed; top:2%; left:1%; width:98%; height:96%; background-color: #333333">
+		<div id="button area" style="position:absolute; top:1%; left:1%;">
+			<button id="startBtn">Do something</button>
+		</div>
+
+		<div id="bigPicture" style="position:absolute; top:10%; left:10%; width:80%; height:80%; ">
+			<img id="system" style="position:absolute; width:100%; bottom:0%; right:10%; height:100%; object-fit: scale-down; " src="images/system.png">
+		</div>
+		<div id="idle" style="text-align: center;color: #FFC000;position:absolute; top:19%; left:55%;">idle</div>
+		<div id="upstream" style="text-align: center;color: #333333;position:absolute; top:20%; left:44%;">upstream</div>
+		<div id="downstream" style="text-align: center;color: #333333;position:absolute; top:51%; left:28%;">downstream</div>
+		<div id="genMix" style="text-align: center;color: #333333;position:absolute; top:40%; left:43%;">genMix</div>
+		<div id="clients" style="text-align: center;color: #FFC000;position:absolute; top:76%; left:29%;">clients</div>
+		<div id="active" style="text-align: center;color: #FFC000;position:absolute; top:66%; left:29%;">active</div>
+		<div id="in" style="text-align: center;color: #FFC000;position:absolute; top:46%; left:43%;">in</div>
+		<div id="out" style="text-align: center;color: #FFC000;position:absolute; top:32%; left:36%;">out</div>
+		<div id="overflows" style="text-align: center;color: #FFC000;position:absolute; top:50%; left:58%;">overflows</div>
+		<div id="shortages" style="text-align: center;color: #FFC000;position:absolute; top:88%; left:58%;">shortages</div>
+		<div id="forcedMixes" style="text-align: center;color: #FFC000;position:absolute; top:42%; left:55%;">forced</div>
+		<div id="threads" style="text-align: center;color: #FFC000;position:absolute; top:30%; left:60%;">threads</div>
+		<div id="cbs" style="text-align: center;color: #FFC000;position:absolute; top:60%; left:58%;">cbs</div>
+		<div id="pacClass" style="text-align: center;color: #FFC000;position:absolute; top:75%; left:58%;">pacClass</div>
+
+<!--
+		<div id="monitor" style="position:absolute; bottom:0%; right:0%; width:50%; height:50%; background-color: #222222">
+			<div id="Trace" style="position:absolute; top:2%; left:2%; width:86%; height:96%; color: #00ff00;">
+				Trace text
+			</div>
+			<div id="UpLED" style="position:absolute; bottom:21%; right:1%; width:10%; height:10%; ">
+				<div style="position:absolute; bottom:5%; right:5%; width:90%; height:90%; ">
+					<img id="UpStatus" style="position:absolute; width:100%; bottom:0%; right:0%; height:100%;object-fit: scale-down; filter:brightness(35%)" src="images/LEDRed.png">
+				</div>
+				<img style="position:absolute; bottom:0%; right:0%; width:100%; height:100%;object-fit: scale-down;" src="images/LEDRing.png">
+			</div>
+			<div id="DownLED" style="position:absolute; bottom:11%; right:1%; width:10%; height:10%; ">
+				<div style="position:absolute; bottom:5%; right:5%; width:90%; height:90%; ">
+					<img id="DownStatus" style="position:absolute; width:100%; bottom:0%; right:0%; height:100%;object-fit: scale-down;" src="images/LEDRed.png">
+				</div>
+				<img style="position:absolute; bottom:0%; right:0%; width:100%; height:100%;object-fit: scale-down;" src="images/LEDRing.png">
+			</div>
+			<div id="GeneralLED" style="position:absolute; bottom:1%; right:1%; width:10%; height:10%; ">
+				<div style="position:absolute; bottom:5%; right:5%; width:90%; height:90%; ">
+					<img id="GeneralStatus" style="position:absolute; width:100%; bottom:0%; right:0%; height:100%;object-fit: scale-down;" src="images/LEDRed.png">
+				</div>
+				<img style="position:absolute; bottom:0%; right:0%; width:100%; height:100%;object-fit: scale-down;" src="images/LEDRing.png">
+			</div>
+		</div>
+-->
+	</div>
+</body>
+
+</html>
+

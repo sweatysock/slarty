@@ -87,7 +87,7 @@ socketIO.on('connect', function (socket) {
 			let mix = [];	// Build up a mix of client audio 
 			let clients = data.c; 
 			for (let c=0; c < clients.length; c++) {
-				if (clients[c].clientID != socketIO.id) {
+				if (clients[c].clientID == socketIO.id) {
 					let a = clients[c].packet.audio;
 					timeGap += now - clients[c].packet.timeEmitted;
 					if (mix.length == 0)
@@ -181,8 +181,41 @@ function startTalking() {
 					outData[i] = audio[i];
 				enterState( idleState );
 			}
-			liveSource.connect(node);
-			node.connect(context.destination);
+
+			let lowFreq = 100;					// Bandpass to clean up Mic
+			let highFreq = 4000;
+			let geometricMean = Math.sqrt(lowFreq * highFreq);
+			var micFilter = context.createBiquadFilter();
+			micFilter.type = 'bandpass';
+			micFilter.frequency.value = geometricMean;
+			micFilter.Q.value = geometricMean / (highFreq - lowFreq);
+			
+			var splitter = context.createChannelSplitter(2);	// Split signal for echo cancelling
+
+			var echoDelay = context.createDelay(5);			// Delay to match speaker echo
+			echoDelay.delayTime.value = 0.00079
+
+			lowFreq = 300;						// Echo filter to match speaker+mic
+			highFreq = 5000;
+			geometricMean = Math.sqrt(lowFreq * highFreq);
+			var echoFilter = context.createBiquadFilter();
+			echoFilter.type = 'bandpass';
+			echoFilter.frequency.value = geometricMean;
+			echoFilter.Q.value = geometricMean / (highFreq - lowFreq);
+			
+			var gainNode = context.createGain();			// Cancelling requires inverting signal
+			gainNode.gain.value = -1;
+
+			liveSource.connect(micFilter);				// Mic goes to micFilter
+			micFilter.connect(node);				// micFilter goes to our processor
+			node.connect(splitter);					// our processor feeds to a splitter
+			splitter.connect(echoDelay,0);				// one output goes to feedback loop
+			splitter.connect(context.destination,0);		// other output goes to speaker
+			echoDelay.connect(echoFilter);				// feedback echo goes to echo filter
+			echoFilter.connect(gainNode);				// echo filter goes to inverter
+			gainNode.connect(micFilter);				// inverter feeds back into micFilter
+			gainNode.gain.value = 0;				// Start with feedback loop off
+
 		}, function (err) { console.log(err); });
 	} else {
 		alert('getUserMedia() is not supported in your browser');
@@ -242,3 +275,5 @@ function magicKernel( x ) {
   return 0.75 - ( x * x );
 }
 
+enterState( idleState );
+console.log("Starting V2.0");
