@@ -362,7 +362,7 @@ function printReport() {
 		"active":	receiveBuffer.length,
 		"in":		packetsIn,
 		"out":		packetsOut,
-		"upIn":		upstramIn,
+		"upIn":		upstreamIn,
 		"upOut":	upstreamOut,
 		"overflows":	overflows,
 		"shortages":	shortages,
