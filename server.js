@@ -109,11 +109,13 @@ function createClientBuffer(client) {
 }
 
 var upstreamServer = null;	// socket ID for upstream server if connected
+var upstreamName = "no upstream server";
 
 function connectUpstreamServer(server) {
 	upstreamServer = require('socket.io-client')(server);
 	upstreamServer.on('connect', function(socket){
 		console.log("upstream server connected ",server);
+		upstreamName = server;
 		upstreamServer.emit("upstreamHi");
 	});
 }
@@ -269,8 +271,8 @@ function generateMix () {
 					shortages++;
 				}
 				else {
-//					for (let i = 0; i < newTrack.audio.length; ++i) 
-//						mix[i] = (mix[i] + newTrack.audio[i]);	
+					for (let i = 0; i < newTrack.audio.length; ++i) 
+						mix[i] = (mix[i] + newTrack.audio[i]);	
 					clientPackets.push( newTrack );		// Store packet of source audio 
 				}
 			}
@@ -283,30 +285,37 @@ function generateMix () {
 //dummyTrack.clientID = "DUMMY";
 //dummyTrack.packet = packet;
 //for (let i=0; i<30; i++)
-	//clientPackets.push( dummyTrack );
-//		gain = applyAutoGain(mix, gain); 	// Apply auto gain to mix starting at the current gain level 
-//		let finalMix = [];			// Final audio mix with upstream audio to send downstream
-//		if (upstreamServer != null) { 		// We have an upstream server. Send it audio
-//			if ((upstreamBuffer.length >= mixTriggerLevel) || (oldUpstreamBuffer.length > 0 )) { 
-//				let upstreamAudio = [];				// Piece of upstream audio to mix in
-//				if (upstreamBuffer == []) { 			// if no upstream audio
-//					upstreamAudio = oldUpstreamBuffer;	// Use old buffer
-//				} else {
-//					upstreamAudio = upstreamBuffer.shift();	// Get new packet from buffer
-//					oldUpstreamBuffer = upstreamAudio;	// and store it in old buffer
-//				}
-//				for (let i = 0; i < upstreamAudio.length; ++i) 
-//					finalMix[i] = mix[i] + upstreamAudio[i];
-//				upstreamGain = applyAutoGain(finalMix, upstreamGain); // Apply auto gain to final mix 
-//			}
-//		}
-//		if (finalMix.length > 0) {	// Send final mix and source audio tracks to all downstream clients
-//			upstreamServer.volatile.emit("u", mix); // THIS MAY NOT WORK... try io.sockets.socket(upstreamServer).emit
-//			io.sockets.in('downstream').volatile.emit('d', {
-//					"a": finalMix,
-//					"c": clientAudio,
-//					"g": (gain * upstreamGain) });
-//		} else { 				// Send mix with no upstream audio to all downstream clients
+//	clientPackets.push( dummyTrack );
+		gain = applyAutoGain(mix, gain); 	// Apply auto gain to mix starting at the current gain level 
+		let finalMix = [];			// Final audio mix with upstream audio to send downstream
+		if (upstreamServer != null) { 		// We have an upstream server. Send it audio
+			if ((upstreamBuffer.length >= mixTriggerLevel) || (oldUpstreamBuffer.length > 0 )) { 
+				let upstreamAudio = [];				// Piece of upstream audio to mix in
+				if (upstreamBuffer == []) { 			// if no upstream audio
+					upstreamAudio = oldUpstreamBuffer;	// Use old buffer
+				} else {
+					upstreamAudio = upstreamBuffer.shift();	// Get new packet from buffer
+					oldUpstreamBuffer = upstreamAudio;	// and store it in old buffer
+				}
+				for (let i = 0; i < upstreamAudio.length; ++i) 
+					finalMix[i] = mix[i] + upstreamAudio[i];
+				upstreamGain = applyAutoGain(finalMix, upstreamGain); // Apply auto gain to final mix 
+			}
+		}
+		if (finalMix.length > 0) {	// Send final mix and source audio tracks to all downstream clients
+			let d = new Date();
+			let now = d.getTime();
+			let packetSequence = 0;
+			upstreamServer.emit("u", {
+				"audio": mix,
+				"sequence": packetSequence,
+				"timeEmitted": now
+			});
+			io.sockets.in('downstream').volatile.emit('d', {
+					"a": finalMix,
+					"c": clientAudio,
+					"g": (gain * upstreamGain) });
+		} else { 				// Send mix with no upstream audio to all downstream clients
 	
 		if (clientPackets.length != 0) {		// Only send audio if we have some to send
 			packetClassifier[clientPackets.length] = packetClassifier[clientPackets.length] + 1;
@@ -351,7 +360,8 @@ function printReport() {
 		"forcedMixes":	forcedMixes,
 		"threads":	threadCount,
 		"cbs":		cbs,
-		"pacClass":	packetClassifier
+		"pacClass":	packetClassifier,
+		"upServer":	upstreamName
 	});
 
 	packetClassifier.fill(0,0,30);

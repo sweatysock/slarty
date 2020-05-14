@@ -23,6 +23,7 @@ socketIO.on('connect', function (socket) {
 		document.getElementById("threads").innerHTML = data["threads"]
 		document.getElementById("cbs").innerHTML = data["cbs"]
 		document.getElementById("pacClass").innerHTML = data["pacClass"]
+		document.getElementById("upServer").innerHTML = data["upServer"]
 	});
 });
 
@@ -39,7 +40,6 @@ document.addEventListener('DOMContentLoaded', function(event){
 	upServer.addEventListener("keypress", (e) => {
 		if (e.which === 13) {
 			console.log("new server is ",upServer.innerHTML);
-	socketIO.emit("superHi"); 	// Say hi to the server so it adds us to its list of supervisors
 			socketIO.emit("nus",
 			{
 				"upstreamServer": upServer.innerHTML,
