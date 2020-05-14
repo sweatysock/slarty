@@ -214,9 +214,10 @@ io.sockets.on('connection', function (socket) {
 function isTimeToMix() {	// Test if we must generate a mix regardless
 	let d = new Date();
 	let now = d.getTime();		
-	if ((nextMixTimeLimit != 0) && (now >= nextMixTimeLimit)) 
+	if ((nextMixTimeLimit != 0) && (now >= nextMixTimeLimit))  {
+		forcedMixes++;
 		return true;
-	else
+	} else
 		return false;
 }
 
@@ -345,7 +346,7 @@ if (b.packets.length < mixTriggerLevel) {console.log("MIXING with buffer below t
 				let now = d.getTime();		
 				nextMixTimeLimit = now;
 			}
-			nextMixTimeLimit = nextMixTimeLimit + (mix.length * 1000)/SampleRate;
+			nextMixTimeLimit = nextMixTimeLimit + (mix.length * 1010)/SampleRate;
 		}
 	}
 	threadCount--;
@@ -357,7 +358,7 @@ if (b.packets.length < mixTriggerLevel) {console.log("MIXING with buffer below t
 const updateTimer = 10000;	// Frequency of updates to the console
 function printReport() {
 	console.log("Idle = ", idleState.total, " upstream = ", upstreamState.total, " downstream = ", downstreamState.total, " genMix = ", genMixState.total);
-	console.log("Clients = ",clientsLive,"  active = ", receiveBuffer.length,"Upstream In =",upstreamIn,"Upstream Out = ",upstreamOut,"In = ",packetsIn," Out = ",packetsOut," overflows = ",overflows," shortages = ",shortages," forced mixes = ",forcedMixes," threads = ",threadCount);
+	console.log("Clients = ",clientsLive,"  active = ", receiveBuffer.length,"Upstream In =",upstreamIn,"Upstream Out = ",upstreamOut,"In = ",packetsIn," Out = ",packetsOut," overflows = ",overflows," shortages = ",shortages," forced mixes = ",forcedMixes," threads = ",threadCount," packetSize = ",packetSize);
 	let cbs = [];
 	for (let c in receiveBuffer)
 		cbs.push(receiveBuffer[c].packets.length);
