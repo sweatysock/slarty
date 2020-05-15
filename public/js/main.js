@@ -56,6 +56,7 @@ const updateTimer = 10000;
 function printReport() {
 	console.log("Idle = ", idleState.total, " data in = ", dataInState.total, " audio in/out = ", audioInOutState.total);
 	console.log("Sent = ",packetsOut," Heard = ",packetsIn," speaker buffer size ",spkrBuffer.length," mic buffer size ", micBuffer.length," overflows = ",overflows," shortages = ",shortages);
+if (packetsIn > (packetsOut +200)) tracing=20;
 	packetsIn = 0;
 	packetsOut = 0;
 	overflows = 0;
@@ -65,7 +66,7 @@ function printReport() {
 setInterval(printReport, updateTimer);
 
 
-
+var tracing = 0;
 // Network code
 //
 var socketIO = io();
@@ -76,6 +77,12 @@ socketIO.on('connect', function (socket) {
 
 	// Data coming down from upstream server: Group mix plus separate member audios
 	socketIO.on('d', function (data) { 
+if (tracing > 0) {
+	console.log("TRACING socket & data");
+	console.log(socket);
+	console.log(data);
+	tracing--;
+}
 		enterState( dataInState );
 		packetsIn++;
 		let now = new Date().getTime();
