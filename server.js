@@ -59,7 +59,6 @@ var overflows = 0;
 var shortages = 0;
 var clientsLive = 0;
 var forcedMixes = 0;
-var threadCount = 0;
 var packetClassifier = [];
 packetClassifier.fill(0,0,30);
 
@@ -180,7 +179,6 @@ io.sockets.on('connection', function (socket) {
 	// Audio coming up from one of our downstream clients
 	socket.on('u', function (data) {
 		enterState( downstreamState );
-		threadCount++;
 		let client = socket.id;
 		let packet = {audio: data["audio"], sequence: data["sequence"], timeEmitted: data["timeEmitted"]};
 		let b = 0;
@@ -347,7 +345,6 @@ function generateMix () {
 			nextMixTimeLimit = nextMixTimeLimit + (mix.length * 1010)/SampleRate;
 		}
 	}
-	threadCount--;
 }
 
 
@@ -356,7 +353,7 @@ function generateMix () {
 const updateTimer = 10000;	// Frequency of updates to the console
 function printReport() {
 	console.log("Idle = ", idleState.total, " upstream = ", upstreamState.total, " downstream = ", downstreamState.total, " genMix = ", genMixState.total);
-	console.log("Clients = ",clientsLive,"  active = ", receiveBuffer.length,"Upstream In =",upstreamIn,"Upstream Out = ",upstreamOut,"In = ",packetsIn," Out = ",packetsOut," overflows = ",overflows," shortages = ",shortages," forced mixes = ",forcedMixes," threads = ",threadCount," packetSize = ",packetSize);
+	console.log("Clients = ",clientsLive,"  active = ", receiveBuffer.length,"Upstream In =",upstreamIn,"Upstream Out = ",upstreamOut,"In = ",packetsIn," Out = ",packetsOut," overflows = ",overflows," shortages = ",shortages," forced mixes = ",forcedMixes);
 	let cbs = [];
 	for (let c in receiveBuffer)
 		cbs.push(receiveBuffer[c].packets.length);
@@ -376,7 +373,6 @@ function printReport() {
 		"overflows":	overflows,
 		"shortages":	shortages,
 		"forcedMixes":	forcedMixes,
-		"threads":	threadCount,
 		"cbs":		cbs,
 		"pacClass":	packetClassifier,
 		"upServer":	upstreamName

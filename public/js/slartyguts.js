@@ -20,7 +20,6 @@ socketIO.on('connect', function (socket) {
 		document.getElementById("overflows").innerHTML = data["overflows"]
 		document.getElementById("shortages").innerHTML = data["shortages"]
 		document.getElementById("forcedMixes").innerHTML = data["forcedMixes"]
-		document.getElementById("threads").innerHTML = data["threads"]
 		document.getElementById("cbs").innerHTML = data["cbs"]
 		document.getElementById("pacClass").innerHTML = data["pacClass"]
 		document.getElementById("upServer").innerHTML = data["upServer"]
