@@ -33,9 +33,9 @@ function stateTimer() {
 var idleState = new stateTimer(); 	idleState.name = "Idle";
 var dataInState = new stateTimer();	dataInState.name = "Data In";
 var audioInOutState = new stateTimer();	audioInOutState.name = "Audio In/Out";
-var currentState = idleState;		currentState.start = new Date().getTime;
+var currentState = idleState;		currentState.start = new Date().getTime();
 function enterState( newState ) {
-	let now = new Date().getTime;
+	let now = new Date().getTime();
 	currentState.total += now - currentState.start;
 	newState.start = now;
 	currentState = newState;
@@ -78,7 +78,7 @@ socketIO.on('connect', function (socket) {
 	socketIO.on('d', function (data) { 
 		enterState( dataInState );
 		packetsIn++;
-		let now = new Date().getTime;
+		let now = new Date().getTime();
 		if (micAccessAllowed) {	// Need access to audio before outputing
 			let mix = [];	// Build up a mix of client audio 
 			let clients = data.c; 
@@ -155,7 +155,7 @@ function startTalking() {
 					micBuffer.push(...micAudio);
 					if (micBuffer.length > PacketSize) {
 						let outAudio = micBuffer.splice(0, PacketSize);
-						let now = new Date().getTime;
+						let now = new Date().getTime();
 						socketIO.emit("u",
 						{
 							"audio": outAudio,
