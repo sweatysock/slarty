@@ -124,7 +124,7 @@ function connectUpstreamServer(server) {
 	});
 
 	// Audio coming down from our upstream server. It is a mix of all the audio above and beside us
-	socket.on('x', function (packet) { // MARK  put 'd' when ready
+	upstreamServer.on('x', function (packet) { // MARK  put 'd' when ready
 		enterState( upstreamState );
 		upstreamIn++;
 		// If no downstream clients ignore packet and empty upstream buffers
