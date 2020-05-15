@@ -33,12 +33,9 @@ function stateTimer() {
 var idleState = new stateTimer(); 	idleState.name = "Idle";
 var dataInState = new stateTimer();	dataInState.name = "Data In";
 var audioInOutState = new stateTimer();	audioInOutState.name = "Audio In/Out";
-let d = new Date();			// Set the state at start to Idle
-let t = d.getTime();			// and manually set start time
-var currentState = idleState;		currentState.start = t;
+var currentState = idleState;		currentState.start = new Date().getTime;
 function enterState( newState ) {
-	let d = new Date();
-	let now = d.getTime();
+	let now = new Date().getTime;
 	currentState.total += now - currentState.start;
 	newState.start = now;
 	currentState = newState;
@@ -81,8 +78,7 @@ socketIO.on('connect', function (socket) {
 	socketIO.on('d', function (data) { 
 		enterState( dataInState );
 		packetsIn++;
-		let d = new Date();
-		let now = d.getTime();
+		let now = new Date().getTime;
 		if (micAccessAllowed) {	// Need access to audio before outputing
 			let mix = [];	// Build up a mix of client audio 
 			let clients = data.c; 
@@ -142,6 +138,7 @@ function startTalking() {
 		navigator.getUserMedia({ audio: constraints }, function (stream) {
 			micAccessAllowed = true;
 			var liveSource = context.createMediaStreamSource(stream);
+			var node = undefined;
 			if (!context.createScriptProcessor) {
 				node = context.createJavaScriptNode(chunkSize, 1, 1);
 			} else {
@@ -158,8 +155,7 @@ function startTalking() {
 					micBuffer.push(...audio);
 					if (micBuffer.length > PacketSize) {
 						audio = micBuffer.splice(0, PacketSize);
-						let d = new Date();
-						let now = d.getTime();
+						let now = new Date().getTime;
 						socketIO.emit("u",
 						{
 							"audio": audio,

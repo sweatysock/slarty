@@ -124,19 +124,27 @@ function connectUpstreamServer(server) {
 	});
 
 	// Audio coming down from our upstream server. It is a mix of all the audio above and beside us
-	upstreamServer.on('x', function (packet) { // MARK  put 'd' when ready
+	upstreamServer.on('d', function (packet) { 
 		enterState( upstreamState );
 		upstreamIn++;
 		// If no downstream clients ignore packet and empty upstream buffers
 		if (receiveBuffer.length == 0) { upstreamBuffer = []; oldUpstreamBuffer = []; }
-		else {
-			// TODO: Remove my audio from mix to avoid echo
-			upstreamBuffer.push(packet); 
+		else {					// Adding upstream audio to upstream buffer
+			let mix = packet.a;		// First need to subtract our audio from mix
+			let gain = packet.g;		// Extract the mix and gain setting used
+			let clients = packet.c;		// Then find out audio in the client audios
+			let ourAudio = [];		// Our audio, if found, will be here
+			clients.forEach( c => { if ( c.clientID == upstreamServer.id ) ourAudio = c.audio; });
+			if (ourAudio.length > 0) {	// Subtract our gain adjusted audio from mix
+				for (let i=0; i < ourAudio.length; i++) {
+					mix[i] -= ourAudio[i] * gain;	
+				}
+			}
+			upstreamBuffer.push(mix); 	// Modified mix is buffered as a packet
 			if (upstreamBuffer.length > maxBufferSize) {
 				upstreamBuffer.shift();
 				overflows++;
 			}
-			packetSize = packet.audio.length;
 			enterState( genMixState );
 			generateMix();
 		}
@@ -181,7 +189,6 @@ io.sockets.on('connection', function (socket) {
 		enterState( downstreamState );
 		let client = socket.id;
 		let packet = {audio: data["audio"], sequence: data["sequence"], timeEmitted: data["timeEmitted"]};
-		let b = 0;
 		let buffer = null;
 		packetSize = packet.audio.length;	// Need to know how much audio we are processing
 		if (receiveBuffer.length == 0) {	// First client, so create buffer right now
@@ -261,7 +268,7 @@ function generateMix () {
 	let numberOfClients = receiveBuffer.length;
 	if (isTimeToMix()) readyToMix = true;
 	else {								// It isn't time to mix. Is there enough to mix anyway?
-		let b; let newBufs = 0; let bigBufs = 0;		// Very explicit logic because this has caused 
+		let newBufs = 0; let bigBufs = 0;		// Very explicit logic because this has caused 
 		receiveBuffer.forEach( b => {				// a lot of trouble!
 			if (b.newBuf == true) newBufs++;
 			if (b.packets.length > mixTriggerLevel) bigBufs++;
