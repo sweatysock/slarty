@@ -148,17 +148,17 @@ function startTalking() {
 				enterState( audioInOutState );
 				var inData = e.inputBuffer.getChannelData(0);
 				var outData = e.outputBuffer.getChannelData(0);
-				let audio = [];
+				let micAudio = [];
 				if (socketConnected) {		// Mic audio can be sent to server
-					audio = downSample(inData, soundcardSampleRate, SampleRate);
-					resampledChunkSize = audio.length;
-					micBuffer.push(...audio);
+					micAudio = downSample(inData, soundcardSampleRate, SampleRate);
+					resampledChunkSize = micAudio.length;
+					micBuffer.push(...micAudio);
 					if (micBuffer.length > PacketSize) {
-						audio = micBuffer.splice(0, PacketSize);
+						let outAudio = micBuffer.splice(0, PacketSize);
 						let now = new Date().getTime;
 						socketIO.emit("u",
 						{
-							"audio": audio,
+							"audio": outAudio,
 							"sequence": packetSequence,
 							"timeEmitted": now
 						});
@@ -166,15 +166,16 @@ function startTalking() {
 						packetSequence++;
 					}
 				}
+				let inAudio = [];
 				if (spkrBuffer.length > resampledChunkSize) {	// Server audio can be sent to speaker
-					audio = spkrBuffer.splice(0,resampledChunkSize);
+					inAudio = spkrBuffer.splice(0,resampledChunkSize);
 				} else {
-					audio.fill(0,0,(resampledChunkSize-1));
+					inAudio = new Array(resampledChunkSize).fill(0);
 					shortages++;
 				}
-				audio = upSample(audio, SampleRate, soundcardSampleRate);
-				for (let i in audio) 
-					outData[i] = audio[i];
+				let spkrAudio = upSample(inAudio, SampleRate, soundcardSampleRate);
+				for (let i in outData) 
+					outData[i] = spkrAudio[i];
 				enterState( idleState );
 			}
 
