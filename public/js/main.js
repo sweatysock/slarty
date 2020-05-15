@@ -78,8 +78,8 @@ socketIO.on('connect', function (socket) {
 	// Data coming down from upstream server: Group mix plus separate member audios
 	socketIO.on('d', function (data) { 
 if (tracing > 0) {
-	console.log("TRACING socket & data");
-	console.log(socket);
+	console.log("TRACING socket & data for ID; ",socketIO.id);
+	console.log(socketIO);
 	console.log(data);
 	tracing--;
 }
