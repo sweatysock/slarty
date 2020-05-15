@@ -136,6 +136,7 @@ function connectUpstreamServer(server) {
 			let ourAudio = [];		// Our audio, if found, will be here
 			clients.forEach( c => { if ( c.clientID == upstreamServer.id ) ourAudio = c.audio;
 console.log("c.clientID = ",c.clientID," upstreamServer.id = ",upstreamServer.id); });
+console.log(ourAudio);
 			if (ourAudio != []) {		// Subtract our gain adjusted audio from mix
 				for (let i=0; i < ourAudio.length; i++) {
 					mix[i] -= ourAudio[i] * gain;	
