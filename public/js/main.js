@@ -56,7 +56,6 @@ const updateTimer = 10000;
 function printReport() {
 	console.log("Idle = ", idleState.total, " data in = ", dataInState.total, " audio in/out = ", audioInOutState.total);
 	console.log("Sent = ",packetsOut," Heard = ",packetsIn," speaker buffer size ",spkrBuffer.length," mic buffer size ", micBuffer.length," overflows = ",overflows," shortages = ",shortages);
-if (packetsIn > (packetsOut +200)) tracing=20;
 	packetsIn = 0;
 	packetsOut = 0;
 	overflows = 0;
@@ -66,7 +65,6 @@ if (packetsIn > (packetsOut +200)) tracing=20;
 setInterval(printReport, updateTimer);
 
 
-var tracing = 0;
 // Network code
 //
 var socketIO = io();
@@ -74,43 +72,37 @@ socketIO.on('connect', function (socket) {
 	console.log('socket connected!');
 	socketConnected = true;
 	socketIO.emit("upstreamHi"); 	// Say hi to the server - we consider it upstream 
+});
 
-	// Data coming down from upstream server: Group mix plus separate member audios
-	socketIO.on('d', function (data) { 
-if (tracing > 0) {
-	console.log("TRACING socket & data for ID; ",socketIO.id);
-	console.log(socketIO);
-	console.log(data);
-	tracing--;
-}
-		enterState( dataInState );
-		packetsIn++;
-		let now = new Date().getTime();
-		if (micAccessAllowed) {	// Need access to audio before outputing
-			let mix = [];	// Build up a mix of client audio 
-			let clients = data.c; 
-			for (let c=0; c < clients.length; c++) {
-				if (clients[c].clientID != socketIO.id) {
-					let a = clients[c].packet.audio;
-					timeGap += now - clients[c].packet.timeEmitted;
-					if (mix.length == 0)
-						for (let i=0; i < a.length; i++)
-							mix[i] = a[i];
-	  				else
-		  				for (let i=0; i < a.length; i++)
-							mix[i] += a[i];
-				}
-			}
-			if (mix.length != 0) {
-				spkrBuffer.push(...mix);
-				if (spkrBuffer.length > maxBuffSize) {
-					spkrBuffer.splice(0, (spkrBuffer.length-maxBuffSize)); 	
-					overflows++;
-				}
+// Data coming down from upstream server: Group mix plus separate member audios
+socketIO.on('d', function (data) { 
+	enterState( dataInState );
+	packetsIn++;
+	let now = new Date().getTime();
+	if (micAccessAllowed) {	// Need access to audio before outputing
+		let mix = [];	// Build up a mix of client audio 
+		let clients = data.c; 
+		for (let c=0; c < clients.length; c++) {
+			if (clients[c].clientID != socketIO.id) {
+				let a = clients[c].packet.audio;
+				timeGap += now - clients[c].packet.timeEmitted;
+				if (mix.length == 0)
+					for (let i=0; i < a.length; i++)
+						mix[i] = a[i];
+  				else
+	  				for (let i=0; i < a.length; i++)
+						mix[i] += a[i];
 			}
 		}
-		enterState( idleState );
-	});
+		if (mix.length != 0) {
+			spkrBuffer.push(...mix);
+			if (spkrBuffer.length > maxBuffSize) {
+				spkrBuffer.splice(0, (spkrBuffer.length-maxBuffSize)); 	
+				overflows++;
+			}
+		}
+	}
+	enterState( idleState );
 });
 
 socketIO.on('disconnect', function () {

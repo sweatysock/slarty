@@ -134,11 +134,7 @@ function connectUpstreamServer(server) {
 			let gain = packet.g;		// Extract the mix and gain setting used
 			let clients = packet.c;		// Then find out audio in the client audios
 			let ourAudio = [];		// Our audio, if found, will be here
-			clients.forEach( c => { if ( c.clientID == upstreamServer.id ) ourAudio = c.audio;
-console.log("c.audio = ",c.audio);
-console.log(c);
-console.log("c.clientID = ",c.clientID," upstreamServer.id = ",upstreamServer.id); });
-console.log(ourAudio);
+			clients.forEach( c => { if ( c.clientID == upstreamServer.id ) ourAudio = c.packet.audio;
 			if (ourAudio != []) {		// Subtract our gain adjusted audio from mix
 				for (let i=0; i < ourAudio.length; i++) {
 					mix[i] -= ourAudio[i] * gain;	
