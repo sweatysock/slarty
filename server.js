@@ -38,12 +38,9 @@ var idleState = new stateTimer(); 	idleState.name = "Idle";
 var upstreamState = new stateTimer();	upstreamState.name = "Upstream";
 var downstreamState = new stateTimer();	downstreamState.name = "Downstream";
 var genMixState = new stateTimer();	genMixState.name = "Generate Mix";
-let d = new Date();			// Set the state at start to Idle
-let t = d.getTime();			// and manually set start time
-var currentState = idleState;		currentState.start = t;
+var currentState = idleState;		currentState.start = new Date().getTime();
 function enterState( newState ) {
-	let d = new Date();
-	let now = d.getTime();
+	let now = new Date().getTime();
 	currentState.total += now - currentState.start;
 	newState.start = now;
 	currentState = newState;
@@ -217,8 +214,7 @@ io.sockets.on('connection', function (socket) {
 //
 //
 function isTimeToMix() {	// Test if we must generate a mix regardless
-	let d = new Date();
-	let now = d.getTime();		
+	let now = new Date().getTime();
 	if ((nextMixTimeLimit != 0) && (now >= nextMixTimeLimit))  {
 		forcedMixes++;
 		return true;
@@ -306,22 +302,24 @@ function generateMix () {
 //for (let i=0; i<30; i++)
 //	clientPackets.push( dummyTrack );
 		gain = applyAutoGain(mix, gain); 	// Apply auto gain to mix starting at the current gain level 
-		if (clientPackets.length != 0) {				// Only send audio if we have some to send
-			if ((upstreamBuffer.length >= mixTriggerLevel) 		// If there is upstream audio, add to mix
-					|| (oldUpstreamBuffer.length > 0 )) { 	
-				let finalMix = [];				// Final audio mix incl. upstream audio 
-				let upstreamAudio = [];				// Piece of upstream audio to mix in
-				if (upstreamBuffer.length == 0) { 		// if no upstream audio
-					upstreamAudio = oldUpstreamBuffer;	// Use old buffer
+		if (clientPackets.length != 0) {		// Only send audio if we have some to send
+			if (upstreamServer != null) { 		// We have an upstream server. Add to mix and send
+				let finalMix = [];			// Final audio mix with upstream audio to send downstream
+				if ((upstreamBuffer.length >= mixTriggerLevel) || (oldUpstreamBuffer.length > 0 )) { 
+					let upstreamAudio = [];				// Piece of upstream audio to mix in
+					if (upstreamBuffer.length == 0) { 		// if no upstream audio
+						upstreamAudio = oldUpstreamBuffer;	// Use old buffer
+					} else {
+						upstreamAudio = upstreamBuffer.shift();	// Get new packet from buffer
+						oldUpstreamBuffer = upstreamAudio;	// and store it in old buffer
+					}
+					for (let i = 0; i < upstreamAudio.length; ++i) 
+						finalMix[i] = mix[i] + upstreamAudio[i];
+					upstreamGain = applyAutoGain(finalMix, upstreamGain); // Apply auto gain to final mix 
 				} else {
-					upstreamAudio = upstreamBuffer.shift();	// Get new packet from buffer
-					oldUpstreamBuffer = upstreamAudio;	// and store it in old buffer
+					finalMix = mix;			// No upstream audio so just use mix for now
 				}
-				for (let i = 0; i < upstreamAudio.length; ++i) 
-					finalMix[i] = mix[i] + upstreamAudio[i];
-				upstreamGain = applyAutoGain(finalMix, upstreamGain); // Apply auto gain to final mix 
-				let d = new Date();
-				let now = d.getTime();
+				let now = new Date().getTime();
 				upstreamServer.emit("u", {
 					"audio": finalMix,
 					"sequence": packetSequence,
@@ -334,7 +332,7 @@ function generateMix () {
 					"c": clientPackets,
 					"g": (gain * upstreamGain) 
 				});
-			} else {			// No upstream audio. Just send client mix downstream.
+			} else {
 				io.sockets.in('downstream').emit('d', {
 					"a": mix,
 					"c": clientPackets,
@@ -344,8 +342,7 @@ function generateMix () {
 			packetsOut++;			// Sent data so log it and set time limit for next send
 			packetClassifier[clientPackets.length] = packetClassifier[clientPackets.length] + 1;
 			if (nextMixTimeLimit == 0) {	// If this is the first send event then start at now
-				let d = new Date();
-				let now = d.getTime();		
+				let now = new Date().getTime();
 				nextMixTimeLimit = now;
 			}
 			nextMixTimeLimit = nextMixTimeLimit + (mix.length * 1010)/SampleRate;
