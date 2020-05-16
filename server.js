@@ -306,21 +306,20 @@ function generateMix () {
 //for (let i=0; i<30; i++)
 //	clientPackets.push( dummyTrack );
 		gain = applyAutoGain(mix, gain); 	// Apply auto gain to mix starting at the current gain level 
-		if (clientPackets.length != 0) {		// Only send audio if we have some to send
-			if (upstreamServer != null) { 		// We have an upstream server. Add to mix and send
-				let finalMix = [];			// Final audio mix with upstream audio to send downstream
-				if ((upstreamBuffer.length >= mixTriggerLevel) || (oldUpstreamBuffer.length > 0 )) { 
-					let upstreamAudio = [];				// Piece of upstream audio to mix in
-					if (upstreamBuffer == []) { 			// if no upstream audio
-						upstreamAudio = oldUpstreamBuffer;	// Use old buffer
-					} else {
-						upstreamAudio = upstreamBuffer.shift();	// Get new packet from buffer
-						oldUpstreamBuffer = upstreamAudio;	// and store it in old buffer
-					}
-					for (let i = 0; i < upstreamAudio.length; ++i) 
-						finalMix[i] = mix[i] + upstreamAudio[i];
-					upstreamGain = applyAutoGain(finalMix, upstreamGain); // Apply auto gain to final mix 
+		if (clientPackets.length != 0) {				// Only send audio if we have some to send
+			if ((upstreamBuffer.length >= mixTriggerLevel) 		// If there is upstream audio, add to mix
+					|| (oldUpstreamBuffer.length > 0 )) { 	
+				let finalMix = [];				// Final audio mix incl. upstream audio 
+				let upstreamAudio = [];				// Piece of upstream audio to mix in
+				if (upstreamBuffer.length == 0) { 		// if no upstream audio
+					upstreamAudio = oldUpstreamBuffer;	// Use old buffer
+				} else {
+					upstreamAudio = upstreamBuffer.shift();	// Get new packet from buffer
+					oldUpstreamBuffer = upstreamAudio;	// and store it in old buffer
 				}
+				for (let i = 0; i < upstreamAudio.length; ++i) 
+					finalMix[i] = mix[i] + upstreamAudio[i];
+				upstreamGain = applyAutoGain(finalMix, upstreamGain); // Apply auto gain to final mix 
 				let d = new Date();
 				let now = d.getTime();
 				upstreamServer.emit("u", {
@@ -335,7 +334,7 @@ function generateMix () {
 					"c": clientPackets,
 					"g": (gain * upstreamGain) 
 				});
-			} else {
+			} else {			// No upstream audio. Just send client mix downstream.
 				io.sockets.in('downstream').emit('d', {
 					"a": mix,
 					"c": clientPackets,
