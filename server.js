@@ -138,6 +138,7 @@ function connectUpstreamServer(server) {
 if (tracing >0) {
 	console.log("MIX before subtraction");
 	console.log(mix);
+	tracing--;
 }
 				for (let i=0; i < ourAudio.length; i++) {
 					mix[i] -= ourAudio[i] * gain;	
@@ -408,7 +409,7 @@ function printReport() {
 	overflows = 0;
 	shortages = 0;
 	forcedMixes = 0;
-tracing = 2;
+tracing = 10;
 }
 setInterval(printReport, updateTimer);
 
