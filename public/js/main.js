@@ -191,8 +191,10 @@ function startTalking() {
 				if (spkrBuffer.length > resampledChunkSize) {	// Server audio can be sent to speaker
 					inAudio = spkrBuffer.splice(0,resampledChunkSize);
 				} else {
-					inAudio = new Array(resampledChunkSize).fill(0);
+					inAudio = new Array(resampledChunkSize-spkrBuffer.length).fill(0);
+					inAudio.unshift(...spkrBuffer);
 					shortages++;
+console.log(inAudio);
 				}
 				let spkrAudio = upSample(inAudio, SampleRate, soundcardSampleRate);
 				for (let i in outData) 
@@ -233,6 +235,8 @@ function startTalking() {
 			echoFilter.connect(gainNode);				// echo filter goes to inverter
 			gainNode.connect(micFilter);				// inverter feeds back into micFilter
 			gainNode.gain.value = 0;				// Start with feedback loop off
+trace(context.destination.channelInterpretation);
+context.destination.channelInterpretation = "discrete";
 trace(context.destination.channelInterpretation);
 		}, function (err) { trace(err); });
 	} else {
