@@ -53,9 +53,11 @@ var seqGap = 0;				// Accumulators for round trip measurements
 var timeGap = 0;
 var seqStep = 0;
 const updateTimer = 10000;
+var spkrAudioLen;
 function printReport() {
-	console.log("Idle = ", idleState.total, " data in = ", dataInState.total, " audio in/out = ", audioInOutState.total);
-	console.log("Sent = ",packetsOut," Heard = ",packetsIn," speaker buffer size ",spkrBuffer.length," mic buffer size ", micBuffer.length," overflows = ",overflows," shortages = ",shortages);
+	trace("Sample rate = ",soundcardSampleRate," resampledChunkSize = ",resampledChunkSize," spkrAudioLen = ",spkrAudioLen);
+	trace("Idle = ", idleState.total, " data in = ", dataInState.total, " audio in/out = ", audioInOutState.total);
+	trace("Sent = ",packetsOut," Heard = ",packetsIn," speaker buffer size ",spkrBuffer.length," mic buffer size ", micBuffer.length," overflows = ",overflows," shortages = ",shortages);
 	packetsIn = 0;
 	packetsOut = 0;
 	overflows = 0;
@@ -65,11 +67,30 @@ function printReport() {
 setInterval(printReport, updateTimer);
 
 
+// Tracing to the traceDiv (a Div with id="Trace" in the DOM)
+//
+var traceDiv = null;
+document.addEventListener('DOMContentLoaded', function(event){
+	traceDiv = document.getElementById('Trace');
+});
+function trace(){	
+	let s ="";
+	for (let i=0; i<arguments.length; i++)
+		s += arguments[i];
+	console.log(s);
+	s += "<br>";
+	if (traceDiv != null) {
+		traceDiv.innerHTML += s;
+		traceDiv.scrollTop = traceDiv.scrollHeight;
+	}
+}
+
+
 // Network code
 //
 var socketIO = io();
 socketIO.on('connect', function (socket) {
-	console.log('socket connected!');
+	trace('socket connected!');
 	socketConnected = true;
 	socketIO.emit("upstreamHi"); 	// Say hi to the server - we consider it upstream 
 });
@@ -106,7 +127,7 @@ socketIO.on('d', function (data) {
 });
 
 socketIO.on('disconnect', function () {
-	console.log('socket disconnected!');
+	trace('socket disconnected!');
 	socketConnected = false;
 });
 
@@ -173,6 +194,7 @@ function startTalking() {
 					shortages++;
 				}
 				let spkrAudio = upSample(inAudio, SampleRate, soundcardSampleRate);
+spkrAudioLen = spkrAudio.length;
 				for (let i in outData) 
 					outData[i] = spkrAudio[i];
 				enterState( idleState );
@@ -212,7 +234,7 @@ function startTalking() {
 			gainNode.connect(micFilter);				// inverter feeds back into micFilter
 			gainNode.gain.value = 0;				// Start with feedback loop off
 
-		}, function (err) { console.log(err); });
+		}, function (err) { trace(err); });
 	} else {
 		alert('getUserMedia() is not supported in your browser');
 	}
@@ -272,4 +294,4 @@ function magicKernel( x ) {
 }
 
 enterState( idleState );
-console.log("Starting V2.0");
+trace("Starting V2.0");
