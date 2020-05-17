@@ -11,7 +11,6 @@ $(document).ready(function () {
 			muted = false;
 			btn.innerText="Mute";
 		} else {
-console.log("MUTE");
 			muted = true;
 			btn.innerText="Unmute";
 		}
@@ -182,7 +181,7 @@ function startTalking() {
 				var inData = e.inputBuffer.getChannelData(0);
 				var outData = e.outputBuffer.getChannelData(0);
 				let micAudio = [];
-				if ((socketConnected) && (muted == "false")) {		// Mic audio can be sent to server
+				if ((socketConnected) && (muted == false)) {		// Mic audio can be sent to server
 					micAudio = downSample(inData, soundcardSampleRate, SampleRate);
 					resampledChunkSize = micAudio.length;
 					micBuffer.push(...micAudio);
