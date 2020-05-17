@@ -53,9 +53,7 @@ var seqGap = 0;				// Accumulators for round trip measurements
 var timeGap = 0;
 var seqStep = 0;
 const updateTimer = 10000;
-var spkrAudioLen; // MARK TEMP DELETE
 function printReport() {
-	trace("Sample rate = ",soundcardSampleRate," resampledChunkSize = ",resampledChunkSize," spkrAudioLen = ",spkrAudioLen);
 	trace("Idle = ", idleState.total, " data in = ", dataInState.total, " audio in/out = ", audioInOutState.total);
 	trace("Sent = ",packetsOut," Heard = ",packetsIn," speaker buffer size ",spkrBuffer.length," mic buffer size ", micBuffer.length," overflows = ",overflows," shortages = ",shortages);
 	packetsIn = 0;
@@ -70,6 +68,8 @@ setInterval(printReport, updateTimer);
 // Tracing to the traceDiv (a Div with id="Trace" in the DOM)
 //
 var traceDiv = null;
+var traceArray = [];
+var maxTraces = 100;
 document.addEventListener('DOMContentLoaded', function(event){
 	traceDiv = document.getElementById('Trace');
 });
@@ -78,9 +78,10 @@ function trace(){
 	for (let i=0; i<arguments.length; i++)
 		s += arguments[i];
 	console.log(s);
-	s += "<br>";
+	traceArray.push(s+"<br>");
+	if (traceArray.length > maxTraces) traceArray.shift(0,1);
 	if (traceDiv != null) {
-		traceDiv.innerHTML += s;
+		traceDiv.innerHTML = traceArray.join("");
 		traceDiv.scrollTop = traceDiv.scrollHeight;
 	}
 }
@@ -194,7 +195,6 @@ function startTalking() {
 					shortages++;
 				}
 				let spkrAudio = upSample(inAudio, SampleRate, soundcardSampleRate);
-spkrAudioLen = spkrAudio.length;
 				for (let i in outData) 
 					outData[i] = spkrAudio[i];
 				enterState( idleState );
@@ -233,7 +233,7 @@ spkrAudioLen = spkrAudio.length;
 			echoFilter.connect(gainNode);				// echo filter goes to inverter
 			gainNode.connect(micFilter);				// inverter feeds back into micFilter
 			gainNode.gain.value = 0;				// Start with feedback loop off
-
+trace(context.destination.channelInterpretation);
 		}, function (err) { trace(err); });
 	} else {
 		alert('getUserMedia() is not supported in your browser');
