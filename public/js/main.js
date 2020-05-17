@@ -234,9 +234,6 @@ function startTalking() {
 			echoFilter.connect(gainNode);				// echo filter goes to inverter
 			gainNode.connect(micFilter);				// inverter feeds back into micFilter
 			gainNode.gain.value = 0;				// Start with feedback loop off
-trace(context.destination.channelInterpretation);
-context.destination.channelInterpretation = "discrete";
-trace(context.destination.channelInterpretation);
 		}, function (err) { trace(err); });
 	} else {
 		alert('getUserMedia() is not supported in your browser');
