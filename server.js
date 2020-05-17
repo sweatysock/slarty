@@ -112,7 +112,12 @@ var upstreamServer = null;	// socket ID for upstream server if connected
 var upstreamName = "no upstream server";
 var packetSequence = 0;
 
-var tracing = 0;
+var tracingA = 0;
+var tracingB = 0;
+var tracingC = 0;
+var tracingD = 0;
+var tracingE = 0;
+var tracingF = 0;
 
 function connectUpstreamServer(server) {
 	upstreamServer = require('socket.io-client')(server);
