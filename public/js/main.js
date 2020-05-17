@@ -53,7 +53,7 @@ var seqGap = 0;				// Accumulators for round trip measurements
 var timeGap = 0;
 var seqStep = 0;
 const updateTimer = 10000;
-var spkrAudioLen;
+var spkrAudioLen; // MARK TEMP DELETE
 function printReport() {
 	trace("Sample rate = ",soundcardSampleRate," resampledChunkSize = ",resampledChunkSize," spkrAudioLen = ",spkrAudioLen);
 	trace("Idle = ", idleState.total, " data in = ", dataInState.total, " audio in/out = ", audioInOutState.total);
@@ -264,7 +264,7 @@ function downSample( buffer, originalSampleRate, resampledRate) {
 
 var  upCache = [0.0,0.0];
 function upSample( buffer, originalSampleRate, resampledRate) {
-	let resampledBufferLength = Math.round( buffer.length * resampledRate / originalSampleRate );
+	let resampledBufferLength = chunkSize;		// Forcing to always fill the outbuffer fully
 	let resampleRatio = buffer.length / resampledBufferLength;
 	let outputData = new Array(resampledBufferLength).fill(0);
 	for ( var i = 0; i < resampledBufferLength - 1; i++ ) {
