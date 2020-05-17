@@ -191,8 +191,9 @@ function startTalking() {
 				if (spkrBuffer.length > resampledChunkSize) {	// Server audio can be sent to speaker
 					inAudio = spkrBuffer.splice(0,resampledChunkSize);
 				} else {
-					inAudio = new Array(resampledChunkSize-spkrBuffer.length).fill(0);
-					inAudio.unshift(spkrBuffer.splice(0,spkrBuffer.length));
+					inAudio = spkrBuffer.splice(0,spkrBuffer.length);
+					let zeros = new Array(resampledChunkSize-spkrBuffer.length).fill(0);
+					inaudio.push(...zeros);
 					shortages++;
 				}
 				let spkrAudio = upSample(inAudio, SampleRate, soundcardSampleRate);
