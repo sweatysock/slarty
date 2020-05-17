@@ -145,7 +145,6 @@ if (tracing >0) {
 	console.log("Gain applied was ",gain);
 	console.log("MIX AFTER subtraction");
 	console.log(mix);
-	tracing--;
 }
 				}
 			}
@@ -314,7 +313,7 @@ function generateMix () {
 //for (let i=0; i<30; i++)
 //	clientPackets.push( dummyTrack );
 		gain = applyAutoGain(mix, gain); 	// Apply auto gain to mix starting at the current gain level 
-if (tracing >0) console.log("Gain = ",gain);
+if (tracing >0) {console.log("Gain = ",gain);tracing--;}
 		if (clientPackets.length != 0) {		// Only send audio if we have some to send
 			if (upstreamServer != null) { 		// We have an upstream server. Add to mix and send
 				let finalMix = [];			// Final audio mix with upstream audio to send downstream
