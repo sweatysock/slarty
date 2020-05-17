@@ -112,6 +112,8 @@ var upstreamServer = null;	// socket ID for upstream server if connected
 var upstreamName = "no upstream server";
 var packetSequence = 0;
 
+var tracing = 0;
+
 function connectUpstreamServer(server) {
 	upstreamServer = require('socket.io-client')(server);
 	upstreamServer.on('connect', function(socket){
@@ -133,8 +135,17 @@ function connectUpstreamServer(server) {
 			let ourAudio = [];		// Our audio, if found, will be here
 			clients.forEach( c => { if ( c.clientID == upstreamServer.id ) ourAudio = c.packet.audio;});
 			if (ourAudio != []) {		// Subtract our gain adjusted audio from mix
+if (tracing >0) {
+	console.log("MIX before subtraction");
+	console.log(mix);
+}
 				for (let i=0; i < ourAudio.length; i++) {
 					mix[i] -= ourAudio[i] * gain;	
+if (tracing >0) {
+	console.log("MIX AFTER subtraction");
+	console.log(mix);
+	tracing--;
+}
 				}
 			}
 			upstreamBuffer.push(mix); 	// Modified mix is buffered as a packet
@@ -389,6 +400,7 @@ function printReport() {
 	overflows = 0;
 	shortages = 0;
 	forcedMixes = 0;
+tracing = 10;
 }
 setInterval(printReport, updateTimer);
 
