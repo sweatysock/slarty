@@ -327,12 +327,18 @@ function generateMix () {
 					for (let i = 0; i < upstreamAudio.length; ++i) 
 						finalMix[i] = mix[i] + upstreamAudio[i];
 					upstreamGain = applyAutoGain(finalMix, upstreamGain); // Apply auto gain to final mix 
+					let newTrack = { packet: [], clientID: 0 };	// build a packet of upstream audio
+					newTrack.clientID = "upstream";			
+					newTrack.packet.audio = upstreamAudio;
+					newTrack.packet.sequence = 0;
+					newTrack.packet.timeEmitted = 0;
+					clientPackets.push( newTrack ); 		// Add upstream audio packet to clients
 				} else {
 					finalMix = mix;			// No upstream audio so just use mix for now
 				}
 				let now = new Date().getTime();
 				upstreamServer.emit("u", {
-					"audio": finalMix,
+					"audio": mix,
 					"sequence": packetSequence,
 					"timeEmitted": now
 				});
