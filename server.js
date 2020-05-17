@@ -408,7 +408,7 @@ function printReport() {
 	overflows = 0;
 	shortages = 0;
 	forcedMixes = 0;
-//tracing = 10;
+tracing = 2;
 }
 setInterval(printReport, updateTimer);
 
