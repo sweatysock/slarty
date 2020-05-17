@@ -5,6 +5,17 @@ $(document).ready(function () {
 		$(this).hide();
 		startTalking();
 	});
+	$("#muteBtn").click(function () {
+		let btn=document.getElementById('muteBtn');
+		if (muted == true) {
+			muted = false;
+			btn.innerText="Mute";
+		} else {
+console.log("MUTE");
+			muted = true;
+			btn.innerText="Unmute";
+		}
+	});
 });
 
 
@@ -20,6 +31,7 @@ var micAccessAllowed = false; 		// Need to get user permission
 var spkrBuffer = []; 			// Audio buffer going to speaker
 var maxBuffSize = 5000;			// Max audio buffer chunks for playback
 var micBuffer = [];			// Buffer mic audio before sending
+var muted = false;			// mic mute control
 
 // Timing counters
 //
@@ -170,7 +182,7 @@ function startTalking() {
 				var inData = e.inputBuffer.getChannelData(0);
 				var outData = e.outputBuffer.getChannelData(0);
 				let micAudio = [];
-				if (socketConnected) {		// Mic audio can be sent to server
+				if ((socketConnected) && (muted == "false")) {		// Mic audio can be sent to server
 					micAudio = downSample(inData, soundcardSampleRate, SampleRate);
 					resampledChunkSize = micAudio.length;
 					micBuffer.push(...micAudio);
