@@ -147,13 +147,13 @@ if (tracingA >0) {
 }
 				for (let i=0; i < ourAudio.length; i++) {
 					mix[i] -= ourAudio[i] * gain;	
+				}
 if (tracingB >0) {
 	console.log("Gain applied was ",gain);
 	console.log("MIX AFTER subtraction");
 	console.log(mix);
 	tracingB--;
 }
-				}
 			}
 			upstreamBuffer.push(mix); 	// Modified mix is buffered as a packet
 			if (upstreamBuffer.length > maxBufferSize) {
