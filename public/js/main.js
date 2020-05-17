@@ -193,7 +193,7 @@ function startTalking() {
 				} else {
 					inAudio = spkrBuffer.splice(0,spkrBuffer.length);
 					let zeros = new Array(resampledChunkSize-spkrBuffer.length).fill(0);
-					inaudio.push(...zeros);
+					inAudio.push(...zeros);
 					shortages++;
 				}
 				let spkrAudio = upSample(inAudio, SampleRate, soundcardSampleRate);
