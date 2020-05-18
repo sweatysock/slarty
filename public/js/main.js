@@ -130,7 +130,7 @@ socketIO.on('d', function (data) {
 			}
 		}
 		if (mix.length != 0) {
-//			spkrBuffer.push(...mix);
+			spkrBuffer.push(...mix);
 			if (spkrBuffer.length > maxBuffSize) {
 				spkrBuffer.splice(0, (spkrBuffer.length-maxBuffSize)); 	
 				overflows++;
