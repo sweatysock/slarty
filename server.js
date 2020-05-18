@@ -163,7 +163,6 @@ io.sockets.on('connection', function (socket) {
 
 	socket.on('disconnect', function () {
 		console.log("User disconnected:", socket.id);
-		console.log("Idle = ", idleState.total, " upstream = ", upstreamState.total, " downstream = ", downstreamState.total, " genMix = ", genMixState.total);
 		// No need to remove the client's buffer as it will happen automatically
 		clientsLive--;
 	});
