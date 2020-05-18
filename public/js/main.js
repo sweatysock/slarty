@@ -17,6 +17,9 @@ $(document).ready(function () {
 	});
 });
 
+function micDisplay(level) {
+	//if (level > 0) micLED1 = 
+}
 
 //Global variables
 //
@@ -118,7 +121,6 @@ socketIO.on('d', function (data) {
 		for (let c=0; c < clients.length; c++) {
 			if (clients[c].clientID != socketIO.id) {
 				let a = clients[c].packet.audio;
-				timeGap += now - clients[c].packet.timeEmitted;
 				if (mix.length == 0)
 					for (let i=0; i < a.length; i++)
 						mix[i] = a[i];
@@ -128,7 +130,7 @@ socketIO.on('d', function (data) {
 			}
 		}
 		if (mix.length != 0) {
-			spkrBuffer.push(...mix);
+//			spkrBuffer.push(...mix);
 			if (spkrBuffer.length > maxBuffSize) {
 				spkrBuffer.splice(0, (spkrBuffer.length-maxBuffSize)); 	
 				overflows++;
@@ -145,12 +147,58 @@ socketIO.on('disconnect', function () {
 
 
 
-// Need function to receive UI position updates in order to rebuild audio mix table
-// and to send the new UI position out to the other clients
-
-
 // Media management code (audio in and out)
 //
+setInterval(displayAnimation, 100);
+function displayAnimation() {
+	// called 10 times a second to animate audio displays
+	// drop levels a little
+	micPeakLevel = micPeakLevel * 0.9;
+	// update displays
+	micDisplay(micPeakLevel);
+}
+
+var micPeakLevel = 0;
+function micPeak(level) {
+	if (level > micPeakLevel) micPeakLevel = level;
+}
+
+function maxValue( arr ) { 				// Find max value in an array
+	let max = arr[0];
+	for (let i =  1; i < arr.length; i++)
+		if (arr[i] > max) max = arr[i];
+	return max;
+}
+
+function applyAutoGain(audio, startGain) {		// Auto gain control
+	let tempGain, maxLevel, endGain, p, x, transitionLength; 
+	maxLevel = maxValue(audio);			// Find peak audio level 
+	endGain = MaxOutputLevel / maxLevel;		// Desired gain to avoid overload
+	if (endGain > MaxGain) endGain = MaxGain;	// Gain is limited to MaxGain
+	if (endGain >= startGain) {			// Gain adjustment speed varies
+		transitionLength = audio.length;	// Gain increases are gentle
+		endGain = startGain + ((endGain - startGain)/10);	// Slow the rate of gain change
+	}
+	else
+		transitionLength = Math.floor(audio.length/10);	// Gain decreases are fast
+	tempGain = startGain;				// Start at current gain level
+	for (let i = 0; i < transitionLength; i++) {	// Adjust gain over transition
+		x = i/transitionLength;
+		if (i < (2*transitionLength/3))		// Use the Magic formula
+			p = 3*x*x/2;
+		else
+			p = -3*x*x + 6*x -2;
+		tempGain = startGain + (endGain - startGain) * p;
+		audio[i] = audio[i] * tempGain;
+	}
+	if (transitionLength != audio.length) {		// Still audio left to adjust?
+		tempGain = endGain;			// Apply endGain to rest
+		for (let i = transitionLength; i < audio.length; i++)
+			audio[i] = audio[i] * tempGain;
+	}
+	return endGain;
+}
+
 function hasGetUserMedia() {		// Test for browser capability
 	return !!(navigator.getUserMedia || navigator.webkitGetUserMedia ||
 		navigator.mozGetUserMedia || navigator.msGetUserMedia);
@@ -187,6 +235,7 @@ function startTalking() {
 					micBuffer.push(...micAudio);
 					if (micBuffer.length > PacketSize) {
 						let outAudio = micBuffer.splice(0, PacketSize);
+						micPeak( maxValue( outAudio ));
 						let now = new Date().getTime();
 						socketIO.emit("u",
 						{
