@@ -69,7 +69,7 @@ function printReport() {
 	trace("Sent = ",packetsOut," Heard = ",packetsIn," speaker buffer size ",spkrBuffer.length," mic buffer size ", micBuffer.length," overflows = ",overflows," shortages = ",shortages);
 	let state = "Green";
 	if ((overflows > 1) || (shortages >1)) state = "Orange";
-	if (socketConnected = false) state = "Red";
+	if (socketConnected == false) state = "Red";
 	setStatusLED("GeneralStatus",state);
 	state = "Green";
 	if ((packetsOut < 30) || (packetsOut > 35)) state = "Orange";
@@ -374,4 +374,4 @@ function magicKernel( x ) {
 }
 
 enterState( idleState );
-trace("Starting V2.0");
+trace("Starting V3.0");
