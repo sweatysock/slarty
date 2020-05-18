@@ -254,7 +254,7 @@ function startTalking() {
 					micBuffer.push(...micAudio);
 					if (micBuffer.length > PacketSize) {
 						let outAudio = micBuffer.splice(0, PacketSize);
-						micPeak( maxValue( outAudio ));
+						//micPeak( maxValue( outAudio ));
 						let now = new Date().getTime();
 						socketIO.emit("u",
 						{
