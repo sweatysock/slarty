@@ -288,8 +288,10 @@ function generateMix () {
 				newTrack.clientID = clientBuffer.clientID;	// Get clientID for audio packet
 				newTrack.packet = clientBuffer.packets.shift();	// Get first packet of audio
 				if (newTrack.packet == undefined) {		// If this client buffer has been emptied...
-					receiveBuffer.splice(client, 1); 	// remove client buffer
 					shortages++;
+					receiveBuffer.splice(client, 1); 	// remove client buffer
+					if (receiveBuffer.length == 1)		// if only one client left
+						nextMixTimeLimit = 0;		// stop sample timer 
 				}
 				else {
 					for (let i = 0; i < newTrack.packet.audio.length; ++i) 
