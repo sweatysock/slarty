@@ -15,11 +15,8 @@ $(document).ready(function () {
 			btn.innerText="Unmute";
 		}
 	});
+	setInterval(displayAnimation, 100);
 });
-
-function micDisplay(level) {
-	//if (level > 0) micLED1 = 
-}
 
 //Global variables
 //
@@ -66,10 +63,22 @@ var currentSeq = 0;			// Last packet sequence received
 var seqGap = 0;				// Accumulators for round trip measurements
 var timeGap = 0;
 var seqStep = 0;
-const updateTimer = 10000;
+const updateTimer = 1000;
 function printReport() {
 	trace("Idle = ", idleState.total, " data in = ", dataInState.total, " audio in/out = ", audioInOutState.total);
 	trace("Sent = ",packetsOut," Heard = ",packetsIn," speaker buffer size ",spkrBuffer.length," mic buffer size ", micBuffer.length," overflows = ",overflows," shortages = ",shortages);
+	let state = "Green";
+	if ((overflows > 1) || (shortages >1)) state = "Orange";
+	if (socketConnected = false) state = "Red";
+	setStatusLED("GeneralStatus",state);
+	state = "Green";
+	if ((packetsOut < 30) || (packetsOut > 35)) state = "Orange";
+	if (packetsOut < 5) state = "Red";
+	setStatusLED("UpStatus",state);
+	state = "Green";
+	if ((packetsIn < 30) || (packetsIn > 35)) state = "Orange";
+	if (packetsIn < 5) state = "Red";
+	setStatusLED("DownStatus",state);
 	packetsIn = 0;
 	packetsOut = 0;
 	overflows = 0;
@@ -149,13 +158,23 @@ socketIO.on('disconnect', function () {
 
 // Media management code (audio in and out)
 //
-setInterval(displayAnimation, 100);
 function displayAnimation() {
 	// called 10 times a second to animate audio displays
 	// drop levels a little
 	micPeakLevel = micPeakLevel * 0.9;
 	// update displays
 	micDisplay(micPeakLevel);
+}
+function micDisplay(level) {
+	//if (level > 0) micLED1 = 
+}
+function setStatusLED(name, level) {
+	let LED = document.getElementById(name);
+	let file;
+	if (level == "Red") file = "images/LEDRed.png";
+	else if (level == "Orange") file = "images/LEDOrange.png";
+	else file = "images/LEDGreen.png";
+	LED.src = file;
 }
 
 var micPeakLevel = 0;
