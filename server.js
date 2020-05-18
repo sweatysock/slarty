@@ -140,20 +140,9 @@ function connectUpstreamServer(server) {
 			let ourAudio = [];		// Our audio, if found, will be here
 			clients.forEach( c => { if ( c.clientID == upstreamServer.id ) ourAudio = c.packet.audio;});
 			if (ourAudio != []) {		// Subtract our gain adjusted audio from mix
-if (tracingA >0) {
-	console.log("MIX before subtraction");
-	console.log(mix);
-	tracingA--;
-}
 				for (let i=0; i < ourAudio.length; i++) {
 					mix[i] -= ourAudio[i] * gain;	
 				}
-if (tracingB >0) {
-	console.log("Gain applied was ",gain);
-	console.log("MIX AFTER subtraction");
-	console.log(mix);
-	tracingB--;
-}
 			}
 			upstreamBuffer.push(mix); 	// Modified mix is buffered as a packet
 			if (upstreamBuffer.length > maxBufferSize) {
@@ -320,7 +309,6 @@ function generateMix () {
 //for (let i=0; i<30; i++)
 //	clientPackets.push( dummyTrack );
 		gain = applyAutoGain(mix, gain); 	// Apply auto gain to mix starting at the current gain level 
-if (tracingC >0) {console.log("Gain = ",gain);tracingC--;}
 		if (clientPackets.length != 0) {		// Only send audio if we have some to send
 			if (upstreamServer != null) { 		// We have an upstream server. Add to mix and send
 				let finalMix = [];			// Final audio mix with upstream audio to send downstream
@@ -335,12 +323,10 @@ if (tracingC >0) {console.log("Gain = ",gain);tracingC--;}
 					for (let i = 0; i < upstreamAudio.length; ++i) 
 						finalMix[i] = mix[i] + upstreamAudio[i];
 					upstreamGain = applyAutoGain(finalMix, upstreamGain); // Apply auto gain to final mix 
-if (tracingD >0) {console.log("Upstream gain = ",upstreamGain);tracingD--;}
 					let newTrack = { packet: [], clientID: 0 };	// build a packet of upstream audio
 					newTrack.clientID = "upstream";			
-					newTrack.packet.audio = upstreamAudio;
-					newTrack.packet.sequence = 0;
-					newTrack.packet.timeEmitted = 0;
+					let packet = {audio: upstreamAudio, sequence: 0, timeEmitted: 0};
+					newTrack.packet = packet;
 					clientPackets.push( newTrack ); 		// Add upstream audio packet to clients
 				} else {
 					finalMix = mix;			// No upstream audio so just use mix for now
