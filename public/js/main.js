@@ -52,6 +52,7 @@ function enterState( newState ) {
 	currentState = newState;
 }
 
+var tracing = 0;
 // Reporting code. Accumulators, interval timer and report generator
 //
 var packetsIn = 0;
@@ -72,6 +73,7 @@ function printReport() {
 	overflows = 0;
 	shortages = 0;
 	timeGap = 0;
+tracing =1;
 }
 setInterval(printReport, updateTimer);
 
@@ -115,6 +117,7 @@ socketIO.on('d', function (data) {
 	if (micAccessAllowed) {	// Need access to audio before outputing
 		let mix = [];	// Build up a mix of client audio 
 		let clients = data.c; 
+if (tracing > 0) {console.log(clients); tracing--;}
 		for (let c=0; c < clients.length; c++) {
 			if (clients[c].clientID != socketIO.id) {
 				let a = clients[c].packet.audio;
