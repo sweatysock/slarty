@@ -163,7 +163,7 @@ socketIO.on('d', function (data) {
 			}
 		}
 mixMax = maxValue(mix);
-if (mixMax == 0) trace(JSON.stringify(data));
+if (mixMax == 0) {trace("Mix 0");clients.forEach(c => {trace(c.clientID," ",maxValue(c.packet.audio));})}
 		applyAutoGain(mix,mixGain);
 		if (mix.length != 0) {
 			spkrBuffer.push(...mix);
