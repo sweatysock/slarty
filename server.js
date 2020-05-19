@@ -58,7 +58,8 @@ var clientsLive = 0;
 var forcedMixes = 0;
 var packetClassifier = [];
 packetClassifier.fill(0,0,30);
-
+var mixMax = 0;
+var upstreamMax = 0;
 
 
 
@@ -301,14 +302,7 @@ function generateMix () {
 			}
 			client--;						// next client down in buffer
 		}
-// Add simulated clients to test payload impact on sending
-//let dummyTrack = { packet: [], clientID: 0 };	
-//let dummyAudio = new Array(500).fill(0);
-//let packet = {audio: dummyAudio, sequence: 4444, timeEmitted: 12345678};
-//dummyTrack.clientID = "DUMMY";
-//dummyTrack.packet = packet;
-//for (let i=0; i<30; i++)
-//	clientPackets.push( dummyTrack );
+mixMax = maxValue(mix);
 		gain = applyAutoGain(mix, gain); 	// Apply auto gain to mix starting at the current gain level 
 		if (clientPackets.length != 0) {		// Only send audio if we have some to send
 			if (upstreamServer != null) { 		// We have an upstream server. Add to mix and send
@@ -321,6 +315,7 @@ function generateMix () {
 						upstreamAudio = upstreamBuffer.shift();	// Get new packet from buffer
 						oldUpstreamBuffer = upstreamAudio;	// and store it in old buffer
 					}
+upstreamMax = maxValue(upstreamAudio);
 					for (let i = 0; i < upstreamAudio.length; ++i) 
 						finalMix[i] = mix[i] + upstreamAudio[i];
 					upstreamGain = applyAutoGain(finalMix, upstreamGain); // Apply auto gain to final mix 
@@ -369,7 +364,7 @@ function generateMix () {
 const updateTimer = 10000;	// Frequency of updates to the console
 function printReport() {
 	console.log("Idle = ", idleState.total, " upstream = ", upstreamState.total, " downstream = ", downstreamState.total, " genMix = ", genMixState.total);
-	console.log("Clients = ",clientsLive,"  active = ", receiveBuffer.length,"Upstream In =",upstreamIn,"Upstream Out = ",upstreamOut,"In = ",packetsIn," Out = ",packetsOut," overflows = ",overflows," shortages = ",shortages," forced mixes = ",forcedMixes);
+	console.log("Clients = ",clientsLive,"  active = ", receiveBuffer.length,"Upstream In =",upstreamIn,"Upstream Out = ",upstreamOut,"In = ",packetsIn," Out = ",packetsOut," overflows = ",overflows," shortages = ",shortages," forced mixes = ",forcedMixes," mixMax = ",mixMax," upstreamMax = ",upstreamMax);
 	let cbs = [];
 	for (let c in receiveBuffer)
 		cbs.push(receiveBuffer[c].packets.length);
@@ -402,6 +397,8 @@ function printReport() {
 	overflows = 0;
 	shortages = 0;
 	forcedMixes = 0;
+	mixMax = 99;
+	upstreamMax = 99;
 tracingA = 10;
 tracingB = 10;
 tracingC = 10;

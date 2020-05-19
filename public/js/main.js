@@ -28,6 +28,7 @@ $(document).ready(function () {
 		console.log("Test button pressed");
 		if (tracing == true) tracing = false;
 		else tracing = true;
+		console.log("Tracing = ",tracing);
 	};
 	setInterval(displayAnimation, 100);
 });
