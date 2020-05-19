@@ -15,6 +15,15 @@ $(document).ready(function () {
 			btn.innerText="Unmute";
 		}
 	});
+	let monitorBtn=document.getElementById('monitorBtn');
+	monitorBtn.onclick = function () {
+		let monitor=document.getElementById('monitor');
+console.log("CLICKED... ",monitor.style.visibility);
+		if (monitor.style.visibility == "hidden") 
+			monitor.style.visibility = "visible";
+		else
+			monitor.style.visibility = "hidden";
+	};
 	setInterval(displayAnimation, 100);
 });
 
@@ -170,11 +179,9 @@ function micDisplay(level) {
 }
 function setStatusLED(name, level) {
 	let LED = document.getElementById(name);
-	let file;
-	if (level == "Red") file = "images/LEDRed.png";
-	else if (level == "Orange") file = "images/LEDOrange.png";
-	else file = "images/LEDGreen.png";
-	LED.src = file;
+	if (level == "Red") LED.className="redLED";
+	else if (level == "Orange") LED.className="orangeLED";
+	else LED.className="greenLED";
 }
 
 var micPeakLevel = 0;
