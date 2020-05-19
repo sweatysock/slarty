@@ -81,9 +81,10 @@ var seqGap = 0;				// Accumulators for round trip measurements
 var timeGap = 0;
 var seqStep = 0;
 const updateTimer = 1000;
+var micMax = 0;
 function printReport() {
 	trace("Idle = ", idleState.total, " data in = ", dataInState.total, " audio in/out = ", audioInOutState.total);
-	trace("Sent = ",packetsOut," Heard = ",packetsIn," speaker buffer size ",spkrBuffer.length," mic buffer size ", micBuffer.length," overflows = ",overflows," shortages = ",shortages);
+	trace("Sent = ",packetsOut," Heard = ",packetsIn," speaker buffer size ",spkrBuffer.length," mic buffer size ", micBuffer.length," overflows = ",overflows," shortages = ",shortages," micMax = ",micMax);
 	let state = "Green";
 	if ((overflows > 1) || (shortages >1)) state = "Orange";
 	if (socketConnected == false) state = "Red";
@@ -101,6 +102,7 @@ function printReport() {
 	overflows = 0;
 	shortages = 0;
 	timeGap = 0;
+	mixMax = 99;
 }
 setInterval(printReport, updateTimer);
 
@@ -277,6 +279,7 @@ function startTalking() {
 							"sequence": packetSequence,
 							"timeEmitted": now
 						});
+micMax = maxValue(outAudio);
 						packetsOut++;
 						packetSequence++;
 					}

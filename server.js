@@ -303,6 +303,7 @@ function generateMix () {
 			client--;						// next client down in buffer
 		}
 mixMax = maxValue(mix);
+if (mixMax = 0) console.log(receiveBuffer);
 		gain = applyAutoGain(mix, gain); 	// Apply auto gain to mix starting at the current gain level 
 		if (clientPackets.length != 0) {		// Only send audio if we have some to send
 			if (upstreamServer != null) { 		// We have an upstream server. Add to mix and send
