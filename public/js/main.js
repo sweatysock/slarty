@@ -48,6 +48,9 @@ var spkrBuffer = []; 			// Audio buffer going to speaker
 var maxBuffSize = 5000;			// Max audio buffer chunks for playback
 var micBuffer = [];			// Buffer mic audio before sending
 var muted = false;			// mic mute control
+var mixGain = 1;			// Gain applied to mix
+const MaxGain = 1;			// Max Gain permitted by Auto Gain Control 
+const MaxOutputLevel = 1;		// Max output level for auto gain control
 
 // Timing counters
 //
@@ -82,9 +85,10 @@ var timeGap = 0;
 var seqStep = 0;
 const updateTimer = 1000;
 var micMax = 0;
+var mixMax = 0;
 function printReport() {
 	trace("Idle = ", idleState.total, " data in = ", dataInState.total, " audio in/out = ", audioInOutState.total);
-	trace("Sent = ",packetsOut," Heard = ",packetsIn," speaker buffer size ",spkrBuffer.length," mic buffer size ", micBuffer.length," overflows = ",overflows," shortages = ",shortages," micMax = ",micMax);
+	trace("Sent = ",packetsOut," Heard = ",packetsIn," speaker buffer size ",spkrBuffer.length," mic buffer size ", micBuffer.length," overflows = ",overflows," shortages = ",shortages," micMax = ",micMax," mixMax = ",mixMax);
 	let state = "Green";
 	if ((overflows > 1) || (shortages >1)) state = "Orange";
 	if (socketConnected == false) state = "Red";
@@ -102,6 +106,7 @@ function printReport() {
 	overflows = 0;
 	shortages = 0;
 	timeGap = 0;
+	micMax = 99;
 	mixMax = 99;
 }
 setInterval(printReport, updateTimer);
@@ -157,6 +162,9 @@ socketIO.on('d', function (data) {
 						mix[i] += a[i];
 			}
 		}
+mixMax = maxValue(mix);
+if (mixMax == 0) trace(JSON.stringify(data));
+		applyAutoGain(mix,mixGain);
 		if (mix.length != 0) {
 			spkrBuffer.push(...mix);
 			if (spkrBuffer.length > maxBuffSize) {
@@ -226,11 +234,16 @@ function applyAutoGain(audio, startGain) {		// Auto gain control
 			p = -3*x*x + 6*x -2;
 		tempGain = startGain + (endGain - startGain) * p;
 		audio[i] = audio[i] * tempGain;
+		if (audio[i] >= MaxOutputLevel) audio[i] = MaxOutputLevel
+		else if (audio[i] < = (MaxOutputLevel * -1) audio[i] = MaxOutputLevel * -1;
 	}
 	if (transitionLength != audio.length) {		// Still audio left to adjust?
 		tempGain = endGain;			// Apply endGain to rest
-		for (let i = transitionLength; i < audio.length; i++)
+		for (let i = transitionLength; i < audio.length; i++) {
 			audio[i] = audio[i] * tempGain;
+			if (audio[i] >= MaxOutputLevel) audio[i] = MaxOutputLevel
+			else if (audio[i] < = (MaxOutputLevel * -1) audio[i] = MaxOutputLevel * -1;
+		}
 	}
 	return endGain;
 }
