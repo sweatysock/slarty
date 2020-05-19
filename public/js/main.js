@@ -140,7 +140,7 @@ socketIO.on('d', function (data) {
 	enterState( dataInState );
 	packetsIn++;
 	let now = new Date().getTime();
-	if ((micAccessAllowed) && (tracing = false)) {	// Need access to audio before outputing
+	if ((micAccessAllowed) && (tracing == false)) {	// Need access to audio before outputing
 		let mix = [];	// Build up a mix of client audio 
 		let clients = data.c; 
 		for (let c=0; c < clients.length; c++) {
