@@ -18,14 +18,21 @@ $(document).ready(function () {
 	let monitorBtn=document.getElementById('monitorBtn');
 	monitorBtn.onclick = function () {
 		let monitor=document.getElementById('monitor');
-console.log("CLICKED... ",monitor.style.visibility);
 		if (monitor.style.visibility == "hidden") 
 			monitor.style.visibility = "visible";
 		else
 			monitor.style.visibility = "hidden";
 	};
+	let testBtn=document.getElementById('testBtn');
+	testBtn.onclick = function () {
+		console.log("Test button pressed");
+		if (tracing == true) tracing = false;
+		else tracing = true;
+	};
 	setInterval(displayAnimation, 100);
 });
+
+var tracing = true;
 
 //Global variables
 //
@@ -133,7 +140,7 @@ socketIO.on('d', function (data) {
 	enterState( dataInState );
 	packetsIn++;
 	let now = new Date().getTime();
-	if (micAccessAllowed) {	// Need access to audio before outputing
+	if ((micAccessAllowed) && (tracing = false)) {	// Need access to audio before outputing
 		let mix = [];	// Build up a mix of client audio 
 		let clients = data.c; 
 		for (let c=0; c < clients.length; c++) {
