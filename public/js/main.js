@@ -86,6 +86,7 @@ var seqStep = 0;
 const updateTimer = 1000;
 var micMax = 0;
 var mixMax = 0;
+var tracecount = 0;
 function printReport() {
 	trace("Idle = ", idleState.total, " data in = ", dataInState.total, " audio in/out = ", audioInOutState.total);
 	trace("Sent = ",packetsOut," Heard = ",packetsIn," speaker buffer size ",spkrBuffer.length," mic buffer size ", micBuffer.length," overflows = ",overflows," shortages = ",shortages," micMax = ",micMax," mixMax = ",mixMax);
@@ -108,6 +109,7 @@ function printReport() {
 	timeGap = 0;
 	micMax = 99;
 	mixMax = 99;
+	tracecount = 2;
 }
 setInterval(printReport, updateTimer);
 
@@ -163,7 +165,7 @@ socketIO.on('d', function (data) {
 			}
 		}
 mixMax = maxValue(mix);
-if (mixMax == 0) {trace("Mix 0");clients.forEach(c => {trace(c.clientID," ",maxValue(c.packet.audio));})}
+if ((mixMax == 0) && (tracecount > 0)) {trace("Mix 0");tracecount--;clients.forEach(c => {trace(c.clientID," ",maxValue(c.packet.audio));})}
 		applyAutoGain(mix,mixGain);
 		if (mix.length != 0) {
 			spkrBuffer.push(...mix);
