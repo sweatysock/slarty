@@ -234,14 +234,14 @@ function applyAutoGain(audio, startGain) {		// Auto gain control
 			p = -3*x*x + 6*x -2;
 		tempGain = startGain + (endGain - startGain) * p;
 		audio[i] = audio[i] * tempGain;
-		if (audio[i] >= MaxOutputLevel) audio[i] = MaxOutputLevel
+		if (audio[i] >= MaxOutputLevel) audio[i] = MaxOutputLevel;
 		else if (audio[i] < = (MaxOutputLevel * -1) audio[i] = MaxOutputLevel * -1;
 	}
 	if (transitionLength != audio.length) {		// Still audio left to adjust?
 		tempGain = endGain;			// Apply endGain to rest
 		for (let i = transitionLength; i < audio.length; i++) {
 			audio[i] = audio[i] * tempGain;
-			if (audio[i] >= MaxOutputLevel) audio[i] = MaxOutputLevel
+			if (audio[i] >= MaxOutputLevel) audio[i] = MaxOutputLevel;
 			else if (audio[i] < = (MaxOutputLevel * -1) audio[i] = MaxOutputLevel * -1;
 		}
 	}
