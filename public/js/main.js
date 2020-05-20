@@ -30,10 +30,17 @@ $(document).ready(function () {
 		else tracing = true;
 		console.log("Tracing = ",tracing);
 	};
+	let actionBtn=document.getElementById('actionBtn');
+	actionBtn.onclick = function () {
+		console.log("Action button pressed");
+		if (stopTracing == true) stopTracing = false;
+		else stopTracing = true;
+	};
 	setInterval(displayAnimation, 100);
 });
 
-var tracing = true;
+var tracing = false;
+var stopTracing = false;
 
 //Global variables
 //
@@ -109,8 +116,19 @@ function printReport() {
 	timeGap = 0;
 	micMax = 99;
 	mixMax = 99;
-	tracecount = 2;
+tracecount = 2;
+f1();
 }
+
+async function  f1() {
+const devices = await navigator.mediaDevices.enumerateDevices();
+trace(JSON.stringify(devices));
+const audioDevices = devices.filter(device => device.kind === 'audiooutput');
+const audio = document.createElement('audio');
+await audio.setSinkId(audioDevices[0].deviceId);
+trace('Audio is being played on ' + audio.sinkId);
+}
+
 setInterval(printReport, updateTimer);
 
 
@@ -123,15 +141,17 @@ document.addEventListener('DOMContentLoaded', function(event){
 	traceDiv = document.getElementById('Trace');
 });
 function trace(){	
-	let s ="";
-	for (let i=0; i<arguments.length; i++)
-		s += arguments[i];
-	console.log(s);
-	traceArray.push(s+"<br>");
-	if (traceArray.length > maxTraces) traceArray.shift(0,1);
-	if (traceDiv != null) {
-		traceDiv.innerHTML = traceArray.join("");
-		traceDiv.scrollTop = traceDiv.scrollHeight;
+	if (stopTracing == false) {
+		let s ="";
+		for (let i=0; i<arguments.length; i++)
+			s += arguments[i];
+		console.log(s);
+		traceArray.push(s+"<br>");
+		if (traceArray.length > maxTraces) traceArray.shift(0,1);
+		if (traceDiv != null) {
+			traceDiv.innerHTML = traceArray.join("");
+			traceDiv.scrollTop = traceDiv.scrollHeight;
+		}
 	}
 }
 
@@ -150,7 +170,7 @@ socketIO.on('d', function (data) {
 	enterState( dataInState );
 	packetsIn++;
 	let now = new Date().getTime();
-	if ((micAccessAllowed) && (tracing == false)) {	// Need access to audio before outputing
+	if ((micAccessAllowed) && (tracing == false)) {	// Need access to audio before outputting
 		let mix = [];	// Build up a mix of client audio 
 		let clients = data.c; 
 		for (let c=0; c < clients.length; c++) {
