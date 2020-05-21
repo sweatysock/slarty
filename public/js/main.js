@@ -260,7 +260,7 @@ function applyAutoGain(audio, startGain, maxGain) {	// Auto gain control
 	let tempGain, maxLevel, endGain, p, x, transitionLength; 
 	maxLevel = maxValue(audio);			// Find peak audio level 
 	endGain = MaxOutputLevel / maxLevel;		// Desired gain to avoid overload
-	maxLevel = 0;					// Use this to capture peak
+//	maxLevel = 0;					// Use this to capture peak
 	if (endGain > maxGain) endGain = maxGain;	// Gain is limited to maxGain
 	if (endGain >= startGain) {			// Gain adjustment speed varies
 		transitionLength = audio.length;	// Gain increases are gentle
@@ -290,7 +290,6 @@ function applyAutoGain(audio, startGain, maxGain) {	// Auto gain control
 //			if (audio[i] > maxLevel) maxLevel = audio[i];
 //		}
 //	}
-finalGain = 0.117; maxLevel = 0.25;
 	return { finalGain: endGain, peak: maxLevel };
 }
 
