@@ -207,10 +207,10 @@ socketIO.on('d', function (data) {
 						mix[i] += a[i];
 			}
 		}
-		let obj = applyAutoGain(mix,mixGain,1);
-		if (obj.peak > mixMax) mixMax = obj.peak;
-if ((obj.peak == 0) && (tracecount > 0)) {trace2("Mix 0");tracecount--;clients.forEach(c => {trace2(c.clientID," ",maxValue(c.packet.audio));})}
-		mixGain = obj.finalGain;
+//		let obj = applyAutoGain(mix,mixGain,1);
+//		if (obj.peak > mixMax) mixMax = obj.peak;
+//if ((obj.peak == 0) && (tracecount > 0)) {trace2("Mix 0");tracecount--;clients.forEach(c => {trace2(c.clientID," ",maxValue(c.packet.audio));})}
+//		mixGain = obj.finalGain;
 		if (mix.length != 0) {
 			spkrBuffer.push(...mix);
 			if (spkrBuffer.length > maxBuffSize) {
