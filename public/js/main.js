@@ -18,29 +18,35 @@ $(document).ready(function () {
 	let monitorBtn=document.getElementById('monitorBtn');
 	monitorBtn.onclick = function () {
 		let monitor=document.getElementById('monitor');
-		if (monitor.style.visibility == "hidden") 
-			monitor.style.visibility = "visible";
-		else
+		let monitor2=document.getElementById('monitor2');
+		if (monitor.style.visibility == "visible") {
 			monitor.style.visibility = "hidden";
+			monitor2.style.visibility = "visible";
+		} else {
+			if (monitor2.style.visibility == "visible")
+				monitor2.style.visibility = "hidden";
+			else
+				monitor.style.visibility = "visible";
+		}
 	};
 	let testBtn=document.getElementById('testBtn');
 	testBtn.onclick = function () {
 		console.log("Test button pressed");
-		if (tracing == true) tracing = false;
-		else tracing = true;
-		console.log("Tracing = ",tracing);
+		if (blockSpkr == true) blockSpkr = false;
+		else blockSpkr = true;
+		console.log("Tracing = ",blockSpkr);
 	};
 	let actionBtn=document.getElementById('actionBtn');
 	actionBtn.onclick = function () {
 		console.log("Action button pressed");
-		if (stopTracing == true) stopTracing = false;
-		else stopTracing = true;
+		if (pauseTracing == true) pauseTracing = false;
+		else pauseTracing = true;
 	};
 	setInterval(displayAnimation, 100);
 });
 
-var tracing = false;
-var stopTracing = false;
+var blockSpkr = false;
+var pauseTracing = false;
 
 //Global variables
 //
@@ -56,8 +62,7 @@ var maxBuffSize = 5000;			// Max audio buffer chunks for playback
 var micBuffer = [];			// Buffer mic audio before sending
 var muted = false;			// mic mute control
 var mixGain = 1;			// Gain applied to mix
-const MaxGain = 1;			// Max Gain permitted by Auto Gain Control 
-const MaxOutputLevel = 1;		// Max output level for auto gain control
+var micGain = 1;			// Gain applied to microphone input
 
 // Timing counters
 //
@@ -91,8 +96,8 @@ var seqGap = 0;				// Accumulators for round trip measurements
 var timeGap = 0;
 var seqStep = 0;
 const updateTimer = 1000;
-var micMax = 0;
-var mixMax = 0;
+var micMax = 0;				// Max mic level to display on level display
+var mixMax = 0;				// Max mix level to display...
 var tracecount = 0;
 function printReport() {
 	trace("Idle = ", idleState.total, " data in = ", dataInState.total, " audio in/out = ", audioInOutState.total);
@@ -135,13 +140,16 @@ setInterval(printReport, updateTimer);
 // Tracing to the traceDiv (a Div with id="Trace" in the DOM)
 //
 var traceDiv = null;
+var traceDiv2 = null;
 var traceArray = [];
+var traceArray2 = [];
 var maxTraces = 100;
 document.addEventListener('DOMContentLoaded', function(event){
 	traceDiv = document.getElementById('Trace');
+	traceDiv2 = document.getElementById('Trace2');
 });
 function trace(){	
-	if (stopTracing == false) {
+	if (pauseTracing == false) {
 		let s ="";
 		for (let i=0; i<arguments.length; i++)
 			s += arguments[i];
@@ -151,6 +159,20 @@ function trace(){
 		if (traceDiv != null) {
 			traceDiv.innerHTML = traceArray.join("");
 			traceDiv.scrollTop = traceDiv.scrollHeight;
+		}
+	}
+}
+function trace2(){	
+	if (pauseTracing == false) {
+		let s ="";
+		for (let i=0; i<arguments.length; i++)
+			s += arguments[i];
+		console.log(s);
+		traceArray2.push(s+"<br>");
+		if (traceArray2.length > maxTraces) traceArray2.shift(0,1);
+		if (traceDiv2 != null) {
+			traceDiv2.innerHTML = traceArray2.join("");
+			traceDiv2.scrollTop = traceDiv2.scrollHeight;
 		}
 	}
 }
@@ -170,7 +192,7 @@ socketIO.on('d', function (data) {
 	enterState( dataInState );
 	packetsIn++;
 	let now = new Date().getTime();
-	if ((micAccessAllowed) && (tracing == false)) {	// Need access to audio before outputting
+	if ((micAccessAllowed) && (blockSpkr == false)) {	// Need access to audio before outputting
 		let mix = [];	// Build up a mix of client audio 
 		let clients = data.c; 
 		for (let c=0; c < clients.length; c++) {
@@ -184,9 +206,10 @@ socketIO.on('d', function (data) {
 						mix[i] += a[i];
 			}
 		}
-mixMax = maxValue(mix);
-if ((mixMax == 0) && (tracecount > 0)) {trace("Mix 0");tracecount--;clients.forEach(c => {trace(c.clientID," ",maxValue(c.packet.audio));})}
-		applyAutoGain(mix,mixGain);
+		let obj = applyAutoGain(mix,mixGain,1);
+		if (obj.peak > mixMax) mixMax = obj.peak;
+if ((obj.peak == 0) && (tracecount > 0)) {trace2("Mix 0");tracecount--;clients.forEach(c => {trace2(c.clientID," ",maxValue(c.packet.audio));})}
+		mixGain = obj.finalGain;
 		if (mix.length != 0) {
 			spkrBuffer.push(...mix);
 			if (spkrBuffer.length > maxBuffSize) {
@@ -210,9 +233,9 @@ socketIO.on('disconnect', function () {
 function displayAnimation() {
 	// called 10 times a second to animate audio displays
 	// drop levels a little
-	micPeakLevel = micPeakLevel * 0.9;
+	micMax = micMax * 0.9;
 	// update displays
-	micDisplay(micPeakLevel);
+	micDisplay(micMax);
 }
 function micDisplay(level) {
 	//if (level > 0) micLED1 = 
@@ -224,11 +247,6 @@ function setStatusLED(name, level) {
 	else LED.className="greenLED";
 }
 
-var micPeakLevel = 0;
-function micPeak(level) {
-	if (level > micPeakLevel) micPeakLevel = level;
-}
-
 function maxValue( arr ) { 				// Find max value in an array
 	let max = arr[0];
 	for (let i =  1; i < arr.length; i++)
@@ -236,11 +254,13 @@ function maxValue( arr ) { 				// Find max value in an array
 	return max;
 }
 
-function applyAutoGain(audio, startGain) {		// Auto gain control
+function applyAutoGain(audio, startGain, maxGain) {	// Auto gain control
+	const MaxOutputLevel = 1;			// Max output level permitted
 	let tempGain, maxLevel, endGain, p, x, transitionLength; 
 	maxLevel = maxValue(audio);			// Find peak audio level 
 	endGain = MaxOutputLevel / maxLevel;		// Desired gain to avoid overload
-	if (endGain > MaxGain) endGain = MaxGain;	// Gain is limited to MaxGain
+	maxLevel = 0;					// Use this to capture peak
+	if (endGain > maxGain) endGain = maxGain;	// Gain is limited to maxGain
 	if (endGain >= startGain) {			// Gain adjustment speed varies
 		transitionLength = audio.length;	// Gain increases are gentle
 		endGain = startGain + ((endGain - startGain)/10);	// Slow the rate of gain change
@@ -258,6 +278,7 @@ function applyAutoGain(audio, startGain) {		// Auto gain control
 		audio[i] = audio[i] * tempGain;
 		if (audio[i] >= MaxOutputLevel) audio[i] = MaxOutputLevel;
 		else if (audio[i] <= (MaxOutputLevel * -1)) audio[i] = MaxOutputLevel * -1;
+		if (audio[i] > maxLevel) maxLevel = audio[i];
 	}
 	if (transitionLength != audio.length) {		// Still audio left to adjust?
 		tempGain = endGain;			// Apply endGain to rest
@@ -265,9 +286,10 @@ function applyAutoGain(audio, startGain) {		// Auto gain control
 			audio[i] = audio[i] * tempGain;
 			if (audio[i] >= MaxOutputLevel) audio[i] = MaxOutputLevel;
 			else if (audio[i] <= (MaxOutputLevel * -1)) audio[i] = MaxOutputLevel * -1;
+			if (audio[i] > maxLevel) maxLevel = audio[i];
 		}
 	}
-	return endGain;
+	return { finalGain: endGain, peak: maxLevel };
 }
 
 function hasGetUserMedia() {		// Test for browser capability
@@ -306,7 +328,9 @@ function startTalking() {
 					micBuffer.push(...micAudio);
 					if (micBuffer.length > PacketSize) {
 						let outAudio = micBuffer.splice(0, PacketSize);
-						//micPeak( maxValue( outAudio ));
+						let obj = applyAutoGain(outAudio, micGain, 1000);
+						if (obj.peak > micMax) micMax = obj.peak;
+						micGain = obj.finalGain;
 						let now = new Date().getTime();
 						socketIO.emit("u",
 						{
@@ -314,7 +338,6 @@ function startTalking() {
 							"sequence": packetSequence,
 							"timeEmitted": now
 						});
-micMax = maxValue(outAudio);
 						packetsOut++;
 						packetSequence++;
 					}
