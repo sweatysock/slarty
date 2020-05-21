@@ -329,9 +329,9 @@ function startTalking() {
 					micBuffer.push(...micAudio);
 					if (micBuffer.length > PacketSize) {
 						let outAudio = micBuffer.splice(0, PacketSize);
-						let obj = applyAutoGain(outAudio, micGain, 10);
-						if (obj.peak > micMax) micMax = obj.peak;
-						micGain = obj.finalGain;
+//						let obj = applyAutoGain(outAudio, micGain, 10);
+//						if (obj.peak > micMax) micMax = obj.peak;
+//						micGain = obj.finalGain;
 						let now = new Date().getTime();
 						socketIO.emit("u",
 						{
