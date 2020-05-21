@@ -207,10 +207,10 @@ socketIO.on('d', function (data) {
 						mix[i] += a[i];
 			}
 		}
-//		let obj = applyAutoGain(mix,mixGain,1);
-//		if (obj.peak > mixMax) mixMax = obj.peak;
+		let obj = applyAutoGain(mix,mixGain,1);
+		if (obj.peak > mixMax) mixMax = obj.peak;
 //if ((obj.peak == 0) && (tracecount > 0)) {trace2("Mix 0");tracecount--;clients.forEach(c => {trace2(c.clientID," ",maxValue(c.packet.audio));})}
-//		mixGain = obj.finalGain;
+		mixGain = obj.finalGain;
 		if (mix.length != 0) {
 			spkrBuffer.push(...mix);
 			if (spkrBuffer.length > maxBuffSize) {
@@ -269,27 +269,28 @@ function applyAutoGain(audio, startGain, maxGain) {	// Auto gain control
 	else
 		transitionLength = Math.floor(audio.length/10);	// Gain decreases are fast
 	tempGain = startGain;				// Start at current gain level
-	for (let i = 0; i < transitionLength; i++) {	// Adjust gain over transition
-		x = i/transitionLength;
-		if (i < (2*transitionLength/3))		// Use the Magic formula
-			p = 3*x*x/2;
-		else
-			p = -3*x*x + 6*x -2;
-		tempGain = startGain + (endGain - startGain) * p;
-		audio[i] = audio[i] * tempGain;
-		if (audio[i] >= MaxOutputLevel) audio[i] = MaxOutputLevel;
-		else if (audio[i] <= (MaxOutputLevel * -1)) audio[i] = MaxOutputLevel * -1;
-		if (audio[i] > maxLevel) maxLevel = audio[i];
-	}
-	if (transitionLength != audio.length) {		// Still audio left to adjust?
-		tempGain = endGain;			// Apply endGain to rest
-		for (let i = transitionLength; i < audio.length; i++) {
-			audio[i] = audio[i] * tempGain;
-			if (audio[i] >= MaxOutputLevel) audio[i] = MaxOutputLevel;
-			else if (audio[i] <= (MaxOutputLevel * -1)) audio[i] = MaxOutputLevel * -1;
-			if (audio[i] > maxLevel) maxLevel = audio[i];
-		}
-	}
+//	for (let i = 0; i < transitionLength; i++) {	// Adjust gain over transition
+//		x = i/transitionLength;
+//		if (i < (2*transitionLength/3))		// Use the Magic formula
+//			p = 3*x*x/2;
+//		else
+//			p = -3*x*x + 6*x -2;
+//		tempGain = startGain + (endGain - startGain) * p;
+//		audio[i] = audio[i] * tempGain;
+//		if (audio[i] >= MaxOutputLevel) audio[i] = MaxOutputLevel;
+//		else if (audio[i] <= (MaxOutputLevel * -1)) audio[i] = MaxOutputLevel * -1;
+//		if (audio[i] > maxLevel) maxLevel = audio[i];
+//	}
+//	if (transitionLength != audio.length) {		// Still audio left to adjust?
+//		tempGain = endGain;			// Apply endGain to rest
+//		for (let i = transitionLength; i < audio.length; i++) {
+//			audio[i] = audio[i] * tempGain;
+//			if (audio[i] >= MaxOutputLevel) audio[i] = MaxOutputLevel;
+//			else if (audio[i] <= (MaxOutputLevel * -1)) audio[i] = MaxOutputLevel * -1;
+//			if (audio[i] > maxLevel) maxLevel = audio[i];
+//		}
+//	}
+finalGain = 0.117; maxLevel = 0.25;
 	return { finalGain: endGain, peak: maxLevel };
 }
 
@@ -329,9 +330,9 @@ function startTalking() {
 					micBuffer.push(...micAudio);
 					if (micBuffer.length > PacketSize) {
 						let outAudio = micBuffer.splice(0, PacketSize);
-//						let obj = applyAutoGain(outAudio, micGain, 10);
-//						if (obj.peak > micMax) micMax = obj.peak;
-//						micGain = obj.finalGain;
+						let obj = applyAutoGain(outAudio, micGain, 10);
+						if (obj.peak > micMax) micMax = obj.peak;
+						micGain = obj.finalGain;
 						let now = new Date().getTime();
 						socketIO.emit("u",
 						{
