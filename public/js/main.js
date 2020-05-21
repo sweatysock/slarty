@@ -103,6 +103,7 @@ function printReport() {
 	trace("Idle = ", idleState.total, " data in = ", dataInState.total, " audio in/out = ", audioInOutState.total);
 	trace("Sent = ",packetsOut," Heard = ",packetsIn," speaker buffer size ",spkrBuffer.length," mic buffer size ", micBuffer.length," overflows = ",overflows," shortages = ",shortages," micMax = ",micMax," mixMax = ",mixMax);
 	let state = "Green";
+	trace2("micMax: ",micMax," micGain: ",micGain," mixMax: ",mixMax," mixGain: ",mixGain);
 	if ((overflows > 1) || (shortages >1)) state = "Orange";
 	if (socketConnected == false) state = "Red";
 	setStatusLED("GeneralStatus",state);
@@ -119,8 +120,8 @@ function printReport() {
 	overflows = 0;
 	shortages = 0;
 	timeGap = 0;
-	micMax = 99;
-	mixMax = 99;
+	micMax = -2;
+	mixMax = -2;
 tracecount = 2;
 f1();
 }
@@ -328,7 +329,7 @@ function startTalking() {
 					micBuffer.push(...micAudio);
 					if (micBuffer.length > PacketSize) {
 						let outAudio = micBuffer.splice(0, PacketSize);
-						let obj = applyAutoGain(outAudio, micGain, 1000);
+						let obj = applyAutoGain(outAudio, micGain, 10);
 						if (obj.peak > micMax) micMax = obj.peak;
 						micGain = obj.finalGain;
 						let now = new Date().getTime();
