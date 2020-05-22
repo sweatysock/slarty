@@ -264,10 +264,11 @@ function applyAutoGain(audio, startGain) {		// Auto gain control
 	}
 	if (transitionLength != audio.length) {		// Still audio left to adjust?
 		tempGain = endGain;			// Apply endGain to rest
-		for (let i = transitionLength; i < audio.length; i++)
+		for (let i = transitionLength; i < audio.length; i++) {
 			audio[i] = audio[i] * tempGain;
 			if (audio[i] >= MaxOutputLevel) audio[i] = MaxOutputLevel;
 			else if (audio[i] <= (MaxOutputLevel * -1)) audio[i] = MaxOutputLevel * -1;
+		}
 	}
 	return endGain;
 }
@@ -310,7 +311,7 @@ function generateMix () {
 			client--;						// next client down in buffer
 		}
 mixMax = maxValue(mix);
-if (mixMax == 0) {console.log("MIX LEVEL 0 ");console.log(receiveBuffer);}
+console.log("MIX LEVEL = ",mixMax);
 		gain = applyAutoGain(mix, gain); 	// Apply auto gain to mix starting at the current gain level 
 		if (clientPackets.length != 0) {		// Only send audio if we have some to send
 			if (upstreamServer != null) { 		// We have an upstream server. Add to mix and send
