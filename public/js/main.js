@@ -250,8 +250,11 @@ function setStatusLED(name, level) {
 
 function maxValue( arr ) { 				// Find max value in an array
 	let max = arr[0];
-	for (let i =  1; i < arr.length; i++)
-		if (arr[i] > max) max = arr[i];
+	let v;
+	for (let i =  1; i < arr.length; i++) {
+		v = Math.abs(arr[i]);
+		if (v > max) max = v;
+	}
 	return max;
 }
 
@@ -260,7 +263,7 @@ function applyAutoGain(audio, startGain, maxGain) {	// Auto gain control
 	let tempGain, maxLevel, endGain, p, x, transitionLength; 
 	maxLevel = maxValue(audio);			// Find peak audio level 
 	endGain = MaxOutputLevel / maxLevel;		// Desired gain to avoid overload
-//	maxLevel = 0;					// Use this to capture peak
+	maxLevel = 0;					// Use this to capture peak
 	if (endGain > maxGain) endGain = maxGain;	// Gain is limited to maxGain
 	if (endGain >= startGain) {			// Gain adjustment speed varies
 		transitionLength = audio.length;	// Gain increases are gentle
@@ -269,27 +272,29 @@ function applyAutoGain(audio, startGain, maxGain) {	// Auto gain control
 	else
 		transitionLength = Math.floor(audio.length/10);	// Gain decreases are fast
 	tempGain = startGain;				// Start at current gain level
-//	for (let i = 0; i < transitionLength; i++) {	// Adjust gain over transition
-//		x = i/transitionLength;
-//		if (i < (2*transitionLength/3))		// Use the Magic formula
-//			p = 3*x*x/2;
-//		else
-//			p = -3*x*x + 6*x -2;
-//		tempGain = startGain + (endGain - startGain) * p;
-//		audio[i] = audio[i] * tempGain;
-//		if (audio[i] >= MaxOutputLevel) audio[i] = MaxOutputLevel;
-//		else if (audio[i] <= (MaxOutputLevel * -1)) audio[i] = MaxOutputLevel * -1;
-//		if (audio[i] > maxLevel) maxLevel = audio[i];
-//	}
-//	if (transitionLength != audio.length) {		// Still audio left to adjust?
-//		tempGain = endGain;			// Apply endGain to rest
-//		for (let i = transitionLength; i < audio.length; i++) {
-//			audio[i] = audio[i] * tempGain;
-//			if (audio[i] >= MaxOutputLevel) audio[i] = MaxOutputLevel;
-//			else if (audio[i] <= (MaxOutputLevel * -1)) audio[i] = MaxOutputLevel * -1;
-//			if (audio[i] > maxLevel) maxLevel = audio[i];
-//		}
-//	}
+	for (let i = 0; i < transitionLength; i++) {	// Adjust gain over transition
+		x = i/transitionLength;
+		if (i < (2*transitionLength/3))		// Use the Magic formula
+			p = 3*x*x/2;
+		else
+			p = -3*x*x + 6*x -2;
+		tempGain = startGain + (endGain - startGain) * p;
+		audio[i] = audio[i] * tempGain;
+		if (audio[i] >= MaxOutputLevel) audio[i] = MaxOutputLevel;
+		else if (audio[i] <= (MaxOutputLevel * -1)) audio[i] = MaxOutputLevel * -1;
+		x = Math.abs(audio[i]);
+		if (x > maxLevel) maxLevel = x;
+	}
+	if (transitionLength != audio.length) {		// Still audio left to adjust?
+		tempGain = endGain;			// Apply endGain to rest
+		for (let i = transitionLength; i < audio.length; i++) {
+			audio[i] = audio[i] * tempGain;
+			if (audio[i] >= MaxOutputLevel) audio[i] = MaxOutputLevel;
+			else if (audio[i] <= (MaxOutputLevel * -1)) audio[i] = MaxOutputLevel * -1;
+			x = Math.abs(audio[i]);
+			if (x > maxLevel) maxLevel = x;
+		}
+	}
 	return { finalGain: endGain, peak: maxLevel };
 }
 
