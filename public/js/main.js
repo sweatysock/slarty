@@ -293,22 +293,22 @@ function applyAutoGain(audio, startGain, maxGain) {	// Auto gain control
 			p = -3*x*x + 6*x -2;
 		tempGain = startGain + (endGain - startGain) * p;
 	 	audio[i] = audio[i] * tempGain;
-trace2("Transition temp gain = ",tempGain);
 		if (audio[i] >= MaxOutputLevel) audio[i] = MaxOutputLevel;
 		else if (audio[i] <= (MaxOutputLevel * -1)) audio[i] = MaxOutputLevel * -1;
 		x = Math.abs(audio[i]);
 		if (x > maxLevel) maxLevel = x;
 	}
+trace2("Transition temp gain final value = ",tempGain);
 	if (transitionLength != audio.length) {		// Still audio left to adjust?
 		tempGain = endGain;			// Apply endGain to rest
 		for (let i = transitionLength; i < audio.length; i++) {
 			audio[i] = audio[i] * tempGain;
-trace2("Remaining temp gain = ",tempGain);
 			if (audio[i] >= MaxOutputLevel) audio[i] = MaxOutputLevel;
 			else if (audio[i] <= (MaxOutputLevel * -1)) audio[i] = MaxOutputLevel * -1;
 			x = Math.abs(audio[i]);
 			if (x > maxLevel) maxLevel = x;
 		}
+trace2("Remaining temp gain final value = ",tempGain);
 	}
 	return { finalGain: endGain, peak: maxLevel };
 }
