@@ -261,7 +261,7 @@ function maxValue( arr ) { 				// Find max value in an array
 function applyAutoGain(audio, startGain, maxGain) {	// Auto gain control
 	const MaxOutputLevel = 1;			// Max output level permitted
 	let tempGain, maxLevel, endGain, p, x, transitionLength; 
-	let output [];
+	let output = [];
 	maxLevel = maxValue(audio);			// Find peak audio level 
 	endGain = MaxOutputLevel / maxLevel;		// Desired gain to avoid overload
 	maxLevel = 0;					// Use this to capture peak
