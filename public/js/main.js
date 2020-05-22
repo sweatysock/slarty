@@ -209,8 +209,8 @@ socketIO.on('d', function (data) {
 		}
 		let obj = applyAutoGain(mix,mixGain,1);
 		if (obj.peak > mixMax) mixMax = obj.peak;
-//if ((obj.peak == 0) && (tracecount > 0)) {trace2("Mix 0");tracecount--;clients.forEach(c => {trace2(c.clientID," ",maxValue(c.packet.audio));})}
 		mixGain = obj.finalGain;
+		mix = obj.audioOut;
 		if (mix.length != 0) {
 			spkrBuffer.push(...mix);
 			if (spkrBuffer.length > maxBuffSize) {
@@ -261,6 +261,7 @@ function maxValue( arr ) { 				// Find max value in an array
 function applyAutoGain(audio, startGain, maxGain) {	// Auto gain control
 	const MaxOutputLevel = 1;			// Max output level permitted
 	let tempGain, maxLevel, endGain, p, x, transitionLength; 
+	let output [];
 	maxLevel = maxValue(audio);			// Find peak audio level 
 	endGain = MaxOutputLevel / maxLevel;		// Desired gain to avoid overload
 	maxLevel = 0;					// Use this to capture peak
@@ -279,23 +280,23 @@ function applyAutoGain(audio, startGain, maxGain) {	// Auto gain control
 		else
 			p = -3*x*x + 6*x -2;
 		tempGain = startGain + (endGain - startGain) * p;
-//		audio[i] = audio[i] * tempGain;
-		if (audio[i] >= MaxOutputLevel) audio[i] = MaxOutputLevel;
-		else if (audio[i] <= (MaxOutputLevel * -1)) audio[i] = MaxOutputLevel * -1;
-		x = Math.abs(audio[i]);
+		output[i] = audio[i] * tempGain;
+		if (output[i] >= MaxOutputLevel) output[i] = MaxOutputLevel;
+		else if (output[i] <= (MaxOutputLevel * -1)) output[i] = MaxOutputLevel * -1;
+		x = Math.abs(output[i]);
 		if (x > maxLevel) maxLevel = x;
 	}
 	if (transitionLength != audio.length) {		// Still audio left to adjust?
 		tempGain = endGain;			// Apply endGain to rest
 		for (let i = transitionLength; i < audio.length; i++) {
-//			audio[i] = audio[i] * tempGain;
-			if (audio[i] >= MaxOutputLevel) audio[i] = MaxOutputLevel;
-			else if (audio[i] <= (MaxOutputLevel * -1)) audio[i] = MaxOutputLevel * -1;
-			x = Math.abs(audio[i]);
+			output[i] = audio[i] * tempGain;
+			if (output[i] >= MaxOutputLevel) output[i] = MaxOutputLevel;
+			else if (output[i] <= (MaxOutputLevel * -1)) output[i] = MaxOutputLevel * -1;
+			x = Math.abs(output[i]);
 			if (x > maxLevel) maxLevel = x;
 		}
 	}
-	return { finalGain: endGain, peak: maxLevel };
+	return { audioOut: output, finalGain: endGain, peak: maxLevel };
 }
 
 function hasGetUserMedia() {		// Test for browser capability
@@ -337,6 +338,7 @@ function startTalking() {
 						let obj = applyAutoGain(outAudio, micGain, 10);
 						if (obj.peak > micMax) micMax = obj.peak;
 						micGain = obj.finalGain;
+						outAudio = obj.audioOut;
 						let now = new Date().getTime();
 						socketIO.emit("u",
 						{
