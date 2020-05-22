@@ -221,6 +221,8 @@ socketIO.on('d', function (data) {
 						mix[i] += a[i];
 			}
 		}
+if (mixGain > 1) trace2("MIX gain goofy ",micGain);
+if (mix.length < 10) trace2("MIX array empty");
 		let obj = applyAutoGain(mix,mixGain,1);
 		if (obj.peak > mixMax) mixMax = obj.peak;
 		mixGain = obj.finalGain;
@@ -262,9 +264,9 @@ function setStatusLED(name, level) {
 }
 
 function maxValue( arr ) { 				// Find max value in an array
-	let max = arr[0];
+	let max = 0;
 	let v;
-	for (let i =  1; i < arr.length; i++) {
+	for (let i =  0; i < arr.length; i++) {
 		v = Math.abs(arr[i]);
 		if (v > max) max = v;
 	}
@@ -276,7 +278,6 @@ function applyAutoGain(audio, startGain, maxGain) {	// Auto gain control
 	let tempGain, maxLevel, endGain, p, x, transitionLength; 
 	maxLevel = maxValue(audio);			// Find peak audio level 
 	endGain = MaxOutputLevel / maxLevel;		// Desired gain to avoid overload
-trace2("start gain =",startGain,"endGain = ",endGain);
 	maxLevel = 0;					// Use this to capture peak
 	if (endGain > maxGain) endGain = maxGain;	// Gain is limited to maxGain
 	if (endGain >= startGain) {			// Gain adjustment speed varies
@@ -299,7 +300,6 @@ trace2("start gain =",startGain,"endGain = ",endGain);
 		x = Math.abs(audio[i]);
 		if (x > maxLevel) maxLevel = x;
 	}
-trace2("Transition temp gain final value = ",tempGain);
 	if (transitionLength != audio.length) {		// Still audio left to adjust?
 		tempGain = endGain;			// Apply endGain to rest
 		for (let i = transitionLength; i < audio.length; i++) {
@@ -309,7 +309,6 @@ trace2("Transition temp gain final value = ",tempGain);
 			x = Math.abs(audio[i]);
 			if (x > maxLevel) maxLevel = x;
 		}
-trace2("Remaining temp gain final value = ",tempGain);
 	}
 	return { finalGain: endGain, peak: maxLevel };
 }
@@ -350,6 +349,8 @@ function startTalking() {
 					micBuffer.push(...micAudio);
 					if (micBuffer.length > PacketSize) {
 						let outAudio = micBuffer.splice(0, PacketSize);
+if (micGain > 10) trace2("Mic gain going crazy ",micGain);
+if (outAudio.length < PacketSize) trace2("Mic array incorrect");
 						let obj = applyAutoGain(outAudio, micGain, 10);
 						if (obj.peak > micMax) micMax = obj.peak;
 						micGain = obj.finalGain;
