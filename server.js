@@ -230,9 +230,12 @@ function isTimeToMix() {	// Test if we must generate a mix regardless
 }
 
 function maxValue( arr ) { 			// Find max value in an array
-	let max = arr[0];
-	for (let i =  1; i < arr.length; i++)
-		if (arr[i] > max) max = arr[i];
+	let max = 0;
+	let v;
+	for (let i =  0; i < arr.length; i++) {
+		v = Math.abs(arr[i]);
+		if (v > max) max = v;
+	}
 	return max;
 }
 
@@ -256,11 +259,15 @@ function applyAutoGain(audio, startGain) {		// Auto gain control
 			p = -3*x*x + 6*x -2;
 		tempGain = startGain + (endGain - startGain) * p;
 		audio[i] = audio[i] * tempGain;
+		if (audio[i] >= MaxOutputLevel) audio[i] = MaxOutputLevel;
+		else if (audio[i] <= (MaxOutputLevel * -1)) audio[i] = MaxOutputLevel * -1;
 	}
 	if (transitionLength != audio.length) {		// Still audio left to adjust?
 		tempGain = endGain;			// Apply endGain to rest
 		for (let i = transitionLength; i < audio.length; i++)
 			audio[i] = audio[i] * tempGain;
+			if (audio[i] >= MaxOutputLevel) audio[i] = MaxOutputLevel;
+			else if (audio[i] <= (MaxOutputLevel * -1)) audio[i] = MaxOutputLevel * -1;
 	}
 	return endGain;
 }

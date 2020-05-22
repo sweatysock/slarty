@@ -221,10 +221,9 @@ socketIO.on('d', function (data) {
 						mix[i] += a[i];
 			}
 		}
-if (mixGain > 1) trace2("MIX gain goofy ",micGain);
-if (mix.length < 10) trace2("MIX array empty");
 		let obj = applyAutoGain(mix,mixGain,1);
 		if (obj.peak > mixMax) mixMax = obj.peak;
+trace2("mixMax = ",obj.peak);
 		mixGain = obj.finalGain;
 		if (mix.length != 0) {
 			spkrBuffer.push(...mix);
@@ -349,11 +348,10 @@ function startTalking() {
 					micBuffer.push(...micAudio);
 					if (micBuffer.length > PacketSize) {
 						let outAudio = micBuffer.splice(0, PacketSize);
-if (micGain > 10) trace2("Mic gain going crazy ",micGain);
-if (outAudio.length < PacketSize) trace2("Mic array incorrect");
 						let obj = applyAutoGain(outAudio, micGain, 10);
 						if (obj.peak > micMax) micMax = obj.peak;
 						micGain = obj.finalGain;
+trace2("Mic peak = ",obj.peak);
 						let now = new Date().getTime();
 						socketIO.emit("u",
 						{
