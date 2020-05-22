@@ -1,6 +1,7 @@
 // UI behaviour setup
 // 
 $(document).ready(function () {
+	setInterval(displayAnimation, 100);
 	$("#startBtn").click(function () {
 		$(this).hide();
 		startTalking();
@@ -42,7 +43,6 @@ $(document).ready(function () {
 		if (pauseTracing == true) pauseTracing = false;
 		else pauseTracing = true;
 	};
-	setInterval(displayAnimation, 100);
 });
 
 var blockSpkr = false;
@@ -123,7 +123,7 @@ function printReport() {
 	micMax = -2;
 	mixMax = -2;
 tracecount = 2;
-	reviewInputDevices();
+//	reviewInputDevices();
 }
 
 async function  reviewInputDevices() {
@@ -223,7 +223,6 @@ socketIO.on('d', function (data) {
 		}
 		let obj = applyAutoGain(mix,mixGain,1);
 		if (obj.peak > mixMax) mixMax = obj.peak;
-trace2("mixMax = ",obj.peak);
 		mixGain = obj.finalGain;
 		if (mix.length != 0) {
 			spkrBuffer.push(...mix);
@@ -351,7 +350,6 @@ function startTalking() {
 						let obj = applyAutoGain(outAudio, micGain, 10);
 						if (obj.peak > micMax) micMax = obj.peak;
 						micGain = obj.finalGain;
-trace2("Mic peak = ",obj.peak);
 						let now = new Date().getTime();
 						socketIO.emit("u",
 						{
