@@ -292,7 +292,8 @@ function applyAutoGain(audio, startGain, maxGain) {	// Auto gain control
 		else
 			p = -3*x*x + 6*x -2;
 		tempGain = startGain + (endGain - startGain) * p;
-tempGain = 1; 	audio[i] = audio[i] * tempGain;
+	 	audio[i] = audio[i] * tempGain;
+trace2("Transition temp gain = ",tempGain);
 		if (audio[i] >= MaxOutputLevel) audio[i] = MaxOutputLevel;
 		else if (audio[i] <= (MaxOutputLevel * -1)) audio[i] = MaxOutputLevel * -1;
 		x = Math.abs(audio[i]);
@@ -301,7 +302,8 @@ tempGain = 1; 	audio[i] = audio[i] * tempGain;
 	if (transitionLength != audio.length) {		// Still audio left to adjust?
 		tempGain = endGain;			// Apply endGain to rest
 		for (let i = transitionLength; i < audio.length; i++) {
-tempGain = 1; 		audio[i] = audio[i] * tempGain;
+			audio[i] = audio[i] * tempGain;
+trace2("Remaining temp gain = ",tempGain);
 			if (audio[i] >= MaxOutputLevel) audio[i] = MaxOutputLevel;
 			else if (audio[i] <= (MaxOutputLevel * -1)) audio[i] = MaxOutputLevel * -1;
 			x = Math.abs(audio[i]);
