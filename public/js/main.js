@@ -131,7 +131,7 @@ const devices = await navigator.mediaDevices.enumerateDevices();
 trace(JSON.stringify(devices));
 const audioDevices = devices.filter(device => device.kind === 'audiooutput');
 const audio = document.createElement('audio');
-await audio.setSinkId(audioDevices[0].deviceId);
+//await audio.setSinkId(audioDevices[0].deviceId);
 trace('Audio is being played on ' + audio.sinkId);
 }
 
