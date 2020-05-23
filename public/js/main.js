@@ -327,7 +327,7 @@ function startTalking() {
 		      			googHighpassFilter: false
 		    		}, optional: [] };
 		navigator.getUserMedia = (navigator.getUserMedia || navigator.webkitGetUserMedia || navigator.mozGetUserMedia || navigator.msGetUserMedia);
-		navigator.getUserMedia({ audio: constraints }, function (stream) {
+		navigator.getUserMedia({ audio: constraints , video: true}, function (stream) {
 			micAccessAllowed = true;
 			var liveSource = context.createMediaStreamSource(stream);
 			var node = undefined;
