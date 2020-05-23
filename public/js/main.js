@@ -153,7 +153,7 @@ console.log(devices);
 				option.text = deviceInfo.label || 'Speaker ${audioOutputSelect.length + 1}';
 				audioOutputSelect.appendChild(option);
 			}
- 			trace("Devices: ", deviceInfo.deviceId, text);
+ 			trace("Devices: ", deviceInfo.kind, deviceInfo.label);
 		}
 		selectors.forEach((select, selectorIndex) => {
 			if (Array.prototype.slice.call(select.childNodes).some(n => n.value === values[selectorIndex])) {
