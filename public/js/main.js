@@ -316,102 +316,115 @@ function hasGetUserMedia() {		// Test for browser capability
 		navigator.mozGetUserMedia || navigator.msGetUserMedia);
 }
 
-function startTalking() {
-	if (hasGetUserMedia()) {
-		var context = new window.AudioContext || new window.webkitAudioContext;
-		soundcardSampleRate = context.sampleRate;
-		let constraints = { mandatory: {
-		      			googEchoCancellation: true,
-		      			googAutoGainControl: false,
-		      			googNoiseSuppression: false,
-		      			googHighpassFilter: false
-		    		}, optional: [] };
-		navigator.getUserMedia = (navigator.getUserMedia || navigator.webkitGetUserMedia || navigator.mozGetUserMedia || navigator.msGetUserMedia);
-		navigator.getUserMedia({ audio: constraints }, function (stream) {
-			micAccessAllowed = true;
-			var liveSource = context.createMediaStreamSource(stream);
-			var node = undefined;
-			if (!context.createScriptProcessor) {
-				node = context.createJavaScriptNode(chunkSize, 1, 1);
-			} else {
-				node = context.createScriptProcessor(chunkSize, 1, 1);
-			}
-			node.onaudioprocess = function (e) {
-				enterState( audioInOutState );
-				var inData = e.inputBuffer.getChannelData(0);
-				var outData = e.outputBuffer.getChannelData(0);
-				let micAudio = [];
-				if ((socketConnected) && (muted == false)) {		// Mic audio can be sent to server
-					micAudio = downSample(inData, soundcardSampleRate, SampleRate);
-					resampledChunkSize = micAudio.length;
-					micBuffer.push(...micAudio);
-					if (micBuffer.length > PacketSize) {
-						let outAudio = micBuffer.splice(0, PacketSize);
-						let obj = applyAutoGain(outAudio, micGain, 10);
-						if (obj.peak > micMax) micMax = obj.peak;
-						micGain = obj.finalGain;
-						let now = new Date().getTime();
-						socketIO.emit("u",
-						{
-							"audio": outAudio,
-							"sequence": packetSequence,
-							"timeEmitted": now
-						});
-						packetsOut++;
-						packetSequence++;
-					}
-				}
-				let inAudio = [];
-				if (spkrBuffer.length > resampledChunkSize) {	// Server audio can be sent to speaker
-					inAudio = spkrBuffer.splice(0,resampledChunkSize);
-				} else {
-					inAudio = spkrBuffer.splice(0,spkrBuffer.length);
-					let zeros = new Array(resampledChunkSize-spkrBuffer.length).fill(0);
-					inAudio.push(...zeros);
-					shortages++;
-				}
-				let spkrAudio = upSample(inAudio, SampleRate, soundcardSampleRate);
-				for (let i in outData) 
-					outData[i] = spkrAudio[i];
-				enterState( idleState );
-			}
 
-			let lowFreq = 100;					// Bandpass to clean up Mic
-			let highFreq = 4000;
-			let geometricMean = Math.sqrt(lowFreq * highFreq);
-			var micFilter = context.createBiquadFilter();
-			micFilter.type = 'bandpass';
-			micFilter.frequency.value = geometricMean;
-			micFilter.Q.value = geometricMean / (highFreq - lowFreq);
-			
-			var splitter = context.createChannelSplitter(2);	// Split signal for echo cancelling
-
-			var echoDelay = context.createDelay(5);			// Delay to match speaker echo
-			echoDelay.delayTime.value = 0.00079
-
-			lowFreq = 300;						// Echo filter to match speaker+mic
-			highFreq = 5000;
-			geometricMean = Math.sqrt(lowFreq * highFreq);
-			var echoFilter = context.createBiquadFilter();
-			echoFilter.type = 'bandpass';
-			echoFilter.frequency.value = geometricMean;
-			echoFilter.Q.value = geometricMean / (highFreq - lowFreq);
-			
-			var gainNode = context.createGain();			// Cancelling requires inverting signal
-			gainNode.gain.value = -1;
-
-			liveSource.connect(micFilter);				// Mic goes to micFilter
-			micFilter.connect(node);				// micFilter goes to our processor
-			node.connect(splitter);					// our processor feeds to a splitter
-			splitter.connect(echoDelay,0);				// one output goes to feedback loop
-			splitter.connect(context.destination,0);		// other output goes to speaker
-			echoDelay.connect(echoFilter);				// feedback echo goes to echo filter
-			echoFilter.connect(gainNode);				// echo filter goes to inverter
-			gainNode.connect(micFilter);				// inverter feeds back into micFilter
-			gainNode.gain.value = 0;				// Start with feedback loop off
-		}, function (err) { trace(err); });
+function handleAudio(stream, context) {
+	micAccessAllowed = true;
+	var liveSource = context.createMediaStreamSource(stream);
+	var node = undefined;
+	if (!context.createScriptProcessor) {
+		node = context.createJavaScriptNode(chunkSize, 1, 1);
 	} else {
-		alert('getUserMedia() is not supported in your browser');
+		node = context.createScriptProcessor(chunkSize, 1, 1);
+	}
+	node.onaudioprocess = function (e) {
+		enterState( audioInOutState );
+		var inData = e.inputBuffer.getChannelData(0);
+		var outData = e.outputBuffer.getChannelData(0);
+		let micAudio = [];
+		if ((socketConnected) && (muted == false)) {		// Mic audio can be sent to server
+			micAudio = downSample(inData, soundcardSampleRate, SampleRate);
+			resampledChunkSize = micAudio.length;
+			micBuffer.push(...micAudio);
+			if (micBuffer.length > PacketSize) {
+				let outAudio = micBuffer.splice(0, PacketSize);
+				let obj = applyAutoGain(outAudio, micGain, 10);
+				if (obj.peak > micMax) micMax = obj.peak;
+				micGain = obj.finalGain;
+				let now = new Date().getTime();
+				socketIO.emit("u",
+				{
+					"audio": outAudio,
+					"sequence": packetSequence,
+					"timeEmitted": now
+				});
+				packetsOut++;
+				packetSequence++;
+			}
+		}
+		let inAudio = [];
+		if (spkrBuffer.length > resampledChunkSize) {	// Server audio can be sent to speaker
+			inAudio = spkrBuffer.splice(0,resampledChunkSize);
+		} else {
+			inAudio = spkrBuffer.splice(0,spkrBuffer.length);
+			let zeros = new Array(resampledChunkSize-spkrBuffer.length).fill(0);
+			inAudio.push(...zeros);
+			shortages++;
+		}
+		let spkrAudio = upSample(inAudio, SampleRate, soundcardSampleRate);
+		for (let i in outData) 
+			outData[i] = spkrAudio[i];
+		enterState( idleState );
+	}
+
+	let lowFreq = 100;					// Bandpass to clean up Mic
+	let highFreq = 4000;
+	let geometricMean = Math.sqrt(lowFreq * highFreq);
+	var micFilter = context.createBiquadFilter();
+	micFilter.type = 'bandpass';
+	micFilter.frequency.value = geometricMean;
+	micFilter.Q.value = geometricMean / (highFreq - lowFreq);
+	
+	var splitter = context.createChannelSplitter(2);	// Split signal for echo cancelling
+
+	var echoDelay = context.createDelay(5);			// Delay to match speaker echo
+	echoDelay.delayTime.value = 0.00079
+
+	lowFreq = 300;						// Echo filter to match speaker+mic
+	highFreq = 5000;
+	geometricMean = Math.sqrt(lowFreq * highFreq);
+	var echoFilter = context.createBiquadFilter();
+	echoFilter.type = 'bandpass';
+	echoFilter.frequency.value = geometricMean;
+	echoFilter.Q.value = geometricMean / (highFreq - lowFreq);
+	
+	var gainNode = context.createGain();			// Cancelling requires inverting signal
+	gainNode.gain.value = -1;
+
+	liveSource.connect(micFilter);				// Mic goes to micFilter
+	micFilter.connect(node);				// micFilter goes to our processor
+	node.connect(splitter);					// our processor feeds to a splitter
+	splitter.connect(echoDelay,0);				// one output goes to feedback loop
+	splitter.connect(context.destination,0);		// other output goes to speaker
+	echoDelay.connect(echoFilter);				// feedback echo goes to echo filter
+	echoFilter.connect(gainNode);				// echo filter goes to inverter
+	gainNode.connect(micFilter);				// inverter feeds back into micFilter
+	gainNode.gain.value = 0;				// Start with feedback loop off
+}
+
+
+function startTalking() {
+	let constraints = { mandatory: {
+ 		googEchoCancellation: true,
+		googAutoGainControl: false,
+		googNoiseSuppression: false,
+		googHighpassFilter: false
+		}, optional: [] };
+	navigator.getUM = (navigator.getUserMedia || navigator.webKitGetUserMedia || navigator.moxGetUserMedia || navigator.mozGetUserMedia || navigator.msGetUserMedia);
+	if (navigator.mediaDevices.getUserMedia) {
+trace("Using GUM with promise");
+		let context = new window.AudioContext || new window.webkitAudioContext;
+		soundcardSampleRate = context.sampleRate;
+		navigator.mediaDevices.getUserMedia({  audio: constraints }) .then(function (stream) {
+			handleAudio(stream, context);
+		})
+		.catch(function (e) { trace(e.name + ": " + e.message); });
+	} else {
+trace("Using OLD GUM");
+		let context = new window.AudioContext || new window.webkitAudioContext;
+		soundcardSampleRate = context.sampleRate;
+		navigator.getUM({ audio: constraints }, function (stream) {
+			handleAudio(stream, context);
+		}, function () { trace("Audio HW is not accessible."); });
 	}
 }
 
