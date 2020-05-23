@@ -45,6 +45,8 @@ $(document).ready(function () {
 	};
 	audioInputSelect = document.getElementById('audioSource');
 	audioOutputSelect = document.getElementById('audioOutput');
+	audioInputSelect.onchange = initAudio();
+	audioOutputSelect.onchange = changeAudioOutput();
 	selectors = [audioInputSelect, audioOutputSelect];
 });
 var blockSpkr = false;
@@ -129,9 +131,7 @@ tracecount = 2;
 }
 
 var audioInputSelect;			// Dropdown for choosing audio input
-audioInputSelect.onchange = initAudio();
 var audioOutputSelect;			// Dropdown for choosing audio output
-audioOutputSelect.onchange = changeAudioOutput();
 var selectors;				// List of the input & output selectors in the UI
 async function  reviewInputDevices() {
 	if (selectors != null) {
