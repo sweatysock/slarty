@@ -457,8 +457,23 @@ trace("AUDIO INPUT select = ",audioSource);
 function changeAudioOutput() {
 	const audioDestination = audioOutputSelect.value;
 	const audio = document.createElement('audio');
-	await audio.setSinkId(audioDestination);
-	trace('Audio is being played on ' + audio.sinkId);
+	if (typeof audio.sinkId !== 'undefined') {
+		audio.setSinkId(audioDestination)
+		.then () => {
+			trace('Audio is being played on ' + audio.sinkId);
+		})
+		.catch(error => {
+			let errorMessage = error;
+			if (error.name === 'SecurityError') {
+				errorMessage = "You need to use HTTPS for selecting audio output device: ${error}";
+			}
+			trace(errorMessage);
+		        // Jump back to first output device in the list as it's the default.
+			audioOutputSelect.selectedIndex = 0;
+		});
+	} else {
+		trace('Browser does not support output device selection.');
+	}
 }
 
 // Resamplers
