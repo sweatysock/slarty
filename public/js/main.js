@@ -316,6 +316,45 @@ function hasGetUserMedia() {		// Test for browser capability
 		navigator.mozGetUserMedia || navigator.msGetUserMedia);
 }
 
+function processAudio(e) {
+	enterState( audioInOutState );
+	var inData = e.inputBuffer.getChannelData(0);
+	var outData = e.outputBuffer.getChannelData(0);
+	let micAudio = [];
+	if ((socketConnected) && (muted == false)) {		// Mic audio can be sent to server
+		micAudio = downSample(inData, soundcardSampleRate, SampleRate);
+		resampledChunkSize = micAudio.length;
+		micBuffer.push(...micAudio);
+		if (micBuffer.length > PacketSize) {
+			let outAudio = micBuffer.splice(0, PacketSize);
+			let obj = applyAutoGain(outAudio, micGain, 10);
+			if (obj.peak > micMax) micMax = obj.peak;
+			micGain = obj.finalGain;
+			let now = new Date().getTime();
+			socketIO.emit("u",
+			{
+				"audio": outAudio,
+				"sequence": packetSequence,
+				"timeEmitted": now
+			});
+			packetsOut++;
+			packetSequence++;
+		}
+	}
+	let inAudio = [];
+	if (spkrBuffer.length > resampledChunkSize) {	// Server audio can be sent to speaker
+		inAudio = spkrBuffer.splice(0,resampledChunkSize);
+	} else {
+		inAudio = spkrBuffer.splice(0,spkrBuffer.length);
+		let zeros = new Array(resampledChunkSize-spkrBuffer.length).fill(0);
+		inAudio.push(...zeros);
+		shortages++;
+	}
+	let spkrAudio = upSample(inAudio, SampleRate, soundcardSampleRate);
+	for (let i in outData) 
+		outData[i] = spkrAudio[i];
+	enterState( idleState );
+}
 
 function handleAudio(stream) {
 	let context = new window.AudioContext || new window.webkitAudioContext;
@@ -328,45 +367,7 @@ function handleAudio(stream) {
 	} else {
 		node = context.createScriptProcessor(chunkSize, 1, 1);
 	}
-	node.onaudioprocess = function (e) {
-		enterState( audioInOutState );
-		var inData = e.inputBuffer.getChannelData(0);
-		var outData = e.outputBuffer.getChannelData(0);
-		let micAudio = [];
-		if ((socketConnected) && (muted == false)) {		// Mic audio can be sent to server
-			micAudio = downSample(inData, soundcardSampleRate, SampleRate);
-			resampledChunkSize = micAudio.length;
-			micBuffer.push(...micAudio);
-			if (micBuffer.length > PacketSize) {
-				let outAudio = micBuffer.splice(0, PacketSize);
-				let obj = applyAutoGain(outAudio, micGain, 10);
-				if (obj.peak > micMax) micMax = obj.peak;
-				micGain = obj.finalGain;
-				let now = new Date().getTime();
-				socketIO.emit("u",
-				{
-					"audio": outAudio,
-					"sequence": packetSequence,
-					"timeEmitted": now
-				});
-				packetsOut++;
-				packetSequence++;
-			}
-		}
-		let inAudio = [];
-		if (spkrBuffer.length > resampledChunkSize) {	// Server audio can be sent to speaker
-			inAudio = spkrBuffer.splice(0,resampledChunkSize);
-		} else {
-			inAudio = spkrBuffer.splice(0,spkrBuffer.length);
-			let zeros = new Array(resampledChunkSize-spkrBuffer.length).fill(0);
-			inAudio.push(...zeros);
-			shortages++;
-		}
-		let spkrAudio = upSample(inAudio, SampleRate, soundcardSampleRate);
-		for (let i in outData) 
-			outData[i] = spkrAudio[i];
-		enterState( idleState );
-	}
+	node.onaudioprocess = processAudio;
 
 	let lowFreq = 100;					// Bandpass to clean up Mic
 	let highFreq = 4000;
