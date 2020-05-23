@@ -459,7 +459,7 @@ function changeAudioOutput() {
 	const audio = document.createElement('audio');
 	if (typeof audio.sinkId !== 'undefined') {
 		audio.setSinkId(audioDestination)
-		.then () => {
+		.then(() => {
 			trace('Audio is being played on ' + audio.sinkId);
 		})
 		.catch(error => {
