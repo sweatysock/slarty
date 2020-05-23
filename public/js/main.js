@@ -426,12 +426,20 @@ function initAudio() {
 			track.stop();
 		});
 	}
-	let constraints = { mandatory: {
- 		googEchoCancellation: true,
-		googAutoGainControl: false,
-		googNoiseSuppression: false,
-		googHighpassFilter: false
-	}, optional: [] };
+	const audioSource = audioInputSelect.value;
+trace("AUDIO INPUT select = ",audioSource);
+	let constraints = { 
+		deviceId: audioSource ? {exact: audioSource} : undefined,
+	};
+	// Old constraints were:
+	//
+	//	mandatory: {
+ 	//		googEchoCancellation: true,
+	//		googAutoGainControl: false,
+	//		googNoiseSuppression: false,
+	//		googHighpassFilter: false 
+	//	}, 
+	//	optional: [] 
 	navigator.getUM = (navigator.getUserMedia || navigator.webKitGetUserMedia || navigator.moxGetUserMedia || navigator.mozGetUserMedia || navigator.msGetUserMedia);
 	if (navigator.mediaDevices.getUserMedia) {
 		trace("Using GUM with promise");
