@@ -129,7 +129,9 @@ tracecount = 2;
 }
 
 var audioInputSelect;			// Dropdown for choosing audio input
+audioInputSelect.onchange = initAudio();
 var audioOutputSelect;			// Dropdown for choosing audio output
+audioOutputSelect.onchange = changeAudioOutput();
 var selectors;				// List of the input & output selectors in the UI
 async function  reviewInputDevices() {
 	if (selectors != null) {
@@ -158,9 +160,6 @@ async function  reviewInputDevices() {
 				select.value = values[selectorIndex];
 			}
 		});
-		const audio = document.createElement('audio');
-		await audio.setSinkId(devices[0].deviceId);
-		trace('Audio is being played on ' + audio.sinkId);
 	}
 }
 
@@ -453,6 +452,13 @@ trace("AUDIO INPUT select = ",audioSource);
 			handleAudio(stream);
 		}, function () { trace("Audio HW is not accessible."); });
 	}
+}
+
+function changeAudioOutput() {
+	const audioDestination = audioOutputSelect.value;
+	const audio = document.createElement('audio');
+	await audio.setSinkId(audioDestination);
+	trace('Audio is being played on ' + audio.sinkId);
 }
 
 // Resamplers
