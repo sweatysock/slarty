@@ -43,8 +43,10 @@ $(document).ready(function () {
 		if (pauseTracing == true) pauseTracing = false;
 		else pauseTracing = true;
 	};
+	audioInputSelect = document.getElementById('audioSource');
+	audioOutputSelect = document.getElementById('audioOutput');
+	selectors = [audioInputSelect, audioOutputSelect];
 });
-
 var blockSpkr = false;
 var pauseTracing = false;
 
@@ -123,30 +125,45 @@ function printReport() {
 	micMax = -2;
 	mixMax = -2;
 tracecount = 2;
-//	reviewInputDevices();
+	reviewInputDevices();
 }
 
+var audioInputSelect;			// Dropdown for choosing audio input
+var audioOutputSelect;			// Dropdown for choosing audio output
+var selectors;				// List of the input & output selectors in the UI
 async function  reviewInputDevices() {
-	const devices = await navigator.mediaDevices.enumerateDevices();
-	let deviceInfo, text;
-	let mc = sc = vc = 1;
-	for (let i = 0; i !== devices.length; ++i) {
-		deviceInfo = devices[i];
-		if (deviceInfo.kind === 'audioinput') {
-			text = deviceInfo.label || 'Microphone ' + mc;
-			mc++;
-		} else if (deviceInfo.kind === 'audiooutput') {
-			text = deviceInfo.label || 'Speaker ' +  sc;
-			sc++;
-		} else if (deviceInfo.kind === 'videoinput') {
-			text = deviceInfo.label || 'Camera ' + vc;
-			vc++;
+	if (selectors != null) {
+		const devices = await navigator.mediaDevices.enumerateDevices();
+console.log(devices);
+		let deviceInfo, text;
+		const values = selectors.map(select => select.value);
+		selectors.forEach(select => {
+			while (select.firstChild) {
+				select.removeChild(select.firstChild);
+			}
+		});
+		for (let i = 0; i !== devices.length; ++i) {
+			deviceInfo = devices[i];
+			const option = document.createElement('option');
+			option.value = deviceInfo.deviceId;
+			if (deviceInfo.kind === 'audioinput') {
+				option.text = deviceInfo.label || 'Microphone ${audioInputSelect.length + 1}';
+				audioInputSelect.appendChild(option);
+			} else if (deviceInfo.kind === 'audiooutput') {
+				option.text = deviceInfo.label || 'Speaker ${audioOutputSelect.length + 1}';
+				audioOutputSelect.appendChild(option);
+			}
+ 			trace("Devices: ", deviceInfo.deviceId, text);
 		}
- 		trace("Devices: ", deviceInfo.deviceId, text);
+		selectors.forEach((select, selectorIndex) => {
+			if (Array.prototype.slice.call(select.childNodes).some(n => n.value === values[selectorIndex])) {
+				select.value = values[selectorIndex];
+			}
+		});
+		const audio = document.createElement('audio');
+		await audio.setSinkId(devices[0].deviceId);
+		trace('Audio is being played on ' + audio.sinkId);
 	}
-	const audio = document.createElement('audio');
-	await audio.setSinkId(devices[0].deviceId);
-	trace('Audio is being played on ' + audio.sinkId);
 }
 
 setInterval(printReport, updateTimer);
@@ -360,9 +377,9 @@ function handleAudio(stream) {
 	let context = new window.AudioContext || new window.webkitAudioContext;
 	soundcardSampleRate = context.sampleRate;
 	micAccessAllowed = true;
-	var liveSource = context.createMediaStreamSource(stream);
-	var node = undefined;
-	if (!context.createScriptProcessor) {
+	let liveSource = context.createMediaStreamSource(stream); // Create audio source (mic)
+	let node = undefined;
+	if (!context.createScriptProcessor) {			// Audio processor node
 		node = context.createJavaScriptNode(chunkSize, 1, 1);
 	} else {
 		node = context.createScriptProcessor(chunkSize, 1, 1);
@@ -372,29 +389,29 @@ function handleAudio(stream) {
 	let lowFreq = 100;					// Bandpass to clean up Mic
 	let highFreq = 4000;
 	let geometricMean = Math.sqrt(lowFreq * highFreq);
-	var micFilter = context.createBiquadFilter();
+	let micFilter = context.createBiquadFilter();
 	micFilter.type = 'bandpass';
 	micFilter.frequency.value = geometricMean;
 	micFilter.Q.value = geometricMean / (highFreq - lowFreq);
 	
-	var splitter = context.createChannelSplitter(2);	// Split signal for echo cancelling
+	let splitter = context.createChannelSplitter(2);	// Split signal for echo cancelling
 
-	var echoDelay = context.createDelay(5);			// Delay to match speaker echo
+	let echoDelay = context.createDelay(5);			// Delay to match speaker echo
 	echoDelay.delayTime.value = 0.00079
 
 	lowFreq = 300;						// Echo filter to match speaker+mic
 	highFreq = 5000;
 	geometricMean = Math.sqrt(lowFreq * highFreq);
-	var echoFilter = context.createBiquadFilter();
+	let echoFilter = context.createBiquadFilter();
 	echoFilter.type = 'bandpass';
 	echoFilter.frequency.value = geometricMean;
 	echoFilter.Q.value = geometricMean / (highFreq - lowFreq);
 	
-	var gainNode = context.createGain();			// Cancelling requires inverting signal
+	let gainNode = context.createGain();			// Cancelling requires inverting signal
 	gainNode.gain.value = -1;
-
+								// Time to connect everything...
 	liveSource.connect(micFilter);				// Mic goes to micFilter
-	micFilter.connect(node);				// micFilter goes to our processor
+	micFilter.connect(node);				// micFilter goes to audio processor
 	node.connect(splitter);					// our processor feeds to a splitter
 	splitter.connect(echoDelay,0);				// one output goes to feedback loop
 	splitter.connect(context.destination,0);		// other output goes to speaker
