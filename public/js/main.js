@@ -134,7 +134,6 @@ var selectors;				// List of the input & output selectors in the UI
 async function  reviewInputDevices() {
 	if (selectors != null) {
 		const devices = await navigator.mediaDevices.enumerateDevices();
-console.log(devices);
 		let deviceInfo, text;
 		const values = selectors.map(select => select.value);
 		selectors.forEach(select => {
@@ -153,7 +152,6 @@ console.log(devices);
 				option.text = deviceInfo.label || 'Speaker ${audioOutputSelect.length + 1}';
 				audioOutputSelect.appendChild(option);
 			}
- 			trace("Devices: ", deviceInfo.kind, deviceInfo.label);
 		}
 		selectors.forEach((select, selectorIndex) => {
 			if (Array.prototype.slice.call(select.childNodes).some(n => n.value === values[selectorIndex])) {
@@ -374,6 +372,11 @@ function processAudio(e) {
 }
 
 function handleAudio(stream) {
+	if (window.stream) {					// Stop any old streams first
+		window.stream.getTracks().forEach(track => {
+			track.stop();
+		});
+	}
 	let context = new window.AudioContext || new window.webkitAudioContext;
 	soundcardSampleRate = context.sampleRate;
 	micAccessAllowed = true;
@@ -428,16 +431,16 @@ function initAudio() {
 		googAutoGainControl: false,
 		googNoiseSuppression: false,
 		googHighpassFilter: false
-		}, optional: [] };
+	}, optional: [] };
 	navigator.getUM = (navigator.getUserMedia || navigator.webKitGetUserMedia || navigator.moxGetUserMedia || navigator.mozGetUserMedia || navigator.msGetUserMedia);
 	if (navigator.mediaDevices.getUserMedia) {
-trace("Using GUM with promise");
+		trace("Using GUM with promise");
 		navigator.mediaDevices.getUserMedia({  audio: constraints }) .then(function (stream) {
 			handleAudio(stream);
 		})
 		.catch(function (e) { trace(e.name + ": " + e.message); });
 	} else {
-trace("Using OLD GUM");
+		trace("Using OLD GUM");
 		navigator.getUM({ audio: constraints }, function (stream) {
 			handleAudio(stream);
 		}, function () { trace("Audio HW is not accessible."); });
