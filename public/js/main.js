@@ -317,7 +317,9 @@ function hasGetUserMedia() {		// Test for browser capability
 }
 
 
-function handleAudio(stream, context) {
+function handleAudio(stream) {
+	let context = new window.AudioContext || new window.webkitAudioContext;
+	soundcardSampleRate = context.sampleRate;
 	micAccessAllowed = true;
 	var liveSource = context.createMediaStreamSource(stream);
 	var node = undefined;
@@ -402,7 +404,7 @@ function handleAudio(stream, context) {
 }
 
 
-function initAud() {
+function initAudio() {
 	let constraints = { mandatory: {
  		googEchoCancellation: true,
 		googAutoGainControl: false,
@@ -412,18 +414,14 @@ function initAud() {
 	navigator.getUM = (navigator.getUserMedia || navigator.webKitGetUserMedia || navigator.moxGetUserMedia || navigator.mozGetUserMedia || navigator.msGetUserMedia);
 	if (navigator.mediaDevices.getUserMedia) {
 trace("Using GUM with promise");
-		let context = new window.AudioContext || new window.webkitAudioContext;
-		soundcardSampleRate = context.sampleRate;
 		navigator.mediaDevices.getUserMedia({  audio: constraints }) .then(function (stream) {
-			handleAudio(stream, context);
+			handleAudio(stream);
 		})
 		.catch(function (e) { trace(e.name + ": " + e.message); });
 	} else {
 trace("Using OLD GUM");
-		let context = new window.AudioContext || new window.webkitAudioContext;
-		soundcardSampleRate = context.sampleRate;
 		navigator.getUM({ audio: constraints }, function (stream) {
-			handleAudio(stream, context);
+			handleAudio(stream);
 		}, function () { trace("Audio HW is not accessible."); });
 	}
 }
