@@ -2,10 +2,6 @@
 // 
 $(document).ready(function () {
 	setInterval(displayAnimation, 100);
-	$("#startBtn").click(function () {
-		$(this).hide();
-		initAudio();
-	});
 	$("#muteBtn").click(function () {
 		let btn=document.getElementById('muteBtn');
 		if (muted == true) {
@@ -30,6 +26,7 @@ $(document).ready(function () {
 				monitor.style.visibility = "visible";
 		}
 	};
+	// Buttons used for testing...
 	let testBtn=document.getElementById('testBtn');
 	testBtn.onclick = function () {
 		console.log("Test button pressed");
@@ -43,11 +40,7 @@ $(document).ready(function () {
 		if (pauseTracing == true) pauseTracing = false;
 		else pauseTracing = true;
 	};
-	audioInputSelect = document.getElementById('audioSource');
-	audioOutputSelect = document.getElementById('audioOutput');
-	audioInputSelect.onchange = initAudio();
-	audioOutputSelect.onchange = changeAudioOutput();
-	selectors = [audioInputSelect, audioOutputSelect];
+	initAudio();
 });
 var blockSpkr = false;
 var pauseTracing = false;
@@ -127,40 +120,6 @@ function printReport() {
 	micMax = -2;
 	mixMax = -2;
 tracecount = 2;
-	reviewInputDevices();
-}
-
-var audioInputSelect;			// Dropdown for choosing audio input
-var audioOutputSelect;			// Dropdown for choosing audio output
-var selectors;				// List of the input & output selectors in the UI
-async function  reviewInputDevices() {
-	if (selectors != null) {
-		const devices = await navigator.mediaDevices.enumerateDevices();
-		let deviceInfo, text;
-		const values = selectors.map(select => select.value);
-		selectors.forEach(select => {
-			while (select.firstChild) {
-				select.removeChild(select.firstChild);
-			}
-		});
-		for (let i = 0; i !== devices.length; ++i) {
-			deviceInfo = devices[i];
-			const option = document.createElement('option');
-			option.value = deviceInfo.deviceId;
-			if (deviceInfo.kind === 'audioinput') {
-				option.text = deviceInfo.label || 'Microphone ${audioInputSelect.length + 1}';
-				audioInputSelect.appendChild(option);
-			} else if (deviceInfo.kind === 'audiooutput') {
-				option.text = deviceInfo.label || 'Speaker ${audioOutputSelect.length + 1}';
-				audioOutputSelect.appendChild(option);
-			}
-		}
-		selectors.forEach((select, selectorIndex) => {
-			if (Array.prototype.slice.call(select.childNodes).some(n => n.value === values[selectorIndex])) {
-				select.value = values[selectorIndex];
-			}
-		});
-	}
 }
 
 setInterval(printReport, updateTimer);
@@ -325,11 +284,6 @@ function applyAutoGain(audio, startGain, maxGain) {	// Auto gain control
 	return { finalGain: endGain, peak: maxLevel };
 }
 
-function hasGetUserMedia() {		// Test for browser capability
-	return !!(navigator.getUserMedia || navigator.webkitGetUserMedia ||
-		navigator.mozGetUserMedia || navigator.msGetUserMedia);
-}
-
 function processAudio(e) {
 	enterState( audioInOutState );
 	var inData = e.inputBuffer.getChannelData(0);
@@ -420,25 +374,15 @@ function handleAudio(stream) {
 
 
 function initAudio() {
-	if (window.stream) {					// Stop any old streams first
-		window.stream.getTracks().forEach(track => {
-			track.stop();
-		});
-	}
-	const audioSource = audioInputSelect.value;
-trace("AUDIO INPUT select = ",audioSource);
 	let constraints = { 
-		deviceId: audioSource ? {exact: audioSource} : undefined,
+		mandatory: {
+ 			googEchoCancellation: true,
+			googAutoGainControl: false,
+			googNoiseSuppression: false,
+			googHighpassFilter: false 
+		}, 
+		optional: [] 
 	};
-	// Old constraints were:
-	//
-	//	mandatory: {
- 	//		googEchoCancellation: true,
-	//		googAutoGainControl: false,
-	//		googNoiseSuppression: false,
-	//		googHighpassFilter: false 
-	//	}, 
-	//	optional: [] 
 	navigator.getUM = (navigator.getUserMedia || navigator.webKitGetUserMedia || navigator.moxGetUserMedia || navigator.mozGetUserMedia || navigator.msGetUserMedia);
 	if (navigator.mediaDevices.getUserMedia) {
 		trace("Using GUM with promise");
@@ -454,27 +398,6 @@ trace("AUDIO INPUT select = ",audioSource);
 	}
 }
 
-function changeAudioOutput() {
-	const audioDestination = audioOutputSelect.value;
-	const audio = document.createElement('audio');
-	if (typeof audio.sinkId !== 'undefined') {
-		audio.setSinkId(audioDestination)
-		.then(() => {
-			trace('Audio is being played on ' + audio.sinkId);
-		})
-		.catch(error => {
-			let errorMessage = error;
-			if (error.name === 'SecurityError') {
-				errorMessage = "You need to use HTTPS for selecting audio output device: ${error}";
-			}
-			trace(errorMessage);
-		        // Jump back to first output device in the list as it's the default.
-			audioOutputSelect.selectedIndex = 0;
-		});
-	} else {
-		trace('Browser does not support output device selection.');
-	}
-}
 
 // Resamplers
 //
