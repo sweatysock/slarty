@@ -372,11 +372,6 @@ function processAudio(e) {
 }
 
 function handleAudio(stream) {
-	if (window.stream) {					// Stop any old streams first
-		window.stream.getTracks().forEach(track => {
-			track.stop();
-		});
-	}
 	let context = new window.AudioContext || new window.webkitAudioContext;
 	soundcardSampleRate = context.sampleRate;
 	micAccessAllowed = true;
@@ -426,6 +421,11 @@ function handleAudio(stream) {
 
 
 function initAudio() {
+	if (window.stream) {					// Stop any old streams first
+		window.stream.getTracks().forEach(track => {
+			track.stop();
+		});
+	}
 	let constraints = { mandatory: {
  		googEchoCancellation: true,
 		googAutoGainControl: false,
