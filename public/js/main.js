@@ -393,7 +393,6 @@ var micMax = 0;								// Max mic level to display on level display
 var mixMax = 0;								// Max mix level to display...
 var tracecount = 0;
 function printReport() {
-	enterState( idleState );					// Update timers in case we are inactive
 	trace("Idle = ", idleState.total, " data in = ", dataInState.total, " audio in/out = ", audioInOutState.total);
 	trace("Sent = ",packetsOut," Heard = ",packetsIn," speaker buffer size ",spkrBuffer.length," mic buffer size ", micBuffer.length," overflows = ",overflows," shortages = ",shortages," micMax = ",micMax," mixMax = ",mixMax);
 	let state = "Green";

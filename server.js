@@ -1,8 +1,3 @@
-//
-// Launch parameters are -u upstream_server -d downstream server
-// Multiple donstream servers can be specified but only one upstream is possible
-//
-
 // Globals and constants
 //
 function ClientBuffer() { 	// Object to buffer audio from a specific client
@@ -22,44 +17,8 @@ var gain = 1;			// The gain applied to the mix
 var upstreamGain = 1;		// Gain applied to the final mix after adding upstream
 const MaxGain = 1;		// Don't want to amplify more than x2
 // Mix generation is done as fast as data comes in, but should keep up a rhythmn
-// even if downstream audio isn't sufficient. The time the last mix was sent is here:
+// even if downstream audio isn't sufficient. The time the next mix must be sent is here:
 var nextMixTimeLimit = 0;
-
-// Timing counters
-//
-// We use these to measure how many miliseconds we spend working on events
-// and how much time we spend doing "nothing" (supposedly idle)
-function stateTimer() {
-	this.name = "";
-	this.total = 0;
-	this.start = 0;
-}
-var idleState = new stateTimer(); 	idleState.name = "Idle";
-var upstreamState = new stateTimer();	upstreamState.name = "Upstream";
-var downstreamState = new stateTimer();	downstreamState.name = "Downstream";
-var genMixState = new stateTimer();	genMixState.name = "Generate Mix";
-var currentState = idleState;		currentState.start = new Date().getTime();
-function enterState( newState ) {
-	let now = new Date().getTime();
-	currentState.total += now - currentState.start;
-	newState.start = now;
-	currentState = newState;
-}
-
-// Accumulators for reporting purposes
-//
-var packetsIn = 0;
-var packetsOut = 0;
-var upstreamIn = 0;
-var upstreamOut = 0;
-var overflows = 0;
-var shortages = 0;
-var clientsLive = 0;
-var forcedMixes = 0;
-var packetClassifier = [];
-packetClassifier.fill(0,0,30);
-var mixMax = 0;
-var upstreamMax = 0;
 
 
 
@@ -367,10 +326,48 @@ upstreamMax = maxValue(upstreamAudio);
 }
 
 
-// Reporting code
+// Reporting code. Accumulators, interval timer and report generator
 // 
+
+// Timing counters
+//
+// We use these to measure how many miliseconds we spend working on events
+// and how much time we spend doing "nothing" (supposedly idle)
+function stateTimer() {
+	this.name = "";
+	this.total = 0;
+	this.start = 0;
+}
+var idleState = new stateTimer(); 	idleState.name = "Idle";
+var upstreamState = new stateTimer();	upstreamState.name = "Upstream";
+var downstreamState = new stateTimer();	downstreamState.name = "Downstream";
+var genMixState = new stateTimer();	genMixState.name = "Generate Mix";
+var currentState = idleState;		currentState.start = new Date().getTime();
+function enterState( newState ) {
+	let now = new Date().getTime();
+	currentState.total += now - currentState.start;
+	newState.start = now;
+	currentState = newState;
+}
+
+// Accumulators for reporting purposes
+//
+var packetsIn = 0;
+var packetsOut = 0;
+var upstreamIn = 0;
+var upstreamOut = 0;
+var overflows = 0;
+var shortages = 0;
+var clientsLive = 0;
+var forcedMixes = 0;
+var packetClassifier = [];
+packetClassifier.fill(0,0,30);
+var mixMax = 0;
+var upstreamMax = 0;
+
 const updateTimer = 10000;	// Frequency of updates to the console
 function printReport() {
+	enterState( idleState );					// Update timers in case we are inactive
 	console.log("Idle = ", idleState.total, " upstream = ", upstreamState.total, " downstream = ", downstreamState.total, " genMix = ", genMixState.total);
 	console.log("Clients = ",clientsLive,"  active = ", receiveBuffer.length,"Upstream In =",upstreamIn,"Upstream Out = ",upstreamOut,"In = ",packetsIn," Out = ",packetsOut," overflows = ",overflows," shortages = ",shortages," forced mixes = ",forcedMixes," mixMax = ",mixMax," upstreamMax = ",upstreamMax);
 	let cbs = [];
