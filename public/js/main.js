@@ -88,7 +88,7 @@ document.addEventListener('DOMContentLoaded', function(event){
 			muted = true;
 			btn.innerText="Unmute";
 		}
-	});
+	}
 }
 
 function displayAnimation() { 						// called 100mS to animate audio displays
