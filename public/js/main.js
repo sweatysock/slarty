@@ -89,7 +89,7 @@ document.addEventListener('DOMContentLoaded', function(event){
 			btn.innerText="Unmute";
 		}
 	}
-}
+});
 
 function displayAnimation() { 						// called 100mS to animate audio displays
 	micMax = micMax * 0.9; 						// drop levels a little for smooth drops
@@ -253,7 +253,7 @@ function handleAudio(stream) {						// We have obtained media access
 
 document.addEventListener('DOMContentLoaded', function(event){
 	initAudio();							// Call initAudio() once loaded
-}
+});
 
 function initAudio() {							// Set up all audio handling here
 	let constraints = { 						// Try to get the right audio setup
