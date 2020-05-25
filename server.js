@@ -115,6 +115,7 @@ function connectUpstreamServer(server) {				// Called when upstream server name 
 		}
 		let obj = applyAutoGain(mix,upstreamMixGain,1);		// Bring mix level down if necessary
 		upstreamMixGain = obj.finalGain;			// Store gain for next loop
+		upstreamMax = obj.peak;					// For monitoring purposes
 		if (mix.length != 0) {					// If there actually was some audio
 			let p = {					// Construct the audio packet
 				name		: "upstream",		// Give it an appropriate name
@@ -333,6 +334,7 @@ function generateMix () {
 				}
 				let obj = applyAutoGain(mix,mixGain,1);			// Bring mix level down if necessary
 				mixGain = obj.finalGain;				// Store gain for next mix auto gain control
+				mixMax = obj.peak;					// For monitoring purposes
 				let now = new Date().getTime();
 				upstreamServer.emit("u", {
 					"name"		: myServerName,			// Let them know which server this comes from
@@ -406,7 +408,7 @@ const updateTimer = 10000;	// Frequency of updates to the console
 function printReport() {
 	enterState( idleState );					// Update timers in case we are inactive
 	console.log("Idle = ", idleState.total, " upstream = ", upstreamState.total, " downstream = ", downstreamState.total, " genMix = ", genMixState.total);
-	console.log("Clients = ",clientsLive,"  Upstream In =",upstreamIn,"Upstream Out = ",upstreamOut,"Upstream Shortages = ",upstreamShortages," Upstream overflows = ",upstreamOverflows,"In = ",packetsIn," Out = ",packetsOut," overflows = ",overflows," shortages = ",shortages," forced mixes = ",forcedMixes," mixMax = ",mixMax," upstreamMax = ",upstreamMax);
+	console.log("Clients = ",clientsLive,"  Upstream In =",upstreamIn,"Upstream Out = ",upstreamOut,"Upstream Shortages = ",upstreamShortages," Upstream overflows = ",upstreamOverflows,"In = ",packetsIn," Out = ",packetsOut," overflows = ",overflows," shortages = ",shortages," forced mixes = ",forcedMixes," mixMax = ",mixMax," upstreamMax = ",upstreamMax," rtt = ",rtt);
 	let cbs = [];
 	for (let c in channels)
 		cbs.push(channels[c].packets.length);
