@@ -354,7 +354,7 @@ function generateMix () {
 				let now = new Date().getTime();
 				nextMixTimeLimit = now;
 			}						// Next mix timeout is advanced forward by mix.length mS
-			nextMixTimeLimit = nextMixTimeLimit + (mix.length * 1010)/SampleRate;
+			nextMixTimeLimit = nextMixTimeLimit + (mix.length * 1000)/SampleRate;
 		}
 	}
 }
