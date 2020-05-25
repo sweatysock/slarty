@@ -13,8 +13,8 @@ var micBuffer = [];							// Buffer mic audio before sending
 var muted = false;							// mic mute control
 var mixGain = 1;							// Gain applied to mix
 var micGain = 1;							// Gain applied to microphone input
-
-
+var myChannel = -1;							// The server assigns us an audio channel
+var myName = "";							// Name assigned to my audio channel
 
 
 
@@ -25,20 +25,33 @@ var socketIO = io();
 socketIO.on('connect', function (socket) {				// New connection coming in
 	trace('socket connected!');
 	socketConnected = true;
-	socketIO.emit("upstreamHi"); 					// Say hi to the server - we consider it upstream 
+	socketIO.emit("upstreamHi",{channel:myChannel}); 		// Register with server and request channel
+});
+
+socketIO.on('channel', function (data) {				// Message assigning us a channel
+	if (data.channel > 0) {						// Assignment successful
+		myChannel = data.channel;
+		if (myName == "") myName = "Channel " + myChannel;
+		trace('Channel assigned: ',myChannel);
+	} else {
+		trace("Server unable to assign a channel");		// Server is probaby full
+		trace("Try a different server");			// Can't do anything more
+		socketConnected = false;
+	}
 });
 
 // Data coming down from upstream server: Group mix plus separate member audios
 socketIO.on('d', function (data) { 
 	enterState( dataInState );					// This is one of our key tasks
 	packetsIn++;							// For monitoring and statistics
-	let now = new Date().getTime();
 	if ((micAccessAllowed) && (blockSpkr == false)) {		// Need access to audio before outputting
 		let mix = [];						// Build up a mix of client audio 
-		let clients = data.c; 
-		for (let c=0; c < clients.length; c++) {
-			if (clients[c].clientID != socketIO.id) {	// Don't include my audio in mix
-				let a = clients[c].packet.audio;
+		let chan = data.channels; 
+console.log(chan);
+		for (let c=0; c < chan.length; c++) {
+			if (chan[c].socketID != socketIO.id) {		// Don't include my audio in mix
+// Set each channel gain, peak level & name
+				let a = chan[c].audio;
 				if (mix.length == 0)			// First audio in mix goes straight
 					for (let i=0; i < a.length; i++)
 						mix[i] = a[i];
@@ -46,12 +59,13 @@ socketIO.on('d', function (data) {
 	  				for (let i=0; i < a.length; i++)
 						mix[i] += a[i];		// Just add all audio together
 			} else {					// This is my own data come back
-				rtt = now - clients[c].timestamp;	// Measure round trip time
+				let now = new Date().getTime();
+				rtt = now - chan[c].timestamp;		// Measure round trip time
 			}
 		}
 		let obj = applyAutoGain(mix,mixGain,1);			// Bring mix level down if necessary
-		if (obj.peak > mixMax) mixMax = obj.peak;		// Note peak for display purposes
 		mixGain = obj.finalGain;				// Store gain for next loop
+		if (obj.peak > mixMax) mixMax = obj.peak;		// Note peak for display purposes
 		if (mix.length != 0) {					// If there actually was some audio
 			spkrBuffer.push(...mix);			// put it on the speaker buffer
 			if (spkrBuffer.length > maxBuffSize) {		// Clip buffer if too full
@@ -178,10 +192,12 @@ function processAudio(e) {						// Main processing loop
 			let now = new Date().getTime();
 			socketIO.emit("u",
 			{
+				"name"		: myName,		// Send the name we have chosen 
 				"audio"		: outAudio,		// Resampled, level-corrected audio
 				"sequence"	: packetSequence,	// Usefull for detecting data losses
-				"timeEmitted"	: now,			// Used to measure round trip time
-				"peak" 		: obj.peak		// Saves having to calculate again
+				"timestamp"	: now,			// Used to measure round trip time
+				"peak" 		: obj.peak,		// Saves having to calculate again
+				"channel"	: myChannel,		// Send assigned channel to help server
 			});
 			packetsOut++;					// For stats and monitoring
 			packetSequence++;
