@@ -147,6 +147,7 @@ io.sockets.on('connection', function (socket) {
 		console.log("New client ", socket.id);
 		let requestedChannel = data.channel;			// If a reconnect they will already have a channel
 		let channel = -1;					// Assigned channel. -1 means none (default response)
+console.log(data);
 		if ((requestedChannel != -1) &&	(channels[requestedChannel].socketID === undefined)) {
 			channel = requestedChannel;			// If requested channel is set and available reassign it
 		} else {
