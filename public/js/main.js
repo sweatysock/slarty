@@ -47,7 +47,6 @@ socketIO.on('d', function (data) {
 	if ((micAccessAllowed) && (blockSpkr == false)) {		// Need access to audio before outputting
 		let mix = [];						// Build up a mix of client audio 
 		let chan = data.channels; 
-console.log(chan);
 		for (let c=0; c < chan.length; c++) {
 			if (chan[c].socketID != socketIO.id) {		// Don't include my audio in mix
 // Set each channel gain, peak level & name
