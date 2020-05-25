@@ -202,6 +202,9 @@ io.sockets.on('connection', function (socket) {
 		enterState( downstreamState );
 		packetSize = packet.audio.length;			// Need to know how much audio we are processing
 		let channel = channels[packet.channel];			// This client's channel was kindly sent in data
+console.log("DATA for CHANNEL ",packet.channel);
+console.log(channels[packet.channel]);
+console.log(channels[0]);
 		channel.name = packet.name;				// Update name of channel in case it has changed
 		channel.socketID = socket.id;				// Store socket ID associated with channel
 		packet.socketID = socket.id;				// Also store it in the packet to help client
