@@ -249,7 +249,7 @@ function applyAutoGain(audio, startGain, maxGain) {			// Auto gain control
 	maxLevel = maxValue(audio);					// Find peak audio level 
 	endGain = MaxOutputLevel / maxLevel;				// Desired gain to avoid overload
 	maxLevel = 0;							// Use this to capture peak
-	if (endGain > MaxGain) endGain = MaxGain;			// Gain is limited to MaxGain
+	if (endGain > maxGain) endGain = maxGain;			// Gain is limited to maxGain
 	if (endGain >= startGain) {					// Gain adjustment speed varies
 		transitionLength = audio.length;			// Gain increases are gentle
 		endGain = startGain + ((endGain - startGain)/10);	// Slow the rate of gain change
