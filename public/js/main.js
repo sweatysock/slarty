@@ -185,7 +185,7 @@ function processAudio(e) {						// Main processing loop
 		micBuffer.push(...micAudio);				// Buffer mic audio until enough
 		if (micBuffer.length > PacketSize) {			// Got enough
 			let outAudio = micBuffer.splice(0, PacketSize);	// Get a packet of audio
-			let obj = applyAutoGain(outAudio, micGain, 10);	// Bring the mic up to level
+			let obj = applyAutoGain(outAudio, micGain, 5);	// Bring the mic up to level, but 5x is max
 			if (obj.peak > micMax) micMax = obj.peak;	// Note peak for local display
 			micGain = obj.finalGain;			// Store gain for next loop
 			let now = new Date().getTime();
@@ -409,7 +409,7 @@ var mixMax = 0;								// Max mix level to display...
 var tracecount = 0;
 function printReport() {
 	trace("Idle = ", idleState.total, " data in = ", dataInState.total, " audio in/out = ", audioInOutState.total);
-	trace("Sent = ",packetsOut," Heard = ",packetsIn," speaker buffer size ",spkrBuffer.length," mic buffer size ", micBuffer.length," overflows = ",overflows," shortages = ",shortages," micMax = ",micMax," mixMax = ",mixMax);
+	trace("Sent = ",packetsOut," Heard = ",packetsIn," speaker buffer size ",spkrBuffer.length," mic buffer size ", micBuffer.length," overflows = ",overflows," shortages = ",shortages," RTT = ",rtt);
 	let state = "Green";
 	trace2("micMax: ",micMax," micGain: ",micGain," mixMax: ",mixMax," mixGain: ",mixGain);
 	if ((overflows > 1) || (shortages >1)) state = "Orange";
@@ -427,6 +427,7 @@ function printReport() {
 	packetsOut = 0;
 	overflows = 0;
 	shortages = 0;
+	rtt = 0;
 	micMax = -2;
 	mixMax = -2;
 	tracecount = 2;
