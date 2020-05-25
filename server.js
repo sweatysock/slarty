@@ -1,7 +1,17 @@
 // Globals and constants
 //
 const NumberOfChannels = 20;						// Max number of channels in this server
-var channels = new Array(NumberOfChannels);				// Each channel's data & buffer held here
+var channels = [];							// Each channel's data & buffer held here
+for (let i=0; i < NumberOfChannels) {					// Create all the channels pre-initialized
+	channels[i] = {
+		packets 	: [],
+		name		: "",
+		socketID	: undefined,
+		shortages 	: 0,
+		overflows 	: 0,
+		newBuf 		: true,		
+	}
+}
 var upstreamBuffer = []; 						// Audio packets coming down from our upstream server 
 var oldUpstreamPacket = null;						// previous upstream packet kept in case more is needed
 const maxBufferSize = 6;						// Max number of packets to store per client
@@ -112,7 +122,7 @@ function connectUpstreamServer(server) {				// Called when upstream server name 
 				peak		: obj.peak,		// Provide peak value to save effort
 				timestamp	: ts,			// Maybe interesting to know how old it is?
 				sequence	: 0,			// Not used
-				channel		: 0			// Upstream is assigned channel 0 everywhere
+				channel		: 0,			// Upstream is assigned channel 0 everywhere
 			}
 			upstreamBuffer.push(p); 			// Store upstream packet in buffer
 			if (upstreamBuffer.length > maxBufferSize) {	// Clip buffer if overflowing
@@ -134,9 +144,11 @@ io.sockets.on('connection', function (socket) {
 		console.log("User disconnected:", socket.id);
 		channels.forEach(c => {					// Find the channel assigned to this connection
 			if (c.socketID == socket.id) {			// and free up its channel
-				c.socketID = undefined;
-				c.name = "";
 				c.packets = [];
+				c.name = "";
+				c.socketID = undefined;
+				shortages = 0,
+				overflows = 0,
 				c.newBuf = true;
 				clientsLive--;
 			}
@@ -147,8 +159,6 @@ io.sockets.on('connection', function (socket) {
 		console.log("New client ", socket.id);
 		let requestedChannel = data.channel;			// If a reconnect they will already have a channel
 		let channel = -1;					// Assigned channel. -1 means none (default response)
-console.log(data);
-console.log(channels[requestedChannel]);
 		if ((requestedChannel != -1) &&	(channels[requestedChannel].socketID === undefined)) {
 			channel = requestedChannel;			// If requested channel is set and available reassign it
 		} else {
@@ -161,14 +171,12 @@ console.log(channels[requestedChannel]);
 		}
 		socket.emit('channel', { channel:channel });		// Send channel assignment result to client
 		if (channel != -1) {					// Channel has been successfully assigned
-			channels[channel] = {				// Reset channel values
-				socketID	: socket.id,
-				newBuf 		: true,		
-				name		: "",
-				shortages 	: 0,
-				overflows 	: 0,
-				packets 	: []
-			}
+			channels[channel].packets = [];			// Reset channel values
+			channels[channel].name = "";
+			channels[channel].socketID = socket.id;
+			channels[channel].shortages = 0;
+			channels[channel].overflows = 0;
+			channels[channel].newBuf = true;		
 			socket.join('downstream');			// Add to group for downstream data
 			clientsLive++;					// For monitoring purposes
 			console.log("Client assigned channel ",channel);
