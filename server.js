@@ -99,7 +99,7 @@ function connectUpstreamServer(server) {				// Called when upstream server name 
 		let mix = [];						// any other audio stream
 		let ts = 0;
 		for (let c=0; c < chan.length; c++) {			// So first we need to build a mix
-			if (chan[c].socketID != socketIO.id) {		// Skip my audio in mix generation
+			if (chan[c].socketID != upstreamServer.id) {	// Skip my audio in mix generation
 				let a = chan[c].audio;
 				if (mix.length == 0)			// First audio in mix goes straight
 					for (let i=0; i < a.length; i++)
