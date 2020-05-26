@@ -333,8 +333,8 @@ function generateMix () {
 				}
 			}
 		});
-		if (clientPackets.length <= 1)				// if zero or one active client left
-			nextMixTimeLimit = 0;				// stop sample timer - no sense in forcing mixes
+//		if (clientPackets.length <= 1)				// if zero or one active client left
+//			nextMixTimeLimit = 0;				// stop sample timer - no sense in forcing mixes
 
 		if (clientPackets.length != 0) {			// Only send audio if we have some to send
 			if (upstreamConnected == true) { 		// Send mix if connected to an upstream server
