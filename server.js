@@ -23,7 +23,14 @@ var upstreamMixGain = 1;						// Gain applied to the upstream mix using auto gai
 var mixGain = 1;							// Gain applied to the mix sent upstream 
 // Mix generation is done as fast as data comes in, but should keep up a rhythmn even if downstream audio isn't sufficient....
 var nextMixTimeLimit = 0;						// The time the next mix must be sent is here:
-var myServerName ="";							// Server name used with upstream server
+var myServerName = process.env.servername; 				// Get servername from heroku config variable, if present
+if (myServerName == undefined)
+	myServerName ="";						// If this is empty it will be set when we connect upstream
+var upstreamName = process.env.upstream; 				// Get upstream server from heroku config variable, if present
+if (upstreamName == undefined)		
+	upstreamName ="";						// If this is empty we will connect later when it is set
+else
+	connectUpstreamServer(upstreamName);				// If we have a server then lets connect straight away
 
 
 
@@ -63,7 +70,6 @@ if (PORT == undefined) {						// Not running on heroku so use SSL
 var io  = require('socket.io').listen(server, { log: false });		// socketIO for downstream connections
 
 var upstreamServer = null;						// socket ID for upstream server if connected
-var upstreamName = "no upstream server";
 var packetSequence = 0;							// Sequence counter for sending upstream
 var upstreamServerChannel = -1;
 var upstreamConnected = false;						// Flag to control sending upstream
@@ -420,6 +426,7 @@ var upstreamMax = 0;
 const updateTimer = 10000;	// Frequency of updates to the console
 function printReport() {
 	enterState( idleState );					// Update timers in case we are inactive
+	console.log(myServerName," Activity Report");
 	console.log("Idle = ", idleState.total, " upstream = ", upstreamState.total, " downstream = ", downstreamState.total, " genMix = ", genMixState.total);
 	console.log("Clients = ",clientsLive,"  Upstream In =",upstreamIn,"Upstream Out = ",upstreamOut,"Upstream Shortages = ",upstreamShortages," Upstream overflows = ",upstreamOverflows,"In = ",packetsIn," Out = ",packetsOut," overflows = ",overflows," shortages = ",shortages," forced mixes = ",forcedMixes," mixMax = ",mixMax," upstreamMax = ",upstreamMax," rtt = ",rtt);
 	let cbs = [];
@@ -467,4 +474,4 @@ setInterval(printReport, updateTimer);
 
 // We are all set up so let the idling begin!
 enterState( idleState );
-console.log("IDLING...");
+console.log(myServerName," IDLING...");
