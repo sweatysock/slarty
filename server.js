@@ -144,7 +144,7 @@ function connectUpstreamServer(server) {				// Called when upstream server name 
 		enterState( idleState );
 	});
 
-	upstreamserver.on('disconnect', function () {
+	upstreamServer.on('disconnect', function () {
 		upstreamConnected = false;
 		console.log("Upstream server disconnected.");
 	});
