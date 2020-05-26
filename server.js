@@ -76,6 +76,7 @@ var upstreamConnected = false;						// Flag to control sending upstream
 
 function connectUpstreamServer(server) {				// Called when upstream server name is set
 	upstreamServer = require('socket.io-client')(server);		// Upstream server uses client socketIO
+	console.log("Connecting upstream to",server);
 	upstreamServer.on('connect', function(socket){			// We initiate the connection as client
 		console.log("upstream server connected ",server);
 		upstreamName = server;
