@@ -29,8 +29,6 @@ if (myServerName == undefined)
 var upstreamName = process.env.upstream; 				// Get upstream server from heroku config variable, if present
 if (upstreamName == undefined)		
 	upstreamName ="";						// If this is empty we will connect later when it is set
-else
-	connectUpstreamServer(upstreamName);				// If we have a server then lets connect straight away
 
 
 
@@ -468,6 +466,10 @@ function printReport() {
 	forcedMixes = 0;
 	mixMax = 99;
 	upstreamMax = 99;
+	if ((upstreamName != "") && (upstreamConnected == false)) {
+		console.log("Connecting to upstream server",upstreamName);
+		connectUpstreamServer(upstreamName);
+	}
 }
 setInterval(printReport, updateTimer);
 
