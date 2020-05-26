@@ -66,6 +66,7 @@ var upstreamServer = null;						// socket ID for upstream server if connected
 var upstreamName = "no upstream server";
 var packetSequence = 0;							// Sequence counter for sending upstream
 var upstreamServerChannel = -1;
+var upstreamConnected = false;						// Flag to control sending upstream
 
 function connectUpstreamServer(server) {				// Called when upstream server name is set
 	upstreamServer = require('socket.io-client')(server);		// Upstream server uses client socketIO
@@ -83,6 +84,7 @@ function connectUpstreamServer(server) {				// Called when upstream server name 
 			upstreamServerChannel = data.channel;
 			if (myServerName == "") myServerName = "Channel " + upstreamServerChannel;
 			console.log("Upstream server has assigned us channel ",upstreamServerChannel);
+			upstreamConnected = true;
 		} else {
 			console.log("Upstream server unable to assign a channel");		
 			console.log("Try a different server");		
@@ -135,6 +137,12 @@ function connectUpstreamServer(server) {				// Called when upstream server name 
 		generateMix();
 		enterState( idleState );
 	});
+
+	upstreamserver.on('disconnect', function () {
+		upstreamConnected = false;
+		console.log("Upstream server disconnected.");
+	}
+
 }
 
 // socket event and audio handling area
@@ -324,20 +332,8 @@ function generateMix () {
 			nextMixTimeLimit = 0;				// stop sample timer - no sense in forcing mixes
 
 		if (clientPackets.length != 0) {			// Only send audio if we have some to send
-			if (upstreamServer != null) { 			// We have an upstream server. Send mix
-				// Is there any upstream audio that we can send downstream?
-				if ((upstreamBuffer.length >= mixTriggerLevel) || (oldUpstreamPacket != null )) { 
-					let upstreamPacket = [];			// Packet of upstream audio to send down
-					if (upstreamBuffer.length == 0) { 		// if shortage of upstream audio
-						upstreamShortages++;			// Log for monitoring purposes
-						upstreamPacket = oldUpstreamPacket;	// use old audio packet rather than silence
-					} else {
-						upstreamPacket = upstreamBuffer.shift();// Get new packet from buffer
-						oldUpstreamPacket = upstreamPacket;	// and store it in old buffer for future shortages
-					}
-					clientPackets.push( upstreamPacket ); 		// Add upstream audio packet to clients
-				}
-				let obj = applyAutoGain(mix,mixGain,1);			// Bring mix level down if necessary
+			if (upstreamConnected == true) { 		// Send mix if connected to an upstream server
+				let obj = applyAutoGain(mix,mixGain,1);			// Adjust mix level 
 				mixGain = obj.finalGain;				// Store gain for next mix auto gain control
 				mixMax = obj.peak;					// For monitoring purposes
 				let now = new Date().getTime();
@@ -351,8 +347,20 @@ function generateMix () {
 				});
 				packetSequence++;
 				upstreamOut++;
+				// As we have an upstream server is there any upstream audio to send downstream?
+				if ((upstreamBuffer.length >= mixTriggerLevel) || (oldUpstreamPacket != null )) { 
+					let upstreamPacket = [];			// Packet of upstream audio to send down
+					if (upstreamBuffer.length == 0) { 		// if shortage of upstream audio
+						upstreamShortages++;			// Log for monitoring purposes
+						upstreamPacket = oldUpstreamPacket;	// use old audio packet rather than silence
+					} else {
+						upstreamPacket = upstreamBuffer.shift();// Get new packet from buffer
+						oldUpstreamPacket = upstreamPacket;	// and store it in old buffer for future shortages
+					}
+					clientPackets.push( upstreamPacket ); 		// Add upstream audio packet to clients
+				}
 			} 
-			io.sockets.in('downstream').emit('d', {
+			io.sockets.in('downstream').emit('d', {		// Send all audio channels to all downstream clients
 				"channels"	: clientPackets,
 			});
 			packetsOut++;					// Sent data so log it and set time limit for next send
@@ -360,7 +368,7 @@ function generateMix () {
 			if (nextMixTimeLimit == 0) {			// If this is the first send event then start at now
 				let now = new Date().getTime();
 				nextMixTimeLimit = now;
-			}						// Next mix timeout is advanced forward by mix.length mS
+			}						// Next mix timeout is advanced forward by mix.length mS +1%
 			nextMixTimeLimit = nextMixTimeLimit + (mix.length * 1010)/SampleRate;
 		}
 	}
