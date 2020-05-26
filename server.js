@@ -147,7 +147,7 @@ function connectUpstreamServer(server) {				// Called when upstream server name 
 	upstreamserver.on('disconnect', function () {
 		upstreamConnected = false;
 		console.log("Upstream server disconnected.");
-	}
+	});
 
 }
 
