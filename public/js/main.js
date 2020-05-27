@@ -140,6 +140,7 @@ function displayAnimation() { 						// called 100mS to animate audio displays
 		mic.maxLevel = mic.maxLevel * rate; 			// drop mic peak level a little for smooth drops
 		setLevelDisplay( mic );					// Update LED display for mic.maxLevel
 		setSliderPos( mic );					// Update slider position for mic gain
+console.log(channels);
 		channels.forEach(c => {					// Update each channel's UI
 			if (c.name != "") {				// A channel needs a name to be active
 				if (c.display != undefined)		// If there is no display associated to the channel
@@ -194,6 +195,8 @@ function setSliderPos( obj ) {
 
 var counter = 1;							// Essentially just a way of generating a novel ID for elements
 function createChannelUI(obj) {
+console.log("CREATING UI for...");
+console.log(obj);
 	let name = "ID"+counter;
 	counter++;
 	// build UI elements for a single channel with element IDs that include the name requested
