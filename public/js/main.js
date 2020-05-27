@@ -116,7 +116,7 @@ socketIO.on('disconnect', function () {
 // Media management and display code (audio in and out)
 //
 document.addEventListener('DOMContentLoaded', function(event){
-	setInterval(displayAnimation, 100);				// Call animated display 10 x a second
+//	setInterval(displayAnimation, 100);				// Call animated display 10 x a second
 //	let muteBtn=document.getElementById('muteBtn');			// Bind mute code to mute button
 //	muteBtn.onclick = function () {
 //		let btn=document.getElementById('muteBtn');
