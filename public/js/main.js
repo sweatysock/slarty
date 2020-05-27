@@ -311,6 +311,7 @@ function processAudio(e) {						// Main processing loop
 			let outAudio = micBuffer.splice(0, PacketSize);	// Get a packet of audio
 			let obj = applyAutoGain(outAudio, mic.gain, 5);	// Bring the mic up to level, but 5x is max
 			if (obj.peak > mic.maxLevel) mic.maxLevel = obj.peak;	// Note peak for local display
+console.log(mic.maxLevel);
 			mic.gain = obj.finalGain;			// Store gain for next loop
 			let now = new Date().getTime();
 			socketIO.emit("u",
