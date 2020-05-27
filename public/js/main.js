@@ -175,6 +175,8 @@ function setLevelDisplay( obj ) { 					// Set LED display level for obj
 	if (v < 0.51) v = 18; else
 	if (v < 0.64) v = 19; else
 	if (v < 0.8) v = 20; else v = 21; 
+console.log("SETTING LED LEVEL with v = ",v);
+console.log(obj);
 	for (let n=1; n <= v; n++) {
 		obj.LED[n].style.visibility = "visible";
 	}
@@ -234,8 +236,6 @@ function createChannelUI(obj) {
 	obj.LED = []; obj.LED[0] = "nada";
 	for (let i=1; i <= NumLEDs; i++)					// LED visibility set using obj.LEDs[n].style.visibility
 		obj.LED[i] = document.getElementById(name+"LED"+i);
-console.log("UI created for...");
-console.log(obj);
 }
 
 function setStatusLED(name, level) {					// Set the status LED's colour
@@ -348,7 +348,6 @@ function handleAudio(stream) {						// We have obtained media access
 	let context = new window.AudioContext || new window.webkitAudioContext;
 	soundcardSampleRate = context.sampleRate;
 	micAccessAllowed = true;
-console.log("CREATING mix and mic UI");
 	createChannelUI( mix );						// Create the output mix channel UI
 	createChannelUI( mic );						// Create the microphone channel UI
 	let liveSource = context.createMediaStreamSource(stream); 	// Create audio source (mic)
