@@ -301,7 +301,6 @@ function processAudio(e) {						// Main processing loop
 	enterState( audioInOutState );					// Log time spent here
 	var inData = e.inputBuffer.getChannelData(0);			// Audio from the mic
 	var outData = e.outputBuffer.getChannelData(0);			// Audio going to speaker
-console.log(outData);
 	let micAudio = [];						// 1. Mic audio processing...
 	if ((socketConnected) && (mic.muted == false)) {		// Need connection to send
 		micAudio = downSample(inData, soundcardSampleRate, SampleRate);
@@ -346,8 +345,8 @@ function handleAudio(stream) {						// We have obtained media access
 	let context = new window.AudioContext || new window.webkitAudioContext;
 	soundcardSampleRate = context.sampleRate;
 	micAccessAllowed = true;
-	createChannelUI( mix );						// Create the output mix channel UI
-	createChannelUI( mic );						// Create the microphone channel UI
+//	createChannelUI( mix );						// Create the output mix channel UI
+//	createChannelUI( mic );						// Create the microphone channel UI
 	let liveSource = context.createMediaStreamSource(stream); 	// Create audio source (mic)
 	let node = undefined;
 	if (!context.createScriptProcessor) {				// Audio processor node
@@ -553,6 +552,8 @@ function printReport() {
 	shortages = 0;
 	rtt = 0;
 	tracecount = 2;
+	mic.maxLevel = 0;
+	mix.maxLevel = 0;
 }
 
 setInterval(printReport, 1000);						// Call report generator once a second
