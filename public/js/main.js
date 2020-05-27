@@ -143,7 +143,7 @@ function displayAnimation() { 						// called 100mS to animate audio displays
 		channels.forEach(c => {					// Update each channel's UI
 			if (c.name != "") {				// A channel needs a name to be active
 				if (c.display == undefined)		// If there is no display associated to the channel
-					createChannelUI(channel[i]);	// build the visuals 
+					createChannelUI(c);		// build the visuals 
 				c.maxLevel = c.maxLevel * rate;		// drop smoothly the max level for the channel
 				setLevelDisplay( c );			// update LED display for channel maxLevel
 				setSliderPos( c );			// update slider position for channel gain
@@ -175,8 +175,6 @@ function setLevelDisplay( obj ) { 					// Set LED display level for obj
 	if (v < 0.51) v = 18; else
 	if (v < 0.64) v = 19; else
 	if (v < 0.8) v = 20; else v = 21; 
-console.log("SETTING LED LEVEL with v = ",v);
-console.log(obj);
 	for (let n=1; n <= v; n++) {
 		obj.LED[n].style.visibility = "visible";
 	}
@@ -194,8 +192,6 @@ function setSliderPos( obj ) {
 
 var counter = 1;							// Essentially just a way of generating a novel ID for elements
 function createChannelUI(obj) {
-console.log("CREATING UI for...");
-console.log(obj);
 	let name = "ID"+counter;
 	counter++;
 	// build UI elements for a single channel with element IDs that include the name requested
