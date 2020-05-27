@@ -116,7 +116,7 @@ socketIO.on('disconnect', function () {
 // Media management and display code (audio in and out)
 //
 document.addEventListener('DOMContentLoaded', function(event){
-//	setInterval(displayAnimation, 100);				// Call animated display 10 x a second
+	setInterval(displayAnimation, 100);				// Call animated display 10 x a second
 //	let muteBtn=document.getElementById('muteBtn');			// Bind mute code to mute button
 //	muteBtn.onclick = function () {
 //		let btn=document.getElementById('muteBtn');
@@ -311,7 +311,6 @@ function processAudio(e) {						// Main processing loop
 			let outAudio = micBuffer.splice(0, PacketSize);	// Get a packet of audio
 			let obj = applyAutoGain(outAudio, mic.gain, 5);	// Bring the mic up to level, but 5x is max
 			if (obj.peak > mic.maxLevel) mic.maxLevel = obj.peak;	// Note peak for local display
-console.log(mic.maxLevel);
 			mic.gain = obj.finalGain;			// Store gain for next loop
 			let now = new Date().getTime();
 			socketIO.emit("u",
