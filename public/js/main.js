@@ -10,11 +10,33 @@ var micAccessAllowed = false; 						// Need to get user permission
 var spkrBuffer = []; 							// Audio buffer going to speaker
 var maxBuffSize = 5000;							// Max audio buffer chunks for playback
 var micBuffer = [];							// Buffer mic audio before sending
-var muted = false;							// mic mute control
-var mixGain = 1;							// Gain applied to mix
-var micGain = 1;							// Gain applied to microphone input
 var myChannel = -1;							// The server assigns us an audio channel
 var myName = "";							// Name assigned to my audio channel
+const NumberOfChannels = 20;						// Max number of channels in this server
+var channels = [];							// Each channel's data & buffer held here
+for (let i=0; i < NumberOfChannels; i++) {				// Create all the channels pre-initialized
+	channels[i] = {
+		name	: "",						// Each client names their channel
+		gain 	: 0,						// Manual gain level. Start at zero and fade up
+		agc	: true,						// Flag if control is manual or auto
+		muted	: false,					// Local mute
+		maxLevel: 0,						// Animated peak channel audio level 
+	};
+}
+var mix = {								// Similar structures for the mix output
+	name 	: "Mix",
+	gain	: 0,
+	agc	: true,
+	muted	: false,
+	maxLevel: 0,
+};
+var mic = {								// and for microphone input
+	name 	: "Mic",
+	gain	: 0,
+	agc	: true,
+	muted	: false,
+	maxLevel: 0,
+};
 
 
 
@@ -24,7 +46,6 @@ var myName = "";							// Name assigned to my audio channel
 var socketIO = io();
 socketIO.on('connect', function (socket) {				// New connection coming in
 	trace('socket connected!');
-	socketConnected = true;
 	socketIO.emit("upstreamHi",{channel:myChannel}); 		// Register with server and request channel
 });
 
@@ -33,6 +54,7 @@ socketIO.on('channel', function (data) {				// Message assigning us a channel
 		myChannel = data.channel;
 		if (myName == "") myName = "Channel " + myChannel;
 		trace('Channel assigned: ',myChannel);
+		socketConnected = true;					// The socket can be used once we have a channel
 	} else {
 		trace("Server unable to assign a channel");		// Server is probaby full
 		trace("Try a different server");			// Can't do anything more
@@ -49,22 +71,26 @@ socketIO.on('d', function (data) {
 		let chan = data.channels; 
 		for (let c=0; c < chan.length; c++) {
 			if (chan[c].socketID != socketIO.id) {		// Don't include my audio in mix
-// Set each channel gain, peak level & name
+				channels[c].name = chan[c].name;	// Update the channel name
+				if (channels[c].muted) continue;	// We can skip a muted channel
 				let a = chan[c].audio;
+				let g = channels[c].gain;		// apply manual gain
+				if (channels[c].peak < chan[c].peak)	// set the peak for level display
+					channels[c].peak = chan[c].peak;
 				if (mix.length == 0)			// First audio in mix goes straight
 					for (let i=0; i < a.length; i++)
-						mix[i] = a[i];
+						mix[i] = a[i] * g;	// Apply channel gain always
   				else
 	  				for (let i=0; i < a.length; i++)
-						mix[i] += a[i];		// Just add all audio together
+						mix[i] += a[i] * g;	// Add all audio * gain. AGC will fix level.
 			} else {					// This is my own data come back
 				let now = new Date().getTime();
 				rtt = now - chan[c].timestamp;		// Measure round trip time
 			}
 		}
-		let obj = applyAutoGain(mix,mixGain,1);			// Bring mix level down if necessary
-		mixGain = obj.finalGain;				// Store gain for next loop
-		if (obj.peak > mixMax) mixMax = obj.peak;		// Note peak for display purposes
+		let obj = applyAutoGain(mix,mix.gain,1);		// Bring mix level down with AGC 
+		mix.gain = obj.finalGain;				// Store gain for next loop
+		if (obj.peak > mix.maxLevel) mix.maxLevel = obj.peak;	// Note peak for display purposes
 		if (mix.length != 0) {					// If there actually was some audio
 			spkrBuffer.push(...mix);			// put it on the speaker buffer
 			if (spkrBuffer.length > maxBuffSize) {		// Clip buffer if too full
@@ -91,27 +117,127 @@ socketIO.on('disconnect', function () {
 //
 document.addEventListener('DOMContentLoaded', function(event){
 	setInterval(displayAnimation, 100);				// Call animated display 10 x a second
-	let muteBtn=document.getElementById('muteBtn');			// Bind mute code to mute button
-	muteBtn.onclick = function () {
-		let btn=document.getElementById('muteBtn');
-		if (muted == true) {
-			muted = false;
-			btn.innerText="Mute";
-		} else {
-			muted = true;
-			btn.innerText="Unmute";
-		}
-	}
+//	let muteBtn=document.getElementById('muteBtn');			// Bind mute code to mute button
+//	muteBtn.onclick = function () {
+//		let btn=document.getElementById('muteBtn');
+//		if (muted == true) {
+//			muted = false;
+//			btn.innerText="Mute";
+//		} else {
+//			muted = true;
+//			btn.innerText="Unmute";
+//		}
+//	}
 });
 
+const NumLEDs = 21;							// Number of LEDs in the level displays
 function displayAnimation() { 						// called 100mS to animate audio displays
-	micMax = micMax * 0.9; 						// drop levels a little for smooth drops
-	// update displays
-	micDisplay(micMax);
+	const rate = 0.7;						// Speed of peak drop in LED level display
+	if (micAccessAllowed) {						// Once we have audio we can animate audio UI
+		mix.maxLevel = mix.maxLevel * rate; 			// drop mix peak level a little for smooth drops
+		setLevelDisplay( mix );					// Update LED display for mix.maxLevel
+		setSliderPos( mix );					// Update slider position for mix gain
+		mic.maxLevel = mic.maxLevel * rate; 			// drop mic peak level a little for smooth drops
+		setLevelDisplay( mic );					// Update LED display for mic.maxLevel
+		setSliderPos( mic );					// Update slider position for mic gain
+		channels.forEach(c => {					// Update each channel's UI
+			if (c.name != "") {				// A channel needs a name to be active
+				if (c.display != undefined)		// If there is no display associated to the channel
+					createChannelUI(channel[i]);	// build the visuals 
+				c.maxLevel = c.maxLevel * rate;		// drop smoothly the max level for the channel
+				setLevelDisplay( c );			// update LED display for channel maxLevel
+				setSliderPos( c );			// update slider position for channel gain
+			}
+		});
+	}
 }
-function micDisplay(level) {
-	//if (level > 0) micLED1 = 
+
+function setLevelDisplay( obj ) { 					// Set LED display level for obj
+	let v = obj.maxLevel;
+	if (v < 0.010) v = 0; else					// v indicates how many LEDs to make visible
+	if (v < 0.012) v = 1; else					// Obviously the higher v the more LEDs on
+	if (v < 0.016) v = 2; else					// These emulate the function:
+	if (v < 0.019) v = 3; else					// v = 10.5 * Math.log10( v ) + 21
+	if (v < 0.024) v = 4; else
+	if (v < 0.030) v = 5; else
+	if (v < 0.037) v = 6; else
+	if (v < 0.046) v = 7; else
+	if (v < 0.058) v = 8; else
+	if (v < 0.072) v = 9; else
+	if (v < 0.09) v = 10; else
+	if (v < 0.11) v = 11; else
+	if (v < 0.13) v = 12; else
+	if (v < 0.17) v = 13; else
+	if (v < 0.21) v = 14; else
+	if (v < 0.26) v = 15; else
+	if (v < 0.33) v = 16; else
+	if (v < 0.41) v = 17; else
+	if (v < 0.51) v = 18; else
+	if (v < 0.64) v = 19; else
+	if (v < 0.8) v = 20; else v = 21; 
+	for (let n=1; n <= v; n++) {
+		obj.LED[n].style.visibility = "visible";
+	}
+	for (let n=(v+1); n <= NumLEDs; n++) {
+		obj.LED[n].style.visibility = "hidden";
+	}
 }
+
+function setSliderPos( obj ) {
+	if (obj.gain < 1) pos = (34 * obj.gain) + 8; 
+	else
+		pos = (2.5 * obj.gain) + 39.5;
+	obj.slider.style.bottom = pos + "%" ;
+}
+
+var counter = 1;							// Essentially just a way of generating a novel ID for elements
+function createChannelUI(obj) {
+	let name = "ID"+counter;
+	counter++;
+	// build UI elements for a single channel with element IDs that include the name requested
+	let channel =' <div id="'+name+'" style="position:relative;width:100px; height:100%; display: inline-block"> \
+			<img style="position:relative;bottom:0%; right:0%; width:100%; height:99%;" src="images/controlBG.png">  \
+			<img style="position:absolute;bottom:8%; right:5%; width:40%; height:10%;" src="images/slider.png" id="'+name+'Slider">  \
+			<img style="position:absolute;right:20%; top:10%;width:50%; height:7%;" src="images/channelOff.png">  \
+			<img style="position:absolute;right:20%; top:10%;width:50%; height:10%;" src="images/channelOn.png" id="'+name+'On">  \
+			<img style="position:absolute;bottom:8%; left:15%; width:30%; height:2%;; visibility:hidden" src="images/sqLEDGreen.png" id="'+name+'LED1">  \
+			<img style="position:absolute;bottom:11%; left:15%; width:30%; height:2%;; visibility:hidden" src="images/sqLEDGreen.png" id="'+name+'LED2">  \
+			<img style="position:absolute;bottom:14%; left:15%; width:30%; height:2%;; visibility:hidden" src="images/sqLEDGreen.png" id="'+name+'LED3">  \
+			<img style="position:absolute;bottom:17%; left:15%; width:30%; height:2%;; visibility:hidden" src="images/sqLEDGreen.png" id="'+name+'LED4">  \
+			<img style="position:absolute;bottom:20%; left:15%; width:30%; height:2%;; visibility:hidden" src="images/sqLEDGreen.png" id="'+name+'LED5">  \
+			<img style="position:absolute;bottom:23%; left:15%; width:30%; height:2%;; visibility:hidden" src="images/sqLEDGreen.png" id="'+name+'LED6">  \
+			<img style="position:absolute;bottom:26%; left:15%; width:30%; height:2%;; visibility:hidden" src="images/sqLEDGreen.png" id="'+name+'LED7">  \
+			<img style="position:absolute;bottom:29%; left:15%; width:30%; height:2%;; visibility:hidden" src="images/sqLEDGreen.png" id="'+name+'LED8">  \
+			<img style="position:absolute;bottom:32%; left:15%; width:30%; height:2%;; visibility:hidden" src="images/sqLEDGreen.png" id="'+name+'LED9">  \
+			<img style="position:absolute;bottom:35%; left:15%; width:30%; height:2%;; visibility:hidden" src="images/sqLEDGreen.png" id="'+name+'LED10">  \
+			<img style="position:absolute;bottom:38%; left:15%; width:30%; height:2%;; visibility:hidden" src="images/sqLEDGreen.png" id="'+name+'LED11">  \
+			<img style="position:absolute;bottom:41%; left:15%; width:30%; height:2%;; visibility:hidden" src="images/sqLEDGreen.png" id="'+name+'LED12">  \
+			<img style="position:absolute;bottom:44%; left:15%; width:30%; height:2%;; visibility:hidden" src="images/sqLEDGreen.png" id="'+name+'LED13">  \
+			<img style="position:absolute;bottom:47%; left:15%; width:30%; height:2%;; visibility:hidden" src="images/sqLEDGreen.png" id="'+name+'LED14">  \
+			<img style="position:absolute;bottom:50%; left:15%; width:30%; height:2%;; visibility:hidden" src="images/sqLEDGreen.png" id="'+name+'LED15">  \
+			<img style="position:absolute;bottom:53%; left:15%; width:30%; height:2%;; visibility:hidden" src="images/sqLEDOrange.png" id="'+name+'LED16">  \
+			<img style="position:absolute;bottom:56%; left:15%; width:30%; height:2%;; visibility:hidden" src="images/sqLEDOrange.png" id="'+name+'LED17">  \
+			<img style="position:absolute;bottom:59%; left:15%; width:30%; height:2%;; visibility:hidden" src="images/sqLEDOrange.png" id="'+name+'LED18">  \
+			<img style="position:absolute;bottom:62%; left:15%; width:30%; height:2%;; visibility:hidden" src="images/sqLEDOrange.png" id="'+name+'LED19">  \
+			<img style="position:absolute;bottom:65%; left:15%; width:30%; height:2%;; visibility:hidden" src="images/sqLEDRed.png" id="'+name+'LED20">  \
+			<img style="position:absolute;bottom:68%; left:15%; width:30%; height:2%;; visibility:hidden" src="images/sqLEDRed.png" id="'+name+'LED21">  \
+			<div style="position:absolute;top:1%; left:3%; width:90%; height:10%;" id="'+name+'Name"> \
+				<marquee behavior="slide" direction="left"></marquee> \
+			</div> \
+		</div>'
+	let mixerRack = document.getElementById("mixerRack");		// Add this collection of items to the mixerRack div
+	mixerRack.innerHTML += channel;
+	obj.display = document.getElementById(name);			// Save references to items that may be modified later
+	obj.slider = document.getElementById(name+"Slider");
+	obj.onButton = document.getElementById(name+"On");
+	obj.nameDisplay = document.getElementById(name+"Name");
+	obj.LED = []; obj.LED[0] = "nada";
+	for (let i=1; i <= NumLEDs; i++)					// LED visibility set using obj.LEDs[n].style.visibility
+		obj.LED[i] = document.getElementById(name+"LED"+i);
+console.log("UI created for...");
+console.log(obj);
+}
+
 function setStatusLED(name, level) {					// Set the status LED's colour
 	let LED = document.getElementById(name);
 	if (level == "Red") LED.className="redLED";
@@ -179,15 +305,15 @@ function processAudio(e) {						// Main processing loop
 	var outData = e.outputBuffer.getChannelData(0);			// Audio going to speaker
 
 	let micAudio = [];						// 1. Mic audio processing...
-	if ((socketConnected) && (muted == false)) {			// Need connection to send
+	if ((socketConnected) && (mic.muted == false)) {		// Need connection to send
 		micAudio = downSample(inData, soundcardSampleRate, SampleRate);
 		resampledChunkSize = micAudio.length;			// Note how much audio is needed
 		micBuffer.push(...micAudio);				// Buffer mic audio until enough
 		if (micBuffer.length > PacketSize) {			// Got enough
 			let outAudio = micBuffer.splice(0, PacketSize);	// Get a packet of audio
-			let obj = applyAutoGain(outAudio, micGain, 5);	// Bring the mic up to level, but 5x is max
-			if (obj.peak > micMax) micMax = obj.peak;	// Note peak for local display
-			micGain = obj.finalGain;			// Store gain for next loop
+			let obj = applyAutoGain(outAudio, mic.gain, 5);	// Bring the mic up to level, but 5x is max
+			if (obj.peak > mic.maxLevel) mic.maxLevel = obj.peak;	// Note peak for local display
+			mic.gain = obj.finalGain;			// Store gain for next loop
 			let now = new Date().getTime();
 			socketIO.emit("u",
 			{
@@ -222,6 +348,9 @@ function handleAudio(stream) {						// We have obtained media access
 	let context = new window.AudioContext || new window.webkitAudioContext;
 	soundcardSampleRate = context.sampleRate;
 	micAccessAllowed = true;
+console.log("CREATING mix and mic UI");
+	createChannelUI( mix );						// Create the output mix channel UI
+	createChannelUI( mic );						// Create the microphone channel UI
 	let liveSource = context.createMediaStreamSource(stream); 	// Create audio source (mic)
 	let node = undefined;
 	if (!context.createScriptProcessor) {				// Audio processor node
@@ -404,14 +533,12 @@ var overflows = 0;
 var shortages = 0;
 var packetSequence = 0;							// Tracing packet ordering
 var rtt = 0;
-var micMax = 0;								// Max mic level to display on level display
-var mixMax = 0;								// Max mix level to display...
 var tracecount = 0;
 function printReport() {
 	trace("Idle = ", idleState.total, " data in = ", dataInState.total, " audio in/out = ", audioInOutState.total);
 	trace("Sent = ",packetsOut," Heard = ",packetsIn," speaker buffer size ",spkrBuffer.length," mic buffer size ", micBuffer.length," overflows = ",overflows," shortages = ",shortages," RTT = ",rtt);
 	let state = "Green";
-	trace2("micMax: ",micMax," micGain: ",micGain," mixMax: ",mixMax," mixGain: ",mixGain);
+	trace2("mic.maxLevel: ",mic.maxLevel," mic.gain: ",mic.gain," mix.maxLevel: ",mix.maxLevel," mix.gain: ",mix.gain);
 	if ((overflows > 1) || (shortages >1)) state = "Orange";
 	if (socketConnected == false) state = "Red";
 	setStatusLED("GeneralStatus",state);
@@ -428,8 +555,6 @@ function printReport() {
 	overflows = 0;
 	shortages = 0;
 	rtt = 0;
-	micMax = -2;
-	mixMax = -2;
 	tracecount = 2;
 }
 

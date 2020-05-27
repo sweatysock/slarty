@@ -2,7 +2,7 @@
 //
 const NumberOfChannels = 20;						// Max number of channels in this server
 var channels = [];							// Each channel's data & buffer held here
-for (let i=0; i < NumberOfChannels; i++) {					// Create all the channels pre-initialized
+for (let i=0; i < NumberOfChannels; i++) {				// Create all the channels pre-initialized
 	channels[i] = {
 		packets 	: [],
 		name		: "",
