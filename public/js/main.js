@@ -140,10 +140,9 @@ function displayAnimation() { 						// called 100mS to animate audio displays
 		mic.maxLevel = mic.maxLevel * rate; 			// drop mic peak level a little for smooth drops
 		setLevelDisplay( mic );					// Update LED display for mic.maxLevel
 		setSliderPos( mic );					// Update slider position for mic gain
-console.log(channels);
 		channels.forEach(c => {					// Update each channel's UI
 			if (c.name != "") {				// A channel needs a name to be active
-				if (c.display != undefined)		// If there is no display associated to the channel
+				if (c.display == undefined)		// If there is no display associated to the channel
 					createChannelUI(channel[i]);	// build the visuals 
 				c.maxLevel = c.maxLevel * rate;		// drop smoothly the max level for the channel
 				setLevelDisplay( c );			// update LED display for channel maxLevel
