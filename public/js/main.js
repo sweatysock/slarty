@@ -30,13 +30,16 @@ var mix = {								// Similar structures for the mix output
 	muted	: false,
 	maxLevel: 0,
 };
-var mic = {								// and for microphone input
-	name 	: "Mic",
-	gain	: 0,
-	agc	: true,
-	muted	: false,
-	maxLevel: 0,
-};
+var micGain = 1;
+var micMaxLevel = 0;
+var micMuted = false;
+//var mic = {								// and for microphone input
+//	name 	: "Mic",
+//	gain	: 0,
+//	agc	: true,
+//	muted	: false,
+//	maxLevel: 0,
+//};
 
 
 
@@ -304,15 +307,15 @@ function processAudio(e) {						// Main processing loop
 	var outData = e.outputBuffer.getChannelData(0);			// Audio going to speaker
 console.log(inData);
 	let micAudio = [];						// 1. Mic audio processing...
-	if ((socketConnected) && (mic.muted == false)) {		// Need connection to send
+	if ((socketConnected) && (micMuted == false)) {		// Need connection to send
 		micAudio = downSample(inData, soundcardSampleRate, SampleRate);
 		resampledChunkSize = micAudio.length;			// Note how much audio is needed
 		micBuffer.push(...micAudio);				// Buffer mic audio until enough
 		if (micBuffer.length > PacketSize) {			// Got enough
 			let outAudio = micBuffer.splice(0, PacketSize);	// Get a packet of audio
-			let obj = applyAutoGain(outAudio, mic.gain, 5);	// Bring the mic up to level, but 5x is max
-			if (obj.peak > mic.maxLevel) mic.maxLevel = obj.peak;	// Note peak for local display
-			mic.gain = obj.finalGain;			// Store gain for next loop
+			let obj = applyAutoGain(outAudio, micGain, 5);	// Bring the mic up to level, but 5x is max
+			if (obj.peak > micMaxLevel) micMaxLevel = obj.peak;	// Note peak for local display
+			micGain = obj.finalGain;			// Store gain for next loop
 			let now = new Date().getTime();
 			socketIO.emit("u",
 			{
@@ -536,7 +539,7 @@ function printReport() {
 	trace("Idle = ", idleState.total, " data in = ", dataInState.total, " audio in/out = ", audioInOutState.total);
 	trace("Sent = ",packetsOut," Heard = ",packetsIn," speaker buffer size ",spkrBuffer.length," mic buffer size ", micBuffer.length," overflows = ",overflows," shortages = ",shortages," RTT = ",rtt);
 	let state = "Green";
-	trace2("mic.maxLevel: ",mic.maxLevel," mic.gain: ",mic.gain," mix.maxLevel: ",mix.maxLevel," mix.gain: ",mix.gain);
+	trace2("micMaxLevel: ",micMaxLevel," micGain: ",micGain," mix.maxLevel: ",mix.maxLevel," mix.gain: ",mix.gain);
 	if ((overflows > 1) || (shortages >1)) state = "Orange";
 	if (socketConnected == false) state = "Red";
 	setStatusLED("GeneralStatus",state);
@@ -554,7 +557,7 @@ function printReport() {
 	shortages = 0;
 	rtt = 0;
 	tracecount = 2;
-	mic.maxLevel = -2;
+	micMaxLevel = -2;
 	mix.maxLevel = -2;
 }
 
