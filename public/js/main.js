@@ -20,7 +20,7 @@ for (let i=0; i < NumberOfChannels; i++) {				// Create all the channels pre-ini
 		gain 	: 0,						// Manual gain level. Start at zero and fade up
 		agc	: true,						// Flag if control is manual or auto
 		muted	: false,					// Local mute
-		maxLevel: 0,						// Animated peak channel audio level 
+		peak	: 0,						// Animated peak channel audio level 
 	};
 }
 var mixOut = {								// Similar structures for the mix output
@@ -28,14 +28,14 @@ var mixOut = {								// Similar structures for the mix output
 	gain	: 1,
 	agc	: true,
 	muted	: false,
-	maxLevel: 0,
+	peak	: 0,
 };
 var micIn = {								// and for microphone input
 	name 	: "Mic",
 	gain	: 0,
 	agc	: true,
 	muted	: false,
-	maxLevel: 0,
+	peak	: 0,
 };
 
 
@@ -69,17 +69,15 @@ socketIO.on('d', function (data) {
 	packetsIn++;							// For monitoring and statistics
 	if ((micAccessAllowed) && (blockSpkr == false)) {		// Need access to audio before outputting
 		let mix = [];						// Build up a mix of client audio 
-		let chan = data.channels; 
-		for (let c=0; c < chan.length; c++) {
-			if (chan[c].socketID != socketIO.id) {		// Don't include my audio in mix
-				channels[c].name = chan[c].name;	// Update the channel name
-				if (channels[c].muted) continue;	// We can skip a muted channel
-				let a = chan[c].audio;
-				let g = channels[c].gain;		// apply manual gain
-				if (channels[c].peak < chan[c].peak)	// set the peak for level display
-					channels[c].peak = chan[c].peak;
-console.log("Mixing channel ",c);
-console.log(chan[c]);
+		data.channels.forEach(c => {
+			if (c.socketID != socketIO.id) {		// Don't include my audio in mix
+				let ch = c.channel;
+				channels[ch].name = c.name;		// Update the channel name
+				if (channels[ch].muted) continue;	// We can skip a muted channel
+				let a = c.audio;
+				let g = channels[ch].gain;		// apply manual gain
+				if (channels[ch].peak < c.peak)		// set the peak for level display
+					channels[ch].peak = c.peak;
 				if (mix.length == 0)			// First audio in mix goes straight
 					for (let i=0; i < a.length; i++)
 						mix[i] = a[i] * g;	// Apply channel gain always
@@ -88,14 +86,12 @@ console.log(chan[c]);
 						mix[i] += a[i] * g;	// Add all audio * gain. AGC will fix level.
 			} else {					// This is my own data come back
 				let now = new Date().getTime();
-				rtt = now - chan[c].timestamp;		// Measure round trip time
+				rtt = now - c.timestamp;		// Measure round trip time
 			}
-		}
-console.log("Mix is...");
-console.log(mix);
+		});
 		let obj = applyAutoGain(mix,mixOut.gain,1);		// Bring mix level down with AGC 
 		mixOut.gain= obj.finalGain;				// Store gain for next loop
-		if (obj.peak > mixOut.maxLevel) mixOut.maxLevel = obj.peak;	// Note peak for display purposes
+		if (obj.peak > mixOut.peak) mixOut.peak = obj.peak;	// Note peak for display purposes
 		if (mix.length != 0) {					// If there actually was some audio
 			spkrBuffer.push(...mix);			// put it on the speaker buffer
 			if (spkrBuffer.length > maxBuffSize) {		// Clip buffer if too full
@@ -139,18 +135,18 @@ const NumLEDs = 21;							// Number of LEDs in the level displays
 function displayAnimation() { 						// called 100mS to animate audio displays
 	const rate = 0.7;						// Speed of peak drop in LED level display
 	if (micAccessAllowed) {						// Once we have audio we can animate audio UI
-		mixOut.maxLevel = mixOut.maxLevel * rate; 			// drop mix peak level a little for smooth drops
-		setLevelDisplay( mixOut );					// Update LED display for mix.maxLevel
+		mixOut.peak = mixOut.peak * rate; 			// drop mix peak level a little for smooth drops
+		setLevelDisplay( mixOut );				// Update LED display for mix.peak
 		setSliderPos( mixOut );					// Update slider position for mix gain
-		micIn.maxLevel = micIn.maxLevel * rate; 			// drop mic peak level a little for smooth drops
-		setLevelDisplay( micIn );					// Update LED display for mic.maxLevel
+		micIn.peak = micIn.peak * rate; 			// drop mic peak level a little for smooth drops
+		setLevelDisplay( micIn );				// Update LED display for mic.peak
 		setSliderPos( micIn );					// Update slider position for mic gain
 		channels.forEach(c => {					// Update each channel's UI
 			if (c.name != "") {				// A channel needs a name to be active
 				if (c.display == undefined)		// If there is no display associated to the channel
 					createChannelUI(c);		// build the visuals 
-				c.maxLevel = c.maxLevel * rate;		// drop smoothly the max level for the channel
-				setLevelDisplay( c );			// update LED display for channel maxLevel
+				c.peak = c.peak * rate;			// drop smoothly the max level for the channel
+				setLevelDisplay( c );			// update LED display for channel peak
 				setSliderPos( c );			// update slider position for channel gain
 			}
 		});
@@ -158,7 +154,7 @@ function displayAnimation() { 						// called 100mS to animate audio displays
 }
 
 function setLevelDisplay( obj ) { 					// Set LED display level for obj
-	let v = obj.maxLevel;
+	let v = obj.peak;
 	if (v < 0.010) v = 0; else					// v indicates how many LEDs to make visible
 	if (v < 0.012) v = 1; else					// Obviously the higher v the more LEDs on
 	if (v < 0.016) v = 2; else					// These emulate the function:
@@ -237,7 +233,7 @@ function createChannelUI(obj) {
 	obj.onButton = document.getElementById(name+"On");
 	obj.nameDisplay = document.getElementById(name+"Name");
 	obj.LED = []; obj.LED[0] = "nada";
-	for (let i=1; i <= NumLEDs; i++)					// LED visibility set using obj.LEDs[n].style.visibility
+	for (let i=1; i <= NumLEDs; i++)				// LED visibility set using obj.LEDs[n].style.visibility
 		obj.LED[i] = document.getElementById(name+"LED"+i);
 }
 
@@ -314,7 +310,7 @@ function processAudio(e) {						// Main processing loop
 		if (micBuffer.length > PacketSize) {			// Got enough
 			let outAudio = micBuffer.splice(0, PacketSize);	// Get a packet of audio
 			let obj = applyAutoGain(outAudio, micIn.gain, 5);	// Bring the mic up to level, but 5x is max
-			if (obj.peak > micIn.maxLevel) micIn.maxLevel = obj.peak;	// Note peak for local display
+			if (obj.peak > micIn.peak) micIn.peak = obj.peak;	// Note peak for local display
 			micIn.gain = obj.finalGain;			// Store gain for next loop
 			let now = new Date().getTime();
 			socketIO.emit("u",
@@ -350,8 +346,8 @@ function handleAudio(stream) {						// We have obtained media access
 	let context = new window.AudioContext || new window.webkitAudioContext;
 	soundcardSampleRate = context.sampleRate;
 	micAccessAllowed = true;
-	createChannelUI( mixOut );						// Create the output mix channel UI
-	createChannelUI( micIn );						// Create the microphone channel UI
+	createChannelUI( mixOut );					// Create the output mix channel UI
+	createChannelUI( micIn );					// Create the microphone channel UI
 	let liveSource = context.createMediaStreamSource(stream); 	// Create audio source (mic)
 	let node = undefined;
 	if (!context.createScriptProcessor) {				// Audio processor node
@@ -539,7 +535,7 @@ function printReport() {
 	trace("Idle = ", idleState.total, " data in = ", dataInState.total, " audio in/out = ", audioInOutState.total);
 	trace("Sent = ",packetsOut," Heard = ",packetsIn," speaker buffer size ",spkrBuffer.length," mic buffer size ", micBuffer.length," overflows = ",overflows," shortages = ",shortages," RTT = ",rtt);
 	let state = "Green";
-	trace2("micIn.maxLevel: ",micIn.maxLevel," micIn.gain: ",micIn.gain," mixOut.maxLevel: ",mixOut.maxLevel," mixOut.gain: ",mixOut.gain);
+	trace2("micIn.peak: ",micIn.peak," micIn.gain: ",micIn.gain," mixOut.peak: ",mixOut.peak," mixOut.gain: ",mixOut.gain);
 	if ((overflows > 1) || (shortages >1)) state = "Orange";
 	if (socketConnected == false) state = "Red";
 	setStatusLED("GeneralStatus",state);
