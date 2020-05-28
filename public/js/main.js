@@ -195,6 +195,7 @@ console.log(obj);
 	else
 		pos = (2.5 * obj.gain) + 39.5;
 	obj.slider.style.bottom = pos + "%" ;
+console.log(obj.slider.style.bottom);
 }
 
 var counter = 1;							// Essentially just a way of generating a novel ID for elements
