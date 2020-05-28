@@ -178,11 +178,11 @@ function setLevelDisplay( obj ) { 					// Set LED display level for obj
 	if (v < 0.64) v = 19; else
 	if (v < 0.8) v = 20; else v = 21; 
 	for (let n=1; n <= v; n++) {
-		let led = document.getElementById(obj.displayID+"LED"+i);
+		let led = document.getElementById(obj.displayID+"LED"+n);
 		led.style.visibility = "visible";
 	}
 	for (let n=(v+1); n <= NumLEDs; n++) {
-		let led = document.getElementById(obj.displayID+"LED"+i);
+		let led = document.getElementById(obj.displayID+"LED"+n);
 		led.style.visibility = "hidden";
 	}
 }
