@@ -74,6 +74,7 @@ socketIO.on('d', function (data) {
 //				channels[c].name = chan[c].name;	// Update the channel name
 //				if (channels[c].muted) continue;	// We can skip a muted channel
 				let a = chan[c].audio;
+				let g = 1;
 //				let g = channels[c].gain;		// apply manual gain
 //				if (channels[c].peak < chan[c].peak)	// set the peak for level display
 //					channels[c].peak = chan[c].peak;
