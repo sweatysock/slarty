@@ -17,7 +17,7 @@ var channels = [];							// Each channel's data & buffer held here
 for (let i=0; i < NumberOfChannels; i++) {				// Create all the channels pre-initialized
 	channels[i] = {
 		name	: "",						// Each client names their channel
-		gain 	: 0,						// Manual gain level. Start at zero and fade up
+		gain 	: 1,						// Manual gain level. Start at zero and fade up
 		agc	: true,						// Flag if control is manual or auto
 		muted	: false,					// Local mute
 		peak	: 0,						// Animated peak channel audio level 
