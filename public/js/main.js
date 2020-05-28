@@ -144,7 +144,7 @@ function displayAnimation() { 						// called 100mS to animate audio displays
 		setSliderPos( micIn );					// Update slider position for mic gain
 		channels.forEach(c => {					// Update each channel's UI
 			if (c.name != "") {				// A channel needs a name to be active
-				if (c.display == undefined)		// If there is no display associated to the channel
+				if (c.displayID == undefined)		// If there is no display associated to the channel
 					createChannelUI(c);		// build the visuals 
 				c.peak = c.peak * rate;			// drop smoothly the max level for the channel
 				setLevelDisplay( c );			// update LED display for channel peak
@@ -183,6 +183,7 @@ function setLevelDisplay( obj ) { 					// Set LED display level for obj
 	if (v < 0.51) v = 18; else
 	if (v < 0.64) v = 19; else
 	if (v < 0.8) v = 20; else v = 21; 
+	v=17;
 	for (let n=1; n <= v; n++) {
 		obj.LED[n].style.visibility = "visible";
 	}
@@ -239,8 +240,6 @@ function createChannelUI(obj) {
 	let mixerRack = document.getElementById("mixerRack");		// Add this collection of items to the mixerRack div
 	mixerRack.innerHTML += channel;
 	obj.displayID = name;
-	obj.onButton = document.getElementById(name+"On");
-	obj.nameDisplay = document.getElementById(name+"Name");
 }
 
 function setStatusLED(name, level) {					// Set the status LED's colour
