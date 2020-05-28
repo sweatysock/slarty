@@ -205,10 +205,11 @@ v=20;
 function setSliderPos( obj ) {
 console.log("SLIDER update for");
 console.log(obj);
+let sl = document.getElementById(obj.displayID + "Slider");
 	if (obj.gain < 1) pos = (34 * obj.gain) + 8; 
 	else
 		pos = (2.5 * obj.gain) + 39.5;
-	obj.slider.style.bottom = pos + "%" ;
+	sl.style.bottom = pos + "%" ;
 console.log(obj.slider.style.bottom);
 }
 
@@ -249,6 +250,7 @@ function createChannelUI(obj) {
 		</div>'
 	let mixerRack = document.getElementById("mixerRack");		// Add this collection of items to the mixerRack div
 	mixerRack.innerHTML += channel;
+obj.displayID = name;
 	obj.display = document.getElementById(name);			// Save references to items that may be modified later
 	obj.slider = document.getElementById(name+"Slider");
 	obj.onButton = document.getElementById(name+"On");
