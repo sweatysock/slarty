@@ -302,6 +302,7 @@ function processAudio(e) {						// Main processing loop
 	enterState( audioInOutState );					// Log time spent here
 	var inData = e.inputBuffer.getChannelData(0);			// Audio from the mic
 	var outData = e.outputBuffer.getChannelData(0);			// Audio going to speaker
+console.log(inData);
 	let micAudio = [];						// 1. Mic audio processing...
 	if ((socketConnected) && (mic.muted == false)) {		// Need connection to send
 		micAudio = downSample(inData, soundcardSampleRate, SampleRate);
