@@ -23,16 +23,13 @@ var myName = "";							// Name assigned to my audio channel
 //		maxLevel: 0,						// Animated peak channel audio level 
 //	};
 //}
-var mixGain = 1;
-var mixMaxLevel = 0;
-var mixMuted = false;
-var mix = {								// Similar structures for the mix output
-	name 	: "Mix",
-	gain	: 1,
-	agc	: true,
-	muted	: false,
-	maxLevel: 0,
-};
+//var mix = {								// Similar structures for the mix output
+//	name 	: "Mix",
+//	gain	: 1,
+//	agc	: true,
+//	muted	: false,
+//	maxLevel: 0,
+//};
 var micGain = 1;
 var micMaxLevel = 0;
 var micMuted = false;
@@ -43,7 +40,6 @@ var micMuted = false;
 //	muted	: false,
 //	maxLevel: 0,
 //};
-
 
 
 
@@ -96,9 +92,9 @@ socketIO.on('d', function (data) {
 				rtt = now - chan[c].timestamp;		// Measure round trip time
 			}
 		}
-		let obj = applyAutoGain(mix,mixGain,1);		// Bring mix level down with AGC 
-		mixGain = obj.finalGain;				// Store gain for next loop
-		if (obj.peak > mixMaxLevel) mixMaxLevel = obj.peak;	// Note peak for display purposes
+		let obj = applyAutoGain(mix,mix.gain,1);		// Bring mix level down with AGC 
+		mix.gain = obj.finalGain;				// Store gain for next loop
+		if (obj.peak > mix.maxLevel) mix.maxLevel = obj.peak;	// Note peak for display purposes
 		if (mix.length != 0) {					// If there actually was some audio
 			spkrBuffer.push(...mix);			// put it on the speaker buffer
 			if (spkrBuffer.length > maxBuffSize) {		// Clip buffer if too full
@@ -309,6 +305,7 @@ function processAudio(e) {						// Main processing loop
 	enterState( audioInOutState );					// Log time spent here
 	var inData = e.inputBuffer.getChannelData(0);			// Audio from the mic
 	var outData = e.outputBuffer.getChannelData(0);			// Audio going to speaker
+console.log(inData);
 	let micAudio = [];						// 1. Mic audio processing...
 	if ((socketConnected) && (micMuted == false)) {		// Need connection to send
 		micAudio = downSample(inData, soundcardSampleRate, SampleRate);
@@ -542,7 +539,7 @@ function printReport() {
 	trace("Idle = ", idleState.total, " data in = ", dataInState.total, " audio in/out = ", audioInOutState.total);
 	trace("Sent = ",packetsOut," Heard = ",packetsIn," speaker buffer size ",spkrBuffer.length," mic buffer size ", micBuffer.length," overflows = ",overflows," shortages = ",shortages," RTT = ",rtt);
 	let state = "Green";
-	trace2("micMaxLevel: ",micMaxLevel," micGain: ",micGain," mixMaxLevel: ",mixMaxLevel," mixGain: ",mixGain);
+	trace2("micMaxLevel: ",micMaxLevel," micGain: ",micGain," mix.maxLevel: ",mix.maxLevel," mix.gain: ",mix.gain);
 	if ((overflows > 1) || (shortages >1)) state = "Orange";
 	if (socketConnected == false) state = "Red";
 	setStatusLED("GeneralStatus",state);
@@ -561,7 +558,7 @@ function printReport() {
 	rtt = 0;
 	tracecount = 2;
 	micMaxLevel = -2;
-	mixMaxLevel = -2;
+	mix.maxLevel = -2;
 }
 
 setInterval(printReport, 1000);						// Call report generator once a second
