@@ -37,20 +37,6 @@ var micIn = {								// and for microphone input
 	muted	: false,
 	peak	: 0,
 };
-var dummyVar = {								// and for microphone input
-	name 	: "Mic",
-	gain	: 0,
-	agc	: true,
-	muted	: false,
-	peak	: 0,
-};
-var dummyVar2 = {								// and for microphone input
-	name 	: "Mic",
-	gain	: 0,
-	agc	: true,
-	muted	: false,
-	peak	: 0,
-};
 
 
 
@@ -169,8 +155,12 @@ function displayAnimation() { 						// called 100mS to animate audio displays
 }
 
 function setLevelDisplay( obj ) { 					// Set LED display level for obj
-console.log("LEG display update for");
-console.log(obj);
+	if (obj.LED == undefined) {
+		obj.LED = []; 
+		obj.LED[0] = "nada";
+		for (let i=1; i <= NumLEDs; i++)			
+			obj.LED[i] = document.getElementById(obj.displayID+"LED"+i);
+	}
 	let v = obj.peak;
 	if (v < 0.010) v = 0; else					// v indicates how many LEDs to make visible
 	if (v < 0.012) v = 1; else					// Obviously the higher v the more LEDs on
@@ -193,7 +183,6 @@ console.log(obj);
 	if (v < 0.51) v = 18; else
 	if (v < 0.64) v = 19; else
 	if (v < 0.8) v = 20; else v = 21; 
-v=20;
 	for (let n=1; n <= v; n++) {
 		obj.LED[n].style.visibility = "visible";
 	}
@@ -203,14 +192,13 @@ v=20;
 }
 
 function setSliderPos( obj ) {
-console.log("SLIDER update for");
-console.log(obj);
-let sl = document.getElementById(obj.displayID + "Slider");
+	if (obj.slider == undefined) {
+		obj.slider = document.getElementById(obj.displayID + "Slider");
+	}
 	if (obj.gain < 1) pos = (34 * obj.gain) + 8; 
 	else
 		pos = (2.5 * obj.gain) + 39.5;
-	sl.style.bottom = pos + "%" ;
-console.log(obj.slider.style.bottom);
+	obj.slider.style.bottom = pos + "%" ;
 }
 
 var counter = 1;							// Essentially just a way of generating a novel ID for elements
@@ -250,14 +238,9 @@ function createChannelUI(obj) {
 		</div>'
 	let mixerRack = document.getElementById("mixerRack");		// Add this collection of items to the mixerRack div
 	mixerRack.innerHTML += channel;
-obj.displayID = name;
-	obj.display = document.getElementById(name);			// Save references to items that may be modified later
-	obj.slider = document.getElementById(name+"Slider");
+	obj.displayID = name;
 	obj.onButton = document.getElementById(name+"On");
 	obj.nameDisplay = document.getElementById(name+"Name");
-	obj.LED = []; obj.LED[0] = "nada";
-	for (let i=1; i <= NumLEDs; i++)				// LED visibility set using obj.LEDs[n].style.visibility
-		obj.LED[i] = document.getElementById(name+"LED"+i);
 }
 
 function setStatusLED(name, level) {					// Set the status LED's colour
@@ -369,10 +352,8 @@ function handleAudio(stream) {						// We have obtained media access
 	let context = new window.AudioContext || new window.webkitAudioContext;
 	soundcardSampleRate = context.sampleRate;
 	micAccessAllowed = true;
-	createChannelUI( dummyVar );					// Create dummy
-	createChannelUI( micIn );					// Create the microphone channel UI
 	createChannelUI( mixOut );					// Create the output mix channel UI
-	createChannelUI( dummyVar2 );					// Create dummy
+	createChannelUI( micIn );					// Create the microphone channel UI
 	let liveSource = context.createMediaStreamSource(stream); 	// Create audio source (mic)
 	let node = undefined;
 	if (!context.createScriptProcessor) {				// Audio processor node
