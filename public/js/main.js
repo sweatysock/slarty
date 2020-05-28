@@ -26,7 +26,7 @@ var myName = "";							// Name assigned to my audio channel
 var mixGain = 1;
 var mixMaxLevel = 0;
 var mixMuted = false;
-var mix = {								// Similar structures for the mix output
+//var mix = {								// Similar structures for the mix output
 //	name 	: "Mix",
 //	gain	: 1,
 //	agc	: true,
