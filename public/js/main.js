@@ -198,7 +198,7 @@ console.log(obj);
 console.log(obj.slider.style.bottom);
 }
 
-var counter = 1;							// Essentially just a way of generating a novel ID for elements
+var counter = 2;							// Essentially just a way of generating a novel ID for elements
 function createChannelUI(obj) {
 	let name = "ID"+counter;
 	counter++;
@@ -353,8 +353,8 @@ function handleAudio(stream) {						// We have obtained media access
 	let context = new window.AudioContext || new window.webkitAudioContext;
 	soundcardSampleRate = context.sampleRate;
 	micAccessAllowed = true;
-	createChannelUI( micIn );					// Create the microphone channel UI
 	createChannelUI( mixOut );					// Create the output mix channel UI
+	createChannelUI( micIn );					// Create the microphone channel UI
 	let liveSource = context.createMediaStreamSource(stream); 	// Create audio source (mic)
 	let node = undefined;
 	if (!context.createScriptProcessor) {				// Audio processor node
