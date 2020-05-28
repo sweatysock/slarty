@@ -155,6 +155,7 @@ function displayAnimation() { 						// called 100mS to animate audio displays
 }
 
 function setLevelDisplay( obj ) { 					// Set LED display level for obj
+	obj.LED = undefined;
 	if (obj.LED == undefined) {
 		obj.LED = []; 
 		obj.LED[0] = "nada";
