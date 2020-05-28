@@ -369,8 +369,8 @@ function handleAudio(stream) {						// We have obtained media access
 	micAccessAllowed = true;
 	createChannelUI( dummyVar );					// Create dummy
 	createChannelUI( micIn );					// Create the microphone channel UI
-	createChannelUI( dummyVar2 );					// Create dummy
 	createChannelUI( mixOut );					// Create the output mix channel UI
+	createChannelUI( dummyVar2 );					// Create dummy
 	let liveSource = context.createMediaStreamSource(stream); 	// Create audio source (mic)
 	let node = undefined;
 	if (!context.createScriptProcessor) {				// Audio processor node
