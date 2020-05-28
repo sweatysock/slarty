@@ -67,7 +67,6 @@ socketIO.on('channel', function (data) {				// Message assigning us a channel
 socketIO.on('d', function (data) { 
 	enterState( dataInState );					// This is one of our key tasks
 	packetsIn++;							// For monitoring and statistics
-console.log(data);
 	if ((micAccessAllowed) && (blockSpkr == false)) {		// Need access to audio before outputting
 		let mix = [];						// Build up a mix of client audio 
 		let chan = data.channels; 
@@ -79,6 +78,8 @@ console.log(data);
 				let g = channels[c].gain;		// apply manual gain
 				if (channels[c].peak < chan[c].peak)	// set the peak for level display
 					channels[c].peak = chan[c].peak;
+console.log("Mixing channel ",c);
+console.log(chan[c]);
 				if (mix.length == 0)			// First audio in mix goes straight
 					for (let i=0; i < a.length; i++)
 						mix[i] = a[i] * g;	// Apply channel gain always
@@ -90,6 +91,8 @@ console.log(data);
 				rtt = now - chan[c].timestamp;		// Measure round trip time
 			}
 		}
+console.log("Mix is...");
+console.log(mix);
 		let obj = applyAutoGain(mix,mixOut.gain,1);		// Bring mix level down with AGC 
 		mixOut.gain= obj.finalGain;				// Store gain for next loop
 		if (obj.peak > mixOut.maxLevel) mixOut.maxLevel = obj.peak;	// Note peak for display purposes
