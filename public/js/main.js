@@ -73,23 +73,24 @@ socketIO.on('d', function (data) {
 			if (c.socketID != socketIO.id) {		// Don't include my audio in mix
 				let ch = c.channel;
 				channels[ch].name = c.name;		// Update the channel name
-				if (channels[ch].muted) continue;	// We can skip a muted channel
-				let a = c.audio;
-				let g = channels[ch].gain;		// apply manual gain
-				if (channels[ch].peak < c.peak)		// set the peak for level display
-					channels[ch].peak = c.peak;
-				if (mix.length == 0)			// First audio in mix goes straight
-					for (let i=0; i < a.length; i++)
-						mix[i] = a[i] * g;	// Apply channel gain always
-  				else
-	  				for (let i=0; i < a.length; i++)
-						mix[i] += a[i] * g;	// Add all audio * gain. AGC will fix level.
+				if (!channels[ch].muted) {		// We can skip a muted channel
+					let a = c.audio;
+					let g = channels[ch].gain;	// apply manual gain
+					if (channels[ch].peak < c.peak)	// set the peak for level display
+						channels[ch].peak = c.peak;
+					if (mix.length == 0)		// First audio in mix goes straight
+						for (let i=0; i < a.length; i++)
+							mix[i] = a[i] * g;
+  					else
+	  					for (let i=0; i < a.length; i++)
+							mix[i] += a[i] * g;
+				}
 			} else {					// This is my own data come back
 				let now = new Date().getTime();
 				rtt = now - c.timestamp;		// Measure round trip time
 			}
 		});
-		let obj = applyAutoGain(mix,mixOut.gain,1);		// Bring mix level down with AGC 
+		let obj = applyAutoGain(mix,mixOut.gain,1);		// Correct mix level with AGC 
 		mixOut.gain= obj.finalGain;				// Store gain for next loop
 		if (obj.peak > mixOut.peak) mixOut.peak = obj.peak;	// Note peak for display purposes
 		if (mix.length != 0) {					// If there actually was some audio
