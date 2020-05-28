@@ -353,8 +353,8 @@ function handleAudio(stream) {						// We have obtained media access
 	let context = new window.AudioContext || new window.webkitAudioContext;
 	soundcardSampleRate = context.sampleRate;
 	micAccessAllowed = true;
-	createChannelUI( mixOut );					// Create the output mix channel UI
 	createChannelUI( micIn );					// Create the microphone channel UI
+	createChannelUI( mixOut );					// Create the output mix channel UI
 	let liveSource = context.createMediaStreamSource(stream); 	// Create audio source (mic)
 	let node = undefined;
 	if (!context.createScriptProcessor) {				// Audio processor node
