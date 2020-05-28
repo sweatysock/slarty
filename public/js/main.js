@@ -118,7 +118,7 @@ socketIO.on('disconnect', function () {
 // Media management and display code (audio in and out)
 //
 document.addEventListener('DOMContentLoaded', function(event){
-	setInterval(displayAnimation, 100);				// Call animated display 10 x a second
+	setInterval(displayAnimation, 1000);				// Call animated display 10 x a second
 //	let muteBtn=document.getElementById('muteBtn');			// Bind mute code to mute button
 //	muteBtn.onclick = function () {
 //		let btn=document.getElementById('muteBtn');
@@ -155,6 +155,8 @@ function displayAnimation() { 						// called 100mS to animate audio displays
 }
 
 function setLevelDisplay( obj ) { 					// Set LED display level for obj
+console.log("LEG display update for");
+console.log(obj);
 	let v = obj.peak;
 	if (v < 0.010) v = 0; else					// v indicates how many LEDs to make visible
 	if (v < 0.012) v = 1; else					// Obviously the higher v the more LEDs on
