@@ -179,6 +179,7 @@ console.log(obj);
 	if (v < 0.51) v = 18; else
 	if (v < 0.64) v = 19; else
 	if (v < 0.8) v = 20; else v = 21; 
+v=12;
 	for (let n=1; n <= v; n++) {
 		obj.LED[n].style.visibility = "visible";
 	}
