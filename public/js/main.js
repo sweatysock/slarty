@@ -23,26 +23,20 @@ var myName = "";							// Name assigned to my audio channel
 //		maxLevel: 0,						// Animated peak channel audio level 
 //	};
 //}
-var mixGain = 1;
-var mixMaxLevel = 0;
-var mixMuted = false;
-var mix = {								// Similar structures for the mix output
+var mixOut = {								// Similar structures for the mix output
 	name 	: "Mix",
 	gain	: 1,
 	agc	: true,
 	muted	: false,
 	maxLevel: 0,
 };
-var micGain = 1;
-var micMaxLevel = 0;
-var micMuted = false;
-//var mic = {								// and for microphone input
-//	name 	: "Mic",
-//	gain	: 0,
-//	agc	: true,
-//	muted	: false,
-//	maxLevel: 0,
-//};
+var micIn = {								// and for microphone input
+	name 	: "Mic",
+	gain	: 0,
+	agc	: true,
+	muted	: false,
+	maxLevel: 0,
+};
 
 
 
@@ -96,9 +90,9 @@ socketIO.on('d', function (data) {
 				rtt = now - chan[c].timestamp;		// Measure round trip time
 			}
 		}
-		let obj = applyAutoGain(mix,mixGain,1);		// Bring mix level down with AGC 
-		mixGain = obj.finalGain;				// Store gain for next loop
-		if (obj.peak > mixMaxLevel) mixMaxLevel = obj.peak;	// Note peak for display purposes
+		let obj = applyAutoGain(mix,mixOut.gain,1);		// Bring mix level down with AGC 
+		mixOut.gain= obj.finalGain;				// Store gain for next loop
+		if (obj.peak > mixOut.maxLevel) mixOut.maxLevel = obj.peak;	// Note peak for display purposes
 		if (mix.length != 0) {					// If there actually was some audio
 			spkrBuffer.push(...mix);			// put it on the speaker buffer
 			if (spkrBuffer.length > maxBuffSize) {		// Clip buffer if too full
@@ -310,15 +304,15 @@ function processAudio(e) {						// Main processing loop
 	var inData = e.inputBuffer.getChannelData(0);			// Audio from the mic
 	var outData = e.outputBuffer.getChannelData(0);			// Audio going to speaker
 	let micAudio = [];						// 1. Mic audio processing...
-	if ((socketConnected) && (micMuted == false)) {		// Need connection to send
+	if ((socketConnected) && (micIn.muted == false)) {		// Need connection to send
 		micAudio = downSample(inData, soundcardSampleRate, SampleRate);
 		resampledChunkSize = micAudio.length;			// Note how much audio is needed
 		micBuffer.push(...micAudio);				// Buffer mic audio until enough
 		if (micBuffer.length > PacketSize) {			// Got enough
 			let outAudio = micBuffer.splice(0, PacketSize);	// Get a packet of audio
-			let obj = applyAutoGain(outAudio, micGain, 5);	// Bring the mic up to level, but 5x is max
-			if (obj.peak > micMaxLevel) micMaxLevel = obj.peak;	// Note peak for local display
-			micGain = obj.finalGain;			// Store gain for next loop
+			let obj = applyAutoGain(outAudio, micIn.gain, 5);	// Bring the mic up to level, but 5x is max
+			if (obj.peak > micIn.maxLevel) micIn.maxLevel = obj.peak;	// Note peak for local display
+			micIn.gain = obj.finalGain;			// Store gain for next loop
 			let now = new Date().getTime();
 			socketIO.emit("u",
 			{
@@ -542,7 +536,7 @@ function printReport() {
 	trace("Idle = ", idleState.total, " data in = ", dataInState.total, " audio in/out = ", audioInOutState.total);
 	trace("Sent = ",packetsOut," Heard = ",packetsIn," speaker buffer size ",spkrBuffer.length," mic buffer size ", micBuffer.length," overflows = ",overflows," shortages = ",shortages," RTT = ",rtt);
 	let state = "Green";
-	trace2("micMaxLevel: ",micMaxLevel," micGain: ",micGain," mixMaxLevel: ",mixMaxLevel," mixGain: ",mixGain);
+	trace2("micIn.maxLevel: ",micIn.maxLevel," micIn.gain: ",micIn.gain," mixOut.maxLevel: ",mixOut.maxLevel," mixOut.gain: ",mixOut.gain);
 	if ((overflows > 1) || (shortages >1)) state = "Orange";
 	if (socketConnected == false) state = "Red";
 	setStatusLED("GeneralStatus",state);
@@ -560,8 +554,8 @@ function printReport() {
 	shortages = 0;
 	rtt = 0;
 	tracecount = 2;
-	micMaxLevel = -2;
-	mixMaxLevel = -2;
+	micIn.maxLevel = -2;
+	mixOut.maxLevel = -2;
 }
 
 setInterval(printReport, 1000);						// Call report generator once a second
