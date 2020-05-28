@@ -23,13 +23,13 @@ var myName = "";							// Name assigned to my audio channel
 //		maxLevel: 0,						// Animated peak channel audio level 
 //	};
 //}
-//var mix = {								// Similar structures for the mix output
-//	name 	: "Mix",
-//	gain	: 1,
-//	agc	: true,
-//	muted	: false,
-//	maxLevel: 0,
-//};
+var mix = {								// Similar structures for the mix output
+	name 	: "Mix",
+	gain	: 1,
+	agc	: true,
+	muted	: false,
+	maxLevel: 0,
+};
 var micGain = 1;
 var micMaxLevel = 0;
 var micMuted = false;
