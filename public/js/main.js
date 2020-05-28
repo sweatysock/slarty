@@ -155,13 +155,6 @@ function displayAnimation() { 						// called 100mS to animate audio displays
 }
 
 function setLevelDisplay( obj ) { 					// Set LED display level for obj
-	obj.LED = undefined;
-	if (obj.LED == undefined) {
-		obj.LED = []; 
-		obj.LED[0] = "nada";
-		for (let i=1; i <= NumLEDs; i++)			
-			obj.LED[i] = document.getElementById(obj.displayID+"LED"+i);
-	}
 	let v = obj.peak;
 	if (v < 0.010) v = 0; else					// v indicates how many LEDs to make visible
 	if (v < 0.012) v = 1; else					// Obviously the higher v the more LEDs on
@@ -185,21 +178,21 @@ function setLevelDisplay( obj ) { 					// Set LED display level for obj
 	if (v < 0.64) v = 19; else
 	if (v < 0.8) v = 20; else v = 21; 
 	for (let n=1; n <= v; n++) {
-		obj.LED[n].style.visibility = "visible";
+		let led = document.getElementById(obj.displayID+"LED"+i);
+		led.style.visibility = "visible";
 	}
 	for (let n=(v+1); n <= NumLEDs; n++) {
-		obj.LED[n].style.visibility = "hidden";
+		let led = document.getElementById(obj.displayID+"LED"+i);
+		led.style.visibility = "hidden";
 	}
 }
 
 function setSliderPos( obj ) {
-	if (obj.slider == undefined) {
-		obj.slider = document.getElementById(obj.displayID + "Slider");
-	}
 	if (obj.gain < 1) pos = (34 * obj.gain) + 8; 
 	else
 		pos = (2.5 * obj.gain) + 39.5;
-	obj.slider.style.bottom = pos + "%" ;
+	let sl = document.getElementById(obj.displayID + "Slider");
+	sl.style.bottom = pos + "%" ;
 }
 
 var counter = 1;							// Essentially just a way of generating a novel ID for elements
