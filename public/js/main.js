@@ -44,6 +44,13 @@ var dummyVar = {								// and for microphone input
 	muted	: false,
 	peak	: 0,
 };
+var dummyVar2 = {								// and for microphone input
+	name 	: "Mic",
+	gain	: 0,
+	agc	: true,
+	muted	: false,
+	peak	: 0,
+};
 
 
 
@@ -361,8 +368,9 @@ function handleAudio(stream) {						// We have obtained media access
 	soundcardSampleRate = context.sampleRate;
 	micAccessAllowed = true;
 	createChannelUI( dummyVar );					// Create dummy
-	createChannelUI( mixOut );					// Create the output mix channel UI
 	createChannelUI( micIn );					// Create the microphone channel UI
+	createChannelUI( dummyVar2 );					// Create dummy
+	createChannelUI( mixOut );					// Create the output mix channel UI
 	let liveSource = context.createMediaStreamSource(stream); 	// Create audio source (mic)
 	let node = undefined;
 	if (!context.createScriptProcessor) {				// Audio processor node
