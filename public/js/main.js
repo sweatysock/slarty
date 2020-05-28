@@ -12,17 +12,17 @@ var maxBuffSize = 5000;							// Max audio buffer chunks for playback
 var micBuffer = [];							// Buffer mic audio before sending
 var myChannel = -1;							// The server assigns us an audio channel
 var myName = "";							// Name assigned to my audio channel
-//const NumberOfChannels = 20;						// Max number of channels in this server
-//var channels = [];							// Each channel's data & buffer held here
-//for (let i=0; i < NumberOfChannels; i++) {				// Create all the channels pre-initialized
-//	channels[i] = {
-//		name	: "",						// Each client names their channel
-//		gain 	: 0,						// Manual gain level. Start at zero and fade up
-//		agc	: true,						// Flag if control is manual or auto
-//		muted	: false,					// Local mute
-//		maxLevel: 0,						// Animated peak channel audio level 
-//	};
-//}
+const NumberOfChannels = 20;						// Max number of channels in this server
+var channels = [];							// Each channel's data & buffer held here
+for (let i=0; i < NumberOfChannels; i++) {				// Create all the channels pre-initialized
+	channels[i] = {
+		name	: "",						// Each client names their channel
+		gain 	: 0,						// Manual gain level. Start at zero and fade up
+		agc	: true,						// Flag if control is manual or auto
+		muted	: false,					// Local mute
+		maxLevel: 0,						// Animated peak channel audio level 
+	};
+}
 var mixOut = {								// Similar structures for the mix output
 	name 	: "Mix",
 	gain	: 1,
@@ -72,13 +72,13 @@ socketIO.on('d', function (data) {
 		let chan = data.channels; 
 		for (let c=0; c < chan.length; c++) {
 			if (chan[c].socketID != socketIO.id) {		// Don't include my audio in mix
-//				channels[c].name = chan[c].name;	// Update the channel name
-//				if (channels[c].muted) continue;	// We can skip a muted channel
+				channels[c].name = chan[c].name;	// Update the channel name
+				if (channels[c].muted) continue;	// We can skip a muted channel
 				let a = chan[c].audio;
 				let g = 1;
-//				let g = channels[c].gain;		// apply manual gain
-//				if (channels[c].peak < chan[c].peak)	// set the peak for level display
-//					channels[c].peak = chan[c].peak;
+				let g = channels[c].gain;		// apply manual gain
+				if (channels[c].peak < chan[c].peak)	// set the peak for level display
+					channels[c].peak = chan[c].peak;
 				if (mix.length == 0)			// First audio in mix goes straight
 					for (let i=0; i < a.length; i++)
 						mix[i] = a[i] * g;	// Apply channel gain always
@@ -118,7 +118,7 @@ socketIO.on('disconnect', function () {
 // Media management and display code (audio in and out)
 //
 document.addEventListener('DOMContentLoaded', function(event){
-//	setInterval(displayAnimation, 100);				// Call animated display 10 x a second
+	setInterval(displayAnimation, 100);				// Call animated display 10 x a second
 //	let muteBtn=document.getElementById('muteBtn');			// Bind mute code to mute button
 //	muteBtn.onclick = function () {
 //		let btn=document.getElementById('muteBtn');
@@ -132,111 +132,111 @@ document.addEventListener('DOMContentLoaded', function(event){
 //	}
 });
 
-//const NumLEDs = 21;							// Number of LEDs in the level displays
-//function displayAnimation() { 						// called 100mS to animate audio displays
-//	const rate = 0.7;						// Speed of peak drop in LED level display
-//	if (micAccessAllowed) {						// Once we have audio we can animate audio UI
-//		mix.maxLevel = mix.maxLevel * rate; 			// drop mix peak level a little for smooth drops
-//		setLevelDisplay( mix );					// Update LED display for mix.maxLevel
-//		setSliderPos( mix );					// Update slider position for mix gain
-//		mic.maxLevel = mic.maxLevel * rate; 			// drop mic peak level a little for smooth drops
-//		setLevelDisplay( mic );					// Update LED display for mic.maxLevel
-//		setSliderPos( mic );					// Update slider position for mic gain
-//		channels.forEach(c => {					// Update each channel's UI
-//			if (c.name != "") {				// A channel needs a name to be active
-//				if (c.display == undefined)		// If there is no display associated to the channel
-//					createChannelUI(c);		// build the visuals 
-//				c.maxLevel = c.maxLevel * rate;		// drop smoothly the max level for the channel
-//				setLevelDisplay( c );			// update LED display for channel maxLevel
-//				setSliderPos( c );			// update slider position for channel gain
-//			}
-//		});
-//	}
-//}
+const NumLEDs = 21;							// Number of LEDs in the level displays
+function displayAnimation() { 						// called 100mS to animate audio displays
+	const rate = 0.7;						// Speed of peak drop in LED level display
+	if (micAccessAllowed) {						// Once we have audio we can animate audio UI
+		mixOut.maxLevel = mixOut.maxLevel * rate; 			// drop mix peak level a little for smooth drops
+		setLevelDisplay( mixOut );					// Update LED display for mix.maxLevel
+		setSliderPos( mixOut );					// Update slider position for mix gain
+		micIn.maxLevel = micIn.maxLevel * rate; 			// drop mic peak level a little for smooth drops
+		setLevelDisplay( micIn );					// Update LED display for mic.maxLevel
+		setSliderPos( micIn );					// Update slider position for mic gain
+		channels.forEach(c => {					// Update each channel's UI
+			if (c.name != "") {				// A channel needs a name to be active
+				if (c.display == undefined)		// If there is no display associated to the channel
+					createChannelUI(c);		// build the visuals 
+				c.maxLevel = c.maxLevel * rate;		// drop smoothly the max level for the channel
+				setLevelDisplay( c );			// update LED display for channel maxLevel
+				setSliderPos( c );			// update slider position for channel gain
+			}
+		});
+	}
+}
 
-//function setLevelDisplay( obj ) { 					// Set LED display level for obj
-//	let v = obj.maxLevel;
-//	if (v < 0.010) v = 0; else					// v indicates how many LEDs to make visible
-//	if (v < 0.012) v = 1; else					// Obviously the higher v the more LEDs on
-//	if (v < 0.016) v = 2; else					// These emulate the function:
-//	if (v < 0.019) v = 3; else					// v = 10.5 * Math.log10( v ) + 21
-//	if (v < 0.024) v = 4; else
-//	if (v < 0.030) v = 5; else
-//	if (v < 0.037) v = 6; else
-//	if (v < 0.046) v = 7; else
-//	if (v < 0.058) v = 8; else
-//	if (v < 0.072) v = 9; else
-//	if (v < 0.09) v = 10; else
-//	if (v < 0.11) v = 11; else
-//	if (v < 0.13) v = 12; else
-//	if (v < 0.17) v = 13; else
-//	if (v < 0.21) v = 14; else
-//	if (v < 0.26) v = 15; else
-//	if (v < 0.33) v = 16; else
-//	if (v < 0.41) v = 17; else
-//	if (v < 0.51) v = 18; else
-//	if (v < 0.64) v = 19; else
-//	if (v < 0.8) v = 20; else v = 21; 
-//	for (let n=1; n <= v; n++) {
-//		obj.LED[n].style.visibility = "visible";
-//	}
-//	for (let n=(v+1); n <= NumLEDs; n++) {
-//		obj.LED[n].style.visibility = "hidden";
-//	}
-//}
+function setLevelDisplay( obj ) { 					// Set LED display level for obj
+	let v = obj.maxLevel;
+	if (v < 0.010) v = 0; else					// v indicates how many LEDs to make visible
+	if (v < 0.012) v = 1; else					// Obviously the higher v the more LEDs on
+	if (v < 0.016) v = 2; else					// These emulate the function:
+	if (v < 0.019) v = 3; else					// v = 10.5 * Math.log10( v ) + 21
+	if (v < 0.024) v = 4; else
+	if (v < 0.030) v = 5; else
+	if (v < 0.037) v = 6; else
+	if (v < 0.046) v = 7; else
+	if (v < 0.058) v = 8; else
+	if (v < 0.072) v = 9; else
+	if (v < 0.09) v = 10; else
+	if (v < 0.11) v = 11; else
+	if (v < 0.13) v = 12; else
+	if (v < 0.17) v = 13; else
+	if (v < 0.21) v = 14; else
+	if (v < 0.26) v = 15; else
+	if (v < 0.33) v = 16; else
+	if (v < 0.41) v = 17; else
+	if (v < 0.51) v = 18; else
+	if (v < 0.64) v = 19; else
+	if (v < 0.8) v = 20; else v = 21; 
+	for (let n=1; n <= v; n++) {
+		obj.LED[n].style.visibility = "visible";
+	}
+	for (let n=(v+1); n <= NumLEDs; n++) {
+		obj.LED[n].style.visibility = "hidden";
+	}
+}
 
-//function setSliderPos( obj ) {
-//	if (obj.gain < 1) pos = (34 * obj.gain) + 8; 
-//	else
-//		pos = (2.5 * obj.gain) + 39.5;
-//	obj.slider.style.bottom = pos + "%" ;
-//}
+function setSliderPos( obj ) {
+	if (obj.gain < 1) pos = (34 * obj.gain) + 8; 
+	else
+		pos = (2.5 * obj.gain) + 39.5;
+	obj.slider.style.bottom = pos + "%" ;
+}
 
-//var counter = 1;							// Essentially just a way of generating a novel ID for elements
-//function createChannelUI(obj) {
-//	let name = "ID"+counter;
-//	counter++;
-//	// build UI elements for a single channel with element IDs that include the name requested
-//	let channel =' <div id="'+name+'" style="position:relative;width:100px; height:100%; display: inline-block"> \
-//			<img style="position:relative;bottom:0%; right:0%; width:100%; height:99%;" src="images/controlBG.png">  \
-//			<img style="position:absolute;bottom:8%; right:5%; width:40%; height:10%;" src="images/slider.png" id="'+name+'Slider">  \
-//			<img style="position:absolute;right:20%; top:10%;width:50%; height:7%;" src="images/channelOff.png">  \
-//			<img style="position:absolute;right:20%; top:10%;width:50%; height:10%;" src="images/channelOn.png" id="'+name+'On">  \
-//			<img style="position:absolute;bottom:8%; left:15%; width:30%; height:2%;; visibility:hidden" src="images/sqLEDGreen.png" id="'+name+'LED1">  \
-//			<img style="position:absolute;bottom:11%; left:15%; width:30%; height:2%;; visibility:hidden" src="images/sqLEDGreen.png" id="'+name+'LED2">  \
-//			<img style="position:absolute;bottom:14%; left:15%; width:30%; height:2%;; visibility:hidden" src="images/sqLEDGreen.png" id="'+name+'LED3">  \
-//			<img style="position:absolute;bottom:17%; left:15%; width:30%; height:2%;; visibility:hidden" src="images/sqLEDGreen.png" id="'+name+'LED4">  \
-//			<img style="position:absolute;bottom:20%; left:15%; width:30%; height:2%;; visibility:hidden" src="images/sqLEDGreen.png" id="'+name+'LED5">  \
-//			<img style="position:absolute;bottom:23%; left:15%; width:30%; height:2%;; visibility:hidden" src="images/sqLEDGreen.png" id="'+name+'LED6">  \
-//			<img style="position:absolute;bottom:26%; left:15%; width:30%; height:2%;; visibility:hidden" src="images/sqLEDGreen.png" id="'+name+'LED7">  \
-//			<img style="position:absolute;bottom:29%; left:15%; width:30%; height:2%;; visibility:hidden" src="images/sqLEDGreen.png" id="'+name+'LED8">  \
-//			<img style="position:absolute;bottom:32%; left:15%; width:30%; height:2%;; visibility:hidden" src="images/sqLEDGreen.png" id="'+name+'LED9">  \
-//			<img style="position:absolute;bottom:35%; left:15%; width:30%; height:2%;; visibility:hidden" src="images/sqLEDGreen.png" id="'+name+'LED10">  \
-//			<img style="position:absolute;bottom:38%; left:15%; width:30%; height:2%;; visibility:hidden" src="images/sqLEDGreen.png" id="'+name+'LED11">  \
-//			<img style="position:absolute;bottom:41%; left:15%; width:30%; height:2%;; visibility:hidden" src="images/sqLEDGreen.png" id="'+name+'LED12">  \
-//			<img style="position:absolute;bottom:44%; left:15%; width:30%; height:2%;; visibility:hidden" src="images/sqLEDGreen.png" id="'+name+'LED13">  \
-//			<img style="position:absolute;bottom:47%; left:15%; width:30%; height:2%;; visibility:hidden" src="images/sqLEDGreen.png" id="'+name+'LED14">  \
-//			<img style="position:absolute;bottom:50%; left:15%; width:30%; height:2%;; visibility:hidden" src="images/sqLEDGreen.png" id="'+name+'LED15">  \
-//			<img style="position:absolute;bottom:53%; left:15%; width:30%; height:2%;; visibility:hidden" src="images/sqLEDOrange.png" id="'+name+'LED16">  \
-//			<img style="position:absolute;bottom:56%; left:15%; width:30%; height:2%;; visibility:hidden" src="images/sqLEDOrange.png" id="'+name+'LED17">  \
-//			<img style="position:absolute;bottom:59%; left:15%; width:30%; height:2%;; visibility:hidden" src="images/sqLEDOrange.png" id="'+name+'LED18">  \
-//			<img style="position:absolute;bottom:62%; left:15%; width:30%; height:2%;; visibility:hidden" src="images/sqLEDOrange.png" id="'+name+'LED19">  \
-//			<img style="position:absolute;bottom:65%; left:15%; width:30%; height:2%;; visibility:hidden" src="images/sqLEDRed.png" id="'+name+'LED20">  \
-//			<img style="position:absolute;bottom:68%; left:15%; width:30%; height:2%;; visibility:hidden" src="images/sqLEDRed.png" id="'+name+'LED21">  \
-//			<div style="position:absolute;top:1%; left:3%; width:90%; height:10%;" id="'+name+'Name"> \
-//				<marquee behavior="slide" direction="left"></marquee> \
-//			</div> \
-//		</div>'
-//	let mixerRack = document.getElementById("mixerRack");		// Add this collection of items to the mixerRack div
-//	mixerRack.innerHTML += channel;
-//	obj.display = document.getElementById(name);			// Save references to items that may be modified later
-//	obj.slider = document.getElementById(name+"Slider");
-//	obj.onButton = document.getElementById(name+"On");
-//	obj.nameDisplay = document.getElementById(name+"Name");
-//	obj.LED = []; obj.LED[0] = "nada";
-//	for (let i=1; i <= NumLEDs; i++)					// LED visibility set using obj.LEDs[n].style.visibility
-//		obj.LED[i] = document.getElementById(name+"LED"+i);
-//}
+var counter = 1;							// Essentially just a way of generating a novel ID for elements
+function createChannelUI(obj) {
+	let name = "ID"+counter;
+	counter++;
+	// build UI elements for a single channel with element IDs that include the name requested
+	let channel =' <div id="'+name+'" style="position:relative;width:100px; height:100%; display: inline-block"> \
+			<img style="position:relative;bottom:0%; right:0%; width:100%; height:99%;" src="images/controlBG.png">  \
+			<img style="position:absolute;bottom:8%; right:5%; width:40%; height:10%;" src="images/slider.png" id="'+name+'Slider">  \
+			<img style="position:absolute;right:20%; top:10%;width:50%; height:7%;" src="images/channelOff.png">  \
+			<img style="position:absolute;right:20%; top:10%;width:50%; height:10%;" src="images/channelOn.png" id="'+name+'On">  \
+			<img style="position:absolute;bottom:8%; left:15%; width:30%; height:2%;; visibility:hidden" src="images/sqLEDGreen.png" id="'+name+'LED1">  \
+			<img style="position:absolute;bottom:11%; left:15%; width:30%; height:2%;; visibility:hidden" src="images/sqLEDGreen.png" id="'+name+'LED2">  \
+			<img style="position:absolute;bottom:14%; left:15%; width:30%; height:2%;; visibility:hidden" src="images/sqLEDGreen.png" id="'+name+'LED3">  \
+			<img style="position:absolute;bottom:17%; left:15%; width:30%; height:2%;; visibility:hidden" src="images/sqLEDGreen.png" id="'+name+'LED4">  \
+			<img style="position:absolute;bottom:20%; left:15%; width:30%; height:2%;; visibility:hidden" src="images/sqLEDGreen.png" id="'+name+'LED5">  \
+			<img style="position:absolute;bottom:23%; left:15%; width:30%; height:2%;; visibility:hidden" src="images/sqLEDGreen.png" id="'+name+'LED6">  \
+			<img style="position:absolute;bottom:26%; left:15%; width:30%; height:2%;; visibility:hidden" src="images/sqLEDGreen.png" id="'+name+'LED7">  \
+			<img style="position:absolute;bottom:29%; left:15%; width:30%; height:2%;; visibility:hidden" src="images/sqLEDGreen.png" id="'+name+'LED8">  \
+			<img style="position:absolute;bottom:32%; left:15%; width:30%; height:2%;; visibility:hidden" src="images/sqLEDGreen.png" id="'+name+'LED9">  \
+			<img style="position:absolute;bottom:35%; left:15%; width:30%; height:2%;; visibility:hidden" src="images/sqLEDGreen.png" id="'+name+'LED10">  \
+			<img style="position:absolute;bottom:38%; left:15%; width:30%; height:2%;; visibility:hidden" src="images/sqLEDGreen.png" id="'+name+'LED11">  \
+			<img style="position:absolute;bottom:41%; left:15%; width:30%; height:2%;; visibility:hidden" src="images/sqLEDGreen.png" id="'+name+'LED12">  \
+			<img style="position:absolute;bottom:44%; left:15%; width:30%; height:2%;; visibility:hidden" src="images/sqLEDGreen.png" id="'+name+'LED13">  \
+			<img style="position:absolute;bottom:47%; left:15%; width:30%; height:2%;; visibility:hidden" src="images/sqLEDGreen.png" id="'+name+'LED14">  \
+			<img style="position:absolute;bottom:50%; left:15%; width:30%; height:2%;; visibility:hidden" src="images/sqLEDGreen.png" id="'+name+'LED15">  \
+			<img style="position:absolute;bottom:53%; left:15%; width:30%; height:2%;; visibility:hidden" src="images/sqLEDOrange.png" id="'+name+'LED16">  \
+			<img style="position:absolute;bottom:56%; left:15%; width:30%; height:2%;; visibility:hidden" src="images/sqLEDOrange.png" id="'+name+'LED17">  \
+			<img style="position:absolute;bottom:59%; left:15%; width:30%; height:2%;; visibility:hidden" src="images/sqLEDOrange.png" id="'+name+'LED18">  \
+			<img style="position:absolute;bottom:62%; left:15%; width:30%; height:2%;; visibility:hidden" src="images/sqLEDOrange.png" id="'+name+'LED19">  \
+			<img style="position:absolute;bottom:65%; left:15%; width:30%; height:2%;; visibility:hidden" src="images/sqLEDRed.png" id="'+name+'LED20">  \
+			<img style="position:absolute;bottom:68%; left:15%; width:30%; height:2%;; visibility:hidden" src="images/sqLEDRed.png" id="'+name+'LED21">  \
+			<div style="position:absolute;top:1%; left:3%; width:90%; height:10%;" id="'+name+'Name"> \
+				<marquee behavior="slide" direction="left"></marquee> \
+			</div> \
+		</div>'
+	let mixerRack = document.getElementById("mixerRack");		// Add this collection of items to the mixerRack div
+	mixerRack.innerHTML += channel;
+	obj.display = document.getElementById(name);			// Save references to items that may be modified later
+	obj.slider = document.getElementById(name+"Slider");
+	obj.onButton = document.getElementById(name+"On");
+	obj.nameDisplay = document.getElementById(name+"Name");
+	obj.LED = []; obj.LED[0] = "nada";
+	for (let i=1; i <= NumLEDs; i++)					// LED visibility set using obj.LEDs[n].style.visibility
+		obj.LED[i] = document.getElementById(name+"LED"+i);
+}
 
 function setStatusLED(name, level) {					// Set the status LED's colour
 	let LED = document.getElementById(name);
@@ -347,8 +347,8 @@ function handleAudio(stream) {						// We have obtained media access
 	let context = new window.AudioContext || new window.webkitAudioContext;
 	soundcardSampleRate = context.sampleRate;
 	micAccessAllowed = true;
-//	createChannelUI( mix );						// Create the output mix channel UI
-//	createChannelUI( mic );						// Create the microphone channel UI
+	createChannelUI( mixOut );						// Create the output mix channel UI
+	createChannelUI( micIn );						// Create the microphone channel UI
 	let liveSource = context.createMediaStreamSource(stream); 	// Create audio source (mic)
 	let node = undefined;
 	if (!context.createScriptProcessor) {				// Audio processor node
@@ -554,8 +554,6 @@ function printReport() {
 	shortages = 0;
 	rtt = 0;
 	tracecount = 2;
-	micIn.maxLevel = -2;
-	mixOut.maxLevel = -2;
 }
 
 setInterval(printReport, 1000);						// Call report generator once a second
