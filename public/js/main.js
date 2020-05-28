@@ -24,7 +24,7 @@ for (let i=0; i < NumberOfChannels; i++) {				// Create all the channels pre-ini
 	};
 }
 var mixOut = {								// Similar structures for the mix output
-	name 	: "Mix",
+	name 	: "Output",
 	gain	: 1,
 	agc	: true,
 	muted	: false,
@@ -137,8 +137,8 @@ function displayAnimation() { 						// called 100mS to animate audio displays
 	const rate = 0.7;						// Speed of peak drop in LED level display
 	if (micAccessAllowed) {						// Once we have audio we can animate audio UI
 		mixOut.peak = mixOut.peak * rate; 			// drop mix peak level a little for smooth drops
-//		setLevelDisplay( mixOut );				// Update LED display for mix.peak
-//		setSliderPos( mixOut );					// Update slider position for mix gain
+		setLevelDisplay( mixOut );				// Update LED display for mix.peak
+		setSliderPos( mixOut );					// Update slider position for mix gain
 		micIn.peak = micIn.peak * rate; 			// drop mic peak level a little for smooth drops
 		setLevelDisplay( micIn );				// Update LED display for mic.peak
 		setSliderPos( micIn );					// Update slider position for mic gain
@@ -353,7 +353,7 @@ function handleAudio(stream) {						// We have obtained media access
 	let context = new window.AudioContext || new window.webkitAudioContext;
 	soundcardSampleRate = context.sampleRate;
 	micAccessAllowed = true;
-//	createChannelUI( mixOut );					// Create the output mix channel UI
+	createChannelUI( mixOut );					// Create the output mix channel UI
 	createChannelUI( micIn );					// Create the microphone channel UI
 	let liveSource = context.createMediaStreamSource(stream); 	// Create audio source (mic)
 	let node = undefined;
