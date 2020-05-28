@@ -67,6 +67,7 @@ socketIO.on('channel', function (data) {				// Message assigning us a channel
 socketIO.on('d', function (data) { 
 	enterState( dataInState );					// This is one of our key tasks
 	packetsIn++;							// For monitoring and statistics
+console.log(data);
 	if ((micAccessAllowed) && (blockSpkr == false)) {		// Need access to audio before outputting
 		let mix = [];						// Build up a mix of client audio 
 		let chan = data.channels; 
