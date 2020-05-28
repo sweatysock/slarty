@@ -179,7 +179,7 @@ console.log(obj);
 	if (v < 0.51) v = 18; else
 	if (v < 0.64) v = 19; else
 	if (v < 0.8) v = 20; else v = 21; 
-v=12;
+v=20;
 	for (let n=1; n <= v; n++) {
 		obj.LED[n].style.visibility = "visible";
 	}
@@ -189,6 +189,8 @@ v=12;
 }
 
 function setSliderPos( obj ) {
+console.log("SLIDER update for");
+console.log(obj);
 	if (obj.gain < 1) pos = (34 * obj.gain) + 8; 
 	else
 		pos = (2.5 * obj.gain) + 39.5;
