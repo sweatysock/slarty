@@ -190,7 +190,7 @@ function setSliderPos( obj ) {
 
 var counter = 1;							// Essentially just a way of generating a novel ID for elements
 function createChannelUI(obj) {
-	let name = obj.channel;
+	let name = "ID"+obj.channel;
 	counter++;
 console.log(obj.channel);
 	// build UI elements for a single channel with element IDs that include the name requested
@@ -272,6 +272,7 @@ console.log(p);
 		else
 			gain = (pos - 39.5)/2.5;
 console.log(id);
+		id = id.substring(2);
 		if (typeof(id) == "number") {
 			id = channel[id];				// ID is channel number so get the channel object
 		} else {
