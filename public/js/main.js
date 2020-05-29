@@ -263,6 +263,8 @@ console.log("drag slider ");
 		let pct = (y/event.target.clientHeight)*100;		// Calculate the slider % movement
 console.log(y,pct);
 		p = dragStartPct + pct;					// Apply the change 
+		let id = event.target.parentNode.id;
+		let slider = document.getElementById(id+"Slider");
 		slider.style.bottom = p;				// Move the slider
 console.log(p);
 		if (p < 8) p = 8;					// Limit slider movement
