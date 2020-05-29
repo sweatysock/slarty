@@ -272,6 +272,7 @@ console.log(p);
 		else
 			gain = (pos - 39.5)/2.5;
 console.log(id);
+console.log("Gain = ",gain);
 		id = id.substring(2);
 		if (parseFloat(id)) id = parseFloat(id);
 		if (typeof(id) == "number") {
@@ -281,7 +282,7 @@ console.log(id);
 		}
 console.log(id);
 		id.gain = gain;						// Set the object's gain level 
-		console.log(id.gain);
+console.log(id.gain);
 	}
 }
 
