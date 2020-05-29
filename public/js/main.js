@@ -271,11 +271,13 @@ console.log(p);
 			gain = (pos -8)/34;
 		else
 			gain = (pos - 39.5)/2.5;
+console.log(id);
 		if (typeof(id) == "number") {
 			id = channel[id];				// ID is channel number so get the channel object
 		} else {
 			id = eval(id);					// Convert the ID to the object (micIn or mixOut)
 		}
+console.log(id);
 		id.gain = gain;						// Set the object's gain level 
 		console.log(id.gain);
 	}
