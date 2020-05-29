@@ -273,6 +273,7 @@ console.log(p);
 			gain = (pos - 39.5)/2.5;
 console.log(id);
 		id = id.substring(2);
+		if (parseFloat(id)) id = parseFloat(id);
 		if (typeof(id) == "number") {
 			id = channel[id];				// ID is channel number so get the channel object
 		} else {
