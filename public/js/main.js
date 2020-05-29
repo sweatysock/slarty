@@ -233,6 +233,7 @@ console.log(obj.channel);
 
 function muteButton(obj) {
 	obj.muted = true;
+console.log(obj);
 	let b = document.getElementById(obj.displayID+"On");
 	b.style.visibility = "hidden";
 }
