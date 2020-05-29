@@ -245,10 +245,14 @@ function unmuteButton(obj) {
 
 var dragging=false;
 var dragStartY;
+var dragStartPct;
 function sliderDragStart(event) {
 	dragging = true;
 	event.target.style.cursor='pointer';
 	dragStartY = event.clientY;
+	let id = event.target.parentNode.id;
+	let slider = document.getElementById(id+"Slider");
+	dragStartPct = parseFloat(slider.style.bottom);		// Get the slider's current % position
 console.log("Draggin started");
 }
 
@@ -258,10 +262,7 @@ console.log("drag slider ");
 		let y = (dragStartY - event.clientY);			// Get the cursor positon
 		let pct = (y/event.target.clientHeight)*100;		// Calculate the slider % movement
 console.log(y,pct);
-		let id = event.target.parentNode.id;
-		let slider = document.getElementById(id+"Slider");
-		let p = parseFloat(slider.style.bottom);		// Get the slider's current % position
-		p = p + pct;						// Apply the change 
+		p = dragStartPct + pct;					// Apply the change 
 		slider.style.bottom = p;				// Move the slider
 console.log(p);
 		if (p < 8) p = 8;					// Limit slider movement
