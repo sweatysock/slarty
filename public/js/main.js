@@ -268,9 +268,9 @@ console.log(p);
 		if (p > 65) p = 65;
 		let gain;						// Now calculate the gain this implies
 		if (p < 42) 						// Inverse equations used for slider positioning
-			gain = (pos -8)/34;
+			gain = (p -8)/34;
 		else
-			gain = (pos - 39.5)/2.5;
+			gain = (p - 39.5)/2.5;
 console.log(id);
 console.log("Gain = ",gain);
 		id = id.substring(2);
