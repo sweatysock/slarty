@@ -275,7 +275,7 @@ console.log(id);
 		id = id.substring(2);
 		if (parseFloat(id)) id = parseFloat(id);
 		if (typeof(id) == "number") {
-			id = channel[id];				// ID is channel number so get the channel object
+			id = channels[id];				// ID is channel number so get the channel object
 		} else {
 			id = eval(id);					// Convert the ID to the object (micIn or mixOut)
 		}
