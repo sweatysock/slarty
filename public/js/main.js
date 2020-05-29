@@ -21,6 +21,7 @@ for (let i=0; i < NumberOfChannels; i++) {				// Create all the channels pre-ini
 		agc	: true,						// Flag if control is manual or auto
 		muted	: false,					// Local mute
 		peak	: 0,						// Animated peak channel audio level 
+		channel	: i,						// The channel needs to know it's number for UI referencing
 	};
 }
 var mixOut = {								// Similar structures for the mix output
@@ -29,6 +30,7 @@ var mixOut = {								// Similar structures for the mix output
 	agc	: true,
 	muted	: false,
 	peak	: 0,
+	channel	: "mixOut",
 };
 var micIn = {								// and for microphone input
 	name 	: "Mic",
@@ -36,6 +38,7 @@ var micIn = {								// and for microphone input
 	agc	: true,
 	muted	: false,
 	peak	: 0,
+	channel	: "micIn",
 };
 
 
@@ -73,9 +76,10 @@ socketIO.on('d', function (data) {
 			if (c.socketID != socketIO.id) {		// Don't include my audio in mix
 				let ch = c.channel;
 				channels[ch].name = c.name;		// Update the channel name
+				channels[ch].channel = ch;		// Update the channel number
 				if (!channels[ch].muted) {		// We can skip a muted channel
 					let a = c.audio;
-					let g = channels[ch].gain;	// apply manual gain
+					let g = channels[ch].gain;	// apply manual gain, if different from 1
 					if (channels[ch].peak < c.peak)	// set the peak for level display
 						channels[ch].peak = c.peak;
 					if (mix.length == 0)		// First audio in mix goes straight
@@ -119,17 +123,6 @@ socketIO.on('disconnect', function () {
 //
 document.addEventListener('DOMContentLoaded', function(event){
 	setInterval(displayAnimation, 100);				// Call animated display 10 x a second
-//	let muteBtn=document.getElementById('muteBtn');			// Bind mute code to mute button
-//	muteBtn.onclick = function () {
-//		let btn=document.getElementById('muteBtn');
-//		if (muted == true) {
-//			muted = false;
-//			btn.innerText="Mute";
-//		} else {
-//			muted = true;
-//			btn.innerText="Unmute";
-//		}
-//	}
 });
 
 const NumLEDs = 21;							// Number of LEDs in the level displays
@@ -197,14 +190,17 @@ function setSliderPos( obj ) {
 
 var counter = 1;							// Essentially just a way of generating a novel ID for elements
 function createChannelUI(obj) {
-	let name = "ID"+counter;
+	let name = obj.channel;
 	counter++;
+console.log(obj.channel);
 	// build UI elements for a single channel with element IDs that include the name requested
+	// non LED: <div style="position:absolute;bottom:8%; right:5%; width:40%; height:65%; background-color:#999999" id="'+name+'SlideBox></div> \
 	let channel =' <div id="'+name+'" style="position:relative;width:100px; height:100%; display: inline-block"> \
 			<img style="position:relative;bottom:0%; right:0%; width:100%; height:99%;" src="images/controlBG.png">  \
-			<img style="position:absolute;bottom:8%; right:5%; width:40%; height:10%;" src="images/slider.png" id="'+name+'Slider">  \
-			<img style="position:absolute;right:20%; top:10%;width:50%; height:7%;" src="images/channelOff.png">  \
-			<img style="position:absolute;right:20%; top:10%;width:50%; height:10%;" src="images/channelOn.png" id="'+name+'On">  \
+			<img style="position:absolute;bottom:8%; right:5%; width:40%; height:10%;" src="images/slider.png" id="'+name+'Slider" >  \
+			<div style="position:absolute;bottom:8%; right:5%; width:40%; height:65%;" draggable="false" id="'+name+'SlideBtn" onmousedown="sliderDragStart(event)" onmousemove="sliderDrag(event)" onmouseup="sliderDragStop(event)"></div>  \
+			<img style="position:absolute;right:20%; top:10%;width:50%; padding-bottom:10%;" src="images/channelOff.png" id="'+name+'Off" onclick="unmuteButton('+obj.channel+')">  \
+			<img style="position:absolute;right:20%; top:10%;width:50%; padding-bottom:10%;" src="images/channelOn.png" id="'+name+'On" onclick="muteButton('+obj.channel+')">  \
 			<img style="position:absolute;bottom:8%; left:15%; width:30%; height:2%;; visibility:hidden" src="images/sqLEDGreen.png" id="'+name+'LED1">  \
 			<img style="position:absolute;bottom:11%; left:15%; width:30%; height:2%;; visibility:hidden" src="images/sqLEDGreen.png" id="'+name+'LED2">  \
 			<img style="position:absolute;bottom:14%; left:15%; width:30%; height:2%;; visibility:hidden" src="images/sqLEDGreen.png" id="'+name+'LED3">  \
@@ -226,13 +222,69 @@ function createChannelUI(obj) {
 			<img style="position:absolute;bottom:62%; left:15%; width:30%; height:2%;; visibility:hidden" src="images/sqLEDOrange.png" id="'+name+'LED19">  \
 			<img style="position:absolute;bottom:65%; left:15%; width:30%; height:2%;; visibility:hidden" src="images/sqLEDRed.png" id="'+name+'LED20">  \
 			<img style="position:absolute;bottom:68%; left:15%; width:30%; height:2%;; visibility:hidden" src="images/sqLEDRed.png" id="'+name+'LED21">  \
-			<div style="position:absolute;top:1%; left:3%; width:90%; height:10%;" id="'+name+'Name"> \
-				<marquee behavior="slide" direction="left"></marquee> \
+			<div style="position:absolute;top:1%; left:3%; width:90%; height:10%;font-color:#555555" id="'+name+'Name"> \
+				<marquee behavior="slide" direction="left">'+obj.channel+'</marquee> \
 			</div> \
 		</div>'
 	let mixerRack = document.getElementById("mixerRack");		// Add this collection of items to the mixerRack div
 	mixerRack.innerHTML += channel;
 	obj.displayID = name;
+}
+
+function muteButton(obj) {
+	obj.muted = true;
+	let b = document.getElementById(obj.displayID+"On");
+	b.style.visibility = "hidden";
+}
+
+function unmuteButton(obj) {
+	obj.muted = false;
+	let b = document.getElementById(obj.displayID+"On");
+	b.style.visibility = "visible";
+}
+
+var dragging=false;
+var dragStartY;
+function sliderDragStart(event) {
+	dragging = true;
+	event.target.style.cursor='pointer';
+	dragStartY = event.clientY;
+console.log("Draggin started");
+}
+
+function sliderDrag(event) {
+console.log("drag slider ");
+	if (dragging) {
+		let y = (dragStartY - event.clientY);			// Get the cursor positon
+		let pct = (y/event.target.clientHeight)*100;		// Calculate the slider % movement
+console.log(y,pct);
+		let id = event.target.parentNode.id;
+		let slider = document.getElementById(id+"Slider");
+		let p = parseFloat(slider.style.bottom);		// Get the slider's current % position
+		p = p + pct;						// Apply the change 
+		slider.style.bottom = p;				// Move the slider
+console.log(p);
+		if (p < 8) p = 8;					// Limit slider movement
+		if (p > 65) p = 65;
+		let gain;						// Now calculate the gain this implies
+		if (p < 42) 						// Inverse equations used for slider positioning
+			gain = (pos -8)/34;
+		else
+			gain = (pos - 39.5)/2.5;
+		if (typeof(id) == "number") {
+			id = channel[id];				// ID is channel number so get the channel object
+		} else {
+			id = eval(id);					// Convert the ID to the object (micIn or mixOut)
+		}
+		id.gain = gain;						// Set the object's gain level 
+		console.log(id.gain);
+	}
+}
+
+function sliderDragStop(event) {
+	event.target.style.cursor='default';
+	dragging = false;
+console.log("Draggin stopped");
 }
 
 function setStatusLED(name, level) {					// Set the status LED's colour
