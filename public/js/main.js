@@ -278,7 +278,7 @@ trace2("drag slider ");
 	if (dragging) {
 		let y = event.clientY;
 		if (y == null) y = event.touches[0].clientY;
-		let y = (dragStartY - event.clientY);			// Get the cursor positon
+		y = (dragStartY - event.clientY);			// Get the cursor positon
 		let pct = (y/event.target.clientHeight)*100;		// Calculate the slider % movement
 trace2(y,pct);
 		p = dragStartPct + pct;					// Apply the change 
