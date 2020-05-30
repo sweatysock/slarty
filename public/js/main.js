@@ -188,17 +188,16 @@ function setSliderPos( obj ) {
 	sl.style.bottom = pos + "%" ;
 }
 
-var counter = 1;							// Essentially just a way of generating a novel ID for elements
 function createChannelUI(obj) {
 	let name = "ID"+obj.channel;
-	counter++;
-console.log(obj.channel);
 	// build UI elements for a single channel with element IDs that include the name requested
 	// non LED: <div style="position:absolute;bottom:8%; right:5%; width:40%; height:65%; background-color:#999999" id="'+name+'SlideBox></div> \
 	let channel =' <div id="'+name+'" style="position:relative;width:100px; height:100%; display: inline-block"> \
 			<img style="position:relative;bottom:0%; right:0%; width:100%; height:99%;" src="images/controlBG.png">  \
 			<img style="position:absolute;bottom:8%; right:5%; width:40%; height:10%;" src="images/slider.png" id="'+name+'Slider" >  \
-			<div style="position:absolute;bottom:8%; right:5%; width:40%; height:65%;" draggable="false" id="'+name+'SlideBtn" onmousedown="sliderDragStart(event)" onmousemove="sliderDrag(event)" onmouseup="sliderDragStop(event)" ontouchstart="sliderDragStart(event)" ontouchmove="sliderDrag(event)" ontouchend="sliderDragStop(event)"></div>  \
+			<div style="position:absolute;bottom:8%; right:5%; width:40%; height:65%;" draggable="false" id="'+name+'SlideBtn" \
+				onmousedown="sliderDragStart(event)" onmousemove="sliderDrag(event)" onmouseup="sliderDragStop(event)" \
+				ontouchstart="sliderDragStart(event)" ontouchmove="sliderDrag(event)" ontouchend="sliderDragStop(event)"></div>  \
 			<img style="position:absolute;right:20%; top:10%;width:50%; padding-bottom:10%;" src="images/channelOff.png" id="'+name+'Off" onclick="unmuteButton(event)">  \
 			<img style="position:absolute;right:20%; top:10%;width:50%; padding-bottom:10%;" src="images/channelOn.png" id="'+name+'On" onclick="muteButton(event)">  \
 			<img style="position:absolute;bottom:8%; left:15%; width:30%; height:2%;; visibility:hidden" src="images/sqLEDGreen.png" id="'+name+'LED1">  \
@@ -231,13 +230,13 @@ console.log(obj.channel);
 	obj.displayID = name;
 }
 
-function convertIdToObj(id) {
+function convertIdToObj(id) {						// Translate HTML DOM IDs to JS data objects
 	id = id.substring(2);
 	if (parseFloat(id)) id = parseFloat(id);
 	if (typeof(id) == "number") {
-		id = channels[id];				// ID is channel number so get the channel object
+		id = channels[id];					// ID is channel number so get the channel object
 	} else {
-		id = eval(id);					// Convert the ID to the object (micIn or mixOut)
+		id = eval(id);						// Convert the ID to the object (micIn or mixOut)
 	}
 	return id;
 }
@@ -262,51 +261,41 @@ var dragging=false;
 var dragStartY;
 var dragStartPct;
 function sliderDragStart(event) {
-trace2(JSON.stringify(event));
 	dragging = true;
 	event.target.style.cursor='pointer';
 	dragStartY = event.clientY;
 	if (isNaN(dragStartY)) dragStartY = event.touches[0].clientY;
 	let id = event.target.parentNode.id;
 	let slider = document.getElementById(id+"Slider");
-	dragStartPct = parseFloat(slider.style.bottom);		// Get the slider's current % position
-console.log("Draggin started");
+	dragStartPct = parseFloat(slider.style.bottom);			// Get the slider's current % position
 }
 
 function sliderDrag(event) {
-trace2("drag slider ");
 	if (dragging) {
 		let y = event.clientY;
-		let yy = event.touches[0].clientY;
 		if (isNaN(y)) y = event.touches[0].clientY;
-		y = (dragStartY - y);					// Get the cursor positon
-		let pct = (y/event.target.clientHeight)*100;		// Calculate the slider % movement
-trace2(y,yy,pct);
-		p = dragStartPct + pct;					// Apply the change 
+		y = (dragStartY - y);					// Get the cursor positon change
+		let pct = (y/event.target.clientHeight)*100;		// Calculate the change as a % of the range
+		p = dragStartPct + pct;					// Apply the change to the initial position
 		let id = event.target.parentNode.id;
 		let slider = document.getElementById(id+"Slider");
-		slider.style.bottom = p;				// Move the slider
-trace2(p);
+		slider.style.bottom = p;				// Move the slider to the desired position
 		if (p < 8) p = 8;					// Limit slider movement
 		if (p > 65) p = 65;
-		let gain;						// Now calculate the gain this implies
+		dragStartPct = p;					// Set this position as the start of the next drag
+		let gain;						// Now calculate the gain this position implies
 		if (p < 42) 						// Inverse equations used for slider positioning
 			gain = (p -8)/34;
 		else
 			gain = (p - 39.5)/2.5;
-trace2(id);
-trace2("Gain = ",gain);
-		id = convertIdToObj(id);
-trace2(id);
+		id = convertIdToObj(id);				// Get the js object ID for this UI element
 		id.gain = gain;						// Set the object's gain level 
-trace2(id.gain);
 	}
 }
 
 function sliderDragStop(event) {
 	event.target.style.cursor='default';
 	dragging = false;
-console.log("Draggin stopped");
 }
 
 function setStatusLED(name, level) {					// Set the status LED's colour
