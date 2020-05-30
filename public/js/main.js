@@ -273,6 +273,7 @@ console.log("Draggin started");
 
 function sliderDrag(event) {
 trace2("drag slider ");
+trace2(JSON.stringify(event));
 	if (dragging) {
 		let y = (dragStartY - event.clientY);			// Get the cursor positon
 		let pct = (y/event.target.clientHeight)*100;		// Calculate the slider % movement
