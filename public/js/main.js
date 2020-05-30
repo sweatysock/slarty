@@ -276,12 +276,12 @@ trace2("drag slider ");
 	if (dragging) {
 		let y = (dragStartY - event.clientY);			// Get the cursor positon
 		let pct = (y/event.target.clientHeight)*100;		// Calculate the slider % movement
-console.log(y,pct);
+trace2(y,pct);
 		p = dragStartPct + pct;					// Apply the change 
 		let id = event.target.parentNode.id;
 		let slider = document.getElementById(id+"Slider");
 		slider.style.bottom = p;				// Move the slider
-console.log(p);
+trace2(p);
 		if (p < 8) p = 8;					// Limit slider movement
 		if (p > 65) p = 65;
 		let gain;						// Now calculate the gain this implies
@@ -289,12 +289,12 @@ console.log(p);
 			gain = (p -8)/34;
 		else
 			gain = (p - 39.5)/2.5;
-console.log(id);
-console.log("Gain = ",gain);
+trace2(id);
+trace2("Gain = ",gain);
 		id = convertIdToObj(id);
-console.log(id);
+trace2(id);
 		id.gain = gain;						// Set the object's gain level 
-console.log(id.gain);
+trace2(id.gain);
 	}
 }
 
@@ -602,7 +602,7 @@ function printReport() {
 	trace("Idle = ", idleState.total, " data in = ", dataInState.total, " audio in/out = ", audioInOutState.total);
 	trace("Sent = ",packetsOut," Heard = ",packetsIn," speaker buffer size ",spkrBuffer.length," mic buffer size ", micBuffer.length," overflows = ",overflows," shortages = ",shortages," RTT = ",rtt);
 	let state = "Green";
-	trace2("micIn.peak: ",micIn.peak," micIn.gain: ",micIn.gain," mixOut.peak: ",mixOut.peak," mixOut.gain: ",mixOut.gain);
+	trace("micIn.peak: ",micIn.peak," micIn.gain: ",micIn.gain," mixOut.peak: ",mixOut.peak," mixOut.gain: ",mixOut.gain);
 	if ((overflows > 1) || (shortages >1)) state = "Orange";
 	if (socketConnected == false) state = "Red";
 	setStatusLED("GeneralStatus",state);
