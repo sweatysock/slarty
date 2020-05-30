@@ -266,7 +266,7 @@ trace2(JSON.stringify(event));
 	dragging = true;
 	event.target.style.cursor='pointer';
 	dragStartY = event.clientY;
-	if (dragStartY == null) dragStartY = event.touches[0].clientY;
+	if (isNaN(dragStartY)) dragStartY = event.touches[0].clientY;
 	let id = event.target.parentNode.id;
 	let slider = document.getElementById(id+"Slider");
 	dragStartPct = parseFloat(slider.style.bottom);		// Get the slider's current % position
@@ -277,7 +277,7 @@ function sliderDrag(event) {
 trace2("drag slider ");
 	if (dragging) {
 		let y = event.clientY;
-		if (y == null) y = event.touches[0].clientY;
+		if (isNaN(y)) y = event.touches[0].clientY;
 		y = (dragStartY - event.clientY);			// Get the cursor positon
 		let pct = (y/event.target.clientHeight)*100;		// Calculate the slider % movement
 trace2(y,pct);
