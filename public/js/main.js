@@ -198,9 +198,9 @@ console.log(obj.channel);
 	let channel =' <div id="'+name+'" style="position:relative;width:100px; height:100%; display: inline-block"> \
 			<img style="position:relative;bottom:0%; right:0%; width:100%; height:99%;" src="images/controlBG.png">  \
 			<img style="position:absolute;bottom:8%; right:5%; width:40%; height:10%;" src="images/slider.png" id="'+name+'Slider" >  \
-			<div style="position:absolute;bottom:8%; right:5%; width:40%; height:65%;" draggable="false" id="'+name+'SlideBtn" onmousedown="sliderDragStart(event)" onmousemove="sliderDrag(event)" onmouseup="sliderDragStop(event)"></div>  \
-			<img style="position:absolute;right:20%; top:10%;width:50%; padding-bottom:10%;" src="images/channelOff.png" id="'+name+'Off" onclick="unmuteButton('+obj+')">  \
-			<img style="position:absolute;right:20%; top:10%;width:50%; padding-bottom:10%;" src="images/channelOn.png" id="'+name+'On" onclick="muteButton('+obj+')">  \
+			<div style="position:absolute;bottom:8%; right:5%; width:40%; height:65%;" draggable="false" id="'+name+'SlideBtn" onmousedown="sliderDragStart(event)" onmousemove="sliderDrag(event)" onmouseup="sliderDragStop(event)" ontouchstart="sliderDragStart(event)" ontouchmove="sliderDrag(event)" ontouchend="sliderDragStop(event)"></div>  \
+			<img style="position:absolute;right:20%; top:10%;width:50%; padding-bottom:10%;" src="images/channelOff.png" id="'+name+'Off" onclick="unmuteButton(event)">  \
+			<img style="position:absolute;right:20%; top:10%;width:50%; padding-bottom:10%;" src="images/channelOn.png" id="'+name+'On" onclick="muteButton(event)">  \
 			<img style="position:absolute;bottom:8%; left:15%; width:30%; height:2%;; visibility:hidden" src="images/sqLEDGreen.png" id="'+name+'LED1">  \
 			<img style="position:absolute;bottom:11%; left:15%; width:30%; height:2%;; visibility:hidden" src="images/sqLEDGreen.png" id="'+name+'LED2">  \
 			<img style="position:absolute;bottom:14%; left:15%; width:30%; height:2%;; visibility:hidden" src="images/sqLEDGreen.png" id="'+name+'LED3">  \
@@ -231,17 +231,31 @@ console.log(obj.channel);
 	obj.displayID = name;
 }
 
-function muteButton(obj) {
-	obj.muted = true;
-console.log(obj);
-	let b = document.getElementById(obj.displayID+"On");
-	b.style.visibility = "hidden";
+function convertIdToObj(id) {
+	id = id.substring(2);
+	if (parseFloat(id)) id = parseFloat(id);
+	if (typeof(id) == "number") {
+		id = channels[id];				// ID is channel number so get the channel object
+	} else {
+		id = eval(id);					// Convert the ID to the object (micIn or mixOut)
+	}
+	return id;
 }
 
-function unmuteButton(obj) {
-	obj.muted = false;
-	let b = document.getElementById(obj.displayID+"On");
+function muteButton(e) {
+	let id = event.target.parentNode.id;
+	let b = document.getElementById(id+"On");
+	b.style.visibility = "hidden";
+	id = convertIdToObj(id);
+	id.muted = true;
+}
+
+function unmuteButton(e) {
+	let id = event.target.parentNode.id;
+	let b = document.getElementById(id+"On");
 	b.style.visibility = "visible";
+	id = convertIdToObj(id);
+	id.muted = false;
 }
 
 var dragging=false;
@@ -277,13 +291,7 @@ console.log(p);
 			gain = (p - 39.5)/2.5;
 console.log(id);
 console.log("Gain = ",gain);
-		id = id.substring(2);
-		if (parseFloat(id)) id = parseFloat(id);
-		if (typeof(id) == "number") {
-			id = channels[id];				// ID is channel number so get the channel object
-		} else {
-			id = eval(id);					// Convert the ID to the object (micIn or mixOut)
-		}
+		id = convertIdToObj(id);
 console.log(id);
 		id.gain = gain;						// Set the object's gain level 
 console.log(id.gain);
