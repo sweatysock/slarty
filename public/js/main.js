@@ -195,7 +195,7 @@ function createChannelUI(obj) {
 	let channel =' <div id="'+name+'" style="position:relative;width:100px; height:100%; display: inline-block"> \
 			<img style="position:relative;bottom:0%; right:0%; width:100%; height:99%;" src="images/controlBG.png">  \
 			<img style="position:absolute;bottom:8%; right:5%; width:40%; height:10%;" src="images/slider.png" id="'+name+'Slider" >  \
-			<div style="position:absolute;bottom:8%; right:5%; width:40%; height:65%;" draggable="false" id="'+name+'SlideBtn" \
+			<div style="position:absolute;bottom:8%; right:5%; width:40%; height:65%;background-color:#555555" draggable="false" id="'+name+'SlideBtn" \
 				onmousedown="sliderDragStart(event)" onmousemove="sliderDrag(event)" onmouseup="sliderDragStop(event)" \
 				ontouchstart="sliderDragStart(event)" ontouchmove="sliderDrag(event)" ontouchend="sliderDragStop(event)"></div>  \
 			<img style="position:absolute;right:20%; top:10%;width:50%; padding-bottom:10%;" src="images/channelOff.png" id="'+name+'Off" onclick="unmuteButton(event)">  \
@@ -276,10 +276,10 @@ function sliderDrag(event) {
 		if (isNaN(y)) y = event.touches[0].clientY;		// If it is NaN we must be on a touchscreen
 trace2("y: ",y);
 		y = (dragStartY - y);					// Get the cursor positon change
-trace2("dragStartY:",dragStartY,"delta y:",y);
+trace2("dragStartY:",dragStartY," delta y:",y);
 		let pct = (y/event.target.clientHeight)*100;		// Calculate the change as a % of the range
 		p = dragStartPct + pct;					// Apply the change to the initial position
-trace2("dragStartPct:",dragStartPct,"pct change:",pct,"% change:",p);
+trace2("dragStartPct:",dragStartPct," pct change:",pct," % from bottom:",p);
 		let id = event.target.parentNode.id;
 		let slider = document.getElementById(id+"Slider");
 		slider.style.bottom = p;				// Move the slider to the desired position
