@@ -353,7 +353,9 @@ function processAudio(e) {						// Main processing loop
 		if (micBuffer.length > PacketSize) {			// Got enough
 			let outAudio = micBuffer.splice(0, PacketSize);	// Get a packet of audio
 			let floor = maxValue(outAudio);			// Get peak level for this packet
+trace2("floor: ",floor);
 			if (floor > mic.threshold) {			// if audio level is above threshold send it
+trace2("good enough");
 				let obj = applyAutoGain(outAudio, micIn.gain, 5);	// Bring the mic up to level, but 5x is max
 				if (obj.peak > micIn.peak) micIn.peak = obj.peak;	// Note peak for local display
 				micIn.gain = obj.finalGain;			// Store gain for next loop
