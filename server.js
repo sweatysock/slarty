@@ -213,7 +213,8 @@ io.sockets.on('connection', function (socket) {
 
 	socket.on('u', function (packet) { 				// Audio coming up from one of our downstream clients
 		enterState( downstreamState );
-		packetSize = packet.audio.length;			// Need to know how much audio we are processing
+		if (packet.audio.length > 0) 
+			packetSize = packet.audio.length;		// Need to know how much audio we are processing
 		let channel = channels[packet.channel];			// This client's channel was kindly sent in data
 if (packet.channel == -1) {
 console.log("DATA for CHANNEL ",packet.channel);
@@ -374,7 +375,7 @@ function generateMix () {
 				let now = new Date().getTime();
 				nextMixTimeLimit = now;
 			}						// Next mix timeout is advanced forward by mix.length mS
-			nextMixTimeLimit = nextMixTimeLimit + (mix.length * 1000)/SampleRate;
+			nextMixTimeLimit = nextMixTimeLimit + (packetSize * 1000)/SampleRate;
 		}
 	}
 }
