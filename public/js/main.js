@@ -149,35 +149,35 @@ function displayAnimation() { 						// called 100mS to animate audio displays
 
 function setLevelDisplay( obj ) { 					// Set LED display level for obj
 	let v = obj.peak;
-	if (v < 0.010) v = 0; else					// v indicates how many LEDs to make visible
-	if (v < 0.012) v = 1; else					// Obviously the higher v the more LEDs on
-	if (v < 0.016) v = 2; else					// These emulate the function:
-	if (v < 0.019) v = 3; else					// v = 10.5 * Math.log10( v ) + 21
-	if (v < 0.024) v = 4; else
-	if (v < 0.030) v = 5; else
-	if (v < 0.037) v = 6; else
-	if (v < 0.046) v = 7; else
-	if (v < 0.058) v = 8; else
-	if (v < 0.072) v = 9; else
-	if (v < 0.09) v = 10; else
-	if (v < 0.11) v = 11; else
-	if (v < 0.13) v = 12; else
-	if (v < 0.17) v = 13; else
-	if (v < 0.21) v = 14; else
-	if (v < 0.26) v = 15; else
-	if (v < 0.33) v = 16; else
-	if (v < 0.41) v = 17; else
-	if (v < 0.51) v = 18; else
-	if (v < 0.64) v = 19; else
-	if (v < 0.8) v = 20; else v = 21; 
-	for (let n=1; n <= v; n++) {
-		let led = document.getElementById(obj.displayID+"LED"+n);
-		led.style.visibility = "visible";
-	}
-	for (let n=(v+1); n <= NumLEDs; n++) {
-		let led = document.getElementById(obj.displayID+"LED"+n);
-		led.style.visibility = "hidden";
-	}
+	let h1, h2, h3;
+	if (v < 0.010) {h1 = 0; h2 = 0; h3 = 0;} else					// v indicates how many LEDs to make visible
+	if (v < 0.012) {h1 = 3.1; h2 = 0; h3 = 0;} else					// Obviously the higher v the more LEDs on
+	if (v < 0.016) {h1 = 6.2; h2 = 0; h3 = 0;} else					// These emulate the function:
+	if (v < 0.019) {h1 = 9.3; h2 = 0; h3 = 0;} else					// v = 10.5 * Math.log10( v ) + 21
+	if (v < 0.024) {h1 = 12.4; h2 = 0; h3 = 0;} else
+	if (v < 0.030) {h1 = 15.5; h2 = 0; h3 = 0;} else
+	if (v < 0.037) {h1 = 18.6; h2 = 0; h3 = 0;} else
+	if (v < 0.046) {h1 = 21.7; h2 = 0; h3 = 0;} else
+	if (v < 0.058) {h1 = 24.8; h2 = 0; h3 = 0;} else
+	if (v < 0.072) {h1 = 27.9; h2 = 0; h3 = 0;} else
+	if (v < 0.09) {h1 = 31; h2 = 0; h3 = 0;} else
+	if (v < 0.11) {h1 = 34; h2 = 0; h3 = 0;} else
+	if (v < 0.13) {h1 = 37.1; h2 = 0; h3 = 0;} else
+	if (v < 0.17) {h1 = 40.2; h2 = 0; h3 = 0;} else
+	if (v < 0.21) {h1 = 43.3; h2 = 0; h3 = 0;} else
+	if (v < 0.26) {h1 = 46.4; h2 = 0; h3 = 0;} else
+	if (v < 0.33) {h1 = 49.5; h2 = 0; h3 = 0;} else
+	if (v < 0.41) {h1 = 49.5; h2 = 3.1; h3 = 0;} else
+	if (v < 0.51) {h1 = 49.5; h2 = 6.2; h3 = 0;} else
+	if (v < 0.64) {h1 = 49.5; h2 = 9.3; h3 = 0;} else
+	if (v < 0.8) {h1 = 49.5; h2 = 9.3; h3 = 3.1;} else 
+		{h1 = 49.5; h2 = 9.3; h3 = 6.2;}
+	let d = document.getElementById(obj.displayID+"LevelGreen");
+	d.style.height = h1+"%";
+	d = document.getElementById(obj.displayID+"LevelOrange");
+	d.style.height = h2+"%";
+	d = document.getElementById(obj.displayID+"LevelRed");
+	d.style.height = h3+"%";
 }
 
 function setSliderPos( obj ) {
@@ -200,27 +200,9 @@ function createChannelUI(obj) {
 				ontouchstart="sliderDragStart(event)" ontouchmove="sliderDrag(event)" ontouchend="sliderDragStop(event)"></div>  \
 			<img style="position:absolute;right:20%; top:10%;width:50%; padding-bottom:10%;" src="images/channelOff.png" id="'+name+'Off" onclick="unmuteButton(event)">  \
 			<img style="position:absolute;right:20%; top:10%;width:50%; padding-bottom:10%;" src="images/channelOn.png" id="'+name+'On" onclick="muteButton(event)">  \
-			<img style="position:absolute;bottom:8%; left:15%; width:30%; height:2%;; visibility:hidden" src="images/sqLEDGreen.png" id="'+name+'LED1">  \
-			<img style="position:absolute;bottom:11%; left:15%; width:30%; height:2%;; visibility:hidden" src="images/sqLEDGreen.png" id="'+name+'LED2">  \
-			<img style="position:absolute;bottom:14%; left:15%; width:30%; height:2%;; visibility:hidden" src="images/sqLEDGreen.png" id="'+name+'LED3">  \
-			<img style="position:absolute;bottom:17%; left:15%; width:30%; height:2%;; visibility:hidden" src="images/sqLEDGreen.png" id="'+name+'LED4">  \
-			<img style="position:absolute;bottom:20%; left:15%; width:30%; height:2%;; visibility:hidden" src="images/sqLEDGreen.png" id="'+name+'LED5">  \
-			<img style="position:absolute;bottom:23%; left:15%; width:30%; height:2%;; visibility:hidden" src="images/sqLEDGreen.png" id="'+name+'LED6">  \
-			<img style="position:absolute;bottom:26%; left:15%; width:30%; height:2%;; visibility:hidden" src="images/sqLEDGreen.png" id="'+name+'LED7">  \
-			<img style="position:absolute;bottom:29%; left:15%; width:30%; height:2%;; visibility:hidden" src="images/sqLEDGreen.png" id="'+name+'LED8">  \
-			<img style="position:absolute;bottom:32%; left:15%; width:30%; height:2%;; visibility:hidden" src="images/sqLEDGreen.png" id="'+name+'LED9">  \
-			<img style="position:absolute;bottom:35%; left:15%; width:30%; height:2%;; visibility:hidden" src="images/sqLEDGreen.png" id="'+name+'LED10">  \
-			<img style="position:absolute;bottom:38%; left:15%; width:30%; height:2%;; visibility:hidden" src="images/sqLEDGreen.png" id="'+name+'LED11">  \
-			<img style="position:absolute;bottom:41%; left:15%; width:30%; height:2%;; visibility:hidden" src="images/sqLEDGreen.png" id="'+name+'LED12">  \
-			<img style="position:absolute;bottom:44%; left:15%; width:30%; height:2%;; visibility:hidden" src="images/sqLEDGreen.png" id="'+name+'LED13">  \
-			<img style="position:absolute;bottom:47%; left:15%; width:30%; height:2%;; visibility:hidden" src="images/sqLEDGreen.png" id="'+name+'LED14">  \
-			<img style="position:absolute;bottom:50%; left:15%; width:30%; height:2%;; visibility:hidden" src="images/sqLEDGreen.png" id="'+name+'LED15">  \
-			<img style="position:absolute;bottom:53%; left:15%; width:30%; height:2%;; visibility:hidden" src="images/sqLEDOrange.png" id="'+name+'LED16">  \
-			<img style="position:absolute;bottom:56%; left:15%; width:30%; height:2%;; visibility:hidden" src="images/sqLEDOrange.png" id="'+name+'LED17">  \
-			<img style="position:absolute;bottom:59%; left:15%; width:30%; height:2%;; visibility:hidden" src="images/sqLEDOrange.png" id="'+name+'LED18">  \
-			<img style="position:absolute;bottom:62%; left:15%; width:30%; height:2%;; visibility:hidden" src="images/sqLEDOrange.png" id="'+name+'LED19">  \
-			<img style="position:absolute;bottom:65%; left:15%; width:30%; height:2%;; visibility:hidden" src="images/sqLEDRed.png" id="'+name+'LED20">  \
-			<img style="position:absolute;bottom:68%; left:15%; width:30%; height:2%;; visibility:hidden" src="images/sqLEDRed.png" id="'+name+'LED21">  \
+			<div style="position:absolute;bottom:8%; left:25%; width:5%; height:0%; background-color:#66FF33" id="'+name+'LevelGreen"></div> \
+			<div style="position:absolute;bottom:57.5%; left:25%; width:5%; height:0%; background-color:#FF6600" id="'+name+'LevelOrange"></div> \
+			<div style="position:absolute;bottom:66.8%; left:25%; width:5%; height:0%; background-color:#FF0000" id="'+name+'LevelRed"></div> \
 			<div style="position:absolute;top:1%; left:3%; width:90%; height:10%;font-color:#555555" id="'+name+'Name"> \
 				<marquee behavior="slide" direction="left">'+obj.channel+'</marquee> \
 			</div> \
