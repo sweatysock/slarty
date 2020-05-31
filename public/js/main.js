@@ -274,6 +274,7 @@ function sliderDrag(event) {
 	if (dragging) {
 		let y = event.clientY;					// Get current cursor Y coord
 		if (isNaN(y)) y = event.touches[0].clientY;		// If it is NaN we must be on a touchscreen
+trace2("y: ",y);
 		y = (dragStartY - y);					// Get the cursor positon change
 trace2("dragStartY:",dragStartY,"delta y:",y);
 		let pct = (y/event.target.clientHeight)*100;		// Calculate the change as a % of the range
@@ -292,7 +293,6 @@ trace2("dragStartPct:",dragStartPct,"pct change:",pct,"% change:",p);
 			gain = (p - 39.5)/2.5;
 		id = convertIdToObj(id);				// Get the js object ID for this UI element
 		id.gain = gain;						// Set the object's gain level 
-trace2("final gain is:",gain);
 	}
 }
 
