@@ -39,6 +39,7 @@ var micIn = {								// and for microphone input
 	muted	: false,
 	peak	: 0,
 	channel	: "micIn",
+	threshold:0.01,							// Level below which we don't send audio
 };
 
 
@@ -351,21 +352,24 @@ function processAudio(e) {						// Main processing loop
 		micBuffer.push(...micAudio);				// Buffer mic audio until enough
 		if (micBuffer.length > PacketSize) {			// Got enough
 			let outAudio = micBuffer.splice(0, PacketSize);	// Get a packet of audio
-			let obj = applyAutoGain(outAudio, micIn.gain, 5);	// Bring the mic up to level, but 5x is max
-			if (obj.peak > micIn.peak) micIn.peak = obj.peak;	// Note peak for local display
-			micIn.gain = obj.finalGain;			// Store gain for next loop
-			let now = new Date().getTime();
-			socketIO.emit("u",
-			{
-				"name"		: myName,		// Send the name we have chosen 
-				"audio"		: outAudio,		// Resampled, level-corrected audio
-				"sequence"	: packetSequence,	// Usefull for detecting data losses
-				"timestamp"	: now,			// Used to measure round trip time
-				"peak" 		: obj.peak,		// Saves having to calculate again
-				"channel"	: myChannel,		// Send assigned channel to help server
-			});
-			packetsOut++;					// For stats and monitoring
-			packetSequence++;
+			let floor = maxValue(outAudio);			// Get peak level for this packet
+			if (floor > mic.threshold) {			// if audio level is above threshold send it
+				let obj = applyAutoGain(outAudio, micIn.gain, 5);	// Bring the mic up to level, but 5x is max
+				if (obj.peak > micIn.peak) micIn.peak = obj.peak;	// Note peak for local display
+				micIn.gain = obj.finalGain;			// Store gain for next loop
+				let now = new Date().getTime();
+				socketIO.emit("u",
+				{
+					"name"		: myName,		// Send the name we have chosen 
+					"audio"		: outAudio,		// Resampled, level-corrected audio
+					"sequence"	: packetSequence,	// Usefull for detecting data losses
+					"timestamp"	: now,			// Used to measure round trip time
+					"peak" 		: obj.peak,		// Saves having to calculate again
+					"channel"	: myChannel,		// Send assigned channel to help server
+				});
+				packetsOut++;					// For stats and monitoring
+				packetSequence++;
+			}
 		}
 	}
 
