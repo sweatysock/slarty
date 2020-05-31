@@ -354,24 +354,27 @@ function processAudio(e) {						// Main processing loop
 			let outAudio = micBuffer.splice(0, PacketSize);	// Get a packet of audio
 			let floor = maxValue(outAudio);			// Get peak level for this packet
 trace2("floor: ",floor);
-			if (floor > micIn.threshold) {			// if audio level is above threshold send it
+			if (floor > micIn.threshold) {			// if audio level is above threshold send audio
 trace2("good enough");
 				let obj = applyAutoGain(outAudio, micIn.gain, 5);	// Bring the mic up to level, but 5x is max
 				if (obj.peak > micIn.peak) micIn.peak = obj.peak;	// Note peak for local display
 				micIn.gain = obj.finalGain;			// Store gain for next loop
-				let now = new Date().getTime();
-				socketIO.emit("u",
-				{
-					"name"		: myName,		// Send the name we have chosen 
-					"audio"		: outAudio,		// Resampled, level-corrected audio
-					"sequence"	: packetSequence,	// Usefull for detecting data losses
-					"timestamp"	: now,			// Used to measure round trip time
-					"peak" 		: obj.peak,		// Saves having to calculate again
-					"channel"	: myChannel,		// Send assigned channel to help server
-				});
-				packetsOut++;					// For stats and monitoring
-				packetSequence++;
+			} else {					// Silent packet sent
+				outAudio = [];
+				micIn.peak = 0;
 			}
+			let now = new Date().getTime();
+			socketIO.emit("u",
+			{
+				"name"		: myName,		// Send the name we have chosen 
+				"audio"		: outAudio,		// Resampled, level-corrected audio
+				"sequence"	: packetSequence,	// Usefull for detecting data losses
+				"timestamp"	: now,			// Used to measure round trip time
+				"peak" 		: micIn.peak,		// Saves having to calculate again
+				"channel"	: myChannel,		// Send assigned channel to help server
+			});
+			packetsOut++;					// For stats and monitoring
+			packetSequence++;
 		}
 	}
 
