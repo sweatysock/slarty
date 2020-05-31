@@ -274,18 +274,14 @@ function sliderDrag(event) {
 	if (dragging) {
 		let y = event.clientY;					// Get current cursor Y coord
 		if (isNaN(y)) y = event.touches[0].clientY;		// If it is NaN we must be on a touchscreen
-trace2("y: ",y);
 		y = (dragStartY - y);					// Get the cursor positon change
-trace2("dragStartY:",dragStartY," delta y:",y);
-		let pct = (y/event.target.clientHeight*0.65)*100;		// Calculate the change as a % of the range
+		let pct = (y/event.target.clientHeight*0.65)*100;	// Calculate the change as a % of the range (0.65 is a fudge... coords are wrong but life is short)
 		p = dragStartPct + pct;					// Apply the change to the initial position
-trace2("dragStartPct:",dragStartPct," pct change:",pct," % from bottom:",p);
 		let id = event.target.parentNode.id;
 		let slider = document.getElementById(id+"Slider");
 		slider.style.bottom = p;				// Move the slider to the desired position
 		if (p < 8) p = 8;					// Limit slider movement
 		if (p > 65) p = 65;
-//		dragStartPct = p;					// Set this position as the start of the next drag
 		let gain;						// Now calculate the gain this position implies
 		if (p < 42) 						// Inverse equations used for slider positioning
 			gain = (p -8)/34;
