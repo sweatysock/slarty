@@ -277,7 +277,7 @@ function sliderDrag(event) {
 trace2("y: ",y);
 		y = (dragStartY - y);					// Get the cursor positon change
 trace2("dragStartY:",dragStartY," delta y:",y);
-		let pct = (y/event.target.clientHeight)*100;		// Calculate the change as a % of the range
+		let pct = (y/event.target.clientHeight*0.2)*100;		// Calculate the change as a % of the range
 		p = dragStartPct + pct;					// Apply the change to the initial position
 trace2("dragStartPct:",dragStartPct," pct change:",pct," % from bottom:",p);
 		let id = event.target.parentNode.id;
