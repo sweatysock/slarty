@@ -257,14 +257,14 @@ function unmuteButton(e) {
 	id.muted = false;
 }
 
-var dragging=false;
-var dragStartY;
-var dragStartPct;
+var dragging=false;							// Flag if slider dragging is happening
+var dragStartY;								// Y coord where dragging started
+var dragStartPct;							// start % from bottom for dragged slider
 function sliderDragStart(event) {
 	dragging = true;
-	event.target.style.cursor='pointer';
-	dragStartY = event.clientY;
-	if (isNaN(dragStartY)) dragStartY = event.touches[0].clientY;
+	event.target.style.cursor='pointer';				// Make pointer look right
+	dragStartY = event.clientY;					// Store where the dragging started
+	if (isNaN(dragStartY)) dragStartY = event.touches[0].clientY;	// If it is NaN must be a touchscreen
 	let id = event.target.parentNode.id;
 	let slider = document.getElementById(id+"Slider");
 	dragStartPct = parseFloat(slider.style.bottom);			// Get the slider's current % position
@@ -272,17 +272,19 @@ function sliderDragStart(event) {
 
 function sliderDrag(event) {
 	if (dragging) {
-		let y = event.clientY;
-		if (isNaN(y)) y = event.touches[0].clientY;
+		let y = event.clientY;					// Get current cursor Y coord
+		if (isNaN(y)) y = event.touches[0].clientY;		// If it is NaN we must be on a touchscreen
 		y = (dragStartY - y);					// Get the cursor positon change
+trace2("dragStartY:",dragStartY,"delta y:",y);
 		let pct = (y/event.target.clientHeight)*100;		// Calculate the change as a % of the range
 		p = dragStartPct + pct;					// Apply the change to the initial position
+trace2("dragStartPct:",dragStartPct,"pct change:",pct,"% change:",p);
 		let id = event.target.parentNode.id;
 		let slider = document.getElementById(id+"Slider");
 		slider.style.bottom = p;				// Move the slider to the desired position
 		if (p < 8) p = 8;					// Limit slider movement
 		if (p > 65) p = 65;
-		dragStartPct = p;					// Set this position as the start of the next drag
+//		dragStartPct = p;					// Set this position as the start of the next drag
 		let gain;						// Now calculate the gain this position implies
 		if (p < 42) 						// Inverse equations used for slider positioning
 			gain = (p -8)/34;
@@ -290,6 +292,7 @@ function sliderDrag(event) {
 			gain = (p - 39.5)/2.5;
 		id = convertIdToObj(id);				// Get the js object ID for this UI element
 		id.gain = gain;						// Set the object's gain level 
+trace2("final gain is:",gain);
 	}
 }
 
