@@ -356,7 +356,7 @@ function processAudio(e) {						// Main processing loop
 trace2("floor: ",floor);
 			if (floor > micIn.threshold) {			// if audio level is above threshold send audio
 trace2("good enough");
-				let obj = applyAutoGain(outAudio, micIn.gain, 5);	// Bring the mic up to level, but 5x is max
+				let obj = applyAutoGain(outAudio, micIn.gain, 2);	// Bring the mic up to level, but 5x is max
 				if (obj.peak > micIn.peak) micIn.peak = obj.peak;	// Note peak for local display
 				micIn.gain = obj.finalGain;			// Store gain for next loop
 			} else {					// Silent packet sent
