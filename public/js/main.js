@@ -203,7 +203,7 @@ function createChannelUI(obj) {
 			<div style="position:absolute;bottom:8%; left:25%; width:5%; height:0%; background-color:#66FF33" id="'+name+'LevelGreen"></div> \
 			<div style="position:absolute;bottom:57.5%; left:25%; width:5%; height:0%; background-color:#FF6600" id="'+name+'LevelOrange"></div> \
 			<div style="position:absolute;bottom:66.8%; left:25%; width:5%; height:0%; background-color:#FF0000" id="'+name+'LevelRed"></div> \
-			<div style="position:absolute;top:1%; left:3%; width:90%; height:10%;font-color:#555555" id="'+name+'Name"> \
+			<div style="position:absolute;top:1%; left:3%; width:90%; height:10%;color:#AAAAAA" id="'+name+'Name"> \
 				<marquee behavior="slide" direction="left">'+obj.channel+'</marquee> \
 			</div> \
 		</div>'
