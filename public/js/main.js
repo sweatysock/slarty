@@ -39,7 +39,7 @@ var micIn = {								// and for microphone input
 	muted	: false,
 	peak	: 0,
 	channel	: "micIn",
-	threshold:0.01,							// Level below which we don't send audio
+	threshold:0.005,						// Level below which we don't send audio
 };
 
 
