@@ -72,7 +72,7 @@ socketIO.on('channel', function (data) {				// Message assigning us a channel
 socketIO.on('d', function (data) { 
 	enterState( dataInState );					// This is one of our key tasks
 	packetsIn++;							// For monitoring and statistics
-	if ((micAccessAllowed) && (blockSpkr == false)) {		// Need access to audio before outputting
+	if (micAccessAllowed) {						// Need access to audio before outputting
 		let mix = [];						// Build up a mix of client audio 
 		data.channels.forEach(c => {
 			let ch = c.channel;
@@ -560,10 +560,9 @@ document.addEventListener('DOMContentLoaded', function(event){
 	// Buttons used for testing...
 	let testBtn=document.getElementById('testBtn');
 	testBtn.onclick = function () {
-		console.log("Test button pressed");
-		if (blockSpkr == true) blockSpkr = false;
-		else blockSpkr = true;
-		console.log("Tracing = ",blockSpkr);
+		console.log("Connection reset requested");
+		resetConnection = true;
+		socketIO.disconnect();
 	};
 	let actionBtn=document.getElementById('actionBtn');
 	actionBtn.onclick = function () {
@@ -572,8 +571,8 @@ document.addEventListener('DOMContentLoaded', function(event){
 		else pauseTracing = true;
 	};
 });
-var blockSpkr = false;
 var pauseTracing = false;
+var resetConnection = false;
 
 // Reporting code. Accumulators, interval timer and report generator
 //
