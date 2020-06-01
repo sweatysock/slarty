@@ -96,13 +96,13 @@ socketIO.on('d', function (data) {
 				let now = new Date().getTime();
 				rtt = (rtt + (now - c.timestamp))/2;	// Measure round trip time rolling average
 				if (rtt > MaxRTT) { 			// If it is too long
-					trace2("RTT at ",rtt,(now - c.timestamp)," Requsting connection reset");
+					trace("RTT at ",rtt,(now - c.timestamp)," Requsting connection reset");
 					resetConnection();		// reset the socket.
 					rtt = 0;			// reset rtt too.
 				}
 			}
 			if (c.sequence != (channels[ch].seq + 1)) 	// Monitor audio transfer quality
-				trace2("Sequence jump Channel ",ch," jump ",(c.sequence - channels[ch].seq));
+				trace("Sequence jump Channel ",ch," jump ",(c.sequence - channels[ch].seq));
 			channels[ch].seq = c.sequence;
 		});
 		let obj = applyAutoGain(mix,mixOut.gain,1);		// Correct mix level with AGC 
@@ -113,7 +113,6 @@ socketIO.on('d', function (data) {
 			if (spkrBuffer.length > maxBuffSize) {		// Clip buffer if too full
 				spkrBuffer.splice(0, (spkrBuffer.length-maxBuffSize)); 	
 				overflows++;				// Note for monitoring purposes
-				trace2("Overflow ",overflows);
 			}
 		}
 	}
@@ -431,6 +430,7 @@ function processAudio(e) {						// Main processing loop
 	enterState( idleState );					// We are done. Back to Idling
 }
 
+var testOsc, echoDelay, echoFilter, echoGain;				// These audio control nodes are global
 function handleAudio(stream) {						// We have obtained media access
 	let context = new window.AudioContext || new window.webkitAudioContext;
 	soundcardSampleRate = context.sampleRate;
@@ -456,21 +456,21 @@ function handleAudio(stream) {						// We have obtained media access
 	
 	let splitter = context.createChannelSplitter(2);		// Split signal for echo cancelling
 
-	var echoDelay = context.createDelay(5);				// Delay to match speaker echo
+	echoDelay = context.createDelay(5);				// Delay to match speaker echo
 	echoDelay.delayTime.value = 0.00079
 
 	lowFreq = 300;							// Echo filter to match speaker+mic
 	highFreq = 5000;
 	geometricMean = Math.sqrt(lowFreq * highFreq);
-	var echoFilter = context.createBiquadFilter();
+	echoFilter = context.createBiquadFilter();
 	echoFilter.type = 'bandpass';
 	echoFilter.frequency.value = geometricMean;
 	echoFilter.Q.value = geometricMean / (highFreq - lowFreq);
 	
-	var echoGain = context.createGain();				// Cancelling requires inverting signal
+	echoGain = context.createGain();				// Cancelling requires inverting signal
 	echoGain.gain.value = 1;
 
-	var testOsc = context.createOscillator();			// Test oscillator generates tones to test echo
+	testOsc = context.createOscillator();			// Test oscillator generates tones to test echo
 	testOsc.frequency = 1000;
 									// Time to connect everything...
 	liveSource.connect(micFilter);					// Mic goes to micFilter
