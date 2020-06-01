@@ -95,11 +95,14 @@ socketIO.on('d', function (data) {
 			} else {					// This is my own data come back
 				let now = new Date().getTime();
 				rtt = (rtt + (now - c.timestamp))/2;	// Measure round trip time rolling average
-				if (rtt > MaxRTT) 			// If it is too long
+				if (rtt > MaxRTT) { 			// If it is too long
+					trace("RTT at ",rtt," Requsting connection reset");
 					resetConnection();		// reset the socket.
+				}
 			}
-if (c.sequence != (channels[ch].seq + 1)) trace2("Sequence jump Channel ",ch," jump ",(c.sequence - channels[ch].seq));
-channels[ch].seq = c.sequence;
+			if (c.sequence != (channels[ch].seq + 1)) 	// Monitor audio transfer quality
+				trace2("Sequence jump Channel ",ch," jump ",(c.sequence - channels[ch].seq));
+			channels[ch].seq = c.sequence;
 		});
 		let obj = applyAutoGain(mix,mixOut.gain,1);		// Correct mix level with AGC 
 		mixOut.gain= obj.finalGain;				// Store gain for next loop
@@ -109,7 +112,7 @@ channels[ch].seq = c.sequence;
 			if (spkrBuffer.length > maxBuffSize) {		// Clip buffer if too full
 				spkrBuffer.splice(0, (spkrBuffer.length-maxBuffSize)); 	
 				overflows++;				// Note for monitoring purposes
-trace2("Overflow");
+				trace2("Overflow ",overflows);
 			}
 		}
 	}
@@ -125,6 +128,7 @@ var lastReset = 0;							// Note previous socket reset to avoid excess resets
 function resetConnection() {						// Use this to reset the socket if needed
 	let now = new Date().getTime();
 	if (lastReset > (now + 20000)) {				// 20 second minimum between socket resets
+		trace("Socket resetting...");
 		socketIO.disconnect();
 		socketIO.connect();
 		lastReset = now
