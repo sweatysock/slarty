@@ -98,7 +98,6 @@ socketIO.on('d', function (data) {
 				if (rtt > MaxRTT) { 			// If it is too long
 					trace("RTT at ",rtt," Requsting connection reset");
 					resetConnection();		// reset the socket.
-					rtt = 0;			// reset rtt too.
 				}
 			}
 			if (c.sequence != (channels[ch].seq + 1)) 	// Monitor audio transfer quality
@@ -128,7 +127,7 @@ socketIO.on('disconnect', function () {
 var lastReset = 0;							// Note previous socket reset to avoid excess resets
 function resetConnection() {						// Use this to reset the socket if needed
 	let now = new Date().getTime();
-	if ((lastReset + 20000) < now)) {				// 20 second minimum between socket resets
+	if (lastReset > (now + 20000)) {				// 20 second minimum between socket resets
 		trace("Socket resetting...");
 		socketIO.disconnect();
 		socketIO.connect();
