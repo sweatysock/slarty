@@ -2,6 +2,7 @@
 //
 const SampleRate = 16000; 						// Global sample rate used for all audio
 const PacketSize = 500;							// Server packet size we must conform to
+const MaxRTT = 800;							// Round Trip Times above this will cause a socket reset
 var chunkSize = 1024;							// Audio chunk size. Fixed by js script processor
 var soundcardSampleRate = null; 					// Get this from context 
 var resampledChunkSize = 0;						// Once resampled the chunks are this size
@@ -93,7 +94,9 @@ socketIO.on('d', function (data) {
 				}
 			} else {					// This is my own data come back
 				let now = new Date().getTime();
-				rtt = now - c.timestamp;		// Measure round trip time
+				rtt = (rtt + (now - c.timestamp))/2;	// Measure round trip time rolling average
+				if (rtt > MaxRTT) 			// If it is too long
+					resetConnection();		// reset the socket.
 			}
 if (c.sequence != (channels[ch].seq + 1)) trace2("Sequence jump Channel ",ch," jump ",(c.sequence - channels[ch].seq));
 channels[ch].seq = c.sequence;
@@ -118,7 +121,15 @@ socketIO.on('disconnect', function () {
 	socketConnected = false;
 });
 
-
+var lastReset = 0;							// Note previous socket reset to avoid excess resets
+function resetConnection() {						// Use this to reset the socket if needed
+	let now = new Date().getTime();
+	if (lastReset > (now + 20000)) {				// 20 second minimum between socket resets
+		socketIO.disconnect();
+		socketIO.connect();
+		lastReset = now
+	}
+}
 
 
 
@@ -561,9 +572,7 @@ document.addEventListener('DOMContentLoaded', function(event){
 	let testBtn=document.getElementById('testBtn');
 	testBtn.onclick = function () {
 		console.log("Connection reset requested");
-		resetConnection = true;
-		socketIO.disconnect();
-		socketIO.connect();
+		resetConnection();
 	};
 	let actionBtn=document.getElementById('actionBtn');
 	actionBtn.onclick = function () {
@@ -573,7 +582,6 @@ document.addEventListener('DOMContentLoaded', function(event){
 	};
 });
 var pauseTracing = false;
-var resetConnection = false;
 
 // Reporting code. Accumulators, interval timer and report generator
 //
@@ -582,7 +590,7 @@ var packetsOut = 0;
 var overflows = 0;
 var shortages = 0;
 var packetSequence = 0;							// Tracing packet ordering
-var rtt = 0;
+var rtt = 0;								// Round Trip Time indicates bad network buffering
 var tracecount = 0;
 function printReport() {
 	trace("Idle = ", idleState.total, " data in = ", dataInState.total, " audio in/out = ", audioInOutState.total);
