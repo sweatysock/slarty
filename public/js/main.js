@@ -367,17 +367,21 @@ function processAudio(e) {						// Main processing loop
 	let micAudio = [];						// 1. Mic audio processing...
 
 	if (echoTest.running == true) {					// The echo test takes over all audio
+trace2("echo testing at step ",echoTest.currentStep);
 		if (echoTest.steps[echoTest.currentStep] > 0) {		// >0 means send a tone of that frequency
 			testOsc.frequency = echoTest.steps[echoTest.currentStep];
 			testOsc.start();
+trace2("Generating frequency ",echoTest.steps[echoTest.currentStep]);
 		} else {						// 0 means wait for a tone
 			testOsc.stop();
+trace2("silence. printing audio to console");
 			console.log(inData);
 		}
 		echoTest.currentStep++;					// Move to next step with next audio sample
 		if (echoTest.currentStep == echoTest.steps.length) {	// At the end of the test cycle
 			echoTest.currentStep = 0;			// Back to the start
 			echoTest.running = false;			// & stop the test
+trace2("Echo test complete");
 		}
 		enterState( idleState );				// We are done. Back to Idling
 		return;							// Don't do anything else while testing
