@@ -22,6 +22,7 @@ for (let i=0; i < NumberOfChannels; i++) {				// Create all the channels pre-ini
 		muted	: false,					// Local mute
 		peak	: 0,						// Animated peak channel audio level 
 		channel	: i,						// The channel needs to know it's number for UI referencing
+		seq	:0,						// Track channel sequence numbers to monitor quality
 	};
 }
 var mixOut = {								// Similar structures for the mix output
@@ -74,8 +75,8 @@ socketIO.on('d', function (data) {
 	if ((micAccessAllowed) && (blockSpkr == false)) {		// Need access to audio before outputting
 		let mix = [];						// Build up a mix of client audio 
 		data.channels.forEach(c => {
+			let ch = c.channel;
 			if (c.socketID != socketIO.id) {		// Don't include my audio in mix
-				let ch = c.channel;
 				channels[ch].name = c.name;		// Update the channel name
 				channels[ch].channel = ch;		// Update the channel number
 				if (!channels[ch].muted) {		// We can skip a muted channel
@@ -94,6 +95,8 @@ socketIO.on('d', function (data) {
 				let now = new Date().getTime();
 				rtt = now - c.timestamp;		// Measure round trip time
 			}
+if (c.sequence != (channels[ch].seq + 1)) trace2("Sequence jump Channel ",ch," jump ",(c.sequence - channels[ch].seq));
+channels[ch].seq = c.sequence;
 		});
 		let obj = applyAutoGain(mix,mixOut.gain,1);		// Correct mix level with AGC 
 		mixOut.gain= obj.finalGain;				// Store gain for next loop
@@ -103,6 +106,7 @@ socketIO.on('d', function (data) {
 			if (spkrBuffer.length > maxBuffSize) {		// Clip buffer if too full
 				spkrBuffer.splice(0, (spkrBuffer.length-maxBuffSize)); 	
 				overflows++;				// Note for monitoring purposes
+trace2("Overflow");
 			}
 		}
 	}
@@ -353,9 +357,7 @@ function processAudio(e) {						// Main processing loop
 		if (micBuffer.length > PacketSize) {			// Got enough
 			let outAudio = micBuffer.splice(0, PacketSize);	// Get a packet of audio
 			let floor = maxValue(outAudio);			// Get peak level for this packet
-trace2("floor: ",floor);
 			if (floor > micIn.threshold) {			// if audio level is above threshold send audio
-trace2("good enough");
 				let obj = applyAutoGain(outAudio, micIn.gain, 2);	// Bring the mic up to level, but 5x is max
 				if (obj.peak > micIn.peak) micIn.peak = obj.peak;	// Note peak for local display
 				micIn.gain = obj.finalGain;			// Store gain for next loop
