@@ -466,9 +466,9 @@ function handleAudio(stream) {						// We have obtained media access
 }
 
 var echoTest = {
-	running = false,
-	steps: [1760,0,440,0,880,0,],
-	currentStep = 0
+	running		: false,
+	steps		: [1760,0,440,0,880,0,],
+	currentStep	: 0,
 };
 function startEchoTest() {							// Test mic-speaker echo levels
 	if (echoTest.running == false) {				// If not testing already
