@@ -419,7 +419,7 @@ function processAudio(e) {						// Main processing loop
 	enterState( idleState );					// We are done. Back to Idling
 }
 
-var context, oscGain, echoDelay, echoFilter, echoGain;			// These audio control nodes are global
+var context, oscGain, echoDelay, echoFilter, echoGain;			// These audio nodes accessed by echo tester
 function handleAudio(stream) {						// We have obtained media access
 	context = new window.AudioContext || new window.webkitAudioContext;
 	soundcardSampleRate = context.sampleRate;
@@ -493,7 +493,7 @@ trace2("echo testing at step ",echoTest.currentStep);
 		if (echoTest.steps[echoTest.currentStep] > 0) {		// >0 means send a tone of that frequency
 			// Create oscillator, set frequency, conenct to gain node & start
 			let testOsc = context.createOscillator();	// Test oscillator generates tones to test echo
-			testOsc.frequency = echoTest.steps[echoTest.currentStep];
+			testOsc.frequency.value = echoTest.steps[echoTest.currentStep];
 			testOsc.connect(oscGain);			// The test oscillator goes through a gain control
 			testOsc.start();
 			oscGain.gain.value = 1;
