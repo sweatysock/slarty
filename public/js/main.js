@@ -97,8 +97,8 @@ socketIO.on('d', function (data) {
 				rtt = (rtt + (now - c.timestamp))/2;	// Measure round trip time rolling average
 				if (rtt > MaxRTT) { 			// If it is too long
 					trace("RTT: ",rtt,"instant rtt: ",(now - c.timestamp)," time: ",now," timestamp: ",c.timestamp," Requsting connection reset");
-					resetConnection();		// reset the socket.
-					rtt = 0;			// reset rtt too.
+//					resetConnection();		// reset the socket.
+//					rtt = 0;			// reset rtt too.
 				}
 			}
 			if (c.sequence != (channels[ch].seq + 1)) 	// Monitor audio transfer quality
@@ -628,9 +628,11 @@ document.addEventListener('DOMContentLoaded', function(event){
 	};
 	let actionBtn=document.getElementById('actionBtn');
 	actionBtn.onclick = function () {
-		trace("Pause traces pressed");
-		if (pauseTracing == true) pauseTracing = false;
-		else pauseTracing = true;
+		trace("Reset connection pressed");
+		resetConnection();
+//		trace("Pause traces pressed");
+//		if (pauseTracing == true) pauseTracing = false;
+//		else pauseTracing = true;
 	};
 });
 var pauseTracing = false;
