@@ -96,7 +96,7 @@ socketIO.on('d', function (data) {
 				let now = new Date().getTime();
 				rtt = (rtt + (now - c.timestamp))/2;	// Measure round trip time rolling average
 				if (rtt > MaxRTT) { 			// If it is too long
-					trace("RTT at ",rtt,(now - c.timestamp)," Requsting connection reset");
+					trace2("RTT at ",rtt,(now - c.timestamp)," Requsting connection reset");
 					resetConnection();		// reset the socket.
 					rtt = 0;			// reset rtt too.
 				}
@@ -129,7 +129,7 @@ var lastReset = new Date().getTime();					// Note previous socket reset to avoid
 function resetConnection() {						// Use this to reset the socket if needed
 	let now = new Date().getTime();
 	if ((lastReset + 30000) < now) {				// 20 second minimum between socket resets
-		trace("Socket resetting...");
+		trace2("Socket resetting...");
 		socketIO.disconnect();
 		socketIO.connect();
 		lastReset = now
@@ -358,7 +358,7 @@ function applyAutoGain(audio, startGain, maxGain) {			// Auto gain control
 }
 
 function processAudio(e) {						// Main processing loop
-	// There are two activities here: 
+	// There are two activities here (if not performing an echo test that is): 
 	// 1. Get Mic audio, down-sample it, buffer it, and, if enough, send to server
 	// 2. Get audio buffered from server and send to speaker
 	
@@ -366,6 +366,25 @@ function processAudio(e) {						// Main processing loop
 	var inData = e.inputBuffer.getChannelData(0);			// Audio from the mic
 	var outData = e.outputBuffer.getChannelData(0);			// Audio going to speaker
 	let micAudio = [];						// 1. Mic audio processing...
+
+	if (echoTest.running == true) {					// The echo test takes over all audio
+		if (echoTest.steps[echoTest.currentStep] > 0) {		// >0 means send a tone of that frequency
+			testOsc.frequency = echoTest.steps[echoTest.currentStep];
+			testOsc.start();
+		} else {						// 0 means wait for a tone
+			testOsc.stop();
+			console.log(inData);
+		}
+		echoTest.currentStep++;					// Move to next step with next audio sample
+		if (echoTest.currentStep == echoTest.steps.length) {	// At the end of the test cycle
+			echoTest.currentStep = 0;			// Back to the start
+			echoTest.running = false;			// & stop the test
+		}
+		enterState( idleState );				// We are done. Back to Idling
+		return;							// Don't do anything else while testing
+	} 
+
+	// 1. Get Mic audio, buffer it, and send it to server if enough buffered
 	if ((socketConnected) && (micIn.muted == false)) {		// Need connection to send
 		micAudio = downSample(inData, soundcardSampleRate, SampleRate);
 		resampledChunkSize = micAudio.length;			// Note how much audio is needed
@@ -396,7 +415,8 @@ function processAudio(e) {						// Main processing loop
 		}
 	}
 
-	let inAudio = [];						// 2. Output audio to speaker
+	// 2. Take audio buffered from server and send it to the speaker
+	let inAudio = [];					
 	if (spkrBuffer.length > resampledChunkSize) {			// There is enough audio buffered
 		inAudio = spkrBuffer.splice(0,resampledChunkSize);	// Get same amount of audio as came in
 	} else {							// Not enough audio.
@@ -467,7 +487,7 @@ function handleAudio(stream) {						// We have obtained media access
 
 var echoTest = {
 	running		: false,
-	steps		: [1760,0,440,0,880,0,],
+	steps		: [1760,0,440,0,880,0,3520,0,220,0,7040,0,110,0,14080,0],
 	currentStep	: 0,
 };
 function startEchoTest() {							// Test mic-speaker echo levels
