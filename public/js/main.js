@@ -500,7 +500,6 @@ trace2("echo testing at step ",echoTest.currentStep);
 trace2("Generating frequency ",echoTest.steps[echoTest.currentStep]);
 		} else {						// 0 means wait for a tone
 			oscGain.gain.value = 0;
-			testOsc.stop()
 trace2("silence. printing audio to console");
 			console.log(audio);
 		}
