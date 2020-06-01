@@ -490,10 +490,10 @@ var echoTest = {
 	steps		: [1760,0,440,0,880,0,3520,0,220,0,7040,0,110,0,14080,0],
 	currentStep	: 0,
 };
-function startEchoTest() {							// Test mic-speaker echo levels
+function startEchoTest() {						// Test mic-speaker echo levels
 	if (echoTest.running == false) {				// If not testing already
 		trace2("Starting echo test");
-		echoTest.running == true;				// start testing
+		echoTest.running = true;				// start testing
 		echoTest.currentStep = 0;				// start at step 0 and work through list
 	}
 }
