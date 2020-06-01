@@ -447,7 +447,7 @@ function handleAudio(stream) {						// We have obtained media access
 	echoFilter.Q.value = geometricMean / (highFreq - lowFreq);
 	
 	let gainNode = context.createGain();				// Cancelling requires inverting signal
-	gainNode.gain.value = -1;
+	gainNode.gain.value = 1;
 									// Time to connect everything...
 	let gainNode2 = context.createGain();				// Cancelling requires inverting signal
 	gainNode2.gain.value = 1;
