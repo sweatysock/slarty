@@ -96,7 +96,7 @@ socketIO.on('d', function (data) {
 				let now = new Date().getTime();
 				rtt = (rtt + (now - c.timestamp))/2;	// Measure round trip time rolling average
 				if (rtt > MaxRTT) { 			// If it is too long
-					trace("RTT: ",rtt," time: ",now," timestamp: ",c.timestamp," Requsting connection reset");
+					trace("RTT: ",rtt,"instant rtt: ",(now - c.timestamp)," time: ",now," timestamp: ",c.timestamp," Requsting connection reset");
 					resetConnection();		// reset the socket.
 					rtt = 0;			// reset rtt too.
 				}
@@ -127,7 +127,7 @@ socketIO.on('disconnect', function () {
 var lastReset = new Date().getTime();					// Note previous socket reset to avoid excess resets
 function resetConnection() {						// Use this to reset the socket if needed
 	let now = new Date().getTime();
-	if ((lastReset + 30000) < now) {				// 20 second minimum between socket resets
+	if ((lastReset + 60000) < now) {				// 20 second minimum between socket resets
 		trace2("Socket resetting...");
 		socketIO.disconnect();
 		socketIO.connect();
