@@ -96,7 +96,7 @@ socketIO.on('d', function (data) {
 				let now = new Date().getTime();
 				rtt = (rtt + (now - c.timestamp))/2;	// Measure round trip time rolling average
 				if (rtt > MaxRTT) { 			// If it is too long
-					trace("RTT at ",rtt," Requsting connection reset");
+					trace("RTT at ",rtt,(now - c.timestamp)," Requsting connection reset");
 					resetConnection();		// reset the socket.
 					rtt = 0;			// reset rtt too.
 				}
@@ -128,7 +128,7 @@ socketIO.on('disconnect', function () {
 var lastReset = new Date().getTime();					// Note previous socket reset to avoid excess resets
 function resetConnection() {						// Use this to reset the socket if needed
 	let now = new Date().getTime();
-	if ((lastReset + 20000) < now) {				// 20 second minimum between socket resets
+	if ((lastReset + 30000) < now) {				// 20 second minimum between socket resets
 		trace("Socket resetting...");
 		socketIO.disconnect();
 		socketIO.connect();
@@ -436,36 +436,46 @@ function handleAudio(stream) {						// We have obtained media access
 	
 	let splitter = context.createChannelSplitter(2);		// Split signal for echo cancelling
 
-	let echoDelay = context.createDelay(5);				// Delay to match speaker echo
+	var echoDelay = context.createDelay(5);				// Delay to match speaker echo
 	echoDelay.delayTime.value = 0.00079
 
 	lowFreq = 300;							// Echo filter to match speaker+mic
 	highFreq = 5000;
 	geometricMean = Math.sqrt(lowFreq * highFreq);
-	let echoFilter = context.createBiquadFilter();
+	var echoFilter = context.createBiquadFilter();
 	echoFilter.type = 'bandpass';
 	echoFilter.frequency.value = geometricMean;
 	echoFilter.Q.value = geometricMean / (highFreq - lowFreq);
 	
-	let gainNode = context.createGain();				// Cancelling requires inverting signal
-	gainNode.gain.value = 1;
-									// Time to connect everything...
-	let gainNode2 = context.createGain();				// Cancelling requires inverting signal
-	gainNode2.gain.value = 1;
+	var echoGain = context.createGain();				// Cancelling requires inverting signal
+	echoGain.gain.value = 1;
+
+	var testOsc = context.createOscillator();			// Test oscillator generates tones to test echo
+	testOsc.frequency = 1000;
 									// Time to connect everything...
 	liveSource.connect(micFilter);					// Mic goes to micFilter
 	micFilter.connect(node);					// micFilter goes to audio processor
 	node.connect(splitter);						// our processor feeds to a splitter
-	splitter.connect(gainNode);
-	splitter.connect(gainNode2);
-	gainNode.connect(context.destination,0);
-	gainNode2.connect(context.destination,0);
-//	splitter.connect(echoDelay,0);					// one output goes to feedback loop
-//	splitter.connect(context.destination,0);			// other output goes to speaker
-//	echoDelay.connect(echoFilter);					// feedback echo goes to echo filter
-//	echoFilter.connect(gainNode);					// echo filter goes to inverter
-//	gainNode.connect(micFilter);					// inverter feeds back into micFilter
-//	gainNode.gain.value = 0;					// Start with feedback loop off
+	testOsc.connect(splitter);					// The test oscillator also connects to splitter
+	splitter.connect(echoDelay,0);					// one output goes to feedback loop
+	splitter.connect(context.destination,0);			// other output goes to speaker
+	echoDelay.connect(echoFilter);					// feedback echo goes to echo filter
+	echoFilter.connect(echoGain);					// echo filter goes to inverter
+	echoGain.connect(micFilter);					// inverter feeds back into micFilter
+	echoGain.gain.value = 0;					// Start with feedback loop off
+}
+
+var echoTest = {
+	running = false,
+	steps: [1760,0,440,0,880,0,],
+	currentStep = 0
+};
+function startEchoTest() {							// Test mic-speaker echo levels
+	if (echoTest.running == false) {				// If not testing already
+		trace2("Starting echo test");
+		echoTest.running == true;				// start testing
+		echoTest.currentStep = 0;				// start at step 0 and work through list
+	}
 }
 
 document.addEventListener('DOMContentLoaded', function(event){
@@ -583,12 +593,12 @@ document.addEventListener('DOMContentLoaded', function(event){
 	// Buttons used for testing...
 	let testBtn=document.getElementById('testBtn');
 	testBtn.onclick = function () {
-		console.log("Connection reset requested");
-		resetConnection();
+		trace2("Echo Test Button Pressed");
+		startEchoTest();
 	};
 	let actionBtn=document.getElementById('actionBtn');
 	actionBtn.onclick = function () {
-		console.log("Action button pressed");
+		trace("Pause traces pressed");
 		if (pauseTracing == true) pauseTracing = false;
 		else pauseTracing = true;
 	};
