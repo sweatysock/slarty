@@ -96,7 +96,7 @@ socketIO.on('d', function (data) {
 				let now = new Date().getTime();
 				rtt = (rtt + (now - c.timestamp))/2;	// Measure round trip time rolling average
 				if (rtt > MaxRTT) { 			// If it is too long
-					trace("RTT at ",rtt,(now - c.timestamp)," Requsting connection reset");
+					trace("RTT: ",rtt," time: ",now," timestamp: ",c.timestamp)," Requsting connection reset");
 					resetConnection();		// reset the socket.
 					rtt = 0;			// reset rtt too.
 				}
