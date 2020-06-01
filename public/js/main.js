@@ -563,6 +563,7 @@ document.addEventListener('DOMContentLoaded', function(event){
 		console.log("Connection reset requested");
 		resetConnection = true;
 		socketIO.disconnect();
+		socketIO.connect();
 	};
 	let actionBtn=document.getElementById('actionBtn');
 	actionBtn.onclick = function () {
