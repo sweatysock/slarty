@@ -452,12 +452,14 @@ function handleAudio(stream) {						// We have obtained media access
 	liveSource.connect(micFilter);					// Mic goes to micFilter
 	micFilter.connect(node);					// micFilter goes to audio processor
 	node.connect(splitter);						// our processor feeds to a splitter
-	splitter.connect(echoDelay,0);					// one output goes to feedback loop
-	splitter.connect(context.destination,0);			// other output goes to speaker
-	echoDelay.connect(echoFilter);					// feedback echo goes to echo filter
-	echoFilter.connect(gainNode);					// echo filter goes to inverter
-	gainNode.connect(micFilter);					// inverter feeds back into micFilter
-	gainNode.gain.value = 0;					// Start with feedback loop off
+	splitter.connect(gainNode);
+	gainNode.connect(context.destination,0);
+//	splitter.connect(echoDelay,0);					// one output goes to feedback loop
+//	splitter.connect(context.destination,0);			// other output goes to speaker
+//	echoDelay.connect(echoFilter);					// feedback echo goes to echo filter
+//	echoFilter.connect(gainNode);					// echo filter goes to inverter
+//	gainNode.connect(micFilter);					// inverter feeds back into micFilter
+//	gainNode.gain.value = 0;					// Start with feedback loop off
 }
 
 document.addEventListener('DOMContentLoaded', function(event){
