@@ -370,10 +370,10 @@ function processAudio(e) {						// Main processing loop
 trace2("echo testing at step ",echoTest.currentStep);
 		if (echoTest.steps[echoTest.currentStep] > 0) {		// >0 means send a tone of that frequency
 			testOsc.frequency = echoTest.steps[echoTest.currentStep];
-			testOsc.start();
+			oscGain.gain.value = 1;
 trace2("Generating frequency ",echoTest.steps[echoTest.currentStep]);
 		} else {						// 0 means wait for a tone
-			testOsc.stop();
+			oscGain.gain.value = 0;
 trace2("silence. printing audio to console");
 			console.log(inData);
 		}
@@ -434,7 +434,7 @@ trace2("Echo test complete");
 	enterState( idleState );					// We are done. Back to Idling
 }
 
-var testOsc, echoDelay, echoFilter, echoGain;				// These audio control nodes are global
+var testOsc, oscGain, echoDelay, echoFilter, echoGain;			// These audio control nodes are global
 function handleAudio(stream) {						// We have obtained media access
 	let context = new window.AudioContext || new window.webkitAudioContext;
 	soundcardSampleRate = context.sampleRate;
@@ -474,13 +474,19 @@ function handleAudio(stream) {						// We have obtained media access
 	echoGain = context.createGain();				// Cancelling requires inverting signal
 	echoGain.gain.value = 1;
 
-	testOsc = context.createOscillator();			// Test oscillator generates tones to test echo
+	testOsc = context.createOscillator();				// Test oscillator generates tones to test echo
 	testOsc.frequency = 1000;
-									// Time to connect everything...
+	testOsc.start();
+			
+	oscGain = context.createGain();		  			// Cancelling requires inverting signal
+	oscGain.gain.value = 0;
+
+	// Time to connect everything...
 	liveSource.connect(micFilter);					// Mic goes to micFilter
 	micFilter.connect(node);					// micFilter goes to audio processor
 	node.connect(splitter);						// our processor feeds to a splitter
-	testOsc.connect(splitter);					// The test oscillator also connects to splitter
+	testOsc.connect(oscGain);					// The test oscillator goes through a gain control
+	oscGain.connect(splitter);					// The Oscillator gain feeds to the splitter too
 	splitter.connect(echoDelay,0);					// one output goes to feedback loop
 	splitter.connect(context.destination,0);			// other output goes to speaker
 	echoDelay.connect(echoFilter);					// feedback echo goes to echo filter
