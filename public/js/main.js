@@ -449,11 +449,16 @@ function handleAudio(stream) {						// We have obtained media access
 	let gainNode = context.createGain();				// Cancelling requires inverting signal
 	gainNode.gain.value = -1;
 									// Time to connect everything...
+	let gainNode2 = context.createGain();				// Cancelling requires inverting signal
+	gainNode2.gain.value = 1;
+									// Time to connect everything...
 	liveSource.connect(micFilter);					// Mic goes to micFilter
 	micFilter.connect(node);					// micFilter goes to audio processor
 	node.connect(splitter);						// our processor feeds to a splitter
 	splitter.connect(gainNode);
+	splitter.connect(gainNode2);
 	gainNode.connect(context.destination,0);
+	gainNode2.connect(context.destination,0);
 //	splitter.connect(echoDelay,0);					// one output goes to feedback loop
 //	splitter.connect(context.destination,0);			// other output goes to speaker
 //	echoDelay.connect(echoFilter);					// feedback echo goes to echo filter
