@@ -367,22 +367,7 @@ function processAudio(e) {						// Main processing loop
 	let micAudio = [];						// 1. Mic audio processing...
 
 	if (echoTest.running == true) {					// The echo test takes over all audio
-trace2("echo testing at step ",echoTest.currentStep);
-		if (echoTest.steps[echoTest.currentStep] > 0) {		// >0 means send a tone of that frequency
-			testOsc.frequency = echoTest.steps[echoTest.currentStep];
-			oscGain.gain.value = 1;
-trace2("Generating frequency ",echoTest.steps[echoTest.currentStep]);
-		} else {						// 0 means wait for a tone
-			oscGain.gain.value = 0;
-trace2("silence. printing audio to console");
-			console.log(inData);
-		}
-		echoTest.currentStep++;					// Move to next step with next audio sample
-		if (echoTest.currentStep == echoTest.steps.length) {	// At the end of the test cycle
-			echoTest.currentStep = 0;			// Back to the start
-			echoTest.running = false;			// & stop the test
-trace2("Echo test complete");
-		}
+		runEchoTest(inData);					// Send the mic audio to the tester
 		enterState( idleState );				// We are done. Back to Idling
 		return;							// Don't do anything else while testing
 	} 
@@ -434,9 +419,9 @@ trace2("Echo test complete");
 	enterState( idleState );					// We are done. Back to Idling
 }
 
-var testOsc, oscGain, echoDelay, echoFilter, echoGain;			// These audio control nodes are global
+var context, oscGain, echoDelay, echoFilter, echoGain;			// These audio control nodes are global
 function handleAudio(stream) {						// We have obtained media access
-	let context = new window.AudioContext || new window.webkitAudioContext;
+	context = new window.AudioContext || new window.webkitAudioContext;
 	soundcardSampleRate = context.sampleRate;
 	micAccessAllowed = true;
 	createChannelUI( mixOut );					// Create the output mix channel UI
@@ -474,18 +459,13 @@ function handleAudio(stream) {						// We have obtained media access
 	echoGain = context.createGain();				// Cancelling requires inverting signal
 	echoGain.gain.value = 1;
 
-	testOsc = context.createOscillator();				// Test oscillator generates tones to test echo
-	testOsc.frequency = 1000;
-	testOsc.start();
-			
-	oscGain = context.createGain();		  			// Cancelling requires inverting signal
+	oscGain = context.createGain();		  			// Gain node for injecting echo cancel test tones
 	oscGain.gain.value = 0;
 
 	// Time to connect everything...
 	liveSource.connect(micFilter);					// Mic goes to micFilter
 	micFilter.connect(node);					// micFilter goes to audio processor
 	node.connect(splitter);						// our processor feeds to a splitter
-	testOsc.connect(oscGain);					// The test oscillator goes through a gain control
 	oscGain.connect(splitter);					// The Oscillator gain feeds to the splitter too
 	splitter.connect(echoDelay,0);					// one output goes to feedback loop
 	splitter.connect(context.destination,0);			// other output goes to speaker
@@ -506,6 +486,30 @@ function startEchoTest() {						// Test mic-speaker echo levels
 		echoTest.running = true;				// start testing
 		echoTest.currentStep = 0;				// start at step 0 and work through list
 	}
+}
+
+function runEchoTest(audio) {
+trace2("echo testing at step ",echoTest.currentStep);
+		if (echoTest.steps[echoTest.currentStep] > 0) {		// >0 means send a tone of that frequency
+			// Create oscillator, set frequency, conenct to gain node & start
+			let testOsc = context.createOscillator();	// Test oscillator generates tones to test echo
+			testOsc.frequency = echoTest.steps[echoTest.currentStep];
+			testOsc.connect(oscGain);			// The test oscillator goes through a gain control
+			testOsc.start();
+			oscGain.gain.value = 1;
+trace2("Generating frequency ",echoTest.steps[echoTest.currentStep]);
+		} else {						// 0 means wait for a tone
+			oscGain.gain.value = 0;
+			testOsc.stop()
+trace2("silence. printing audio to console");
+			console.log(audio);
+		}
+		echoTest.currentStep++;					// Move to next step with next audio sample
+		if (echoTest.currentStep == echoTest.steps.length) {	// At the end of the test cycle
+			echoTest.currentStep = 0;			// Back to the start
+			echoTest.running = false;			// & stop the test
+trace2("Echo test complete");
+		}
 }
 
 document.addEventListener('DOMContentLoaded', function(event){
