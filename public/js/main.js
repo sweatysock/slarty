@@ -128,7 +128,7 @@ socketIO.on('disconnect', function () {
 var lastReset = new Date().getTime();					// Note previous socket reset to avoid excess resets
 function resetConnection() {						// Use this to reset the socket if needed
 	let now = new Date().getTime();
-	if ((lastReset + 20000) < now)) {				// 20 second minimum between socket resets
+	if ((lastReset + 20000) < now) {				// 20 second minimum between socket resets
 		trace("Socket resetting...");
 		socketIO.disconnect();
 		socketIO.connect();
