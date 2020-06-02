@@ -41,7 +41,8 @@ var micIn = {								// and for microphone input
 	muted	: false,
 	peak	: 0,
 	channel	: "micIn",
-	threshold:0.000,						// Level below which we don't send audio
+	threshold:0.005,						// Level below which we don't send audio
+	gate	: 0,							// Threshold gate. >0 means open.
 };
 
 
@@ -327,7 +328,7 @@ function applyAutoGain(audio, startGain, maxGain) {			// Auto gain control
 	if (endGain > maxGain) endGain = maxGain;			// Gain is limited to maxGain
 	if (endGain >= startGain) {					// Gain adjustment speed varies
 		transitionLength = audio.length;			// Gain increases are gentle
-		endGain = startGain + ((endGain - startGain)/10);	// Slow the rate of gain change
+		endGain = startGain + ((endGain - startGain)/20);	// Slow the rate of gain change
 	}
 	else
 		transitionLength = Math.floor(audio.length/10);		// Gain decreases are fast
@@ -358,6 +359,16 @@ function applyAutoGain(audio, startGain, maxGain) {			// Auto gain control
 	return { finalGain: endGain, peak: maxLevel };
 }
 
+function fadeUp(audio) {						// Fade sample linearly over length
+	for (let i=0; i<audio.length; i++)
+		audio[i] = audio[i] * (i/audio.length);
+}
+
+function fadeDown(audio) {						// Fade sample linearly over length
+	for (let i=0; i<audio.length; i++)
+		audio[i] = audio[i] * ((audio.length - i)/audio.length);
+}
+
 function processAudio(e) {						// Main processing loop
 	// There are two activities here (if not performing an echo test that is): 
 	// 1. Get Mic audio, down-sample it, buffer it, and, if enough, send to server
@@ -384,11 +395,21 @@ function processAudio(e) {						// Main processing loop
 		if (micBuffer.length > PacketSize) {			// Got enough
 			let outAudio = micBuffer.splice(0, PacketSize);	// Get a packet of audio
 			let floor = maxValue(outAudio);			// Get peak level for this packet
-			if (floor > micIn.threshold) {			// if audio level is above threshold send audio
+			if (floor > micIn.threshold)  			// if audio level is above threshold open gate
+				if (micIn.gate == 0)
+					micIn.gate = 11;		// This signals the gate has just been reopened
+				else					// which means fade up the sample
+					micIn.gate = 10;
+			if (micIn.gate > 0) {				// If gate is open prepare the audio for sending
 				let obj = applyAutoGain(outAudio, micIn.gain, 2);	// Bring the mic up to level, but 5x is max
 				if (obj.peak > micIn.peak) micIn.peak = obj.peak;	// Note peak for local display
 				micIn.gain = obj.finalGain;			// Store gain for next loop
-			} else {					// Silent packet sent
+				micIn.gate--;				// Gate slowly closes
+				if (micIn.gate == 0)			// Gate is about to close
+					fadeDown(outAudio);		// Fade sample down to zero for smooth sound
+				else if (micIn.gate == 10)		// Gate has just been opened so fade up
+					fadeUp(outAudio);
+			} else {					// Gate closed. Send silent packet
 				outAudio = [];
 				micIn.peak = 0;
 			}
@@ -568,7 +589,7 @@ function magicKernel( x ) {						// This thing is crazy cool
 // Echo testing code
 //
 var echoTest = {
-	running		: false,
+	running		: false,					// Note: 0 means pause and record audio. Number means # of waves per chunk
 	steps		: [4,0,0,0,0,0,0,0,0,0,8,0,0,0,0,0,0,0,0,0,16,0,0,0,0,0,0,0,0,0,32,0,0,0,0,0,0,0,0,0,64,0,0,0,0,0,0,0,0,0,128,0,0,0,0,0,0,0,0,0],
 	currentStep	: 0,
 	currentResults	: 0,
