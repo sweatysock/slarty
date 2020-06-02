@@ -244,6 +244,7 @@ function convertIdToObj(id) {						// Translate HTML DOM IDs to JS data objects
 }
 
 function muteButton(e) {
+trace2("mute");
 	let id = event.target.parentNode.id;
 	let b = document.getElementById(id+"On");
 	b.style.visibility = "hidden";
@@ -252,6 +253,7 @@ function muteButton(e) {
 }
 
 function unmuteButton(e) {
+trace2("unmute");
 	let id = event.target.parentNode.id;
 	let b = document.getElementById(id+"On");
 	b.style.visibility = "visible";
@@ -641,10 +643,18 @@ var monitors = ["none","monitor","monitor2"];
 document.addEventListener('DOMContentLoaded', function(event){
 	let monitorBtn=document.getElementById('monitorBtn');
 	monitorBtn.onclick = function () {
-		if (monitors[currentMonitor] != "none") document.getElementById(monitors[currentMonitor]).style.visibility = "hidden";
+		if (monitors[currentMonitor] != "none") {
+			let mon = document.getElementById(monitors[currentMonitor])
+			mon.style.visibility = "hidden";
+			mon.parentNode.style.visibility = "hidden";
+		}
 		currentMonitor++;
 		if (currentMonitor == monitors.length) currentMonitor = 0;
-		if (monitors[currentMonitor] != "none") document.getElementById(monitors[currentMonitor]).style.visibility = "visible";
+		if (monitors[currentMonitor] != "none") {
+			let mon = document.getElementById(monitors[currentMonitor])
+			mon.style.visibility = "visible";
+			mon.parentNode.style.visibility = "visible";
+		}
 	};
 	// Buttons used for testing...
 	let testBtn=document.getElementById('testBtn');
