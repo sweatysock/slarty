@@ -367,8 +367,10 @@ function processAudio(e) {						// Main processing loop
 	let micAudio = [];						// 1. Mic audio processing...
 
 	if (echoTest.running == true) {					// The echo test takes over all audio
-		runEchoTest(inData);					// Send the mic audio to the tester
-		enterState( idleState );				// We are done. Back to Idling
+		let output = runEchoTest(inData);			// Send the mic audio to the tester
+		for (let i in output) 					// and get back audio to reproduce
+			outData[i] = output[i];				// Copy audio to output
+		enterState( idleState );				// This test stage is done. Back to Idling
 		return;							// Don't do anything else while testing
 	} 
 
@@ -419,9 +421,9 @@ function processAudio(e) {						// Main processing loop
 	enterState( idleState );					// We are done. Back to Idling
 }
 
-var context, oscGain, echoDelay, echoFilter, echoGain;			// These audio nodes accessed by echo tester
+var echoDelay, echoFilter, echoGain;					// These audio nodes accessed by echo tester
 function handleAudio(stream) {						// We have obtained media access
-	context = new window.AudioContext || new window.webkitAudioContext;
+	let context = new window.AudioContext || new window.webkitAudioContext;
 	soundcardSampleRate = context.sampleRate;
 	micAccessAllowed = true;
 	createChannelUI( mixOut );					// Create the output mix channel UI
@@ -459,14 +461,10 @@ function handleAudio(stream) {						// We have obtained media access
 	echoGain = context.createGain();				// Cancelling requires inverting signal
 	echoGain.gain.value = 1;
 
-	oscGain = context.createGain();		  			// Gain node for injecting echo cancel test tones
-	oscGain.gain.value = 0;
-
 	// Time to connect everything...
 	liveSource.connect(micFilter);					// Mic goes to micFilter
 	micFilter.connect(node);					// micFilter goes to audio processor
 	node.connect(splitter);						// our processor feeds to a splitter
-	oscGain.connect(splitter);					// The Oscillator gain feeds to the splitter too
 	splitter.connect(echoDelay,0);					// one output goes to feedback loop
 	splitter.connect(context.destination,0);			// other output goes to speaker
 	echoDelay.connect(echoFilter);					// feedback echo goes to echo filter
@@ -475,42 +473,8 @@ function handleAudio(stream) {						// We have obtained media access
 	echoGain.gain.value = 0;					// Start with feedback loop off
 }
 
-var echoTest = {
-	running		: false,
-	steps		: [1760,0,440,0,880,0,3520,0,220,0,7040,0,110,0,14080,0],
-	currentStep	: 0,
-};
-function startEchoTest() {						// Test mic-speaker echo levels
-	if (echoTest.running == false) {				// If not testing already
-		trace2("Starting echo test");
-		echoTest.running = true;				// start testing
-		echoTest.currentStep = 0;				// start at step 0 and work through list
-	}
-}
 
-function runEchoTest(audio) {
-trace2("echo testing at step ",echoTest.currentStep);
-		if (echoTest.steps[echoTest.currentStep] > 0) {		// >0 means send a tone of that frequency
-			// Create oscillator, set frequency, conenct to gain node & start
-			let testOsc = context.createOscillator();	// Test oscillator generates tones to test echo
-			testOsc.frequency.value = echoTest.steps[echoTest.currentStep];
-			testOsc.connect(oscGain);			// The test oscillator goes through a gain control
-			testOsc.start();
-			oscGain.gain.value = 1;
-trace2("Generating frequency ",echoTest.steps[echoTest.currentStep]);
-		} else {						// 0 means wait for a tone
-			oscGain.gain.value = 0;
-trace2("silence. printing audio to console");
-			console.log(audio);
-		}
-		echoTest.currentStep++;					// Move to next step with next audio sample
-		if (echoTest.currentStep == echoTest.steps.length) {	// At the end of the test cycle
-			echoTest.currentStep = 0;			// Back to the start
-			echoTest.running = false;			// & stop the test
-trace2("Echo test complete");
-		}
-}
-
+	
 document.addEventListener('DOMContentLoaded', function(event){
 	initAudio();							// Call initAudio() once loaded
 });
@@ -599,6 +563,70 @@ function magicKernel( x ) {						// This thing is crazy cool
 
 
 
+// Echo testing code
+//
+var echoTest = {
+	running		: false,
+	steps		: [4,0,0,0,0,0,0,0,0,0,8,0,0,0,0,0,0,0,0,0,16,0,0,0,0,0,0,0,0,0,32,0,0,0,0,0,0,0,0,0,64,0,0,0,0,0,0,0,0,0,128,0,0,0,0,0,0,0,0,0],
+	currentStep	: 0,
+	currentResults	: 0,
+	samples		: [],
+	results		: [],
+};
+echoTest.steps.forEach(i => {
+	let halfWave = chunkSize/(i*2);
+	let audio = [];
+	for  (let s=0; s < chunkSize; s++) {
+		audio.push(Math.sin(Math.PI * s / halfWave));
+	}
+	echoTest.samples[i] = audio;
+});
+
+function startEchoTest() {						// Test mic-speaker echo levels
+	if (echoTest.running == false) {				// If not testing already
+		trace2("Starting echo test");
+		echoTest.running = true;				// start testing
+		echoTest.currentStep = 0;				// start at step 0 and work through list
+	}
+}
+
+function runEchoTest(audio) {
+	let outAudio;
+	if (echoTest.steps[echoTest.currentStep] > 0) {		// >0 means return a sample with that many waves
+		outAudio = echoTest.samples[echoTest.steps[echoTest.currentStep]];
+		echoTest.currentResults = echoTest.steps[echoTest.currentStep];
+		echoTest.results[echoTest.currentResults] = [];	// Get results buffer ready to store audio
+	} else {						// 0 means buffer resulting audio coming back through mic
+		echoTest.results[echoTest.currentResults].push(...audio);
+		outAudio = new Array(chunkSize).fill(0);	// return silence
+	}
+	echoTest.currentStep++;					// Move to next step with next audio sample
+	if (echoTest.currentStep == echoTest.steps.length) {	// At the end of the test cycle
+		echoTest.currentStep = 0;			// Back to the start
+		echoTest.running = false;			// & stop the test
+		for(let i=4;i<=128;i=i*2) {			// Now draw the graphs
+			drawWave(echoTest.results[i], "graph"+i);
+		}
+	}
+	return outAudio;
+}
+
+function drawWave(audio,n) {
+	let str = '<div id="'+n+'" style="position:absolute; bottom:10%; right:5%; width:80%; height:80%; background-color: #222222; visibility: hidden">'+n;
+	let max = 0;
+	for (let i=0; i<audio.length;i++) {audio[i] = Math.abs(audio[i]); if (audio[i] > max) max = audio[i];}
+	for (let i=4;i<(audio.length-4);i++) {
+		let l = (i*100)/audio.length;
+		let b = 50 + 50*(audio[i-4]+audio[i-3]+audio[i-2]+audio[i-1]+audio[i]+audio[i+1]+audio[i+2]+audio[i+3]+audio[i+4])/9;
+		str += '<div style="position:absolute; bottom:'+b+'%;left:'+l+'%;width:1px;height:1px;background-color:#66FF33"></div>';
+	}
+	max = 50 + 50*max;
+	str += '<div style="position:absolute; bottom:'+max+'%;left:0%;width:100%;height:1px;background-color:#FF0000">'+max+'</div>';
+	str += '</div>';
+	let container = document.getElementById("graphs");
+	container.innerHTML += str;
+	monitors.push(n);
+}
 
 
 
@@ -608,20 +636,15 @@ function magicKernel( x ) {						// This thing is crazy cool
 
 // Tracing, monitoring, reporting and debugging code
 // 
+var currentMonitor=0;
+var monitors = ["none","monitor","monitor2"];
 document.addEventListener('DOMContentLoaded', function(event){
 	let monitorBtn=document.getElementById('monitorBtn');
 	monitorBtn.onclick = function () {
-		let monitor=document.getElementById('monitor');
-		let monitor2=document.getElementById('monitor2');
-		if (monitor.style.visibility == "visible") {
-			monitor.style.visibility = "hidden";
-			monitor2.style.visibility = "visible";
-		} else {
-			if (monitor2.style.visibility == "visible")
-				monitor2.style.visibility = "hidden";
-			else
-				monitor.style.visibility = "visible";
-		}
+		if (monitors[currentMonitor] != "none") document.getElementById(monitors[currentMonitor]).style.visibility = "hidden";
+		currentMonitor++;
+		if (currentMonitor == monitors.length) currentMonitor = 0;
+		if (monitors[currentMonitor] != "none") document.getElementById(monitors[currentMonitor]).style.visibility = "visible";
 	};
 	// Buttons used for testing...
 	let testBtn=document.getElementById('testBtn');
