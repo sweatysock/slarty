@@ -47,7 +47,7 @@ var micIn = {								// and for microphone input
 	muted	: false,
 	peak	: 0,
 	channel	: "micIn",
-	threshold:0.005,						// Level below which we don't send audio
+	threshold:0.000,						// Level below which we don't send audio
 	gate	: 0,							// Threshold gate. >0 means open.
 };
 
@@ -331,7 +331,7 @@ function applyAutoGain(audio, startGain, manGain, MaxOutputLevel) {	// Auto gain
 	if (endGain > manGain) endGain = manGain;			// Gain will try to go up to manGain 
 	if (endGain >= startGain) {					// Gain adjustment speed varies
 		transitionLength = audio.length;			// Gain increases are gentle
-		endGain = startGain + ((endGain - startGain)/20);	// Slow the rate of gain change
+		endGain = startGain + ((endGain - startGain)/40);	// Slow the rate of gain change
 	}
 	else
 		transitionLength = Math.floor(audio.length/10);		// Gain decreases are fast
