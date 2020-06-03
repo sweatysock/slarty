@@ -421,20 +421,19 @@ function processAudio(e) {						// Main processing loop
 		micBuffer.push(...micAudio);				// Buffer mic audio until enough
 		if (micBuffer.length > PacketSize) {			// Got enough
 			let outAudio = micBuffer.splice(0, PacketSize);	// Get a packet of audio
-			let peak = maxValue(outAudio);			// Get peak level for this packet
-			if (peak > micIn.threshold)  			// if audio level is above threshold open gate
+			let obj = applyAutoGain(outAudio, micIn.gain, 
+				micIn.manGain, 1);			// Set mic level to manGain 
+			if (obj.peak > micIn.peak) micIn.peak = obj.peak;	// Note peak for local display
+			micIn.gain = obj.finalGain;			// Store gain for next loop
+			if (obj.peak > micIn.threshold)  		// if audio level is above threshold open gate
 				if (micIn.gate == 0)
 					micIn.gate = 6;			// This signals the gate has just been reopened
 				else					// which means fade up the sample
 					micIn.gate = 5;
 			if (micIn.gate > 0) {				// If gate is open prepare the audio for sending
-				let obj = applyAutoGain(outAudio, micIn.gain, 
-					micIn.manGain, 1);		// Set mic level to manGain respecting ceiling
-				if (obj.peak > micIn.peak) micIn.peak = obj.peak;	// Note peak for local display
-				micIn.gain = obj.finalGain;			// Store gain for next loop
 				requestControl();			// Try to get control if mic is loudest
-				if (micIn.ceiling != 1)			// If our ceiling is lower apply it
-					applyGain(outAudio, micIn.ceiling);
+				if (micIn.ceiling != 1)			// If our ceiling is lower mix is louder
+					applyGain(outAudio, micIn.ceiling);	// Apply the ceiling imposed
 				micIn.gate--;				// Gate slowly closes
 				if (micIn.gate == 0)			// Gate is about to close
 					fadeDown(outAudio);		// Fade sample down to zero for smooth sound
