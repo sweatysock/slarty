@@ -41,7 +41,7 @@ var micIn = {								// and for microphone input
 	muted	: false,
 	peak	: 0,
 	channel	: "micIn",
-	threshold:0.005,						// Level below which we don't send audio
+	threshold:0.015,						// Level below which we don't send audio
 	gate	: 0,							// Threshold gate. >0 means open.
 };
 
@@ -397,9 +397,9 @@ function processAudio(e) {						// Main processing loop
 			let floor = maxValue(outAudio);			// Get peak level for this packet
 			if (floor > micIn.threshold)  			// if audio level is above threshold open gate
 				if (micIn.gate == 0)
-					micIn.gate = 11;		// This signals the gate has just been reopened
+					micIn.gate = 6;		// This signals the gate has just been reopened
 				else					// which means fade up the sample
-					micIn.gate = 10;
+					micIn.gate = 5;
 			if (micIn.gate > 0) {				// If gate is open prepare the audio for sending
 				let obj = applyAutoGain(outAudio, micIn.gain, 2);	// Bring the mic up to level, but 5x is max
 				if (obj.peak > micIn.peak) micIn.peak = obj.peak;	// Note peak for local display
@@ -407,7 +407,7 @@ function processAudio(e) {						// Main processing loop
 				micIn.gate--;				// Gate slowly closes
 				if (micIn.gate == 0)			// Gate is about to close
 					fadeDown(outAudio);		// Fade sample down to zero for smooth sound
-				else if (micIn.gate == 10)		// Gate has just been opened so fade up
+				else if (micIn.gate == 5)		// Gate has just been opened so fade up
 					fadeUp(outAudio);
 			} else {					// Gate closed. Send silent packet
 				outAudio = new Array(PacketSize).fill(0);
