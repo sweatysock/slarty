@@ -108,11 +108,13 @@ socketIO.on('d', function (data) {
 				trace("Sequence jump Channel ",ch," jump ",(c.sequence - channels[ch].seq));
 			channels[ch].seq = c.sequence;
 		});
-		requestControl();					// Try to get control if mix is loudest
-		let obj = applyAutoGain(mix,mixOut.gain,mixOut.manGain,
-			mixOut.ceiling);				// Set mix level to manGain respecting ceiling
+		let obj = applyAutoGain(mix,mixOut.gain,
+			mixOut.manGain, 1);				// Set mix level to manGain respecting ceiling
 		mixOut.gain= obj.finalGain;				// Store gain for next loop
 		if (obj.peak > mixOut.peak) mixOut.peak = obj.peak;	// Note peak for display purposes
+		requestControl();					// Try to get control if mix is loudest
+		if (mixOut.ceiling != 1)				// If our ceiling is lower apply it
+			applyGain(mix, mixOut.ceiling);
 		if (mix.length != 0) {					// If there actually was some audio
 			spkrBuffer.push(...mix);			// put it on the speaker buffer
 			if (spkrBuffer.length > maxBuffSize) {		// Clip buffer if too full
@@ -331,7 +333,7 @@ function applyAutoGain(audio, startGain, manGain, MaxOutputLevel) {	// Auto gain
 	if (endGain > manGain) endGain = manGain;			// Gain will try to go up to manGain 
 	if (endGain >= startGain) {					// Gain adjustment speed varies
 		transitionLength = audio.length;			// Gain increases are gentle
-		endGain = startGain + ((endGain - startGain)/40);	// Slow the rate of gain change
+		endGain = startGain + ((endGain - startGain)/10);	// Slow the rate of gain change
 	}
 	else
 		transitionLength = Math.floor(audio.length/10);		// Gain decreases are fast
@@ -360,6 +362,11 @@ function applyAutoGain(audio, startGain, manGain, MaxOutputLevel) {	// Auto gain
 		}
 	}
 	return { finalGain: endGain, peak: maxLevel };
+}
+
+function applyGain( audio, gain ) {					// Apply a simple gain level to a sample
+	for (let i=0; i<audio.length; i++)
+		audio[i] = audio[i] * gain;
 }
 
 function fadeUp(audio) {						// Fade sample linearly over length
@@ -421,11 +428,13 @@ function processAudio(e) {						// Main processing loop
 				else					// which means fade up the sample
 					micIn.gate = 5;
 			if (micIn.gate > 0) {				// If gate is open prepare the audio for sending
-				requestControl();			// Try to get control if mic is loudest
 				let obj = applyAutoGain(outAudio, micIn.gain, 
-					micIn.manGain, micIn.ceiling);	// Set mic level to manGain respecting ceiling
+					micIn.manGain, 1);		// Set mic level to manGain respecting ceiling
 				if (obj.peak > micIn.peak) micIn.peak = obj.peak;	// Note peak for local display
 				micIn.gain = obj.finalGain;			// Store gain for next loop
+				requestControl();			// Try to get control if mic is loudest
+				if (micIn.ceiling != 1)			// If our ceiling is lower apply it
+					applyGain(outAudio, micIn.ceiling);
 				micIn.gate--;				// Gate slowly closes
 				if (micIn.gate == 0)			// Gate is about to close
 					fadeDown(outAudio);		// Fade sample down to zero for smooth sound
