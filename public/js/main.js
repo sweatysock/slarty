@@ -421,10 +421,10 @@ function processAudio(e) {						// Main processing loop
 				else					// which means fade up the sample
 					micIn.gate = 5;
 			if (micIn.gate > 0) {				// If gate is open prepare the audio for sending
-				if (peak > micIn.peak) micIn.peak = peak;	// Update peak before requesting control
 				requestControl();			// Try to get control if mic is loudest
 				let obj = applyAutoGain(outAudio, micIn.gain, 
 					micIn.manGain, micIn.ceiling);	// Set mic level to manGain respecting ceiling
+trace2("Mic ceiling:",micIn.ceiling);
 				if (obj.peak > micIn.peak) micIn.peak = obj.peak;	// Note peak for local display
 				micIn.gain = obj.finalGain;			// Store gain for next loop
 				micIn.gate--;				// Gate slowly closes
