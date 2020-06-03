@@ -13,6 +13,7 @@ var maxBuffSize = 6000;							// Max audio buffer chunks for playback
 var micBuffer = [];							// Buffer mic audio before sending
 var myChannel = -1;							// The server assigns us an audio channel
 var myName = "";							// Name assigned to my audio channel
+var halfDuplexLevel = 0.25;						// Ceiling for weaker channel in half duplex mode
 const NumberOfChannels = 20;						// Max number of channels in this server
 var channels = [];							// Each channel's data & buffer held here
 for (let i=0; i < NumberOfChannels; i++) {				// Create all the channels pre-initialized
@@ -29,6 +30,8 @@ for (let i=0; i < NumberOfChannels; i++) {				// Create all the channels pre-ini
 var mixOut = {								// Similar structures for the mix output
 	name 	: "Output",
 	gain	: 1,
+	manGain : 1,
+	ceiling : 1,
 	agc	: true,
 	muted	: false,
 	peak	: 0,
@@ -37,6 +40,8 @@ var mixOut = {								// Similar structures for the mix output
 var micIn = {								// and for microphone input
 	name 	: "Mic",
 	gain	: 0,
+	manGain : 1,
+	ceiling : 1,
 	agc	: true,
 	muted	: false,
 	peak	: 0,
@@ -102,7 +107,9 @@ socketIO.on('d', function (data) {
 				trace("Sequence jump Channel ",ch," jump ",(c.sequence - channels[ch].seq));
 			channels[ch].seq = c.sequence;
 		});
-		let obj = applyAutoGain(mix,mixOut.gain,1);		// Correct mix level with AGC 
+		requestControl();					// Try to get control if mix is loudest
+		let obj = applyAutoGain(mix,mixOut.gain,mixOut.manGain,
+			mixOut.ceiling);				// Set mix level to manGain respecting ceiling
 		mixOut.gain= obj.finalGain;				// Store gain for next loop
 		if (obj.peak > mixOut.peak) mixOut.peak = obj.peak;	// Note peak for display purposes
 		if (mix.length != 0) {					// If there actually was some audio
@@ -315,13 +322,12 @@ function maxValue( arr ) { 						// Find max value in an array
 	return max;
 }
 
-function applyAutoGain(audio, startGain, maxGain) {			// Auto gain control
-	const MaxOutputLevel = 1;					// Max output level permitted
+function applyAutoGain(audio, startGain, manGain, MaxOutputLevel) {	// Auto gain control
 	let tempGain, maxLevel, endGain, p, x, transitionLength; 
 	maxLevel = maxValue(audio);					// Find peak audio level 
 	endGain = MaxOutputLevel / maxLevel;				// Desired gain to avoid overload
 	maxLevel = 0;							// Use this to capture peak
-	if (endGain > maxGain) endGain = maxGain;			// Gain is limited to maxGain
+	if (endGain > manGain) endGain = manGain;			// Gain will try to go up to manGain 
 	if (endGain >= startGain) {					// Gain adjustment speed varies
 		transitionLength = audio.length;			// Gain increases are gentle
 		endGain = startGain + ((endGain - startGain)/20);	// Slow the rate of gain change
@@ -365,6 +371,23 @@ function fadeDown(audio) {						// Fade sample linearly over length
 		audio[i] = audio[i] * ((audio.length - i)/audio.length);
 }
 
+var controlTimer = 0;							// timer used to slow changes of control
+function requestControl() {						// Set maxGain levels according to loudest
+	let now = new Date().getTime();
+	if (now > controlTimer) {					// No control changes until timer is done
+		if (micIn.peak >= mixOut.peak) {
+			micIn.ceiling = 1;
+			mixOut.ceiling = halfDuplexLevel;
+trace2("Mic has control");
+		} else {
+			mixOut.ceiling = 1;
+			micIn.ceiling = halfDuplexLevel;
+trace2("Control with MIX");
+		}
+		controlTimer = now + 100;			
+	}
+}
+
 function processAudio(e) {						// Main processing loop
 	// There are two activities here (if not performing an echo test that is): 
 	// 1. Get Mic audio, down-sample it, buffer it, and, if enough, send to server
@@ -390,14 +413,17 @@ function processAudio(e) {						// Main processing loop
 		micBuffer.push(...micAudio);				// Buffer mic audio until enough
 		if (micBuffer.length > PacketSize) {			// Got enough
 			let outAudio = micBuffer.splice(0, PacketSize);	// Get a packet of audio
-			let floor = maxValue(outAudio);			// Get peak level for this packet
-			if (floor > micIn.threshold)  			// if audio level is above threshold open gate
+			let peak = maxValue(outAudio);			// Get peak level for this packet
+			if (peak > micIn.threshold)  			// if audio level is above threshold open gate
 				if (micIn.gate == 0)
-					micIn.gate = 6;		// This signals the gate has just been reopened
+					micIn.gate = 6;			// This signals the gate has just been reopened
 				else					// which means fade up the sample
 					micIn.gate = 5;
 			if (micIn.gate > 0) {				// If gate is open prepare the audio for sending
-				let obj = applyAutoGain(outAudio, micIn.gain, 2);	// Bring the mic up to level, but 5x is max
+				if (peak > micIn.peak) micIn.peak = peak;	// Update peak before requesting control
+				requestControl();			// Try to get control if mic is loudest
+				let obj = applyAutoGain(outAudio, micIn.gain, 
+					micIn.manGain, micIn.ceiling);	// Set mic level to manGain respecting ceiling
 				if (obj.peak > micIn.peak) micIn.peak = obj.peak;	// Note peak for local display
 				micIn.gain = obj.finalGain;			// Store gain for next loop
 				micIn.gate--;				// Gate slowly closes
@@ -406,7 +432,6 @@ function processAudio(e) {						// Main processing loop
 				else if (micIn.gate == 5)		// Gate has just been opened so fade up
 					fadeUp(outAudio);
 			} else {					// Gate closed. Send silent packet
-//				outAudio = new Array(PacketSize).fill(0);
 				outAudio = [];
 				micIn.peak = 0;
 			}
