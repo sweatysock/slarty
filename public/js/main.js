@@ -41,7 +41,7 @@ var micIn = {								// and for microphone input
 	muted	: false,
 	peak	: 0,
 	channel	: "micIn",
-	threshold:0.000,						// Level below which we don't send audio
+	threshold:0.005,						// Level below which we don't send audio
 	gate	: 0,							// Threshold gate. >0 means open.
 };
 
@@ -410,7 +410,7 @@ function processAudio(e) {						// Main processing loop
 				else if (micIn.gate == 10)		// Gate has just been opened so fade up
 					fadeUp(outAudio);
 			} else {					// Gate closed. Send silent packet
-				outAudio = [];
+				outAudio = new Array(PacketSize).fill(0);
 				micIn.peak = 0;
 			}
 			let now = new Date().getTime();
