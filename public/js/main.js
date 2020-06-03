@@ -47,7 +47,7 @@ var micIn = {								// and for microphone input
 	muted	: false,
 	peak	: 0,
 	channel	: "micIn",
-	threshold:0.000,						// Level below which we don't send audio
+	threshold:0.010,						// Level below which we don't send audio
 	gate	: 0,							// Threshold gate. >0 means open.
 };
 
