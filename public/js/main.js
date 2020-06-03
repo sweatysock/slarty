@@ -75,7 +75,7 @@ socketIO.on('d', function (data) {
 	enterState( dataInState );					// This is one of our key tasks
 	packetsIn++;							// For monitoring and statistics
 	if (micAccessAllowed) {						// Need access to audio before outputting
-		let mix = [];						// Build up a mix of client audio 
+		let mix = new Array(PacketSize).fill(0);		// Build up a mix of client audio from 0s
 		data.channels.forEach(c => {
 			let ch = c.channel;
 			if (c.socketID != socketIO.id) {		// Don't include my audio in mix
@@ -86,12 +86,8 @@ socketIO.on('d', function (data) {
 					let g = channels[ch].gain;	// apply manual gain, if different from 1
 					if (channels[ch].peak < c.peak)	// set the peak for level display
 						channels[ch].peak = c.peak;
-					if (mix.length == 0)		// First audio in mix goes straight
-						for (let i=0; i < a.length; i++)
-							mix[i] = a[i] * g;
-  					else
-	  					for (let i=0; i < a.length; i++)
-							mix[i] += a[i] * g;
+	  				for (let i=0; i < a.length; i++)
+						mix[i] += a[i] * g;
 				}
 			} else {					// This is my own data come back
 				let now = new Date().getTime();
