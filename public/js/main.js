@@ -410,7 +410,8 @@ function processAudio(e) {						// Main processing loop
 				else if (micIn.gate == 5)		// Gate has just been opened so fade up
 					fadeUp(outAudio);
 			} else {					// Gate closed. Send silent packet
-				outAudio = new Array(PacketSize).fill(0);
+//				outAudio = new Array(PacketSize).fill(0);
+				outAudio = [];
 				micIn.peak = 0;
 			}
 			let now = new Date().getTime();
