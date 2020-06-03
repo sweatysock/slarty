@@ -13,7 +13,8 @@ var maxBuffSize = 6000;							// Max audio buffer chunks for playback
 var micBuffer = [];							// Buffer mic audio before sending
 var myChannel = -1;							// The server assigns us an audio channel
 var myName = "";							// Name assigned to my audio channel
-var halfDuplexLevel = 0.25;						// Ceiling for weaker channel in half duplex mode
+var halfDuplexLevel = 0.1;						// Ceiling for weaker channel in half duplex mode
+var halDuplexLag = 500;							// mS that the half Duplex switch stays set
 const NumberOfChannels = 20;						// Max number of channels in this server
 var channels = [];							// Each channel's data & buffer held here
 for (let i=0; i < NumberOfChannels; i++) {				// Create all the channels pre-initialized
@@ -40,13 +41,13 @@ var mixOut = {								// Similar structures for the mix output
 var micIn = {								// and for microphone input
 	name 	: "Mic",
 	gain	: 0,
-	manGain : 1,
+	manGain : 2,
 	ceiling : 1,
 	agc	: true,
 	muted	: false,
 	peak	: 0,
 	channel	: "micIn",
-	threshold:0.015,						// Level below which we don't send audio
+	threshold:0.005,						// Level below which we don't send audio
 	gate	: 0,							// Threshold gate. >0 means open.
 };
 
@@ -384,7 +385,7 @@ trace2("Mic has control");
 			micIn.ceiling = halfDuplexLevel;
 trace2("Control with MIX");
 		}
-		controlTimer = now + 100;			
+		controlTimer = now + halfDuplexLag;			
 	}
 }
 
