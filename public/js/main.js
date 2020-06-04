@@ -441,7 +441,7 @@ function endTalkover() {
 		mixOut.ceiling = 1;
 }
 
-var echoDelay = 9;							// Number of samples before echo is detected
+var echoDelay = 5;							// Number of samples before echo is detected
 var thresholdBuffer = new Array(echoDelay).fill(0);			// Thresholds are set from delayed output audio levels
 
 function processAudio(e) {						// Main processing loop
