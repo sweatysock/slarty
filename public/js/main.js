@@ -419,6 +419,7 @@ function processAudio(e) {						// Main processing loop
 				micIn.manGain, 1);			// Set mic level to manGain 
 			if (obj.peak > micIn.peak) 
 				micIn.peak = obj.peak;			// Note peak for local display
+			let peak = micIn.peak				// peak for packet to be sent
 			micIn.gain = obj.finalGain;			// Store gain for next loop
 			if (obj.peak > micIn.threshold)  		// if audio level is above threshold open gate
 				if (micIn.gate == 0)
@@ -435,7 +436,7 @@ function processAudio(e) {						// Main processing loop
 					fadeUp(outAudio);
 			} else {					// Gate closed. Send silent packet
 				outAudio = [];
-				micIn.peak = 0;
+				peak = 0;
 			}
 			let now = new Date().getTime();
 			socketIO.emit("u",
@@ -444,7 +445,7 @@ function processAudio(e) {						// Main processing loop
 				"audio"		: outAudio,		// Resampled, level-corrected audio
 				"sequence"	: packetSequence,	// Usefull for detecting data losses
 				"timestamp"	: now,			// Used to measure round trip time
-				"peak" 		: micIn.peak,		// Saves having to calculate again
+				"peak" 		: peak,			// Saves others having to calculate again
 				"channel"	: myChannel,		// Send assigned channel to help server
 			});
 			packetsOut++;					// For stats and monitoring
