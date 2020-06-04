@@ -87,11 +87,11 @@ socketIO.on('d', function (data) {
 			if (c.socketID != socketIO.id) {		// Don't include my audio in mix
 				channels[ch].name = c.name;		// Update the channel name
 				channels[ch].channel = ch;		// Update the channel number
+				if (channels[ch].peak < c.peak)		// set the peak for level display
+					channels[ch].peak = c.peak;	// even if muted
 				if (!channels[ch].muted) {		// We can skip a muted channel
 					let a = c.audio;
 					let g = channels[ch].gain;	// apply manual gain, if different from 1
-					if (channels[ch].peak < c.peak)	// set the peak for level display
-						channels[ch].peak = c.peak;
 	  				for (let i=0; i < a.length; i++)
 						mix[i] += a[i] * g;
 				}
@@ -417,7 +417,8 @@ function processAudio(e) {						// Main processing loop
 			let outAudio = micBuffer.splice(0, PacketSize);	// Get a packet of audio
 			let obj = applyAutoGain(outAudio, micIn.gain, 
 				micIn.manGain, 1);			// Set mic level to manGain 
-			if (obj.peak > micIn.peak) micIn.peak = obj.peak;	// Note peak for local display
+			if (obj.peak > micIn.peak) 
+				micIn.peak = obj.peak;			// Note peak for local display
 			micIn.gain = obj.finalGain;			// Store gain for next loop
 			if (obj.peak > micIn.threshold)  		// if audio level is above threshold open gate
 				if (micIn.gate == 0)
