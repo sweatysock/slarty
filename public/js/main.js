@@ -45,7 +45,7 @@ var micIn = {								// and for microphone input
 	muted	: false,
 	peak	: 0,
 	channel	: "micIn",
-	threshold:0.010,						// Level below which we don't send audio
+	threshold:0.001,						// Level below which we don't send audio
 	gate	: 0,							// Threshold gate. >0 means open.
 };
 
@@ -158,6 +158,7 @@ function displayAnimation() { 						// called 100mS to animate audio displays
 		micIn.peak = micIn.peak * rate; 			// drop mic peak level a little for smooth drops
 		setLevelDisplay( micIn );				// Update LED display for mic.peak
 		setSliderPos( micIn );					// Update slider position for mic gain
+		setThresholdPos( micIn );
 		channels.forEach(c => {					// Update each channel's UI
 			if (c.name != "") {				// A channel needs a name to be active
 				if (c.displayID == undefined)		// If there is no display associated to the channel
@@ -171,7 +172,9 @@ function displayAnimation() { 						// called 100mS to animate audio displays
 }
 
 function mapToLevelDisplay( n ) {					// map input to log scale in level display div
-	v = (10.5 * Math.log10(n) + 21)*65/21;				// v=(10.5log(n)+21)65/21
+	let v = 0;
+	if (n > 0.01) 
+		v = (10.5 * Math.log10(n) + 21)*65/21;			// v=(10.5log(n)+21)65/21
 	return v;
 }
 
@@ -180,14 +183,23 @@ function setLevelDisplay( obj ) { 					// Set LED display level for obj
 	let h1, h2, h3;
 	v = mapToLevelDisplay(v);
 	if (v < 49.5) {h1 = v; h2 = 0; h3 = 0;} else
-	if (v < 58.8) {h1 = 49.5; h2 = v; h3 = 0;} else
-			{h1 = 49.5; h2 = 9.3; h3 = v;}
+	if (v < 58.8) {h1 = 49.5; h2 = (v-49.5); h3 = 0;} else
+			{h1 = 49.5; h2 = 9.3; h3 = (v-58.8);}
 	let d = document.getElementById(obj.displayID+"LevelGreen");
 	d.style.height = h1+"%";
 	d = document.getElementById(obj.displayID+"LevelOrange");
 	d.style.height = h2+"%";
 	d = document.getElementById(obj.displayID+"LevelRed");
 	d.style.height = h3+"%";
+}
+
+function setThresholdPos( obj ) {					// Set threshold indicator position
+	let v = obj.threshold;
+trace2("Threshold is ",v);
+	if ((v > 0) && (v < 0.011)) v = 0.011;
+	v =  mapToLevelDisplay(v);					// Modifying bottom edge so add 8
+	let d = document.getElementById(obj.displayID+"Threshold");
+	d.style.height = v+"%";
 }
 
 function setSliderPos( obj ) {
@@ -213,6 +225,10 @@ function createChannelUI(obj) {
 			<div style="position:absolute;bottom:8%; left:25%; width:5%; height:0%; background-color:#66FF33" id="'+name+'LevelGreen"></div> \
 			<div style="position:absolute;bottom:57.5%; left:25%; width:5%; height:0%; background-color:#FF6600" id="'+name+'LevelOrange"></div> \
 			<div style="position:absolute;bottom:66.8%; left:25%; width:5%; height:0%; background-color:#FF0000" id="'+name+'LevelRed"></div> \
+			<div style="position:absolute;bottom:8%; left:25%; width:5%; height:0%; background-color:#999999" id="'+name+'Threshold"></div> \
+			<div style="position:absolute;bottom:8%; left:5%; width:40%; height:65%;" draggable="false" id="'+name+'ThreshBtn" \
+				onmousedown="threshDragStart(event)" onmousemove="threshDrag(event)" onmouseup="threshDragStop(event)" \
+				ontouchstart="threshDragStart(event)" ontouchmove="threshDrag(event)" ontouchend="threshDragStop(event)"></div>  \
 			<div style="position:absolute;top:1%; left:3%; width:90%; height:10%;color:#AAAAAA" id="'+name+'Name"> \
 				<marquee behavior="slide" direction="left">'+obj.channel+'</marquee> \
 			</div> \
@@ -251,31 +267,35 @@ trace2("unmute");
 	id.muted = false;
 }
 
-var dragging=false;							// Flag if slider dragging is happening
-var dragStartY;								// Y coord where dragging started
-var dragStartPct;							// start % from bottom for dragged slider
+var slider = {
+	dragging:false,							// Flag if slider dragging is happening
+	dragStartY:0,							// Y coord where dragging started
+	dragStartPct:0,							// start % from bottom for dragged slider
+};
+
 function sliderDragStart(event) {
-	dragging = true;
+	slider.dragging = true;
 	event.target.style.cursor='pointer';				// Make pointer look right
-	dragStartY = event.clientY;					// Store where the dragging started
-	if (isNaN(dragStartY)) dragStartY = event.touches[0].clientY;	// If it is NaN must be a touchscreen
+	slider.dragStartY = event.clientY;				// Store where the dragging started
+	if (isNaN(slider.dragStartY)) 
+		slider.dragStartY = event.touches[0].clientY;		// If it is NaN must be a touchscreen
 	let id = event.target.parentNode.id;
-	let slider = document.getElementById(id+"Slider");
-	dragStartPct = parseFloat(slider.style.bottom);			// Get the slider's current % position
+	let o = document.getElementById(id+"Slider");
+	slider.dragStartPct = parseFloat(o.style.bottom);		// Get the slider's current % position
 }
 
 function sliderDrag(event) {
-	if (dragging) {
+	if (slider.dragging) {
 		let y = event.clientY;					// Get current cursor Y coord
 		if (isNaN(y)) y = event.touches[0].clientY;		// If it is NaN we must be on a touchscreen
-		y = (dragStartY - y);					// Get the cursor positon change
+		y = (slider.dragStartY - y);				// Get the cursor positon change
 		let pct = (y/event.target.clientHeight*0.65)*100;	// Calculate the change as a % of the range (0.65 is a fudge... coords are wrong but life is short)
-		p = dragStartPct + pct;					// Apply the change to the initial position
+		p = slider.dragStartPct + pct;				// Apply the change to the initial position
 		let id = event.target.parentNode.id;
-		let slider = document.getElementById(id+"Slider");
-		slider.style.bottom = p;				// Move the slider to the desired position
+		let o = document.getElementById(id+"Slider");
 		if (p < 8) p = 8;					// Limit slider movement
 		if (p > 65) p = 65;
+		o.style.bottom = p;					// Move the slider to the desired position
 		let gain;						// Now calculate the gain this position implies
 		if (p < 42) 						// Inverse equations used for slider positioning
 			gain = (p -8)/34;
@@ -288,7 +308,51 @@ function sliderDrag(event) {
 
 function sliderDragStop(event) {
 	event.target.style.cursor='default';
-	dragging = false;
+	slider.dragging = false;
+}
+
+var thresh = {
+	dragging:false,							// Flag if thresh dragging is happening
+	dragStartY:0,							// Y coord where dragging started
+	dragStartPct:0,							// start % from bottom for dragged thresh
+};
+
+function threshDragStart(event) {
+	thresh.dragging = true;
+	event.target.style.cursor='pointer';				// Make pointer look right
+	thresh.dragStartY = event.clientY;				// Store where the dragging started
+	if (isNaN(thresh.dragStartY)) 
+		thresh.dragStartY = event.touches[0].clientY;		// If it is NaN must be a touchscreen
+	let id = event.target.parentNode.id;
+	let o = document.getElementById(id+"Threshold");
+	thresh.dragStartPct = parseFloat(o.style.height);			// Get the thresh's current % position
+}
+
+function threshDrag(event) {
+	if (thresh.dragging) {
+		let y = event.clientY;					// Get current cursor Y coord
+		if (isNaN(y)) y = event.touches[0].clientY;		// If it is NaN we must be on a touchscreen
+		y = (thresh.dragStartY - y);				// Get the cursor positon change
+		let pct = (y/event.target.clientHeight*0.65)*100;	// Calculate the change as a % of the range (0.65 is a fudge... coords are wrong but life is short)
+		p = thresh.dragStartPct + pct;				// Apply the change to the initial position
+		let id = event.target.parentNode.id;
+		let o = document.getElementById(id+"Threshold");
+		if (p < 0) p = 0; 					// Limit thresh movement between 0% and 65%
+		if (p > 65) p = 65;
+		o.style.height = p;					// Move the thresh to the desired position
+		if (p > 0) {						// Now calculate the threshold this position implies
+			p = p*21/65;
+			p = (p-21)/10.5;
+			p = Math.pow(10,p);
+		}
+		id = convertIdToObj(id);				// Get the js object ID for this UI element
+		id.threshold = p;					// Set the object's (micIn's) gain level 
+	}
+}
+
+function threshDragStop(event) {
+	event.target.style.cursor='default';
+	thresh.dragging = false;
 }
 
 function setStatusLED(name, level) {					// Set the status LED's colour
@@ -362,7 +426,7 @@ function fadeDown(audio) {						// Fade sample linearly over length
 		audio[i] = audio[i] * ((audio.length - i)/audio.length);
 }
 
-var talkoverLevel = 0.1;						// Ceiling for weaker channel in half duplex mode
+var talkoverLevel = 0.01;						// Ceiling for weaker channel in half duplex mode
 var talkoverLag = 600;							// mS that the half Duplex switch stays set
 var talkoverTimer = 0;							// timer used to slow talkover lift off
 function talkover() {							// Suppress mix level while mic is active
@@ -376,6 +440,9 @@ function endTalkover() {
 	if (now > talkoverTimer) 					// Mix ceiling can raise after timeout
 		mixOut.ceiling = 1;
 }
+
+var echoDelay = 9;							// Number of samples before echo is detected
+var thresholdBuffer = new Array(echoDelay).fill(0);			// Thresholds are set from delayed output audio levels
 
 function processAudio(e) {						// Main processing loop
 	// There are two activities here (if not performing an echo test that is): 
@@ -401,38 +468,39 @@ function processAudio(e) {						// Main processing loop
 		resampledChunkSize = micAudio.length;			// Note how much audio is needed
 		micBuffer.push(...micAudio);				// Buffer mic audio until enough
 		if (micBuffer.length > PacketSize) {			// Got enough
-			let outAudio = micBuffer.splice(0, PacketSize);	// Get a packet of audio
-			let obj = applyAutoGain(outAudio, micIn.gain, 
+			let inAudio = micBuffer.splice(0, PacketSize);	// Get a packet of audio
+			let obj = applyAutoGain(inAudio, micIn.gain, 
 				micIn.manGain, 1);			// Set mic level to manGain 
 			if (obj.peak > micIn.peak) 
 				micIn.peak = obj.peak;			// Note peak for local display
 			let peak = micIn.peak				// peak for packet to be sent
 			micIn.gain = obj.finalGain;			// Store gain for next loop
-			if (obj.peak > micIn.threshold)  		// if audio level is above threshold open gate
+			if (obj.peak > micIn.threshold) {  		// if audio level is above threshold open gate
 				if (micIn.gate == 0)
 					micIn.gate = 6;			// This signals the gate has just been reopened
 				else					// which means fade up the sample
 					micIn.gate = 5;
-			if (micIn.muted) micIn.gate = 0;		// Muted means never breaking the threshold
+			} 
 			if (micIn.gate > 0) {				// If gate is open prepare the audio for sending
 				talkover();				// Mic is active so drop mix output
 				micIn.gate--;				// Gate slowly closes
 				if (micIn.gate == 0)			// Gate is about to close
-					fadeDown(outAudio);		// Fade sample down to zero for smooth sound
+					fadeDown(inAudio);		// Fade sample down to zero for smooth sound
 				else if (micIn.gate == 5)		// Gate has just been opened so fade up
-					fadeUp(outAudio);
+					fadeUp(inAudio);
 			} else {					// Gate closed. Send silent packet
-				outAudio = [];
-				peak = 0;
+				inAudio = [];
+				micIn.peak = 0;
 			}
+			if (micIn.muted) inAudio = [];			// Muted means sending emply audio
 			let now = new Date().getTime();
 			socketIO.emit("u",
 			{
 				"name"		: myName,		// Send the name we have chosen 
-				"audio"		: outAudio,		// Resampled, level-corrected audio
+				"audio"		: inAudio,		// Resampled, level-corrected audio
 				"sequence"	: packetSequence,	// Usefull for detecting data losses
 				"timestamp"	: now,			// Used to measure round trip time
-				"peak" 		: peak,			// Saves others having to calculate again
+				"peak" 		: micIn.peak,		// Saves others having to calculate again
 				"channel"	: myChannel,		// Send assigned channel to help server
 			});
 			packetsOut++;					// For stats and monitoring
@@ -441,22 +509,24 @@ function processAudio(e) {						// Main processing loop
 	}
 
 	// 2. Take audio buffered from server and send it to the speaker
-	let inAudio = [];					
+	let outAudio = [];					
 	if (spkrBuffer.length > resampledChunkSize) {			// There is enough audio buffered
-		inAudio = spkrBuffer.splice(0,resampledChunkSize);	// Get same amount of audio as came in
+		outAudio = spkrBuffer.splice(0,resampledChunkSize);	// Get same amount of audio as came in
 	} else {							// Not enough audio.
-		inAudio = spkrBuffer.splice(0,spkrBuffer.length);	// Take all that remains and complete with 0s
+		outAudio = spkrBuffer.splice(0,spkrBuffer.length);	// Take all that remains and complete with 0s
 		let zeros = new Array(resampledChunkSize-spkrBuffer.length).fill(0);
-		inAudio.push(...zeros);
+		outAudio.push(...zeros);
 		shortages++;						// For stats and monitoring
 	}
-	let spkrAudio = upSample(inAudio, SampleRate, soundcardSampleRate); // Bring back to HW sampling rate
+	let max = maxValue(outAudio);					// Get peak level of this outgoing audio
+	thresholdBuffer.push(max);					// push it into dynamic threshold queue
+	micIn.threshold = thresholdBuffer.splice(0,1);			// set threshold to oldest buffer level
+	let spkrAudio = upSample(outAudio, SampleRate, soundcardSampleRate); // Bring back to HW sampling rate
 	for (let i in outData) 
 		outData[i] = spkrAudio[i];				// Copy audio to output
 	enterState( idleState );					// We are done. Back to Idling
 }
 
-var echoDelay, echoFilter, echoGain;					// These audio nodes accessed by echo tester
 function handleAudio(stream) {						// We have obtained media access
 	let context = new window.AudioContext || new window.webkitAudioContext;
 	soundcardSampleRate = context.sampleRate;
@@ -482,30 +552,11 @@ function handleAudio(stream) {						// We have obtained media access
 	
 	let splitter = context.createChannelSplitter(2);		// Split signal for echo cancelling
 
-	echoDelay = context.createDelay(5);				// Delay to match speaker echo
-	echoDelay.delayTime.value = 0.00079
-
-	lowFreq = 300;							// Echo filter to match speaker+mic
-	highFreq = 5000;
-	geometricMean = Math.sqrt(lowFreq * highFreq);
-	echoFilter = context.createBiquadFilter();
-	echoFilter.type = 'bandpass';
-	echoFilter.frequency.value = geometricMean;
-	echoFilter.Q.value = geometricMean / (highFreq - lowFreq);
-	
-	echoGain = context.createGain();				// Cancelling requires inverting signal
-	echoGain.gain.value = 1;
-
 	// Time to connect everything...
 	liveSource.connect(micFilter);					// Mic goes to micFilter
 	micFilter.connect(node);					// micFilter goes to audio processor
 	node.connect(splitter);						// our processor feeds to a splitter
-	splitter.connect(echoDelay,0);					// one output goes to feedback loop
 	splitter.connect(context.destination,0);			// other output goes to speaker
-	echoDelay.connect(echoFilter);					// feedback echo goes to echo filter
-	echoFilter.connect(echoGain);					// echo filter goes to inverter
-	echoGain.connect(micFilter);					// inverter feeds back into micFilter
-	echoGain.gain.value = 0;					// Start with feedback loop off
 }
 
 
