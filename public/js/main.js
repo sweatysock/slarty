@@ -13,8 +13,6 @@ var maxBuffSize = 6000;							// Max audio buffer chunks for playback
 var micBuffer = [];							// Buffer mic audio before sending
 var myChannel = -1;							// The server assigns us an audio channel
 var myName = "";							// Name assigned to my audio channel
-var talkoverLevel = 0.1;						// Ceiling for weaker channel in half duplex mode
-var talkoverLag = 400;							// mS that the half Duplex switch stays set
 const NumberOfChannels = 20;						// Max number of channels in this server
 var channels = [];							// Each channel's data & buffer held here
 for (let i=0; i < NumberOfChannels; i++) {				// Create all the channels pre-initialized
@@ -377,6 +375,8 @@ function fadeDown(audio) {						// Fade sample linearly over length
 		audio[i] = audio[i] * ((audio.length - i)/audio.length);
 }
 
+var talkoverLevel = 0.1;						// Ceiling for weaker channel in half duplex mode
+var talkoverLag = 600;							// mS that the half Duplex switch stays set
 var talkoverTimer = 0;							// timer used to slow talkover lift off
 function talkover() {							// Suppress mix level while mic is active
 	let now = new Date().getTime();
