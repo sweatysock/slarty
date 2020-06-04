@@ -30,7 +30,7 @@ for (let i=0; i < NumberOfChannels; i++) {				// Create all the channels pre-ini
 }
 var mixOut = {								// Similar structures for the mix output
 	name 	: "Output",
-	gain	: 1,
+	gain	: 0,
 	manGain : 1,
 	ceiling : 1,
 	agc	: true,
