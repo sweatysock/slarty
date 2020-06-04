@@ -170,31 +170,18 @@ function displayAnimation() { 						// called 100mS to animate audio displays
 	}
 }
 
+function mapToLevelDisplay( n ) {					// map input to log scale in level display div
+	v = (10.5 * Math.log10(n) + 21)*65/21;				// v=(10.5log(n)+21)65/21
+	return v;
+}
+
 function setLevelDisplay( obj ) { 					// Set LED display level for obj
 	let v = obj.peak;
 	let h1, h2, h3;
-	if (v < 0.010) {h1 = 0; h2 = 0; h3 = 0;} else					// v indicates how many LEDs to make visible
-	if (v < 0.012) {h1 = 3.1; h2 = 0; h3 = 0;} else					// Obviously the higher v the more LEDs on
-	if (v < 0.016) {h1 = 6.2; h2 = 0; h3 = 0;} else					// These emulate the function:
-	if (v < 0.019) {h1 = 9.3; h2 = 0; h3 = 0;} else					// v = 10.5 * Math.log10( v ) + 21
-	if (v < 0.024) {h1 = 12.4; h2 = 0; h3 = 0;} else
-	if (v < 0.030) {h1 = 15.5; h2 = 0; h3 = 0;} else
-	if (v < 0.037) {h1 = 18.6; h2 = 0; h3 = 0;} else
-	if (v < 0.046) {h1 = 21.7; h2 = 0; h3 = 0;} else
-	if (v < 0.058) {h1 = 24.8; h2 = 0; h3 = 0;} else
-	if (v < 0.072) {h1 = 27.9; h2 = 0; h3 = 0;} else
-	if (v < 0.09) {h1 = 31; h2 = 0; h3 = 0;} else
-	if (v < 0.11) {h1 = 34; h2 = 0; h3 = 0;} else
-	if (v < 0.13) {h1 = 37.1; h2 = 0; h3 = 0;} else
-	if (v < 0.17) {h1 = 40.2; h2 = 0; h3 = 0;} else
-	if (v < 0.21) {h1 = 43.3; h2 = 0; h3 = 0;} else
-	if (v < 0.26) {h1 = 46.4; h2 = 0; h3 = 0;} else
-	if (v < 0.33) {h1 = 49.5; h2 = 0; h3 = 0;} else
-	if (v < 0.41) {h1 = 49.5; h2 = 3.1; h3 = 0;} else
-	if (v < 0.51) {h1 = 49.5; h2 = 6.2; h3 = 0;} else
-	if (v < 0.64) {h1 = 49.5; h2 = 9.3; h3 = 0;} else
-	if (v < 0.8) {h1 = 49.5; h2 = 9.3; h3 = 3.1;} else 
-		{h1 = 49.5; h2 = 9.3; h3 = 6.2;}
+	v = mapToLevelDisplay(v);
+	if (v < 49.5) {h1 = v; h2 = 0; h3 = 0;} else
+	if (v < 58.8) {h1 = 49.5; h2 = v; h3 = 0;} else
+			{h1 = 49.5; h2 = 9.3; h3 = v;}
 	let d = document.getElementById(obj.displayID+"LevelGreen");
 	d.style.height = h1+"%";
 	d = document.getElementById(obj.displayID+"LevelOrange");
