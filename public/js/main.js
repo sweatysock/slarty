@@ -13,8 +13,8 @@ var maxBuffSize = 6000;							// Max audio buffer chunks for playback
 var micBuffer = [];							// Buffer mic audio before sending
 var myChannel = -1;							// The server assigns us an audio channel
 var myName = "";							// Name assigned to my audio channel
-var halfDuplexLevel = 0.1;						// Ceiling for weaker channel in half duplex mode
-var halfDuplexLag = 400;							// mS that the half Duplex switch stays set
+var talkoverLevel = 0.1;						// Ceiling for weaker channel in half duplex mode
+var talkoverLag = 400;							// mS that the half Duplex switch stays set
 const NumberOfChannels = 20;						// Max number of channels in this server
 var channels = [];							// Each channel's data & buffer held here
 for (let i=0; i < NumberOfChannels; i++) {				// Create all the channels pre-initialized
@@ -108,13 +108,11 @@ socketIO.on('d', function (data) {
 				trace("Sequence jump Channel ",ch," jump ",(c.sequence - channels[ch].seq));
 			channels[ch].seq = c.sequence;
 		});
+		endTalkover();						// Try to end mic talkover before setting gain
 		let obj = applyAutoGain(mix,mixOut.gain,
 			mixOut.manGain, 1);				// Set mix level to manGain respecting ceiling
 		mixOut.gain= obj.finalGain;				// Store gain for next loop
 		if (obj.peak > mixOut.peak) mixOut.peak = obj.peak;	// Note peak for display purposes
-		requestControl();					// Try to get control if mix is loudest
-		if (mixOut.ceiling != 1)				// If our ceiling is lower apply it
-			applyGain(mix, mixOut.ceiling);
 		if (mix.length != 0) {					// If there actually was some audio
 			spkrBuffer.push(...mix);			// put it on the speaker buffer
 			if (spkrBuffer.length > maxBuffSize) {		// Clip buffer if too full
@@ -379,21 +377,17 @@ function fadeDown(audio) {						// Fade sample linearly over length
 		audio[i] = audio[i] * ((audio.length - i)/audio.length);
 }
 
-var controlTimer = 0;							// timer used to slow changes of control
-function requestControl() {						// Set maxGain levels according to loudest
+var talkoverTimer = 0;							// timer used to slow talkover lift off
+function talkover() {							// Suppress mix level while mic is active
 	let now = new Date().getTime();
-	if (now > controlTimer) {					// No control changes until timer is done
-		if (micIn.peak >= mixOut.peak) {
-			micIn.ceiling = 1;
-			mixOut.ceiling = halfDuplexLevel;
-trace2("Mic has control");
-		} else {
-			mixOut.ceiling = 1;
-			micIn.ceiling = halfDuplexLevel;
-trace2("Control with MIX");
-		}
-		controlTimer = now + halfDuplexLag;			
-	}
+	talkoverTimer = now + talkoverLag;			
+	mixOut.ceiling = talkoverLevel;
+}
+
+function endTalkover() {
+	let now = new Date().getTime();
+	if (now > talkoverTimer) 					// Mix ceiling can raise after timeout
+		mixOut.ceiling = 1;
 }
 
 function processAudio(e) {						// Main processing loop
@@ -415,7 +409,7 @@ function processAudio(e) {						// Main processing loop
 	} 
 
 	// 1. Get Mic audio, buffer it, and send it to server if enough buffered
-	if ((socketConnected) && (micIn.muted == false)) {		// Need connection to send
+	if (socketConnected) {						// Need connection to send
 		micAudio = downSample(inData, soundcardSampleRate, SampleRate);
 		resampledChunkSize = micAudio.length;			// Note how much audio is needed
 		micBuffer.push(...micAudio);				// Buffer mic audio until enough
@@ -430,10 +424,9 @@ function processAudio(e) {						// Main processing loop
 					micIn.gate = 6;			// This signals the gate has just been reopened
 				else					// which means fade up the sample
 					micIn.gate = 5;
+			if (micIn.muted) micIn.gate = 0;		// Muted means never breaking the threshold
 			if (micIn.gate > 0) {				// If gate is open prepare the audio for sending
-				requestControl();			// Try to get control if mic is loudest
-				if (micIn.ceiling != 1)			// If our ceiling is lower mix is louder
-					applyGain(outAudio, micIn.ceiling);	// Apply the ceiling imposed
+				talkover();				// Mic is active so drop mix output
 				micIn.gate--;				// Gate slowly closes
 				if (micIn.gate == 0)			// Gate is about to close
 					fadeDown(outAudio);		// Fade sample down to zero for smooth sound
