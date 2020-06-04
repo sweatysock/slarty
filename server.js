@@ -16,7 +16,7 @@ var upstreamBuffer = []; 						// Audio packets coming down from our upstream se
 var oldUpstreamPacket = null;						// previous upstream packet kept in case more is needed
 const maxBufferSize = 10;						// Max number of packets to store per client
 const mixTriggerLevel = 3;						// When all clients have this many packets we create a mix
-var packetSize;								// Number of samples in the client audio packets
+const packetSize = 500;								// Number of samples in the client audio packets
 const SampleRate = 16000; 						// All audio in audence runs at this sample rate. 
 const MaxOutputLevel = 1;						// Max output level for INT16, for auto gain control
 var upstreamMixGain = 1;						// Gain applied to the upstream mix using auto gain control
@@ -213,8 +213,6 @@ io.sockets.on('connection', function (socket) {
 
 	socket.on('u', function (packet) { 				// Audio coming up from one of our downstream clients
 		enterState( downstreamState );
-		if (packet.audio.length > 0) 
-			packetSize = packet.audio.length;		// Need to know how much audio we are processing
 		let channel = channels[packet.channel];			// This client sends their channel to save server effort
 if (packet.channel == -1) {
 console.log("DATA for CHANNEL ",packet.channel);
