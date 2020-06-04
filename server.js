@@ -215,7 +215,7 @@ io.sockets.on('connection', function (socket) {
 		enterState( downstreamState );
 		if (packet.audio.length > 0) 
 			packetSize = packet.audio.length;		// Need to know how much audio we are processing
-		let channel = channels[packet.channel];			// This client's channel was kindly sent in data
+		let channel = channels[packet.channel];			// This client sends their channel to save server effort
 if (packet.channel == -1) {
 console.log("DATA for CHANNEL ",packet.channel);
 console.log(channels[packet.channel]);
@@ -245,6 +245,7 @@ console.log(channels[0]);
 //
 function isTimeToMix() {						// Test if we must generate a mix regardless
 	let now = new Date().getTime();
+console.log("nextMixTimeLimit: ",nextMixTimeLimit,"now: ",now);
 	if ((nextMixTimeLimit != 0) && (now >= nextMixTimeLimit))  {
 		forcedMixes++;
 		return true;
