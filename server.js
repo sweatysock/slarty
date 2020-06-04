@@ -214,11 +214,6 @@ io.sockets.on('connection', function (socket) {
 	socket.on('u', function (packet) { 				// Audio coming up from one of our downstream clients
 		enterState( downstreamState );
 		let channel = channels[packet.channel];			// This client sends their channel to save server effort
-if (packet.channel == -1) {
-console.log("DATA for CHANNEL ",packet.channel);
-console.log(channels[packet.channel]);
-console.log(channels[0]);
-}
 		channel.name = packet.name;				// Update name of channel in case it has changed
 		channel.socketID = socket.id;				// Store socket ID associated with channel
 		packet.socketID = socket.id;				// Also store it in the packet to help client
@@ -243,7 +238,6 @@ console.log(channels[0]);
 //
 function isTimeToMix() {						// Test if we must generate a mix regardless
 	let now = new Date().getTime();
-console.log("nextMixTimeLimit: ",nextMixTimeLimit,"now: ",now);
 	if ((nextMixTimeLimit != 0) && (now >= nextMixTimeLimit))  {
 		forcedMixes++;
 		return true;
@@ -375,7 +369,7 @@ function generateMix () {
 				nextMixTimeLimit = now;
 			}						// Next mix timeout is advanced forward by mix.length mS
 			nextMixTimeLimit = nextMixTimeLimit + (packetSize * 1000)/SampleRate;
-		}
+		} else nextMixTimeLimit = 0;				// No client packets so stop forcing and wait until more
 	}
 }
 
