@@ -109,8 +109,7 @@ socketIO.on('d', function (data) {
 			channels[ch].seq = c.sequence;
 		});
 		endTalkover();						// Try to end mic talkover before setting gain
-		let obj = applyAutoGain(mix,mixOut.gain,
-			mixOut.manGain, 1, mixOut.gainRate);		// Set mix level to manGain respecting ceiling
+		let obj = applyAutoGain(mix, mixOut);			// Trim mix level 
 		mixOut.gain= obj.finalGain;				// Store gain for next loop
 		if (obj.peak > mixOut.peak) mixOut.peak = obj.peak;	// Note peak for display purposes
 		if (mix.length != 0) {					// If there actually was some audio
@@ -377,13 +376,28 @@ function maxValue( arr ) { 						// Find max value in an array
 	return max;
 }
 
-function applyAutoGain(audio, startGain, targetGain, MaxOutputLevel, gainRate) {
+var mixOut = {								// Similar structures for the mix output
+	name 	: "Output",
+	gain	: 0,
+	gainRate: 100,
+	manGain : 1,
+	ceiling : 1,
+	agc	: true,
+	muted	: false,
+	peak	: 0,
+	channel	: "mixOut",
+};
+function applyAutoGain(audio, obj) {
+	let startGain = obj.gain;
+	let targetGain = obj.manGain;
+	let ceiling = obj.ceiling;
+	let gainRate = obj.gainRate;
 	let tempGain, maxLevel, endGain, p, x, transitionLength; 
 	maxLevel = maxValue(audio);					// Find peak audio level 
-	endGain = MaxOutputLevel / maxLevel;				// Desired gain to avoid overload
+	endGain = ceiling / maxLevel;					// Desired gain to avoid overload
 	maxLevel = 0;							// Use this to capture peak
 	if (endGain > targetGain) endGain = targetGain;			// No higher than targetGain 
-	else gainRate = 10000;						// clipping! so now very slow gain increases
+	else obj.gainRate = 10000;					// clipping! slow gain increases - set obj value
 	if (endGain >= startGain) {					// Gain adjustment speed varies
 		transitionLength = audio.length;			// Gain increases are over entire sample
 		endGain = startGain + ((endGain - startGain)/gainRate);	// and are very gentle
@@ -399,8 +413,8 @@ function applyAutoGain(audio, startGain, targetGain, MaxOutputLevel, gainRate) {
 			p = -3*x*x + 6*x -2;
 		tempGain = startGain + (endGain - startGain) * p;
 	 	audio[i] = audio[i] * tempGain;
-		if (audio[i] >= MaxOutputLevel) audio[i] = MaxOutputLevel;
-		else if (audio[i] <= (MaxOutputLevel * -1)) audio[i] = MaxOutputLevel * -1;
+		if (audio[i] >= ceiling) audio[i] = ceiling;
+		else if (audio[i] <= (ceiling * -1)) audio[i] = ceiling * -1;
 		x = Math.abs(audio[i]);
 		if (x > maxLevel) maxLevel = x;
 	}
@@ -408,8 +422,8 @@ function applyAutoGain(audio, startGain, targetGain, MaxOutputLevel, gainRate) {
 		tempGain = endGain;					// Apply endGain to rest
 		for (let i = transitionLength; i < audio.length; i++) {
 			audio[i] = audio[i] * tempGain;
-			if (audio[i] >= MaxOutputLevel) audio[i] = MaxOutputLevel;
-			else if (audio[i] <= (MaxOutputLevel * -1)) audio[i] = MaxOutputLevel * -1;
+			if (audio[i] >= ceiling) audio[i] = ceiling;
+			else if (audio[i] <= (ceiling * -1)) audio[i] = ceiling * -1;
 			x = Math.abs(audio[i]);
 			if (x > maxLevel) maxLevel = x;
 		}
@@ -447,7 +461,7 @@ function endTalkover() {
 		mixOut.ceiling = 1;
 }
 
-var echoDelay = 5;							// Number of samples before echo is detected
+var echoDelay = 6;							// Number of samples before echo is detected
 var thresholdBuffer = new Array(echoDelay).fill(0);			// Thresholds are set from delayed output audio levels
 
 function processAudio(e) {						// Main processing loop
@@ -475,8 +489,7 @@ function processAudio(e) {						// Main processing loop
 		micBuffer.push(...micAudio);				// Buffer mic audio until enough
 		if (micBuffer.length > PacketSize) {			// Got enough
 			let inAudio = micBuffer.splice(0, PacketSize);	// Get a packet of audio
-			let obj = applyAutoGain(inAudio, micIn.gain, 
-				micIn.manGain, 1, micIn.gainRate);	// Set mic level to manGain 
+			let obj = applyAutoGain(inAudio, micIn);	// Set mic level to manGain 
 			if (obj.peak > micIn.peak) 
 				micIn.peak = obj.peak;			// Note peak for local display
 			let peak = micIn.peak				// peak for packet to be sent
