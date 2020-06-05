@@ -442,7 +442,6 @@ function talkover() {							// Suppress mix level while mic is active
 	let now = new Date().getTime();
 	talkoverTimer = now + talkoverLag;			
 	mixOut.ceiling = talkoverLevel;
-trace2("talkover");
 }
 
 function endTalkover() {
@@ -450,7 +449,6 @@ function endTalkover() {
 	if (now > talkoverTimer) { 					// Mix ceiling can raise after timeout
 		mixOut.ceiling = 1;
 		mixOut.gainRate = 10;
-trace2("stop talkover");
 	}
 }
 
@@ -487,6 +485,7 @@ function processAudio(e) {						// Main processing loop
 				micIn.peak = obj.peak;			// Note peak for local display
 			let peak = micIn.peak				// peak for packet to be sent
 			micIn.gain = obj.finalGain;			// Store gain for next loop
+trace2("mic ",obj.peak.toFixed(3)," thresh ",micIn.threshold.toFixed(3)," Diff ",(obj.peak-minIn.threshold));
 			if (obj.peak > micIn.threshold) {  		// if audio level is above threshold open gate
 				if (micIn.gate == 0)
 					micIn.gate = 6;			// This signals the gate has just been reopened
