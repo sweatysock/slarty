@@ -29,7 +29,7 @@ for (let i=0; i < NumberOfChannels; i++) {				// Create all the channels pre-ini
 var mixOut = {								// Similar structures for the mix output
 	name 	: "Output",
 	gain	: 0,
-	manGain : 1,
+	manGain : 10,
 	ceiling : 1,
 	agc	: true,
 	muted	: false,
@@ -144,13 +144,13 @@ function resetConnection() {						// Use this to reset the socket if needed
 
 // Media management and display code (audio in and out)
 //
+var displayRefresh = 100;						// mS between UI updates. May be increased if CPU struggling
 document.addEventListener('DOMContentLoaded', function(event){
-	setInterval(displayAnimation, 100);				// Call animated display 10 x a second
+	setTimeout(displayAnimation, displayRefresh);			// Call animated display once. It will need to reset timeout everytime.
 });
 
-const NumLEDs = 21;							// Number of LEDs in the level displays
 function displayAnimation() { 						// called 100mS to animate audio displays
-	enterState( UIState );					// Back to Idling
+	enterState( UIState );						// Measure time spent updating UI
 	const rate = 0.7;						// Speed of peak drop in LED level display
 	if (micAccessAllowed) {						// Once we have audio we can animate audio UI
 		mixOut.peak = mixOut.peak * rate; 			// drop mix peak level a little for smooth drops
@@ -170,6 +170,8 @@ function displayAnimation() { 						// called 100mS to animate audio displays
 			}
 		});
 	}
+	if (displayRefresh <= 1000)					// If CPU really struggling stop animating UI completely
+		setTimeout(displayAnimation, displayRefresh);		// Call animated display again. 
 	enterState( idleState );					// Back to Idling
 }
 
@@ -197,7 +199,6 @@ function setLevelDisplay( obj ) { 					// Set LED display level for obj
 
 function setThresholdPos( obj ) {					// Set threshold indicator position
 	let v = obj.threshold;
-trace2("Threshold is ",v);
 	if ((v > 0) && (v < 0.011)) v = 0.011;
 	v =  mapToLevelDisplay(v);					// Modifying bottom edge so add 8
 	let d = document.getElementById(obj.displayID+"Threshold");
@@ -374,15 +375,15 @@ function maxValue( arr ) { 						// Find max value in an array
 	return max;
 }
 
-function applyAutoGain(audio, startGain, manGain, MaxOutputLevel) {	// Auto gain control
+function applyAutoGain(audio, startGain, targetGain, MaxOutputLevel) {	// Auto gain control
 	let tempGain, maxLevel, endGain, p, x, transitionLength; 
 	maxLevel = maxValue(audio);					// Find peak audio level 
 	endGain = MaxOutputLevel / maxLevel;				// Desired gain to avoid overload
 	maxLevel = 0;							// Use this to capture peak
-	if (endGain > manGain) endGain = manGain;			// Gain will try to go up to manGain 
+	if (endGain > targetGain) endGain = targetGain;			// No higher than targetGain 
 	if (endGain >= startGain) {					// Gain adjustment speed varies
 		transitionLength = audio.length;			// Gain increases are gentle
-		endGain = startGain + ((endGain - startGain)/10);	// Slow the rate of gain change
+		endGain = startGain + ((endGain - startGain)/100);	// Slow the rate of gain change
 	}
 	else
 		transitionLength = Math.floor(audio.length/10);		// Gain decreases are fast
@@ -768,11 +769,13 @@ var shortages = 0;
 var packetSequence = 0;							// Tracing packet ordering
 var rtt = 0;								// Round Trip Time indicates bad network buffering
 var tracecount = 0;
+var sendShortages = 0;
 function printReport() {
-	trace("Idle = ", idleState.total, " data in = ", dataInState.total, " audio in/out = ", audioInOutState.total,"UI work = ",UIState.total);
-	trace("Sent = ",packetsOut," Heard = ",packetsIn," speaker buffer size ",spkrBuffer.length," mic buffer size ", micBuffer.length," overflows = ",overflows," shortages = ",shortages," RTT = ",rtt);
+	enterState( UIState );						// Measure time spent updating UI even for reporting!
+	trace("Idle = ", idleState.total, " data in = ", dataInState.total, " audio in/out = ", audioInOutState.total," UI work = ",UIState.total);
+	trace("Sent = ",packetsOut," Heard = ",packetsIn," overflows = ",overflows," shortages = ",shortages," RTT = ",rtt.toFixed(1));
 	let state = "Green";
-	trace("micIn.peak: ",micIn.peak," micIn.gain: ",micIn.gain," mixOut.peak: ",mixOut.peak," mixOut.gain: ",mixOut.gain);
+	trace("micIn.peak: ",micIn.peak.toFixed(1)," micIn.gain: ",micIn.gain.toFixed(1)," mixOut.peak: ",mixOut.peak.toFixed(1)," mixOut.gain: ",mixOut.gain.toFixed(1));
 	if ((overflows > 1) || (shortages >1)) state = "Orange";
 	if (socketConnected == false) state = "Red";
 	setStatusLED("GeneralStatus",state);
@@ -784,12 +787,27 @@ function printReport() {
 	if ((packetsIn < 30) || (packetsIn > 35)) state = "Orange";
 	if (packetsIn < 5) state = "Red";
 	setStatusLED("DownStatus",state);
+	if (packetsOut < 30) sendShortages++;				// Monitor if we are sending enough audio
+	else sendShortages--;
+	if ((sendShortages > 10) && (displayRefresh == 100)) {		// 10 seconds of shortages is bad. Slow UI animation.
+trace("Not ending enough audio... slowing animation to 0.5s");
+		displayRefresh = 500; sendShortages = 0;
+	}
+	if ((sendShortages > 10) && (displayRefresh == 500)) {		// 10 more seconds... slow it even more
+trace("Still not ending enough audio... slowing animation to 1s");
+		displayRefresh = 1000; sendShortages = 0;
+	}
+	if ((sendShortages > 10) && (displayRefresh == 1000)) {		// another 10 seconds? Stop animation completely.
+trace("Still not sending enough audio. Stopping UI animation ");
+		displayRefresh = 2000; sendShortages = 0;
+	}
 	packetsIn = 0;
 	packetsOut = 0;
 	overflows = 0;
 	shortages = 0;
 	rtt = 0;
 	tracecount = 2;
+	enterState( idleState );					// Back to Idling
 }
 
 setInterval(printReport, 1000);						// Call report generator once a second
