@@ -435,7 +435,7 @@ function fadeDown(audio) {						// Fade sample linearly over length
 		audio[i] = audio[i] * ((audio.length - i)/audio.length);
 }
 
-var talkoverLevel = 0.05;						// Ceiling for mix when mic is active
+var talkoverLevel = 0.2;						// Ceiling for mix when mic is active
 var talkoverLag = 800;							// mS that the half Duplex switch stays set
 var talkoverTimer = 0;							// timer used to slow talkover lift off
 function talkover() {							// Suppress mix level while mic is active
@@ -446,8 +446,10 @@ function talkover() {							// Suppress mix level while mic is active
 
 function endTalkover() {
 	let now = new Date().getTime();
-	if (now > talkoverTimer) 					// Mix ceiling can raise after timeout
+	if (now > talkoverTimer) { 					// Mix ceiling can raise after timeout
 		mixOut.ceiling = 1;
+		mixOut.gainRate = 10;
+	}
 }
 
 var echoDelay = 6;							// Number of samples before echo is detected
