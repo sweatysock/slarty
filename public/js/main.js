@@ -112,7 +112,6 @@ socketIO.on('d', function (data) {
 		let obj = applyAutoGain(mix, mixOut);			// Trim mix level 
 		mixOut.gain= obj.finalGain;				// Store gain for next loop
 		if (obj.peak > mixOut.peak) mixOut.peak = obj.peak;	// Note peak for display purposes
-console.log(mixOut);
 		if (mix.length != 0) {					// If there actually was some audio
 			spkrBuffer.push(...mix);			// put it on the speaker buffer
 			if (spkrBuffer.length > maxBuffSize) {		// Clip buffer if too full
@@ -436,13 +435,14 @@ function fadeDown(audio) {						// Fade sample linearly over length
 		audio[i] = audio[i] * ((audio.length - i)/audio.length);
 }
 
-var talkoverLevel = 0.2;						// Ceiling for mix when mic is active
-var talkoverLag = 200;							// mS that the half Duplex switch stays set
+var talkoverLevel = 0.5;						// Ceiling for mix when mic is active
+var talkoverLag = 100;							// mS that the half Duplex switch stays set
 var talkoverTimer = 0;							// timer used to slow talkover lift off
 function talkover() {							// Suppress mix level while mic is active
 	let now = new Date().getTime();
 	talkoverTimer = now + talkoverLag;			
 	mixOut.ceiling = talkoverLevel;
+trace2("talkover");
 }
 
 function endTalkover() {
@@ -450,6 +450,7 @@ function endTalkover() {
 	if (now > talkoverTimer) { 					// Mix ceiling can raise after timeout
 		mixOut.ceiling = 1;
 		mixOut.gainRate = 10;
+trace2("stop talkover");
 	}
 }
 
