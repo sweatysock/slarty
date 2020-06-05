@@ -29,6 +29,7 @@ for (let i=0; i < NumberOfChannels; i++) {				// Create all the channels pre-ini
 var mixOut = {								// Similar structures for the mix output
 	name 	: "Output",
 	gain	: 0,
+	gainRate: 100;
 	manGain : 1,
 	ceiling : 1,
 	agc	: true,
@@ -39,6 +40,7 @@ var mixOut = {								// Similar structures for the mix output
 var micIn = {								// and for microphone input
 	name 	: "Mic",
 	gain	: 0,
+	gainRate: 1000;
 	manGain : 10,
 	ceiling : 1,
 	agc	: true,
@@ -108,7 +110,7 @@ socketIO.on('d', function (data) {
 		});
 		endTalkover();						// Try to end mic talkover before setting gain
 		let obj = applyAutoGain(mix,mixOut.gain,
-			mixOut.manGain, 1);				// Set mix level to manGain respecting ceiling
+			mixOut.manGain, 1, mixOut.gainRate);		// Set mix level to manGain respecting ceiling
 		mixOut.gain= obj.finalGain;				// Store gain for next loop
 		if (obj.peak > mixOut.peak) mixOut.peak = obj.peak;	// Note peak for display purposes
 		if (mix.length != 0) {					// If there actually was some audio
@@ -375,8 +377,7 @@ function maxValue( arr ) { 						// Find max value in an array
 	return max;
 }
 
-var gainRate = 100;							// Start with medium speed gain increase
-function applyAutoGain(audio, startGain, targetGain, MaxOutputLevel) {	// Auto gain control
+function applyAutoGain(audio, startGain, targetGain, MaxOutputLevel, gainRate) {
 	let tempGain, maxLevel, endGain, p, x, transitionLength; 
 	maxLevel = maxValue(audio);					// Find peak audio level 
 	endGain = MaxOutputLevel / maxLevel;				// Desired gain to avoid overload
@@ -475,7 +476,7 @@ function processAudio(e) {						// Main processing loop
 		if (micBuffer.length > PacketSize) {			// Got enough
 			let inAudio = micBuffer.splice(0, PacketSize);	// Get a packet of audio
 			let obj = applyAutoGain(inAudio, micIn.gain, 
-				micIn.manGain, 1);			// Set mic level to manGain 
+				micIn.manGain, 1, micIn.gainRate);	// Set mic level to manGain 
 			if (obj.peak > micIn.peak) 
 				micIn.peak = obj.peak;			// Note peak for local display
 			let peak = micIn.peak				// peak for packet to be sent
