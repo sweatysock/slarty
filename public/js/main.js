@@ -108,7 +108,7 @@ socketIO.on('d', function (data) {
 				trace("Sequence jump Channel ",ch," jump ",(c.sequence - channels[ch].seq));
 			channels[ch].seq = c.sequence;
 		});
-		endTalkover();						// Try to end mic talkover before setting gain
+//		endTalkover();						// Try to end mic talkover before setting gain
 		let obj = applyAutoGain(mix, mixOut);			// Trim mix level 
 		mixOut.gain= obj.finalGain;				// Store gain for next loop
 		if (obj.peak > mixOut.peak) mixOut.peak = obj.peak;	// Note peak for display purposes
@@ -366,6 +366,11 @@ function setStatusLED(name, level) {					// Set the status LED's colour
 	else LED.className="greenLED";
 }
 
+
+
+
+// Audio management code
+//
 function maxValue( arr ) { 						// Find max value in an array
 	let max = 0;	
 	let v;
@@ -435,8 +440,8 @@ function fadeDown(audio) {						// Fade sample linearly over length
 		audio[i] = audio[i] * ((audio.length - i)/audio.length);
 }
 
-var talkoverLevel = 0.5;						// Ceiling for mix when mic is active
-var talkoverLag = 100;							// mS that the half Duplex switch stays set
+var talkoverLevel = 0.8;						// Ceiling for mix when mic is active
+var talkoverLag = 10;							// mS that the half Duplex switch stays set
 var talkoverTimer = 0;							// timer used to slow talkover lift off
 function talkover() {							// Suppress mix level while mic is active
 	let now = new Date().getTime();
@@ -452,8 +457,23 @@ function endTalkover() {
 	}
 }
 
+var levelCategories = new Array(11).fill(0);				// Categorizer to build histogram of packet levels
+function levelClassifier( v ) {
+	if (v < 0.005) levelCategories[0]++; else
+	if (v < 0.01) levelCategories[1]++; else
+	if (v < 0.02) levelCategories[2]++; else
+	if (v < 0.04) levelCategories[4]++; else
+	if (v < 0.07) levelCategories[5]++; else
+	if (v < 0.1) levelCategories[6]++; else
+	if (v < 0.2) levelCategories[7]++; else
+	if (v < 0.4) levelCategories[8]++; else
+	if (v < 0.7) levelCategories[9]++; else
+		levelCategories[10]++
+}
+
 var echoDelay = 7;							// Number of samples before echo is detected
 var thresholdBuffer = new Array(echoDelay).fill(0);			// Thresholds are set from delayed output audio levels
+var gateDelay = 5;							// Amount of samples (time) the gate stays open
 
 function processAudio(e) {						// Main processing loop
 	// There are two activities here (if not performing an echo test that is): 
@@ -489,16 +509,16 @@ function processAudio(e) {						// Main processing loop
 if ((micIn.threshold > 0) && (diff > 0)) trace2("mic ",obj.peak.toFixed(3)," thresh ",micIn.threshold.toFixed(3)," Diff ",diff.toFixed(3));
 			if (obj.peak > micIn.threshold) {  		// if audio level is above threshold open gate
 				if (micIn.gate == 0)
-					micIn.gate = 6;			// This signals the gate has just been reopened
+					micIn.gate = gateDelay + 1;	// This signals the gate has just been reopened
 				else					// which means fade up the sample
-					micIn.gate = 5;
+					micIn.gate = gateDelay;
 			} 
 			if (micIn.gate > 0) {				// If gate is open prepare the audio for sending
-				talkover();				// Mic is active so drop mix output
+//				talkover();				// Mic is active so drop mix output
 				micIn.gate--;				// Gate slowly closes
 				if (micIn.gate == 0)			// Gate is about to close
 					fadeDown(inAudio);		// Fade sample down to zero for smooth sound
-				else if (micIn.gate == 5)		// Gate has just been opened so fade up
+				else if (micIn.gate == gateDelay)	// Gate has just been opened so fade up
 					fadeUp(inAudio);
 			} else {					// Gate closed. Send silent packet
 				inAudio = [];
@@ -531,8 +551,9 @@ if ((micIn.threshold > 0) && (diff > 0)) trace2("mic ",obj.peak.toFixed(3)," thr
 		shortages++;						// For stats and monitoring
 	}
 	let max = maxValue(outAudio);					// Get peak level of this outgoing audio
+	levelClassifier(max);
 	thresholdBuffer.push(max);					// push it into dynamic threshold queue
-	micIn.threshold = 1.0*thresholdBuffer.splice(0,1);			// set threshold to oldest buffer level
+	micIn.threshold = 1.0*thresholdBuffer.splice(0,1);		// set threshold to oldest buffer level
 	let spkrAudio = upSample(outAudio, SampleRate, soundcardSampleRate); // Bring back to HW sampling rate
 	for (let i in outData) 
 		outData[i] = spkrAudio[i];				// Copy audio to output
@@ -785,6 +806,7 @@ function printReport() {
 	trace("Sent = ",packetsOut," Heard = ",packetsIn," overflows = ",overflows," shortages = ",shortages," RTT = ",rtt.toFixed(1));
 	let state = "Green";
 	trace("micIn.peak: ",micIn.peak.toFixed(1)," micIn.gain: ",micIn.gain.toFixed(1)," mixOut.peak: ",mixOut.peak.toFixed(1)," mixOut.gain: ",mixOut.gain.toFixed(1));
+	trace("Levels of output: ",levelCategories);
 	if ((overflows > 1) || (shortages >1)) state = "Orange";
 	if (socketConnected == false) state = "Red";
 	setStatusLED("GeneralStatus",state);
