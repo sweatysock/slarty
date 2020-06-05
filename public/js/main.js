@@ -532,7 +532,7 @@ if ((micIn.threshold > 0) && (diff > 0)) trace2("mic ",obj.peak.toFixed(3)," thr
 	}
 	let max = maxValue(outAudio);					// Get peak level of this outgoing audio
 	thresholdBuffer.push(max);					// push it into dynamic threshold queue
-	micIn.threshold = thresholdBuffer.splice(0,1);			// set threshold to oldest buffer level
+	micIn.threshold = 1.0*thresholdBuffer.splice(0,1);			// set threshold to oldest buffer level
 	let spkrAudio = upSample(outAudio, SampleRate, soundcardSampleRate); // Bring back to HW sampling rate
 	for (let i in outData) 
 		outData[i] = spkrAudio[i];				// Copy audio to output
