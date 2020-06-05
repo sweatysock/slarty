@@ -29,7 +29,7 @@ for (let i=0; i < NumberOfChannels; i++) {				// Create all the channels pre-ini
 var mixOut = {								// Similar structures for the mix output
 	name 	: "Output",
 	gain	: 0,
-	manGain : 10,
+	manGain : 1,
 	ceiling : 1,
 	agc	: true,
 	muted	: false,
@@ -39,7 +39,7 @@ var mixOut = {								// Similar structures for the mix output
 var micIn = {								// and for microphone input
 	name 	: "Mic",
 	gain	: 0,
-	manGain : 2,
+	manGain : 10,
 	ceiling : 1,
 	agc	: true,
 	muted	: false,
@@ -375,15 +375,17 @@ function maxValue( arr ) { 						// Find max value in an array
 	return max;
 }
 
+var gainRate = 100;							// Start with medium speed gain increase
 function applyAutoGain(audio, startGain, targetGain, MaxOutputLevel) {	// Auto gain control
 	let tempGain, maxLevel, endGain, p, x, transitionLength; 
 	maxLevel = maxValue(audio);					// Find peak audio level 
 	endGain = MaxOutputLevel / maxLevel;				// Desired gain to avoid overload
 	maxLevel = 0;							// Use this to capture peak
 	if (endGain > targetGain) endGain = targetGain;			// No higher than targetGain 
+	else gainRate = 10000;						// clipping! so now very slow gain increases
 	if (endGain >= startGain) {					// Gain adjustment speed varies
-		transitionLength = audio.length;			// Gain increases are gentle
-		endGain = startGain + ((endGain - startGain)/100);	// Slow the rate of gain change
+		transitionLength = audio.length;			// Gain increases are over entire sample
+		endGain = startGain + ((endGain - startGain)/gainRate);	// and are very gentle
 	}
 	else
 		transitionLength = Math.floor(audio.length/10);		// Gain decreases are fast
