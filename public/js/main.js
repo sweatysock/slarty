@@ -376,17 +376,6 @@ function maxValue( arr ) { 						// Find max value in an array
 	return max;
 }
 
-var mixOut = {								// Similar structures for the mix output
-	name 	: "Output",
-	gain	: 0,
-	gainRate: 100,
-	manGain : 1,
-	ceiling : 1,
-	agc	: true,
-	muted	: false,
-	peak	: 0,
-	channel	: "mixOut",
-};
 function applyAutoGain(audio, obj) {
 	let startGain = obj.gain;
 	let targetGain = obj.manGain;
