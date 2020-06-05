@@ -759,11 +759,11 @@ document.addEventListener('DOMContentLoaded', function(event){
 	};
 	let actionBtn=document.getElementById('actionBtn');
 	actionBtn.onclick = function () {
-		trace("Reset connection pressed");
-		resetConnection();
-//		trace("Pause traces pressed");
-//		if (pauseTracing == true) pauseTracing = false;
-//		else pauseTracing = true;
+//		trace("Reset connection pressed");
+//		resetConnection();
+		trace("Pause traces pressed");
+		if (pauseTracing == true) pauseTracing = false;
+		else pauseTracing = true;
 	};
 });
 var pauseTracing = false;
