@@ -457,18 +457,18 @@ function endTalkover() {
 	}
 }
 
-var levelCategories = new Array(11).fill(0);				// Categorizer to build histogram of packet levels
+var levelCategories = new Array(10).fill(0);				// Categorizer to build histogram of packet levels
 function levelClassifier( v ) {
 	if (v < 0.005) levelCategories[0]++; else
 	if (v < 0.01) levelCategories[1]++; else
 	if (v < 0.02) levelCategories[2]++; else
-	if (v < 0.04) levelCategories[4]++; else
-	if (v < 0.07) levelCategories[5]++; else
-	if (v < 0.1) levelCategories[6]++; else
-	if (v < 0.2) levelCategories[7]++; else
-	if (v < 0.4) levelCategories[8]++; else
-	if (v < 0.7) levelCategories[9]++; else
-		levelCategories[10]++
+	if (v < 0.04) levelCategories[3]++; else
+	if (v < 0.07) levelCategories[4]++; else
+	if (v < 0.1) levelCategories[5]++; else
+	if (v < 0.2) levelCategories[6]++; else
+	if (v < 0.4) levelCategories[7]++; else
+	if (v < 0.7) levelCategories[8]++; else
+		levelCategories[9]++
 }
 
 var echoDelay = 7;							// Number of samples before echo is detected
