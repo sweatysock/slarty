@@ -485,7 +485,7 @@ function processAudio(e) {						// Main processing loop
 				micIn.peak = obj.peak;			// Note peak for local display
 			let peak = micIn.peak				// peak for packet to be sent
 			micIn.gain = obj.finalGain;			// Store gain for next loop
-trace2("mic ",obj.peak.toFixed(3)," thresh ",micIn.threshold.toFixed(3)," Diff ",(obj.peak-minIn.threshold));
+trace2("mic ",obj.peak," thresh ",micIn.threshold," Diff ",(obj.peak-micIn.threshold));
 			if (obj.peak > micIn.threshold) {  		// if audio level is above threshold open gate
 				if (micIn.gate == 0)
 					micIn.gate = 6;			// This signals the gate has just been reopened
