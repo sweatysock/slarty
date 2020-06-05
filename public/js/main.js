@@ -503,7 +503,8 @@ function processAudio(e) {						// Main processing loop
 			let obj = applyAutoGain(inAudio, micIn);	// Set mic level to manGain 
 			if (obj.peak > micIn.peak) 
 				micIn.peak = obj.peak;			// Note peak for local display
-			let peak = micIn.peak				// peak for packet to be sent
+			let peak = obj.peak				// peak for packet to be sent
+			levelClassifier(peak);				// Classify audio incoming for analysis
 			micIn.gain = obj.finalGain;			// Store gain for next loop
 			let diff = obj.peak-micIn.threshold;
 if ((micIn.threshold > 0) && (diff > 0)) trace2("mic ",obj.peak.toFixed(3)," thresh ",micIn.threshold.toFixed(3)," Diff ",diff.toFixed(3));
@@ -551,7 +552,6 @@ if ((micIn.threshold > 0) && (diff > 0)) trace2("mic ",obj.peak.toFixed(3)," thr
 		shortages++;						// For stats and monitoring
 	}
 	let max = maxValue(outAudio);					// Get peak level of this outgoing audio
-	levelClassifier(max);
 	thresholdBuffer.push(max);					// push it into dynamic threshold queue
 	micIn.threshold = 1.0*thresholdBuffer.splice(0,1);		// set threshold to oldest buffer level
 	let spkrAudio = upSample(outAudio, SampleRate, soundcardSampleRate); // Bring back to HW sampling rate
