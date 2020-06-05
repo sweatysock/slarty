@@ -150,6 +150,7 @@ document.addEventListener('DOMContentLoaded', function(event){
 
 const NumLEDs = 21;							// Number of LEDs in the level displays
 function displayAnimation() { 						// called 100mS to animate audio displays
+	enterState( UIState );					// Back to Idling
 	const rate = 0.7;						// Speed of peak drop in LED level display
 	if (micAccessAllowed) {						// Once we have audio we can animate audio UI
 		mixOut.peak = mixOut.peak * rate; 			// drop mix peak level a little for smooth drops
@@ -169,6 +170,7 @@ function displayAnimation() { 						// called 100mS to animate audio displays
 			}
 		});
 	}
+	enterState( idleState );					// Back to Idling
 }
 
 function mapToLevelDisplay( n ) {					// map input to log scale in level display div
@@ -426,8 +428,8 @@ function fadeDown(audio) {						// Fade sample linearly over length
 		audio[i] = audio[i] * ((audio.length - i)/audio.length);
 }
 
-var talkoverLevel = 0.01;						// Ceiling for weaker channel in half duplex mode
-var talkoverLag = 600;							// mS that the half Duplex switch stays set
+var talkoverLevel = 0.05;						// Ceiling for mix when mic is active
+var talkoverLag = 800;							// mS that the half Duplex switch stays set
 var talkoverTimer = 0;							// timer used to slow talkover lift off
 function talkover() {							// Suppress mix level while mic is active
 	let now = new Date().getTime();
@@ -767,7 +769,7 @@ var packetSequence = 0;							// Tracing packet ordering
 var rtt = 0;								// Round Trip Time indicates bad network buffering
 var tracecount = 0;
 function printReport() {
-	trace("Idle = ", idleState.total, " data in = ", dataInState.total, " audio in/out = ", audioInOutState.total);
+	trace("Idle = ", idleState.total, " data in = ", dataInState.total, " audio in/out = ", audioInOutState.total,"UI work = ",UIState.total);
 	trace("Sent = ",packetsOut," Heard = ",packetsIn," speaker buffer size ",spkrBuffer.length," mic buffer size ", micBuffer.length," overflows = ",overflows," shortages = ",shortages," RTT = ",rtt);
 	let state = "Green";
 	trace("micIn.peak: ",micIn.peak," micIn.gain: ",micIn.gain," mixOut.peak: ",mixOut.peak," mixOut.gain: ",mixOut.gain);
@@ -845,6 +847,7 @@ function stateTimer() {
 var idleState = new stateTimer(); 	idleState.name = "Idle";
 var dataInState = new stateTimer();	dataInState.name = "Data In";
 var audioInOutState = new stateTimer();	audioInOutState.name = "Audio In/Out";
+var UIState = new stateTimer();	UIState.name = "UI updating";
 var currentState = idleState;		currentState.start = new Date().getTime();
 function enterState( newState ) {
 	let now = new Date().getTime();
