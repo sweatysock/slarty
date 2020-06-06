@@ -36,6 +36,7 @@ var mixOut = {								// Similar structures for the mix output
 	muted	: false,
 	peak	: 0,
 	channel	: "mixOut",
+	levels	: new Array(20).fill(0);				// Categorizer to build histogram of packet levels
 };
 var micIn = {								// and for microphone input
 	name 	: "Mic",
@@ -47,6 +48,7 @@ var micIn = {								// and for microphone input
 	muted	: false,
 	peak	: 0,
 	channel	: "micIn",
+	levels	: new Array(20).fill(0);				// Categorizer to build histogram of packet levels
 	threshold:0.001,						// Level below which we don't send audio
 	gate	: 0,							// Threshold gate. >0 means open.
 };
@@ -381,6 +383,30 @@ function maxValue( arr ) { 						// Find max value in an array
 	return max;
 }
 
+function levelClassifier( categories, v ) {
+	if (v < 0.0001) categories[0]++; else
+	if (v < 0.0002) categories[1]++; else
+	if (v < 0.0003) categories[2]++; else
+	if (v < 0.0005) categories[3]++; else
+	if (v < 0.0007) categories[4]++; else
+	if (v < 0.001) categories[5]++; else
+	if (v < 0.002) categories[6]++; else
+	if (v < 0.003) categories[7]++; else
+	if (v < 0.005) categories[8]++; else
+	if (v < 0.007) categories[9]++; else
+	if (v < 0.01) categories[10]++; else
+	if (v < 0.02) categories[11]++; else
+	if (v < 0.03) categories[12]++; else
+	if (v < 0.05) categories[13]++; else
+	if (v < 0.07) categories[14]++; else
+	if (v < 0.1) categories[15]++; else
+	if (v < 0.2) categories[15]++; else
+	if (v < 0.3) categories[16]++; else
+	if (v < 0.5) categories[17]++; else
+	if (v < 0.7) categories[18]++; else
+		categories[19]++
+}
+
 function applyAutoGain(audio, obj) {
 	let startGain = obj.gain;
 	let targetGain = obj.manGain;
@@ -388,6 +414,7 @@ function applyAutoGain(audio, obj) {
 	let gainRate = obj.gainRate;
 	let tempGain, maxLevel, endGain, p, x, transitionLength; 
 	maxLevel = maxValue(audio);					// Find peak audio level 
+	levelClassifier(obj.levels, maxLevel);				// Classify audio for noise analysis
 	endGain = ceiling / maxLevel;					// Desired gain to avoid overload
 	maxLevel = 0;							// Use this to capture peak
 	if (endGain > targetGain) endGain = targetGain;			// No higher than targetGain 
@@ -457,31 +484,6 @@ function endTalkover() {
 	}
 }
 
-var levelCategories = new Array(20).fill(0);				// Categorizer to build histogram of packet levels
-function levelClassifier( v ) {
-	if (v < 0.0001) levelCategories[0]++; else
-	if (v < 0.0002) levelCategories[1]++; else
-	if (v < 0.0003) levelCategories[2]++; else
-	if (v < 0.0005) levelCategories[3]++; else
-	if (v < 0.0007) levelCategories[4]++; else
-	if (v < 0.001) levelCategories[5]++; else
-	if (v < 0.002) levelCategories[6]++; else
-	if (v < 0.003) levelCategories[7]++; else
-	if (v < 0.005) levelCategories[8]++; else
-	if (v < 0.007) levelCategories[9]++; else
-	if (v < 0.01) levelCategories[10]++; else
-	if (v < 0.02) levelCategories[11]++; else
-	if (v < 0.03) levelCategories[12]++; else
-	if (v < 0.05) levelCategories[13]++; else
-	if (v < 0.07) levelCategories[14]++; else
-	if (v < 0.1) levelCategories[15]++; else
-	if (v < 0.2) levelCategories[15]++; else
-	if (v < 0.3) levelCategories[16]++; else
-	if (v < 0.5) levelCategories[17]++; else
-	if (v < 0.7) levelCategories[18]++; else
-		levelCategories[19]++
-}
-
 var echoDelay = 7;							// Number of samples before echo is detected
 var thresholdBuffer = new Array(echoDelay).fill(0);			// Thresholds are set from delayed output audio levels
 var gateDelay = 5;							// Amount of samples (time) the gate stays open
@@ -515,7 +517,6 @@ function processAudio(e) {						// Main processing loop
 			if (obj.peak > micIn.peak) 
 				micIn.peak = obj.peak;			// Note peak for local display
 			let peak = obj.peak				// peak for packet to be sent
-			levelClassifier(peak);				// Classify audio incoming for analysis
 			micIn.gain = obj.finalGain;			// Store gain for next loop
 			let diff = obj.peak-micIn.threshold;
 if ((micIn.threshold > 0) && (diff > 0)) trace2("mic ",obj.peak.toFixed(3)," thresh ",micIn.threshold.toFixed(3)," Diff ",diff.toFixed(3));
@@ -817,7 +818,7 @@ function printReport() {
 	trace("Sent = ",packetsOut," Heard = ",packetsIn," overflows = ",overflows," shortages = ",shortages," RTT = ",rtt.toFixed(1));
 	let state = "Green";
 	trace("micIn.peak: ",micIn.peak.toFixed(1)," micIn.gain: ",micIn.gain.toFixed(1)," mixOut.peak: ",mixOut.peak.toFixed(1)," mixOut.gain: ",mixOut.gain.toFixed(1));
-	trace("Levels of output: ",levelCategories);
+	trace("Mic level categories: ",micIn.levels);
 	if ((overflows > 1) || (shortages >1)) state = "Orange";
 	if (socketConnected == false) state = "Red";
 	setStatusLED("GeneralStatus",state);
