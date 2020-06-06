@@ -471,14 +471,14 @@ function levelClassifier( v ) {
 var noiseThreshold = 0;							// Base threshold for mic signal
 function setNoiseThreshold () {						// Set the mic threshold to remove most background noise
 	let max = 0;
-	for (let i=0; i<levelCategories.length; i++)
+	for (let i=0; i<14; i++)
 		if (levelCategories[i] > max) {				// Find the peak category for sample levels
 			max = levelCategories[i];
 			noiseThreshold = thresholdBands[i+1];		// Threshold set to remove all below the peak
 		}
 trace2("Noise threshold: ",noiseThreshold);
 	if (max > 0)
-		for (let i=0; i<levelCategories.length; i++)
+		for (let i=0; i<14; i++)
 			levelCategories[i] = 
 				((levelCategories[i]/max)*100.0);	// Keep old data to obtain slower threshold changes
 }
