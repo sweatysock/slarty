@@ -468,14 +468,15 @@ function levelClassifier( v ) {
 	}
 }
 
-var micBGThreshold = 0;							// Base threshold for mic signal
-function setBGThreshold () {						// Set the mic threshold to remove most background noise
-	let max = thresh = 0;
+var noiseThreshold = 0;							// Base threshold for mic signal
+function setNoiseThreshold () {						// Set the mic threshold to remove most background noise
+	let max = 0;
 	for (let i=0; i<levelCategories.length; i++)
 		if (levelCategories[i] > max) {				// Find the peak category for sample levels
 			max = levelCategories[i];
-			micBGThreshold = thresholdBands[i];		// Threshold set to remove all below the peak
+			noiseThreshold = thresholdBands[i];		// Threshold set to remove all below the peak
 		}
+trace2("Noise threshold: ",noiseThreshold);
 }
 
 var echoDelay = 7;							// Number of samples before echo is detected
@@ -509,7 +510,8 @@ function processAudio(e) {						// Main processing loop
 			let inAudio = micBuffer.splice(0, PacketSize);	// Get a packet of audio
 			let peak = maxValue(inAudio);			// Get peak of raw mic audio
 			levelClassifier(peak);				// Classify audio incoming for analysis
-			if (peak > micIn.threshold) {	  		// if audio level is above threshold open gate
+			if ((peak > micIn.threshold) &&			// if audio is above dynamic threshold
+				(peak > noiseThreshold)) {		// and noise threshold, open gate
 				if (micIn.gate == 0)
 					micIn.gate = gateDelay + 1;	// This signals the gate has just been reopened
 				else					// which means fade up the sample
@@ -813,6 +815,7 @@ function printReport() {
 	let state = "Green";
 	trace("micIn.peak: ",micIn.peak.toFixed(1)," micIn.gain: ",micIn.gain.toFixed(1)," mixOut.peak: ",mixOut.peak.toFixed(1)," mixOut.gain: ",mixOut.gain.toFixed(1));
 	trace("Levels of output: ",levelCategories);
+	setNoiseThreshold();						// Set mic noise threshold based on level categories
 	for (let i=0; i<levelCategories.length; i++)
 		levelCategories[i] = 0;					// Reset level categories each second
 	if ((overflows > 1) || (shortages >1)) state = "Orange";
