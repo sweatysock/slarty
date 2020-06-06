@@ -474,9 +474,11 @@ function setNoiseThreshold () {						// Set the mic threshold to remove most bac
 	for (let i=0; i<levelCategories.length; i++)
 		if (levelCategories[i] > max) {				// Find the peak category for sample levels
 			max = levelCategories[i];
-			noiseThreshold = thresholdBands[i+1];		// Threshold set to remove all below the peak
+			noiseThreshold = thresholdBands[i];		// Threshold set to remove all below the peak
 		}
 trace2("Noise threshold: ",noiseThreshold);
+	for (let i=0; i<levelCategories.length; i++)
+		levelCategories[i] = (levelCategories[i]/max)*100;	// Keep old data to obtain slower threshold changes
 }
 
 var echoDelay = 7;							// Number of samples before echo is detected
@@ -816,8 +818,6 @@ function printReport() {
 	trace("micIn.peak: ",micIn.peak.toFixed(1)," micIn.gain: ",micIn.gain.toFixed(1)," mixOut.peak: ",mixOut.peak.toFixed(1)," mixOut.gain: ",mixOut.gain.toFixed(1));
 	trace("Levels of output: ",levelCategories);
 	setNoiseThreshold();						// Set mic noise threshold based on level categories
-	for (let i=0; i<levelCategories.length; i++)
-		levelCategories[i] = 0;					// Reset level categories each second
 	if ((overflows > 1) || (shortages >1)) state = "Orange";
 	if (socketConnected == false) state = "Red";
 	setStatusLED("GeneralStatus",state);
