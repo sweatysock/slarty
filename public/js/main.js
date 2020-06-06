@@ -813,6 +813,7 @@ function printReport() {
 	let state = "Green";
 	trace("micIn.peak: ",micIn.peak.toFixed(1)," micIn.gain: ",micIn.gain.toFixed(1)," mixOut.peak: ",mixOut.peak.toFixed(1)," mixOut.gain: ",mixOut.gain.toFixed(1));
 	trace("Levels of output: ",levelCategories);
+	levelCategories.forEach(c => {c = 0});
 	if ((overflows > 1) || (shortages >1)) state = "Orange";
 	if (socketConnected == false) state = "Red";
 	setStatusLED("GeneralStatus",state);
