@@ -457,29 +457,25 @@ function endTalkover() {
 	}
 }
 
-var levelCategories = new Array(20).fill(0);				// Categorizer to build histogram of packet levels
+var thresholdBands = [0.0001, 0.0002, 0.0003, 0.0005, 0.0007, 0.001, 0.002, 0.003, 0.005, 0.007, 0.01, 0.02, 0.03, 0.05, 0.07, 0.1, 0.2, 0.3, 0.5, 0.7, 1, 2];
+var levelCategories = new Array(thresholdBands.length).fill(0);		// Categorizer to build histogram of packet levels
 function levelClassifier( v ) {
-	if (v < 0.0001) levelCategories[0]++; else
-	if (v < 0.0002) levelCategories[1]++; else
-	if (v < 0.0003) levelCategories[2]++; else
-	if (v < 0.0005) levelCategories[3]++; else
-	if (v < 0.0007) levelCategories[4]++; else
-	if (v < 0.001) levelCategories[5]++; else
-	if (v < 0.002) levelCategories[6]++; else
-	if (v < 0.003) levelCategories[7]++; else
-	if (v < 0.005) levelCategories[8]++; else
-	if (v < 0.007) levelCategories[9]++; else
-	if (v < 0.01) levelCategories[10]++; else
-	if (v < 0.02) levelCategories[11]++; else
-	if (v < 0.03) levelCategories[12]++; else
-	if (v < 0.05) levelCategories[13]++; else
-	if (v < 0.07) levelCategories[14]++; else
-	if (v < 0.1) levelCategories[15]++; else
-	if (v < 0.2) levelCategories[15]++; else
-	if (v < 0.3) levelCategories[16]++; else
-	if (v < 0.5) levelCategories[17]++; else
-	if (v < 0.7) levelCategories[18]++; else
-		levelCategories[19]++
+	for (let i=0; i<thresholdBands.length; i++) {
+		if (v < thresholdBands[i]) {
+			levelCategories[i]++;
+			break;
+		}
+	}
+}
+
+var micBGThreshold = 0;							// Base threshold for mic signal
+function setBGThreshold () {						// Set the mic threshold to remove most background noise
+	let max = thresh = 0;
+	for (let i=0; i<levelCategories.length; i++)
+		if (levelCategories[i] > max) {				// Find the peak category for sample levels
+			max = levelCategories[i];
+			micBGThreshold = thresholdBands[i];		// Threshold set to remove all below the peak
+		}
 }
 
 var echoDelay = 7;							// Number of samples before echo is detected
