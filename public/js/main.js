@@ -36,7 +36,7 @@ var mixOut = {								// Similar structures for the mix output
 	muted	: false,
 	peak	: 0,
 	channel	: "mixOut",
-	levels	: new Array(20).fill(0);				// Categorizer to build histogram of packet levels
+	levels	: new Array(20).fill(0),				// Categorizer to build histogram of packet levels
 };
 var micIn = {								// and for microphone input
 	name 	: "Mic",
@@ -48,7 +48,7 @@ var micIn = {								// and for microphone input
 	muted	: false,
 	peak	: 0,
 	channel	: "micIn",
-	levels	: new Array(20).fill(0);				// Categorizer to build histogram of packet levels
+	levels	: new Array(20).fill(0),				// Categorizer to build histogram of packet levels
 	threshold:0.001,						// Level below which we don't send audio
 	gate	: 0,							// Threshold gate. >0 means open.
 };
