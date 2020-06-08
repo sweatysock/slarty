@@ -47,8 +47,8 @@ var micIn = {								// and for microphone input
 	muted	: false,
 	peak	: 0,
 	channel	: "micIn",
-	threshold:0.001,						// Level below which we don't send audio
-	gate	: 0,							// Threshold gate. >0 means open.
+	threshold:0.000,						// Level below which we don't send audio
+	gate	: 1,							// Threshold gate. >0 means open.
 };
 
 
@@ -381,6 +381,14 @@ function maxValue( arr ) { 						// Find max value in an array
 	return max;
 }
 
+function avgValue( arr ) { 						// Find average value in an array
+	let t = 0;
+	for (let i =  0; i < arr.length; i++) {
+		t += Math.abs(arr[i]);					// average ABSOLUTE value
+	}
+	return (t/arr.length);
+}
+
 function applyAutoGain(audio, obj) {
 	let startGain = obj.gain;
 	let targetGain = obj.manGain;
@@ -493,9 +501,9 @@ function processAudio(e) {						// Main processing loop
 	// 2. Get audio buffered from server and send to speaker
 	
 	enterState( audioInOutState );					// Log time spent here
+
 	var inData = e.inputBuffer.getChannelData(0);			// Audio from the mic
 	var outData = e.outputBuffer.getChannelData(0);			// Audio going to speaker
-	let micAudio = [];						// 1. Mic audio processing...
 
 	if (echoTest.running == true) {					// The echo test takes over all audio
 		let output = runEchoTest(inData);			// Send the mic audio to the tester
@@ -507,37 +515,38 @@ function processAudio(e) {						// Main processing loop
 
 	// 1. Get Mic audio, buffer it, and send it to server if enough buffered
 	if (socketConnected) {						// Need connection to send
-		micAudio = downSample(inData, soundcardSampleRate, SampleRate);
-		resampledChunkSize = micAudio.length;			// Note how much audio is needed
-		micBuffer.push(...micAudio);				// Buffer mic audio until enough
-		if (micBuffer.length > PacketSize) {			// Got enough
+		let micAudio = [];					// Our objective is to fill this with audio
+		let peak = maxValue(inData);				// Get peak of raw mic audio
+		levelClassifier(peak);					// Classify audio incoming for analysis
+		if ((peak > micIn.threshold) &&				// if audio is above dynamic threshold
+			(peak > noiseThreshold)) {			// and noise threshold, open gate
+			if (micIn.gate == 0)
+				micIn.gate = gateDelay + 1;		// This signals the gate has just been reopened
+			else						// which means fade up the sample
+				micIn.gate = gateDelay;
+		} 
+		if (micIn.gate > 0) {					// If gate is open prepare the audio for sending
+			micAudio = downSample(inData, soundcardSampleRate, SampleRate);
+			resampledChunkSize = micAudio.length;		// Note how much resampled audio is needed
+			talkover();					// Mic is active so perhaps drop mix output
+			micIn.gate--;					// Gate slowly closes
+			if (micIn.gate == 0)				// Gate is about to close
+				fadeDown(micAudio);			// Fade sample down to zero for smooth sound
+			else if (micIn.gate == gateDelay)		// Gate has just been opened so fade up
+				fadeUp(micAudio);
+		} else {						// Gate closed. Fill with silence.
+			micAudio = new Array(resampledChunkSize).fill(0);
+		}
+		micBuffer.push(...micAudio);				// Buffer mic audio 
+		if (micBuffer.length > PacketSize) {			// If enough in buffer to fill a packet
 			let inAudio = micBuffer.splice(0, PacketSize);	// Get a packet of audio
-			let peak = maxValue(inAudio);			// Get peak of raw mic audio
-			levelClassifier(peak);				// Classify audio incoming for analysis
-			if ((peak > micIn.threshold) &&			// if audio is above dynamic threshold
-				(peak > noiseThreshold)) {		// and noise threshold, open gate
-				if (micIn.gate == 0)
-					micIn.gate = gateDelay + 1;	// This signals the gate has just been reopened
-				else					// which means fade up the sample
-					micIn.gate = gateDelay;
-			} 
 			let obj = applyAutoGain(inAudio, micIn);	// Amplify mic with auto limiter
 			if (obj.peak > micIn.peak) 
 				micIn.peak = obj.peak;			// Note peak for local display
 			peak = obj.peak					// peak for packet to be sent
 			micIn.gain = obj.finalGain;			// Store gain for next loop
-			if (micIn.gate > 0) {				// If gate is open prepare the audio for sending
-				talkover();				// Mic is active so drop mix output
-				micIn.gate--;				// Gate slowly closes
-				if (micIn.gate == 0)			// Gate is about to close
-					fadeDown(inAudio);		// Fade sample down to zero for smooth sound
-				else if (micIn.gate == gateDelay)	// Gate has just been opened so fade up
-					fadeUp(inAudio);
-			} else {					// Gate closed. Send silent packet
-				inAudio = [];
-				micIn.peak = 0;
-			}
-			if (micIn.muted) inAudio = [];			// Muted means sending emply audio
+			if ((peak == 0) || (micIn.muted)) 		// Silent audio
+				inAudio = [];				// Send empty audio packet
 			let now = new Date().getTime();
 			socketIO.emit("u",
 			{
@@ -545,7 +554,7 @@ function processAudio(e) {						// Main processing loop
 				"audio"		: inAudio,		// Resampled, level-corrected audio
 				"sequence"	: packetSequence,	// Usefull for detecting data losses
 				"timestamp"	: now,			// Used to measure round trip time
-				"peak" 		: micIn.peak,		// Saves others having to calculate again
+				"peak" 		: peak,			// Saves others having to calculate again
 				"channel"	: myChannel,		// Send assigned channel to help server
 			});
 			packetsOut++;					// For stats and monitoring
@@ -697,20 +706,32 @@ function magicKernel( x ) {						// This thing is crazy cool
 // Echo testing code
 //
 var echoTest = {
-	running		: false,					// Note: 0 means pause and record audio. Number means # of waves per chunk
-	steps		: [4,0,0,0,0,0,0,0,0,0,8,0,0,0,0,0,0,0,0,0,16,0,0,0,0,0,0,0,0,0,32,0,0,0,0,0,0,0,0,0,64,0,0,0,0,0,0,0,0,0,128,0,0,0,0,0,0,0,0,0],
+	running		: false,
+	steps		: [16,8,128,64,32,1,0.5,0.2,0.1,0.05,0.02],
 	currentStep	: 0,
 	currentResults	: 0,
+	samplesNeeded 	: 0,
 	samples		: [],
 	results		: [],
 };
+
 echoTest.steps.forEach(i => {
-	let halfWave = chunkSize/(i*2);
-	let audio = [];
-	for  (let s=0; s < chunkSize; s++) {
-		audio.push(Math.sin(Math.PI * s / halfWave));
+	if (i>1) {							// Create waves of different frequencies
+		let halfWave = chunkSize/(i*2);
+		let audio = [];
+		for  (let s=0; s < chunkSize; s++) {
+			audio.push(Math.sin(Math.PI * s / halfWave));
+		}
+		echoTest.samples[i] = audio;
+	} else {							// Create 1411Hz waves at different levels
+		let halfWave = chunkSize/64;
+		let audio = [];
+		let gain = i;
+		for  (let s=0; s < chunkSize; s++) {
+			audio.push(gain * Math.sin(Math.PI * s / halfWave));
+		}
+		echoTest.samples[i] = audio;
 	}
-	echoTest.samples[i] = audio;
 });
 
 function startEchoTest() {						// Test mic-speaker echo levels
@@ -723,20 +744,37 @@ function startEchoTest() {						// Test mic-speaker echo levels
 
 function runEchoTest(audio) {
 	let outAudio;
-	if (echoTest.steps[echoTest.currentStep] > 0) {		// >0 means return a sample with that many waves
-		outAudio = echoTest.samples[echoTest.steps[echoTest.currentStep]];
-		echoTest.currentResults = echoTest.steps[echoTest.currentStep];
-		echoTest.results[echoTest.currentResults] = [];	// Get results buffer ready to store audio
-	} else {						// 0 means buffer resulting audio coming back through mic
-		echoTest.results[echoTest.currentResults].push(...audio);
-		outAudio = new Array(chunkSize).fill(0);	// return silence
-	}
-	echoTest.currentStep++;					// Move to next step with next audio sample
-	if (echoTest.currentStep == echoTest.steps.length) {	// At the end of the test cycle
-		echoTest.currentStep = 0;			// Back to the start
-		echoTest.running = false;			// & stop the test
-		for(let i=4;i<=128;i=i*2) {			// Now draw the graphs
-			drawWave(echoTest.results[i], "graph"+i);
+	if (echoTest.currentStep < echoTest.steps.length) {		// If test steps need to be executed
+		if (echoTest.samplesNeeded == 0) {			// If not storing audio must be sending test sound
+			outAudio = echoTest.samples[echoTest.steps[echoTest.currentStep]]; 	// Get test sound for this test
+			echoTest.currentResults = echoTest.steps[echoTest.currentStep];		// and relevant results buffer 
+			echoTest.results[echoTest.currentResults] = [];	// Get results buffer ready to store audio
+			echoTest.samplesNeeded = 10;			// Request 9 audio samples for each test
+		} else {						// Store audio to buffer
+			echoTest.results[echoTest.currentResults].push(...audio);
+			outAudio = new Array(chunkSize).fill(0);	// return silence to send to speaker
+			echoTest.samplesNeeded--;			// One sample less needed
+		}
+		if (echoTest.samplesNeeded == 0) 			// If no more samples needed
+			echoTest.currentStep++;				// move to next step
+	} else {							// Test completed. 
+		echoTest.running = false;				// Stop test and analyze results
+		for (let i=0; i < echoTest.steps.length; i++) {		// for each test step
+//			let highestAvg = highestPeak = delayFromAvg = delayFromPeak = 0;
+			let test = echoTest.steps[i];
+			let results = echoTest.results[test];
+			let name = "Test " + test;
+			trace2(name);
+			drawWave(results,name);
+//			for (let s=0; s < results.length; s++) {
+//				let sample = results[s];
+//				let avg = avgValue(sample);
+//				let peak = maxValue(sample);
+//				if (avg > highestAvg) {highestAvg = avg; delayFromAvg = s}
+//				if (peak > highestPeak) {highestPeak = peak; delayFromPeak = s}
+//				trace2("Sample ",s," avg: ",avg," peak ",peak);
+//			}
+//			trace2("Test "+test," results: from avg: ",delayFromAvg," from peak: ",delayFromPeak);
 		}
 	}
 	return outAudio;
