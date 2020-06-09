@@ -491,8 +491,7 @@ trace2("Noise threshold: ",noiseThreshold);
 				((levelCategories[i]/max)*100.0);	// Keep old data to obtain slower threshold changes
 }
 
-var echoDelay = 7;							// Number of samples before echo is detected
-var thresholdBuffer = new Array(echoDelay).fill(0);			// Thresholds are set from delayed output audio levels
+var thresholdBuffer = new Array(10).fill(0);				// Buffer dynamic thresholds here. 4 is typical. 10 is enough
 var gateDelay = 5;							// Amount of samples (time) the gate stays open
 
 function processAudio(e) {						// Main processing loop
@@ -573,8 +572,9 @@ function processAudio(e) {						// Main processing loop
 		shortages++;						// For stats and monitoring
 	}
 	let max = maxValue(outAudio);					// Get peak level of this outgoing audio
-	thresholdBuffer.push(max);					// push it into dynamic threshold queue
-	micIn.threshold = 1.0*thresholdBuffer.splice(0,1);		// set threshold to oldest buffer level
+	thresholdBuffer.unshift(echoTest.factor*max);			// adjust & add to start of dynamic threshold queue
+	micIn.threshold = thresholdBuffer[echoTest.sampleDelay];	// Set mic threshold to delayed level
+	thresholdBuffer.pop();						// Remove oldest threshold buffer value
 	let spkrAudio = upSample(outAudio, SampleRate, soundcardSampleRate); // Bring back to HW sampling rate
 	for (let i in outData) 
 		outData[i] = spkrAudio[i];				// Copy audio to output
@@ -707,30 +707,34 @@ function magicKernel( x ) {						// This thing is crazy cool
 //
 var echoTest = {
 	running		: false,
-	steps		: [16,8,128,64,32,1,0.5,0.2,0.1,0.05,0.02],
-	currentStep	: 0,
-	currentResults	: 0,
-	samplesNeeded 	: 0,
-	samples		: [],
-	results		: [],
+	steps		: [16,8,128,64,32,1,0.5,0.2,0.1,0.05,0.02,0],	// Test frequencies and levels ended with 0
+	currentStep	: 0,						// Points to test step being executed
+	analysisStep	: 0,						// Points to test step being analysed
+	tones		: [],						// Tones for each test are held here
+	samplesNeeded 	: 0,						// Indicates how many samples still to store
+	results		: [],						// Samples of each test buffer here
+	delays 		: [],						// Array of final measurements
+	delay		: 129,	// Default value			// Final delay measurement result stored here
+	factor		: 2.17,	// Default value			// Final sensitivity factor stored here
+	sampleDelay	: 5,	// Default value			// Final number of samples to delay dynamic threshold by
 };
 
-echoTest.steps.forEach(i => {
+echoTest.steps.forEach(i => {						// Build test tones
 	if (i>1) {							// Create waves of different frequencies
 		let halfWave = chunkSize/(i*2);
 		let audio = [];
 		for  (let s=0; s < chunkSize; s++) {
 			audio.push(Math.sin(Math.PI * s / halfWave));
 		}
-		echoTest.samples[i] = audio;
-	} else {							// Create 1411Hz waves at different levels
+		echoTest.tones[i] = audio;
+	} else if (i > 0) {						// Create 1411Hz waves at different levels
 		let halfWave = chunkSize/64;
 		let audio = [];
 		let gain = i;
 		for  (let s=0; s < chunkSize; s++) {
 			audio.push(gain * Math.sin(Math.PI * s / halfWave));
 		}
-		echoTest.samples[i] = audio;
+		echoTest.tones[i] = audio;
 	}
 });
 
@@ -739,58 +743,112 @@ function startEchoTest() {						// Test mic-speaker echo levels
 		trace2("Starting echo test");
 		echoTest.running = true;				// start testing
 		echoTest.currentStep = 0;				// start at step 0 and work through list
+		echoTest.analysisStep = 0;				// reset the analysis pointer too
+		echoTest.results = [];					// clear out results for new test
+		echoTest.delays = [];					// clear out final mesaurements too
 	}
 }
 
-function runEchoTest(audio) {
+function runEchoTest(audio) {						// Test audio system in a series of tests
 	let outAudio;
-	if (echoTest.currentStep < echoTest.steps.length) {		// If test steps need to be executed
+	let test = echoTest.steps[echoTest.currentStep];
+	if (test > 0) {							// 0 means analyze. >0 means emit & record audio
 		if (echoTest.samplesNeeded == 0) {			// If not storing audio must be sending test sound
-			outAudio = echoTest.samples[echoTest.steps[echoTest.currentStep]]; 	// Get test sound for this test
-			echoTest.currentResults = echoTest.steps[echoTest.currentStep];		// and relevant results buffer 
-			echoTest.results[echoTest.currentResults] = [];	// Get results buffer ready to store audio
-			echoTest.samplesNeeded = 10;			// Request 9 audio samples for each test
-		} else {						// Store audio to buffer
-			echoTest.results[echoTest.currentResults].push(...audio);
+			trace2("Running test ",test);
+			outAudio = echoTest.tones[test]; 		// Get test sound for this test
+			echoTest.results[test] = [];			// Get results buffer ready to store audio
+			echoTest.samplesNeeded = 10;			// Request 10 audio samples for each test
+		} else {						// else samples need to be buffered
+			echoTest.results[test].push(...audio);
 			outAudio = new Array(chunkSize).fill(0);	// return silence to send to speaker
 			echoTest.samplesNeeded--;			// One sample less needed
+			if (echoTest.samplesNeeded == 0)		// If no more samples needed
+				echoTest.currentStep++;			// move to next step
 		}
-		if (echoTest.samplesNeeded == 0) 			// If no more samples needed
-			echoTest.currentStep++;				// move to next step
-	} else {							// Test completed. 
-		echoTest.running = false;				// Stop test and analyze results
-		for (let i=0; i < echoTest.steps.length; i++) {		// for each test step
-//			let highestAvg = highestPeak = delayFromAvg = delayFromPeak = 0;
-			let test = echoTest.steps[i];
-			let results = echoTest.results[test];
-			let name = "Test " + test;
-			trace2(name);
-			drawWave(results,name);
-//			for (let s=0; s < results.length; s++) {
-//				let sample = results[s];
-//				let avg = avgValue(sample);
-//				let peak = maxValue(sample);
-//				if (avg > highestAvg) {highestAvg = avg; delayFromAvg = s}
-//				if (peak > highestPeak) {highestPeak = peak; delayFromPeak = s}
-//				trace2("Sample ",s," avg: ",avg," peak ",peak);
-//			}
-//			trace2("Test "+test," results: from avg: ",delayFromAvg," from peak: ",delayFromPeak);
+	} else {							// Test completed. "0" indicates analysis phase.
+		let review = echoTest.steps[echoTest.analysisStep];
+		if (review > 0) {					// >0 means reviewing a test
+			let results = echoTest.results[review];
+			let name = "test " + review;
+			trace2("Analyzing ",name);
+			let pulse = echoTest.tones[review];
+			let plen = pulse.length;
+			let conv = [];					// convolution output
+			for (let p=0; p<(results.length-plen); p++) {	// Run the convolution over results
+				let sum = 0;
+				for (x=0; x<plen; x++) {
+					sum += results[p+x]*pulse[x];
+				}
+				conv.push(sum);				// push each result to output
+			}
+			let max = 0;
+			let edge;
+			for (j=0; j<conv.length; j++)			// Find max = edge of pulse
+				if (conv[j] > max) {
+					max = conv[j];
+					edge = j;
+				}
+			let delay = (edge*1000)/soundcardSampleRate;	// convert result to mS
+			trace2("Pulse delay is ",delay,"mS");
+			echoTest.delays.push(delay.toFixed(0));		// Gather results n mS for each step
+//			for (j=0; j<conv.length; j++)			// Normalize output for graphs
+//				conv[j] = conv[j]/max;
+//			drawWave(results,name,(edge*100/results.length));
+		} else {						// All tests have been analyzed. Get conclusions.
+			trace2("Reviewing results");
+			let counts = [];				// Collate results 
+			echoTest.delays.forEach(d => {if (counts[d] == null) counts[d] = 1; else counts[d]++});
+			let max = 0;
+			let winner = false;
+			for (let c in counts) {				// Find most agreed on result (mode)
+				if (counts[c] >5) {
+					trace2("Delay is ",c);
+					winner = true;
+					echoTest.delay = c;		// Store final delay result
+					echoTest.sampleDelay = Math.floor((echoTest.delay * soundcardSampleRate / 1000)/1024)
+					trace2("Sample delay is ",echoTest.sampleDelay);
+				}
+			}
+			if (winner) {					// If delay obtained calculate gain factor
+				// Convert delay back to samples as start point for averaging level
+				let edge = Math.round(echoTest.delay * soundcardSampleRate / 1000);
+				let factors = [];			// Buffer results here
+				// for each test <= 1 get avg level from edge for 1024 samples and get factor
+				for (let i=0; i<(echoTest.steps.length-1); i++) {
+					let t = echoTest.steps[i];
+					if (t <= 1) {			// Level tests are <= 1
+						let data = echoTest.results[t].slice(edge, (edge+1024));
+						let avg = avgValue(data);
+						let factor = avg/(t * 0.637);	// Avg mic signal vs avg output signal
+						trace2("Test ",echoTest.steps[i]," Factor: ",factor);
+						factors.push(factor);	// Store result in buffer
+					}
+				}
+				// Get average factor value
+				echoTest.factor = avgValue(factors);
+				trace2("Factor average is ",echoTest.factor);
+			} else {
+				trace2("No clear result");		// No agreement, no result
+			}
+			echoTest.running = false;			// Stop test 
 		}
+		echoTest.analysisStep++;				// Progress to analyze next step
 	}
 	return outAudio;
 }
 
-function drawWave(audio,n) {
+function drawWave(audio,n,d) {
 	let str = '<div id="'+n+'" style="position:absolute; bottom:10%; right:5%; width:80%; height:80%; background-color: #222222; visibility: hidden">'+n;
 	let max = 0;
 	for (let i=0; i<audio.length;i++) {audio[i] = Math.abs(audio[i]); if (audio[i] > max) max = audio[i];}
 	for (let i=4;i<(audio.length-4);i++) {
 		let l = (i*100)/audio.length;
-		let b = 50 + 50*(audio[i-4]+audio[i-3]+audio[i-2]+audio[i-1]+audio[i]+audio[i+1]+audio[i+2]+audio[i+3]+audio[i+4])/9;
+		let b = 50 + 50*audio[i];
 		str += '<div style="position:absolute; bottom:'+b+'%;left:'+l+'%;width:1px;height:1px;background-color:#66FF33"></div>';
 	}
 	max = 50 + 50*max;
 	str += '<div style="position:absolute; bottom:'+max+'%;left:0%;width:100%;height:1px;background-color:#FF0000">'+max+'</div>';
+	str += '<div style="position:absolute; bottom:0%;left:'+d+'%;width:1px;height:100%;background-color:#FF0000"></div>';
 	str += '</div>';
 	let container = document.getElementById("graphs");
 	container.innerHTML += str;
