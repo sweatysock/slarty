@@ -40,8 +40,8 @@ var mixOut = {								// Similar structures for the mix output
 var micIn = {								// and for microphone input
 	name 	: "Mic",
 	gain	: 0,
-	gainRate: 1000,
-	manGain : 10,
+	gainRate: 10000,
+	manGain : 3,
 	ceiling : 1,
 	agc	: true,
 	muted	: false,
