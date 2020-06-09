@@ -715,7 +715,7 @@ var echoTest = {
 	results		: [],						// Samples of each test buffer here
 	delays 		: [],						// Array of final measurements
 	delay		: 129,	// Default value			// Final delay measurement result stored here
-	factor		: 2.17,	// Default value			// Final sensitivity factor stored here
+	factor		: 1,	// Default value			// Final sensitivity factor stored here
 	sampleDelay	: 5,	// Default value			// Final number of samples to delay dynamic threshold by
 };
 
