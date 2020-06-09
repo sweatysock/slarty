@@ -810,7 +810,6 @@ function runEchoTest(audio) {						// Test audio system in a series of tests
 					winner = true;
 					echoTest.delay = c;		// Store final delay result
 					echoTest.sampleDelay = Math.floor((echoTest.delay * soundcardSampleRate / 1000)/1024)
-echoTest.sampleDelay = echoTest.sampleDelay -1;
 					trace2("Sample delay is ",echoTest.sampleDelay);
 				}
 			}
@@ -830,8 +829,7 @@ echoTest.sampleDelay = echoTest.sampleDelay -1;
 					}
 				}
 				// Get average factor value
-				echoTest.factor = avgValue(factors);
-echoTest.factor = 1;
+				echoTest.factor = avgValue(factors) * 1.1; // boost factor to give echo margin
 				trace2("Factor average is ",echoTest.factor);
 			} else {
 				trace2("No clear result");		// No agreement, no result
