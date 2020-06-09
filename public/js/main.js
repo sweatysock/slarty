@@ -544,8 +544,10 @@ function processAudio(e) {						// Main processing loop
 				micIn.peak = obj.peak;			// Note peak for local display
 			peak = obj.peak					// peak for packet to be sent
 			micIn.gain = obj.finalGain;			// Store gain for next loop
-			if ((peak == 0) || (micIn.muted)) 		// Silent audio
+			if ((peak == 0) || (micIn.muted)) { 		// Silent audio
 				inAudio = [];				// Send empty audio packet
+				peak = 0;
+			}
 			let now = new Date().getTime();
 			socketIO.emit("u",
 			{
@@ -578,6 +580,7 @@ function processAudio(e) {						// Main processing loop
 		thresholdBuffer[echoTest.sampleDelay],	
 		thresholdBuffer[echoTest.sampleDelay+1]
 	]);								// Apply most aggressive threshold of current +/-1
+trace2("DT:",micIn.threshold," ",echoTest.factor," ",max," ",micIn.gain);
 	thresholdBuffer.pop();						// Remove oldest threshold buffer value
 	let spkrAudio = upSample(outAudio, SampleRate, soundcardSampleRate); // Bring back to HW sampling rate
 	for (let i in outData) 
