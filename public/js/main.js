@@ -846,8 +846,8 @@ function runEchoTest(audio) {						// Test audio system in a series of tests
 					}
 				}
 				// Get average factor value
-				echoTest.factor = avgValue(factors) * 1.1; // boost factor to give echo margin
-				if (echoTest.factor < 1) factor = 1;	// Factor shouldn't be lower than this
+//				echoTest.factor = avgValue(factors) * 1.1; // boost factor to give echo margin
+//				if (echoTest.factor < 1) factor = 1;	// Factor shouldn't be lower than this
 				trace2("Factor average is ",echoTest.factor);
 			} else {
 				trace2("No clear result");		// No agreement, no result
