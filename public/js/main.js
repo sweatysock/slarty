@@ -806,6 +806,7 @@ function runEchoTest(audio) {						// Test audio system in a series of tests
 					winner = true;
 					echoTest.delay = c;		// Store final delay result
 					echoTest.sampleDelay = Math.floor((echoTest.delay * soundcardSampleRate / 1000)/1024)
+echoTest.sampleDelay = echoTest.sampleDelay -1;
 					trace2("Sample delay is ",echoTest.sampleDelay);
 				}
 			}
