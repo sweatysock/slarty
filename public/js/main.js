@@ -572,7 +572,7 @@ function processAudio(e) {						// Main processing loop
 		shortages++;						// For stats and monitoring
 	}
 	let max = maxValue(outAudio);					// Get peak level of this outgoing audio
-	thresholdBuffer.unshift(echoTest.factor*max);			// adjust & add to start of dynamic threshold queue
+	thresholdBuffer.unshift(echoTest.factor*max*micIn.gain);	// adjust & add to start of dynamic threshold queue
 	micIn.threshold = maxValue([
 		thresholdBuffer[echoTest.sampleDelay-1],
 		thresholdBuffer[echoTest.sampleDelay],	
