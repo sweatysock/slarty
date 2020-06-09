@@ -826,6 +826,7 @@ function runEchoTest(audio) {						// Test audio system in a series of tests
 				}
 				// Get average factor value
 				echoTest.factor = avgValue(factors);
+echoTest.factor = 1;
 				trace2("Factor average is ",echoTest.factor);
 			} else {
 				trace2("No clear result");		// No agreement, no result
