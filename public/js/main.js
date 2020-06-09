@@ -586,13 +586,13 @@ function processAudio(e) {						// Main processing loop
 		shortages++;						// For stats and monitoring
 	}
 	let max = maxValue(outAudio);					// Get peak level of this outgoing audio
-	thresholdBuffer.unshift(echoTest.factor*max*micIn.gain);	// adjust & add to start of dynamic threshold queue
-	micIn.threshold = maxValue([
+	thresholdBuffer.unshift( max );					// add to start of dynamic threshold queue
+	micIn.threshold = (maxValue([
 		thresholdBuffer[echoTest.sampleDelay-1],
 		thresholdBuffer[echoTest.sampleDelay],	
 		thresholdBuffer[echoTest.sampleDelay+1]
-	]);								// Apply most aggressive threshold of current +/-1
-trace2("thresh ",micIn.threshold," max ",max," gain ",micIn.gain);
+	])) * echoTest.factor * micIn.gain;				// Apply most aggressive threshold of current +/-1
+trace2("thresh ",micIn.threshold," gain ",micIn.gain);
 	thresholdBuffer.pop();						// Remove oldest threshold buffer value
 	let spkrAudio = upSample(outAudio, SampleRate, soundcardSampleRate); // Bring back to HW sampling rate
 	for (let i in outData) 
