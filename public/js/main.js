@@ -615,6 +615,8 @@ function handleAudio(stream) {						// We have obtained media access
 	micFilter.connect(node);					// micFilter goes to audio processor
 	node.connect(splitter);						// our processor feeds to a splitter
 	splitter.connect(context.destination,0);			// other output goes to speaker
+
+	startEchoTest();
 }
 
 
