@@ -40,7 +40,7 @@ var mixOut = {								// Similar structures for the mix output
 var micIn = {								// and for microphone input
 	name 	: "Mic",
 	gain	: 0,
-	gainRate: 10000,
+	gainRate: 1000,
 	manGain : 3,
 	ceiling : 1,
 	agc	: true,
@@ -399,7 +399,7 @@ function applyAutoGain(audio, obj) {
 	endGain = ceiling / maxLevel;					// Desired gain to avoid overload
 	maxLevel = 0;							// Use this to capture peak
 	if (endGain > targetGain) endGain = targetGain;			// No higher than targetGain 
-	else obj.gainRate = 10000;					// clipping! slow gain increases - set obj value
+	else obj.gainRate = 100000;					// clipping! slow gain increases - set obj value
 	if (endGain >= startGain) {					// Gain adjustment speed varies
 		transitionLength = audio.length;			// Gain increases are over entire sample
 		endGain = startGain + ((endGain - startGain)/gainRate);	// and are very gentle
@@ -920,7 +920,7 @@ function printReport() {
 	let state = "Green";
 	trace("micIn.peak: ",micIn.peak.toFixed(1)," micIn.gain: ",micIn.gain.toFixed(1)," mixOut.peak: ",mixOut.peak.toFixed(1)," mixOut.gain: ",mixOut.gain.toFixed(1));
 	trace("Levels of output: ",levelCategories);
-//	setNoiseThreshold();						// Set mic noise threshold based on level categories
+	setNoiseThreshold();						// Set mic noise threshold based on level categories
 	if ((overflows > 1) || (shortages >1)) state = "Orange";
 	if (socketConnected == false) state = "Red";
 	setStatusLED("GeneralStatus",state);
