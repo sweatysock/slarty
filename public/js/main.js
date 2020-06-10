@@ -174,7 +174,7 @@ function displayAnimation() { 						// called 100mS to animate audio displays
 					c.peak = c.peak * rate;		// drop smoothly the max level for the channel
 					setLevelDisplay( c );		// update LED display for channel peak
 					setSliderPos( c );		// update slider position for channel gain
-//				}
+				}
 			}
 		}
 	}
