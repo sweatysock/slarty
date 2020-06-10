@@ -67,7 +67,7 @@ socketIO.on('connect', function (socket) {				// New connection coming in
 socketIO.on('channel', function (data) {				// Message assigning us a channel
 	if (data.channel > 0) {						// Assignment successful
 		myChannel = data.channel;
-		if (myName == "") myName = "Channel " + myChannel;
+		if (myName == "") myName = "Input " + myChannel;
 		trace('Channel assigned: ',myChannel);
 		socketConnected = true;					// The socket can be used once we have a channel
 	} else {
@@ -166,9 +166,9 @@ function displayAnimation() { 						// called 100mS to animate audio displays
 		for (let ch in channels) {				// Update each channel's UI
 			c = channels[ch];
 			if (c.name != "") {				// A channel needs a name to be active
-//				if (serverLiveChannels[c].name == "")	// Channel must have disconnected. 
-//					removeChannelUI(c);		// Remove its UI presence
-//				else {
+				if (serverLiveChannels[ch].name == "")	// Channel must have disconnected. 
+					removeChannelUI(c);		// Remove its UI presence
+				else {
 					if (c.displayID == undefined)	// If there is no display associated to the channel
 						createChannelUI(c);	// build the visuals 
 					c.peak = c.peak * rate;		// drop smoothly the max level for the channel
@@ -262,6 +262,7 @@ function createChannelUI(obj) {
 }
 
 function removeChannelUI(obj) {
+	trace2("Removing channel ",obj.name);
 	let chan = document.getElementById(obj.displayID);
 	chan.remove();							// Remove from UI
 	obj.displayID	= undefined;					// Reset all variables except channel #
@@ -973,8 +974,8 @@ function printReport() {
 	if (packetsIn < 5) state = "Red";
 	setStatusLED("DownStatus",state);
 	if ((overflows > 2) || (shortages > 2)) 
-		if (maxBuffSize < 20000) maxBuffSize += 100;		// Increase speaker buffer size if we are overflowing or short
-	if (maxBuffSize > 6000) maxBuffSize -= 10;			// Steadily drop buffer back to size to compensate
+		if (maxBuffSize < 10000) maxBuffSize += 100;		// Increase speaker buffer size if we are overflowing or short
+	if (maxBuffSize > 6000) maxBuffSize -= 20;			// Steadily drop buffer back to size to compensate
 	if (packetsOut < 30) sendShortages++;				// Monitor if we are sending enough audio
 	else sendShortages--;
 	if ((sendShortages > 10) && (displayRefresh == 100)) {		// 10 seconds of shortages is bad. Slow UI animation.
