@@ -446,7 +446,8 @@ function printReport() {
 		"pacClass":	packetClassifier,
 		"upServer":	upstreamName
 	});
-	if ((overflows > 10) || (shortages > 10)) maxBufferSize += 3;	// If data is too variable boost buffer size
+	if ((overflows > 10) || (shortages > 10)) 
+		if (maxBufferSize < 20) maxBufferSize += 3;		// If data is too variable boost buffer size
 	if (maxBufferSize > 10) maxBufferSize--;			// nut regularly try to bring it back to normal
 	packetClassifier.fill(0,0,30);
 	packetsIn = 0;

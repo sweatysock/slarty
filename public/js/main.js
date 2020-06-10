@@ -953,7 +953,8 @@ function printReport() {
 	if ((packetsIn < 30) || (packetsIn > 35)) state = "Orange";
 	if (packetsIn < 5) state = "Red";
 	setStatusLED("DownStatus",state);
-	if ((overflows > 2) || (shortages > 2)) maxBuffSize += 1000;	// Increase speaker buffer size if we are overflowing or short
+	if ((overflows > 2) || (shortages > 2)) 
+		if (maxBuffSize < 20000) maxBuffSize += 100;		// Increase speaker buffer size if we are overflowing or short
 	if (maxBuffSize > 6000) maxBuffSize -= 10;			// Steadily drop buffer back to size to compensate
 	if (packetsOut < 30) sendShortages++;				// Monitor if we are sending enough audio
 	else sendShortages--;
