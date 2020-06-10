@@ -359,8 +359,17 @@ function generateMix () {
 					clientPackets.push( upstreamPacket ); 		// Add upstream audio packet to clients
 				}
 			} 
+			let liveChannels = [];				// build snapshot of current live client buffers
+			for (let c in channels) 
+				if (channels[c].name != "") {		// Means channel is connected to a client
+					liveChannels[c] = {
+						name	: channels[c].name,
+						queue 	: channels[c].packets.length,
+					}
+				}
 			io.sockets.in('downstream').emit('d', {		// Send all audio channels to all downstream clients
 				"channels"	: clientPackets,
+				"liveChannels"	: liveChannels,		// Include server info about live clients and their queues
 			});
 			packetsOut++;					// Sent data so log it and set time limit for next send
 			packetClassifier[clientPackets.length] = packetClassifier[clientPackets.length] + 1;
@@ -416,7 +425,7 @@ packetClassifier.fill(0,0,30);
 var mixMax = 0;
 var upstreamMax = 0;
 
-const updateTimer = 10000;	// Frequency of updates to the console
+const updateTimer = 1000;						// Frequency of updates to the console
 function printReport() {
 	enterState( idleState );					// Update timers in case we are inactive
 	console.log(myServerName," Activity Report");

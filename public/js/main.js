@@ -26,6 +26,7 @@ for (let i=0; i < NumberOfChannels; i++) {				// Create all the channels pre-ini
 		seq	:0,						// Track channel sequence numbers to monitor quality
 	};
 }
+var serverLiveChannels = [];						// Server will keep us updated on its live channels here
 var mixOut = {								// Similar structures for the mix output
 	name 	: "Output",
 	gain	: 0,
@@ -80,6 +81,7 @@ socketIO.on('channel', function (data) {				// Message assigning us a channel
 socketIO.on('d', function (data) { 
 	enterState( dataInState );					// This is one of our key tasks
 	packetsIn++;							// For monitoring and statistics
+	serverLiveChannels = data.liveChannels;				// Keep this info for UI updating
 	if (micAccessAllowed) {						// Need access to audio before outputting
 		let mix = new Array(PacketSize).fill(0);		// Build up a mix of client audio from 0s
 		data.channels.forEach(c => {
@@ -161,15 +163,20 @@ function displayAnimation() { 						// called 100mS to animate audio displays
 		setLevelDisplay( micIn );				// Update LED display for mic.peak
 		setSliderPos( micIn );					// Update slider position for mic gain
 		setThresholdPos( micIn );
-		channels.forEach(c => {					// Update each channel's UI
+		for (let ch in channels) {				// Update each channel's UI
+			c = channels[ch];
 			if (c.name != "") {				// A channel needs a name to be active
-				if (c.displayID == undefined)		// If there is no display associated to the channel
-					createChannelUI(c);		// build the visuals 
-				c.peak = c.peak * rate;			// drop smoothly the max level for the channel
-				setLevelDisplay( c );			// update LED display for channel peak
-				setSliderPos( c );			// update slider position for channel gain
+//				if (serverLiveChannels[c].name == "")	// Channel must have disconnected. 
+//					removeChannelUI(c);		// Remove its UI presence
+//				else {
+					if (c.displayID == undefined)	// If there is no display associated to the channel
+						createChannelUI(c);	// build the visuals 
+					c.peak = c.peak * rate;		// drop smoothly the max level for the channel
+					setLevelDisplay( c );		// update LED display for channel peak
+					setSliderPos( c );		// update slider position for channel gain
+//				}
 			}
-		});
+		}
 	}
 	if (displayRefresh <= 1000)					// If CPU really struggling stop animating UI completely
 		setTimeout(displayAnimation, displayRefresh);		// Call animated display again. 
@@ -246,12 +253,24 @@ function createChannelUI(obj) {
 				onmousedown="threshDragStart(event)" onmousemove="threshDrag(event)" onmouseup="threshDragStop(event)" \
 				ontouchstart="threshDragStart(event)" ontouchmove="threshDrag(event)" ontouchend="threshDragStop(event)"></div>  \
 			<div style="position:absolute;top:1%; left:3%; width:90%; height:10%;color:#AAAAAA" id="'+name+'Name"> \
-				<marquee behavior="slide" direction="left">'+obj.channel+'</marquee> \
+				<marquee behavior="slide" direction="left">'+obj.name+'</marquee> \
 			</div> \
 		</div>'
 	let mixerRack = document.getElementById("mixerRack");		// Add this collection of items to the mixerRack div
 	mixerRack.innerHTML += channel;
 	obj.displayID = name;
+}
+
+function removeChannelUI(obj) {
+	let chan = document.getElementById(obj.displayID);
+	chan.remove();							// Remove from UI
+	obj.displayID	= undefined;					// Reset all variables except channel #
+	obj.name 	= "";						
+	obj.gain	= 1;					
+	obj.agc		= true;				
+	obj.muted	= false;		
+	obj.peak	= 0;		
+	obj.seq		= 0;
 }
 
 function convertIdToObj(id) {						// Translate HTML DOM IDs to JS data objects
