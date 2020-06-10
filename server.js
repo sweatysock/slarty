@@ -14,7 +14,7 @@ for (let i=0; i < NumberOfChannels; i++) {				// Create all the channels pre-ini
 }
 var upstreamBuffer = []; 						// Audio packets coming down from our upstream server 
 var oldUpstreamPacket = null;						// previous upstream packet kept in case more is needed
-const maxBufferSize = 10;						// Max number of packets to store per client
+var maxBufferSize = 10;						// Max number of packets to store per client
 const mixTriggerLevel = 3;						// When all clients have this many packets we create a mix
 const packetSize = 500;								// Number of samples in the client audio packets
 const SampleRate = 16000; 						// All audio in audence runs at this sample rate. 
