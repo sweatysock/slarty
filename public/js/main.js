@@ -591,7 +591,7 @@ function processAudio(e) {						// Main processing loop
 		thresholdBuffer[echoTest.sampleDelay-1],
 		thresholdBuffer[echoTest.sampleDelay],	
 		thresholdBuffer[echoTest.sampleDelay+1]
-	])) * echoTest.factor * micIn.gain;				// Apply most aggressive threshold of current +/-1
+	])) * echoTest.factor * micIn.gain;				// Apply most aggressive threshold near current +/-1
 	thresholdBuffer.pop();						// Remove oldest threshold buffer value
 	let spkrAudio = upSample(outAudio, SampleRate, soundcardSampleRate); // Bring back to HW sampling rate
 	for (let i in outData) 
@@ -939,7 +939,7 @@ function printReport() {
 	trace("Idle = ", idleState.total, " data in = ", dataInState.total, " audio in/out = ", audioInOutState.total," UI work = ",UIState.total);
 	trace("Sent = ",packetsOut," Heard = ",packetsIn," overflows = ",overflows," shortages = ",shortages," RTT = ",rtt.toFixed(1));
 	let state = "Green";
-	trace("micIn.peak: ",micIn.peak.toFixed(1)," micIn.gain: ",micIn.gain.toFixed(1)," mixOut.peak: ",mixOut.peak.toFixed(1)," mixOut.gain: ",mixOut.gain.toFixed(1));
+	trace("micIn.peak: ",micIn.peak.toFixed(1)," micIn.gain: ",micIn.gain.toFixed(1)," mixOut.peak: ",mixOut.peak.toFixed(1)," mixOut.gain: ",mixOut.gain.toFixed(1)," speaker buff: ",spkrBuffer.length);
 	trace("Levels of output: ",levelCategories);
 //	setNoiseThreshold();						// Set mic noise threshold based on level categories
 	if ((overflows > 1) || (shortages >1)) state = "Orange";
@@ -953,6 +953,8 @@ function printReport() {
 	if ((packetsIn < 30) || (packetsIn > 35)) state = "Orange";
 	if (packetsIn < 5) state = "Red";
 	setStatusLED("DownStatus",state);
+	if ((overflows > 2) || (shortages > 2)) maxBuffSize += 1000;	// Increase speaker buffer size if we are overflowing or short
+	if (maxBuffSize > 6000) maxBuffSize -= 10;			// Steadily drop buffer back to size to compensate
 	if (packetsOut < 30) sendShortages++;				// Monitor if we are sending enough audio
 	else sendShortages--;
 	if ((sendShortages > 10) && (displayRefresh == 100)) {		// 10 seconds of shortages is bad. Slow UI animation.
