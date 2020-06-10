@@ -166,7 +166,7 @@ function displayAnimation() { 						// called 100mS to animate audio displays
 		for (let ch in channels) {				// Update each channel's UI
 			c = channels[ch];
 			if (c.name != "") {				// A channel needs a name to be active
-				if (serverLiveChannels[ch].name == "")	// Channel must have disconnected. 
+				if (serverLiveChannels[ch] == null)	// Channel must have disconnected. 
 					removeChannelUI(c);		// Remove its UI presence
 				else {
 					if (c.displayID == undefined)	// If there is no display associated to the channel
