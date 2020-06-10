@@ -939,7 +939,7 @@ function printReport() {
 	trace("Idle = ", idleState.total, " data in = ", dataInState.total, " audio in/out = ", audioInOutState.total," UI work = ",UIState.total);
 	trace("Sent = ",packetsOut," Heard = ",packetsIn," overflows = ",overflows," shortages = ",shortages," RTT = ",rtt.toFixed(1));
 	let state = "Green";
-	trace("micIn.peak: ",micIn.peak.toFixed(1)," micIn.gain: ",micIn.gain.toFixed(1)," mixOut.peak: ",mixOut.peak.toFixed(1)," mixOut.gain: ",mixOut.gain.toFixed(1)," speaker buff: ",spkrBuffer.length);
+	trace("micIn.peak: ",micIn.peak.toFixed(1)," micIn.gain: ",micIn.gain.toFixed(1)," mixOut.peak: ",mixOut.peak.toFixed(1)," mixOut.gain: ",mixOut.gain.toFixed(1)," speaker buff: ",spkrBuffer.length," Max Buff: ",maxBuffSize);
 	trace("Levels of output: ",levelCategories);
 //	setNoiseThreshold();						// Set mic noise threshold based on level categories
 	if ((overflows > 1) || (shortages >1)) state = "Orange";
