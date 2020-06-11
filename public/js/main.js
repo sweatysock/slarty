@@ -390,7 +390,8 @@ function applyAutoGain(audio, obj) {
 		endGain = startGain + ((endGain - startGain)/gainRate);	// and are very gentle
 	}
 	else
-		transitionLength = 0;
+//		transitionLength = Math.floor(audio.length/10);		// Gain decreases are fast
+		transitionLength = Math.floor(audio.length/10);		// Gain decreases are fast
 	tempGain = startGain;						// Start at current gain level
 	for (let i = 0; i < transitionLength; i++) {			// Adjust gain over transition
 		x = i/transitionLength;
@@ -903,7 +904,10 @@ document.addEventListener('DOMContentLoaded', function(event){
 //		trace("Reset connection pressed");
 //		resetConnection();
 		trace("Pause traces pressed");
-		if (pauseTracing == true) pauseTracing = false;
+		if (pauseTracing == true) {
+			pauseTracing = false;
+			setTimeout(printReport, 1000);			// Restart report generation
+		}
 		else pauseTracing = true;
 	};
 });
@@ -961,10 +965,11 @@ trace("Still not sending enough audio. Stopping UI animation ");
 	shortages = 0;
 	rtt = 0;
 	tracecount = 2;
+	if (!pauseTracing) setTimeout(printReport, 1000);		// Call report generator once a second
 	enterState( idleState );					// Back to Idling
 }
 
-setInterval(printReport, 1000);						// Call report generator once a second
+setTimeout(printReport, 1000);						// Call report generator once a second
 
 
 // Tracing to the traceDiv (a Div with id="Trace" in the DOM)
