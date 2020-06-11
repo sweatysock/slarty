@@ -298,7 +298,7 @@ function unmuteButton(e) {
 trace2("unmute");
 	let id = event.target.parentNode.id;
 	let b = document.getElementById(id+"On");
-	b.style.visibility = "visible";
+	b.style.visibility = "inherit";
 	id = convertIdToObj(id);
 	id.muted = false;
 }
