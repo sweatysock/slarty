@@ -620,11 +620,12 @@ function processAudio(e) {						// Main processing loop
 }
 
 function handleAudio(stream) {						// We have obtained media access
+	let context;
 	let AudioContext = window.AudioContext 				// Default
 		|| window.webkitAudioContext 				// Safari and old versions of Chrome
 		|| false; 
 	if (AudioContext) {
-		let context = new AudioContext();
+		context = new AudioContext();
 	} else {
 		alert("Sorry, the Web Audio API is not supported by your browser. Consider upgrading or using Google Chrome or Mozilla Firefox");
 	}
