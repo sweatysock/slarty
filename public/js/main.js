@@ -904,10 +904,7 @@ document.addEventListener('DOMContentLoaded', function(event){
 //		trace("Reset connection pressed");
 //		resetConnection();
 		trace("Pause traces pressed");
-		if (pauseTracing == true) {
-			pauseTracing = false;
-			setTimeout(printReport, 1000);			// Restart report generation
-		}
+		if (pauseTracing == true) pauseTracing = false;
 		else pauseTracing = true;
 	};
 });
@@ -925,12 +922,14 @@ var tracecount = 0;
 var sendShortages = 0;
 function printReport() {
 	enterState( UIState );						// Measure time spent updating UI even for reporting!
-	trace("Idle = ", idleState.total, " data in = ", dataInState.total, " audio in/out = ", audioInOutState.total," UI work = ",UIState.total);
-	trace("Sent = ",packetsOut," Heard = ",packetsIn," overflows = ",overflows," shortages = ",shortages," RTT = ",rtt.toFixed(1));
-	let state = "Green";
-	trace("micIn.peak: ",micIn.peak.toFixed(1)," micIn.gain: ",micIn.gain.toFixed(1)," mixOut.peak: ",mixOut.peak.toFixed(1)," mixOut.gain: ",mixOut.gain.toFixed(1)," speaker buff: ",spkrBuffer.length," Max Buff: ",maxBuffSize);
-	trace("Levels of output: ",levelCategories);
+	if (!pauseTracing) {
+		trace("Idle = ", idleState.total, " data in = ", dataInState.total, " audio in/out = ", audioInOutState.total," UI work = ",UIState.total);
+		trace("Sent = ",packetsOut," Heard = ",packetsIn," overflows = ",overflows," shortages = ",shortages," RTT = ",rtt.toFixed(1));
+		let state = "Green";
+		trace("micIn.peak: ",micIn.peak.toFixed(1)," micIn.gain: ",micIn.gain.toFixed(1)," mixOut.peak: ",mixOut.peak.toFixed(1)," mixOut.gain: ",mixOut.gain.toFixed(1)," speaker buff: ",spkrBuffer.length," Max Buff: ",maxBuffSize);
+		trace("Levels of output: ",levelCategories);
 //	setNoiseThreshold();						// Set mic noise threshold based on level categories
+	}
 	if ((overflows > 1) || (shortages >1)) state = "Orange";
 	if (socketConnected == false) state = "Red";
 	setStatusLED("GeneralStatus",state);
@@ -965,11 +964,10 @@ trace("Still not sending enough audio. Stopping UI animation ");
 	shortages = 0;
 	rtt = 0;
 	tracecount = 2;
-	if (!pauseTracing) setTimeout(printReport, 1000);		// Call report generator once a second
 	enterState( idleState );					// Back to Idling
 }
 
-setTimeout(printReport, 1000);						// Call report generator once a second
+setInterval(printReport, 1000);						// Call report generator once a second
 
 
 // Tracing to the traceDiv (a Div with id="Trace" in the DOM)
