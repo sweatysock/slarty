@@ -471,6 +471,7 @@ function setNoiseThreshold () {						// Set the mic threshold to remove most bac
 			max = levelCategories[i];
 			noiseThreshold = thresholdBands[i];		// Threshold set to remove all below the peak
 		}
+	noiseThreshold = noiseThreshold * 1.2;				// Give noise threshold a little boost
 trace2("Noise threshold: ",noiseThreshold);
 	if (max > 0)
 		for (let i=0; i<14; i++)
