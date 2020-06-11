@@ -41,7 +41,7 @@ var mixOut = {								// Similar structures for the mix output
 var micIn = {								// and for microphone input
 	name 	: "Mic",
 	gain	: 0,
-	gainRate: 1000,
+	gainRate: 200,
 	manGain : 3,
 	ceiling : 1,
 	agc	: true,
@@ -154,7 +154,7 @@ document.addEventListener('DOMContentLoaded', function(event){
 
 function displayAnimation() { 						// called 100mS to animate audio displays
 	enterState( UIState );						// Measure time spent updating UI
-	const rate = 0.7;						// Speed of peak drop in LED level display
+	const rate = 0.8;						// Speed of peak drop in LED level display
 	if (micAccessAllowed) {						// Once we have audio we can animate audio UI
 		mixOut.peak = mixOut.peak * rate; 			// drop mix peak level a little for smooth drops
 		setLevelDisplay( mixOut );				// Update LED display for mix.peak
@@ -240,7 +240,7 @@ function createChannelUI(obj) {
 	let channel =' <div id="'+name+'" style="position:relative;width:100px; height:100%; display: inline-block"> \
 			<img style="position:relative;bottom:0%; right:0%; width:100%; height:99%;" src="images/controlBG.png">  \
 			<img style="position:absolute;bottom:8%; right:5%; width:40%; height:10%;" src="images/slider.png" id="'+name+'Slider" >  \
-			<div style="position:absolute;bottom:8%; right:5%; width:40%; height:65%;" draggable="false" id="'+name+'SlideBtn" \
+			<div style="position:absolute;bottom:8%; right:5%; width:90%; height:65%;" draggable="false" id="'+name+'SlideBtn" \
 				onmousedown="sliderDragStart(event)" onmousemove="sliderDrag(event)" onmouseup="sliderDragStop(event)" \
 				ontouchstart="sliderDragStart(event)" ontouchmove="sliderDrag(event)" ontouchend="sliderDragStop(event)"></div>  \
 			<img style="position:absolute;right:20%; top:10%;width:50%; padding-bottom:10%;" src="images/channelOff.png" id="'+name+'Off" onclick="unmuteButton(event)">  \
@@ -249,9 +249,6 @@ function createChannelUI(obj) {
 			<div style="position:absolute;bottom:57.5%; left:25%; width:5%; height:0%; background-color:#FF6600" id="'+name+'LevelOrange"></div> \
 			<div style="position:absolute;bottom:66.8%; left:25%; width:5%; height:0%; background-color:#FF0000" id="'+name+'LevelRed"></div> \
 			<div style="position:absolute;bottom:8%; left:25%; width:5%; height:0%; background-color:#999999" id="'+name+'Threshold"></div> \
-			<div style="position:absolute;bottom:8%; left:5%; width:40%; height:65%;" draggable="false" id="'+name+'ThreshBtn" \
-				onmousedown="threshDragStart(event)" onmousemove="threshDrag(event)" onmouseup="threshDragStop(event)" \
-				ontouchstart="threshDragStart(event)" ontouchmove="threshDrag(event)" ontouchend="threshDragStop(event)"></div>  \
 			<div style="position:absolute;top:1%; left:3%; width:90%; height:10%;color:#AAAAAA" id="'+name+'Name"> \
 				<marquee behavior="slide" direction="left">'+obj.name+'</marquee> \
 			</div> \
