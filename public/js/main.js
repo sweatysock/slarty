@@ -928,8 +928,8 @@ function printReport() {
 		let state = "Green";
 		trace("micIn.peak: ",micIn.peak.toFixed(1)," micIn.gain: ",micIn.gain.toFixed(1)," mixOut.peak: ",mixOut.peak.toFixed(1)," mixOut.gain: ",mixOut.gain.toFixed(1)," speaker buff: ",spkrBuffer.length," Max Buff: ",maxBuffSize);
 		trace("Levels of output: ",levelCategories);
-//	setNoiseThreshold();						// Set mic noise threshold based on level categories
 	}
+	setNoiseThreshold();						// Set mic noise threshold based on level categories
 	if ((overflows > 1) || (shortages >1)) state = "Orange";
 	if (socketConnected == false) state = "Red";
 	setStatusLED("GeneralStatus",state);
