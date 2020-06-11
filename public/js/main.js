@@ -344,50 +344,6 @@ function sliderDragStop(event) {
 	slider.dragging = false;
 }
 
-var thresh = {
-	dragging:false,							// Flag if thresh dragging is happening
-	dragStartY:0,							// Y coord where dragging started
-	dragStartPct:0,							// start % from bottom for dragged thresh
-};
-
-function threshDragStart(event) {
-	thresh.dragging = true;
-	event.target.style.cursor='pointer';				// Make pointer look right
-	thresh.dragStartY = event.clientY;				// Store where the dragging started
-	if (isNaN(thresh.dragStartY)) 
-		thresh.dragStartY = event.touches[0].clientY;		// If it is NaN must be a touchscreen
-	let id = event.target.parentNode.id;
-	let o = document.getElementById(id+"Threshold");
-	thresh.dragStartPct = parseFloat(o.style.height);			// Get the thresh's current % position
-}
-
-function threshDrag(event) {
-	if (thresh.dragging) {
-		let y = event.clientY;					// Get current cursor Y coord
-		if (isNaN(y)) y = event.touches[0].clientY;		// If it is NaN we must be on a touchscreen
-		y = (thresh.dragStartY - y);				// Get the cursor positon change
-		let pct = (y/event.target.clientHeight*0.65)*100;	// Calculate the change as a % of the range (0.65 is a fudge... coords are wrong but life is short)
-		p = thresh.dragStartPct + pct;				// Apply the change to the initial position
-		let id = event.target.parentNode.id;
-		let o = document.getElementById(id+"Threshold");
-		if (p < 0) p = 0; 					// Limit thresh movement between 0% and 65%
-		if (p > 65) p = 65;
-		o.style.height = p;					// Move the thresh to the desired position
-		if (p > 0) {						// Now calculate the threshold this position implies
-			p = p*21/65;
-			p = (p-21)/10.5;
-			p = Math.pow(10,p);
-		}
-		id = convertIdToObj(id);				// Get the js object ID for this UI element
-		id.threshold = p;					// Set the object's (micIn's) gain level 
-	}
-}
-
-function threshDragStop(event) {
-	event.target.style.cursor='default';
-	thresh.dragging = false;
-}
-
 function setStatusLED(name, level) {					// Set the status LED's colour
 	let LED = document.getElementById(name);
 	if (level == "Red") LED.className="redLED";
@@ -434,15 +390,16 @@ function applyAutoGain(audio, obj) {
 		endGain = startGain + ((endGain - startGain)/gainRate);	// and are very gentle
 	}
 	else
-		transitionLength = Math.floor(audio.length/10);		// Gain decreases are fast
+		transitionLength = 0;
 	tempGain = startGain;						// Start at current gain level
 	for (let i = 0; i < transitionLength; i++) {			// Adjust gain over transition
 		x = i/transitionLength;
-		if (i < (2*transitionLength/3))				// Use the Magic formula
-			p = 3*x*x/2;					
-		else
-			p = -3*x*x + 6*x -2;
-		tempGain = startGain + (endGain - startGain) * p;
+//		if (i < (2*transitionLength/3))				// Use the Magic formula
+//			p = 3*x*x/2;					
+//		else
+//			p = -3*x*x + 6*x -2;
+//		tempGain = startGain + (endGain - startGain) * p;
+		tempGain = startGain + (endGain - startGain) * x;
 	 	audio[i] = audio[i] * tempGain;
 		if (audio[i] >= ceiling) audio[i] = ceiling;
 		else if (audio[i] <= (ceiling * -1)) audio[i] = ceiling * -1;
