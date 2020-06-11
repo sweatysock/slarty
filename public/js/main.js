@@ -620,7 +620,12 @@ function processAudio(e) {						// Main processing loop
 }
 
 function handleAudio(stream) {						// We have obtained media access
-	let context = new (window.AudioContext || new window.webkitAudioContext);
+	let context = new window.AudioContext || new window.webkitAudioContext;
+	if('webkitAudioContext' in window) {
+		    context = new webkitAudioContext();
+	}
+console.log("Context is...");
+console.log(context);
 	soundcardSampleRate = context.sampleRate;
 	micAccessAllowed = true;
 	createChannelUI( mixOut );					// Create the output mix channel UI
