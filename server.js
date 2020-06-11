@@ -1,5 +1,10 @@
 // Globals and constants
 //
+const maxBufferSize = 10;						// Max number of packets to store per client
+const mixTriggerLevel = 3;						// When all clients have this many packets we create a mix
+const packetSize = 500;							// Number of samples in the client audio packets
+const SampleRate = 16000; 						// All audio in audence runs at this sample rate. 
+const MaxOutputLevel = 1;						// Max output level for INT16, for auto gain control
 const NumberOfChannels = 20;						// Max number of channels in this server
 var channels = [];							// Each channel's data & buffer held here
 for (let i=0; i < NumberOfChannels; i++) {				// Create all the channels pre-initialized
@@ -10,15 +15,12 @@ for (let i=0; i < NumberOfChannels; i++) {				// Create all the channels pre-ini
 		shortages 	: 0,
 		overflows 	: 0,
 		newBuf 		: true,		
+		maxBufferSize	: maxBufferSize,
+		mixTriggerLevel	: mixTriggerLevel,
 	}
 }
 var upstreamBuffer = []; 						// Audio packets coming down from our upstream server 
 var oldUpstreamPacket = null;						// previous upstream packet kept in case more is needed
-var maxBufferSize = 10;						// Max number of packets to store per client
-const mixTriggerLevel = 3;						// When all clients have this many packets we create a mix
-const packetSize = 500;								// Number of samples in the client audio packets
-const SampleRate = 16000; 						// All audio in audence runs at this sample rate. 
-const MaxOutputLevel = 1;						// Max output level for INT16, for auto gain control
 var upstreamMixGain = 1;						// Gain applied to the upstream mix using auto gain control
 var mixGain = 1;							// Gain applied to the mix sent upstream 
 // Mix generation is done as fast as data comes in, but should keep up a rhythmn even if downstream audio isn't sufficient....
@@ -218,12 +220,12 @@ io.sockets.on('connection', function (socket) {
 		channel.socketID = socket.id;				// Store socket ID associated with channel
 		packet.socketID = socket.id;				// Also store it in the packet to help client
 		channel.packets.push(packet);				// Add packet to its channel packet buffer
-		if (channel.packets.length > maxBufferSize) {		// If buffer full, remove oldest item
+		if (channel.packets.length > channel.maxBufferSize) {	// If buffer full, remove oldest item
 			channel.packets.shift();
 			channel.overflows++;				// Log overflows per channel
 			overflows++;					// and also globally for monitoring
 		}
-		if (channel.packets.length >= mixTriggerLevel) 
+		if (channel.packets.length >= channel.mixTriggerLevel) 
 			channel.newBuf = false;				// Buffer has filled enough. Channel can enter the mix
 		packetsIn++;
 		enterState( genMixState );
@@ -304,7 +306,7 @@ function generateMix () {
 		let fullCount = 0;		
 		channels.forEach( c => {
 			if (c.newBuf == false) {			// Check each non-new channel if it has enough audio
-				if (c.packets.length > mixTriggerLevel) fullCount++;
+				if (c.packets.length > c.mixTriggerLevel) fullCount++;
 				else allFull = false;
 			}
 		});							// If all non-new buffers are full enough lets mix!
@@ -426,6 +428,7 @@ var mixMax = 0;
 var upstreamMax = 0;
 
 const updateTimer = 1000;						// Frequency of updates to the console
+var counterDivider = 0;							// Used to execute operation 10x slower than the reporting loop
 function printReport() {
 	enterState( idleState );					// Update timers in case we are inactive
 	console.log(myServerName," Activity Report");
@@ -458,9 +461,24 @@ function printReport() {
 		"pacClass":	packetClassifier,
 		"upServer":	upstreamName
 	});
-	if ((overflows > 10) || (shortages > 10)) 
-		if (maxBufferSize < 15) maxBufferSize += 3;		// If data is too variable boost buffer size
-	if (maxBufferSize > 10) maxBufferSize--;			// nut regularly try to bring it back to normal
+	counterDivider++;
+	counterDivider = counterDivider % 10;
+	channels.forEach(c => {
+		if (c.shortages > 3)
+			if (c.mixTriggerLevel < 6)
+				c.mixTriggerLevel++;			// Boost minimum buffer to reduce chances of shortfalls
+		if (c.overflows > 3)
+			if (c.maxBufferSize < 15)
+				c.maxBufferSize++;			// Boost channel buffer size to reduce overflows
+		c.shortages = 0;					// Reset counters
+		c.overflows = 0;
+		if (counterDivider == 0) {				// Once every 10 reports try to reduce buffers back down
+			if (c.mixTriggerLevel > 3)
+				c.mixTriggerLevel--;
+			if (c.maxBufferSize > 7)
+				c.maxBufferSize--;
+		}
+	});
 	packetClassifier.fill(0,0,30);
 	packetsIn = 0;
 	packetsOut = 0;
