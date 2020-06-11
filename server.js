@@ -461,24 +461,24 @@ function printReport() {
 		"pacClass":	packetClassifier,
 		"upServer":	upstreamName
 	});
-	counterDivider++;
-	counterDivider = counterDivider % 10;
-	channels.forEach(c => {
-		if (c.shortages > 3)
-			if (c.mixTriggerLevel < 6)
-				c.mixTriggerLevel++;			// Boost minimum buffer to reduce chances of shortfalls
-		if (c.overflows > 3)
-			if (c.maxBufferSize < 15)
-				c.maxBufferSize++;			// Boost channel buffer size to reduce overflows
-		c.shortages = 0;					// Reset counters
-		c.overflows = 0;
-		if (counterDivider == 0) {				// Once every 10 reports try to reduce buffers back down
-			if (c.mixTriggerLevel > 3)
-				c.mixTriggerLevel--;
-			if (c.maxBufferSize > 7)
-				c.maxBufferSize--;
-		}
-	});
+//	counterDivider++;
+//	counterDivider = counterDivider % 10;
+//	channels.forEach(c => {
+//		if (c.shortages > 3)
+//			if (c.mixTriggerLevel < 6)
+//				c.mixTriggerLevel++;			// Boost minimum buffer to reduce chances of shortfalls
+//		if (c.overflows > 3)
+//			if (c.maxBufferSize < 15)
+//				c.maxBufferSize++;			// Boost channel buffer size to reduce overflows
+//		c.shortages = 0;					// Reset counters
+//		c.overflows = 0;
+//		if (counterDivider == 0) {				// Once every 10 reports try to reduce buffers back down
+//			if (c.mixTriggerLevel > 3)
+//				c.mixTriggerLevel--;
+//			if (c.maxBufferSize > 7)
+//				c.maxBufferSize--;
+//		}
+//	});
 	packetClassifier.fill(0,0,30);
 	packetsIn = 0;
 	packetsOut = 0;
