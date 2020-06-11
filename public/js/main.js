@@ -148,9 +148,9 @@ function resetConnection() {						// Use this to reset the socket if needed
 // Media management and display code (audio in and out)
 //
 var displayRefresh = 100;						// mS between UI updates. May be increased if CPU struggling
-document.addEventListener('DOMContentLoaded', function(event){
-	setTimeout(displayAnimation, displayRefresh);			// Call animated display once. It will need to reset timeout everytime.
-});
+//document.addEventListener('DOMContentLoaded', function(event){
+//	setTimeout(displayAnimation, displayRefresh);			// Call animated display once. It will need to reset timeout everytime.
+//});
 
 function displayAnimation() { 						// called 100mS to animate audio displays
 	enterState( UIState );						// Measure time spent updating UI
@@ -908,7 +908,7 @@ document.addEventListener('DOMContentLoaded', function(event){
 		else pauseTracing = true;
 	};
 });
-var pauseTracing = false;
+var pauseTracing = true;						// Traces are off by default
 
 // Reporting code. Accumulators, interval timer and report generator
 //
