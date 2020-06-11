@@ -620,10 +620,15 @@ function processAudio(e) {						// Main processing loop
 }
 
 function handleAudio(stream) {						// We have obtained media access
-	let context = new window.AudioContext || new window.webkitAudioContext;
-	if('webkitAudioContext' in window) {
-		    context = new webkitAudioContext();
+	let AudioContext = window.AudioContext 				// Default
+		|| window.webkitAudioContext 				// Safari and old versions of Chrome
+		|| false; 
+	if (AudioContext) {
+		let context = new AudioContext();
+	} else {
+		alert("Sorry, the Web Audio API is not supported by your browser. Consider upgrading or using Google Chrome or Mozilla Firefox");
 	}
+//let context = new window.AudioContext || new window.webkitAudioContext;
 console.log("Context is...");
 console.log(context);
 	soundcardSampleRate = context.sampleRate;
