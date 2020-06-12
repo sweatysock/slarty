@@ -1,7 +1,7 @@
 {
-  "name": "nodejsvoip",
+  "name": "audence",
   "version": "1.0.0",
-  "description": "voip without webrtc",
+  "description": "massive audio platform",
   "main": "server.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
@@ -9,21 +9,19 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/cracker0dks/nodeJsVoip.git"
+    "url": "git+https://github.com/sweatysock/slarty.git"
   },
   "keywords": [
-    "voip"
+    "sweatysock"
   ],
-  "author": "cracker0dks",
+  "author": "sweatysock",
   "license": "MIT",
   "bugs": {
-    "url": "https://github.com/cracker0dks/nodeJsVoip/issues"
+    "url": "https://github.com/sweatysock/slarty/issues"
   },
-  "homepage": "https://github.com/cracker0dks/nodeJsVoip#readme",
+  "homepage": "https://github.com/sweatysock/slarty#readme",
   "dependencies": {
     "express": "4.x",
-    "heroku-ssl-redirect": "0.0.4",
-    "nouislider": "^14.5.0",
     "socket.io": "^2.3.0",
     "socket.io-client": "^2.3.0"
   },

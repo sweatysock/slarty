@@ -69,6 +69,11 @@ if (PORT == undefined) {						// Not running on heroku so use SSL
 
 var io  = require('socket.io').listen(server, { log: false });		// socketIO for downstream connections
 
+
+
+// Socket IO Client for upstream connections
+//
+//
 var upstreamServer = null;						// socket ID for upstream server if connected
 var packetSequence = 0;							// Sequence counter for sending upstream
 var upstreamServerChannel = -1;
@@ -77,82 +82,86 @@ var upstreamConnected = false;						// Flag to control sending upstream
 function connectUpstreamServer(server) {				// Called when upstream server name is set
 	upstreamServer = require('socket.io-client')(server);		// Upstream server uses client socketIO
 	console.log("Connecting upstream to",server);
-	upstreamServer.on('connect', function(socket){			// We initiate the connection as client
-		console.log("upstream server connected ",server);
-		upstreamName = server;
-		upstreamServer.emit("upstreamHi",			// As client we need to say Hi 
-		{
-			"channel"	: upstreamServerChannel		// Send our channel (in case we have been re-connected)
-		});
-	});
-
-	upstreamServer.on('channel', function (data) {			// The response to our "Hi" is a channel assignment
-		if (data.channel > 0) {					// Assignment successful
-			upstreamServerChannel = data.channel;
-			if (myServerName == "") myServerName = "Channel " + upstreamServerChannel;
-			console.log("Upstream server has assigned us channel ",upstreamServerChannel);
-			upstreamConnected = true;
-		} else {
-			console.log("Upstream server unable to assign a channel");		
-			console.log("Try a different server");		
-			upstreamName = "no upstream server";
-			upstreamServer.close();				// Disconnect and clear upstream server name
-		}
-	});
-
-	// Audio coming down from our upstream server. It is a mix of audio from above and beside us in the server tree
-	upstreamServer.on('d', function (packet) { 
-		enterState( upstreamState );				// The task here is to build a mix
-		upstreamIn++;						// and prepare this audio for sending
-		let chan = packet.channels;				// to all downstream clients just like
-		let mix = [];						// any other audio stream
-		let ts = 0;
-		for (let c=0; c < chan.length; c++) {			// So first we need to build a mix
-			if (chan[c].socketID != upstreamServer.id) {	// Skip my audio in mix generation
-				let a = chan[c].audio;
-				if (mix.length == 0)			// First audio in mix goes straight
-					for (let i=0; i < a.length; i++)
-						mix[i] = a[i];
-  				else
-	  				for (let i=0; i < a.length; i++)
-						mix[i] += a[i];		// Just add all audio together
-			} else {					// This is my own data come back
-				let now = new Date().getTime();
-				ts = chan[c].timestamp;
-				rtt = now - ts;				// Measure round trip time
-			}
-		}
-		let obj = applyAutoGain(mix,upstreamMixGain,1);		// Bring mix level down if necessary
-		upstreamMixGain = obj.finalGain;			// Store gain for next loop
-		upstreamMax = obj.peak;					// For monitoring purposes
-		if (mix.length != 0) {					// If there actually was some audio
-			let p = {					// Construct the audio packet
-				name		: "upstream",		// Give it an appropriate name
-				audio		: mix,			// The audio is the mix just prepared
-				peak		: obj.peak,		// Provide peak value to save effort
-				timestamp	: ts,			// Maybe interesting to know how old it is?
-				sequence	: 0,			// Not used
-				channel		: 0,			// Upstream is assigned channel 0 everywhere
-			}
-			upstreamBuffer.push(p); 			// Store upstream packet in buffer
-			if (upstreamBuffer.length > maxBufferSize) {	// Clip buffer if overflowing
-				upstreamBuffer.shift();
-				upstreamOverflows++;
-			}
-		}
-		enterState( genMixState );
-		generateMix();
-		enterState( idleState );
-	});
-
-	upstreamServer.on('disconnect', function () {
-		upstreamConnected = false;
-		console.log("Upstream server disconnected.");
-	});
-
 }
 
-// socket event and audio handling area
+upstreamServer.on('connect', function(socket){			// We initiate the connection as client
+	console.log("upstream server connected ",server);
+	upstreamName = server;
+	upstreamServer.emit("upstreamHi",			// As client we need to say Hi 
+	{
+		"channel"	: upstreamServerChannel		// Send our channel (in case we have been re-connected)
+	});
+});
+
+upstreamServer.on('channel', function (data) {			// The response to our "Hi" is a channel assignment
+	if (data.channel > 0) {					// Assignment successful
+		upstreamServerChannel = data.channel;
+		if (myServerName == "") myServerName = "Channel " + upstreamServerChannel;
+		console.log("Upstream server has assigned us channel ",upstreamServerChannel);
+		upstreamConnected = true;
+	} else {
+		console.log("Upstream server unable to assign a channel");		
+		console.log("Try a different server");		
+		upstreamName = "no upstream server";
+		upstreamServer.close();				// Disconnect and clear upstream server name
+	}
+});
+
+// Audio coming down from our upstream server. It is a mix of audio from above and beside us in the server tree
+upstreamServer.on('d', function (packet) { 
+	enterState( upstreamState );				// The task here is to build a mix
+	upstreamIn++;						// and prepare this audio for sending
+	let chan = packet.channels;				// to all downstream clients just like
+	let mix = [];						// any other audio stream
+	let ts = 0;
+	for (let c=0; c < chan.length; c++) {			// So first we need to build a mix
+		if (chan[c].socketID != upstreamServer.id) {	// Skip my audio in mix generation
+			let a = chan[c].audio;
+			if (mix.length == 0)			// First audio in mix goes straight
+				for (let i=0; i < a.length; i++)
+					mix[i] = a[i];
+  			else
+  				for (let i=0; i < a.length; i++)
+					mix[i] += a[i];		// Just add all audio together
+		} else {					// This is my own data come back
+			let now = new Date().getTime();
+			ts = chan[c].timestamp;
+			rtt = now - ts;				// Measure round trip time
+		}
+	}
+	let obj = applyAutoGain(mix,upstreamMixGain,1);		// Bring mix level down if necessary
+	upstreamMixGain = obj.finalGain;			// Store gain for next loop
+	upstreamMax = obj.peak;					// For monitoring purposes
+	if (mix.length != 0) {					// If there actually was some audio
+		let p = {					// Construct the audio packet
+			name		: "upstream",		// Give it an appropriate name
+			audio		: mix,			// The audio is the mix just prepared
+			peak		: obj.peak,		// Provide peak value to save effort
+			timestamp	: ts,			// Maybe interesting to know how old it is?
+			sequence	: 0,			// Not used
+			channel		: 0,			// Upstream is assigned channel 0 everywhere
+		}
+		upstreamBuffer.push(p); 			// Store upstream packet in buffer
+		if (upstreamBuffer.length > maxBufferSize) {	// Clip buffer if overflowing
+			upstreamBuffer.shift();
+			upstreamOverflows++;
+		}
+	}
+	enterState( genMixState );
+	generateMix();
+	enterState( idleState );
+});
+
+upstreamServer.on('disconnect', function () {
+	upstreamConnected = false;
+	console.log("Upstream server disconnected.");
+});
+
+
+
+
+// Downstream client socket event and audio handling area
+//
 io.sockets.on('connection', function (socket) {
 	console.log("New connection:", socket.id);
 
