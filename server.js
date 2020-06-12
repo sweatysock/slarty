@@ -28,9 +28,6 @@ var nextMixTimeLimit = 0;						// The time the next mix must be sent is here:
 var myServerName = process.env.servername; 				// Get servername from heroku config variable, if present
 if (myServerName == undefined)
 	myServerName ="";						// If this is empty it will be set when we connect upstream
-var upstreamName = process.env.upstream; 				// Get upstream server from heroku config variable, if present
-if (upstreamName == undefined)		
-	upstreamName ="";						// If this is empty we will connect later when it is set
 
 
 
@@ -74,14 +71,17 @@ var io  = require('socket.io').listen(server, { log: false });		// socketIO for 
 // Socket IO Client for upstream connections
 //
 //
-var upstreamServer = null;						// socket ID for upstream server if connected
+var upstreamName = process.env.upstream; 				// Get upstream server from heroku config variable, if present
+if (upstreamName == undefined)		
+	upstreamName ="";						// If this is empty we will connect later when it is set
+var upstreamServer = require('socket.io-client')(upstreamName);		// Upstream server uses client socketIO
 var packetSequence = 0;							// Sequence counter for sending upstream
 var upstreamServerChannel = -1;
 var upstreamConnected = false;						// Flag to control sending upstream
 
 function connectUpstreamServer(server) {				// Called when upstream server name is set
-	upstreamServer = require('socket.io-client')(server);		// Upstream server uses client socketIO
 	console.log("Connecting upstream to",server);
+	var upstreamServer = require('socket.io-client')(server);		// Upstream server uses client socketIO
 }
 
 upstreamServer.on('connect', function(socket){			// We initiate the connection as client
