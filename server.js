@@ -41,8 +41,6 @@ var fs = require('fs');
 var express = require('express');
 var app = express();
 app.use(express.static('public'));
-var sslRedirect = require('heroku-ssl-redirect');
-app.use(sslRedirect());
 var PORT = process.env.PORT; 
 if (PORT == undefined) {						// Not running on heroku so use SSL
 	var https = require('https');
