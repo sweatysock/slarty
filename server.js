@@ -85,8 +85,7 @@ function connectUpstreamServer(server) {				// Called when upstream server name 
 }
 
 upstreamServer.on('connect', function(socket){			// We initiate the connection as client
-	console.log("upstream server connected ",server);
-	upstreamName = server;
+	console.log("upstream server connected ",upstreamName);
 	upstreamServer.emit("upstreamHi",			// As client we need to say Hi 
 	{
 		"channel"	: upstreamServerChannel		// Send our channel (in case we have been re-connected)
