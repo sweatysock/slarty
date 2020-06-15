@@ -617,8 +617,8 @@ function handleAudio(stream) {						// We have obtained media access
 	}
 	node.onaudioprocess = processAudio;				// Link the callback to the node
 
-	let lowFreq = 100;						// Bandpass to clean up Mic
-	let highFreq = 4000;
+	let lowFreq = 10;						// Bandpass to clean up Mic
+	let highFreq = 1000;
 	let geometricMean = Math.sqrt(lowFreq * highFreq);
 	let micFilter = context.createBiquadFilter();
 	micFilter.type = 'bandpass';
@@ -628,9 +628,8 @@ function handleAudio(stream) {						// We have obtained media access
 	let splitter = context.createChannelSplitter(2);		// Split signal for echo cancelling
 
 	// Time to connect everything...
-//	liveSource.connect(micFilter);					// Mic goes to micFilter
-//	micFilter.connect(node);					// micFilter goes to audio processor
-liveSource.connect(node);					
+	liveSource.connect(micFilter);					// Mic goes to micFilter
+	micFilter.connect(node);					// micFilter goes to audio processor
 	node.connect(splitter);						// our processor feeds to a splitter
 	splitter.connect(context.destination,0);			// other output goes to speaker
 
