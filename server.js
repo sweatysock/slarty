@@ -64,7 +64,8 @@ if (PORT == undefined) {						// Not running on heroku so use SSL
 	});
 }
 
-var io  = require('socket.io').listen(server, { log: false });		// socketIO for downstream connections
+var io  = require('socket.io').listen(server, 
+	{ cookie: false, log: false });					// socketIO for downstream connections
 
 
 
@@ -129,7 +130,7 @@ upstreamServer.on('d', function (packet) {
 			rtt = now - ts;				// Measure round trip time
 		}
 	}
-	//mix = midBoostFilter(mix);				// Filter upstream audio to made it distant
+	mix = midBoostFilter(mix);				// Filter upstream audio to made it distant
 	let obj = applyAutoGain(mix,upstreamMixGain,1);		// Bring mix level down if necessary
 	upstreamMixGain = obj.finalGain;			// Store gain for next loop
 	upstreamMax = obj.peak;					// For monitoring purposes
@@ -307,36 +308,30 @@ function applyAutoGain(audio, startGain, maxGain) {			// Auto gain control
 	return { finalGain: endGain, peak: maxLevel };
 }
 
-//var filterBuf = [0,0];							// Keep previous two samples here for next filter session
-function midBoostFilter(input) {					// Filter to boost mids giving distant sound
-	// First filter is a high pass resonant filter
-//	let A = 1.35381889;						// Factors for the filter. Derived during design
-//	let B = -0.575885;
-//	let C = 0.2220661;
-	let output = [];
-//	output[0] = filterBuf[0];					// Restore values from previous filter session
-//	output[1] = filterBuf[1];
-//	for (let i=0; i<audio.length; i++)
-//		output[i+2] = A * output[i+1] + B * output[i] + C * input[i];
-//	output.splice(0,2);						// Remove first two elements from previous filter session
-//	filterBuf[0] = output[input.length-2];				// Store the last two output values for next filter session
-//	filterBuf[1] = output[input.length-1];
-//	input = output;
-
-	// Second filter is a simple high pass filter
-	let alpha = 0.761904762;
-	output[0] = input[0];
-	for (let i=1; i<input.length; i++)
-		output[i] = (output[i-1] + input[i] - input[i-1]) * alpha;
-	input = output;
-
-	// Third filter is a simple low pass filter
-	alpha = 0.5555556;
-	output[0] = input[0] * alpha;
-	for (let i=1; i<input.length; i++)
-		output[i] = output[i-1] + (input[i] -output[i-1]) * alpha;
-
-	return output;
+var prevFilt1In = 0;							// Save last in & out samples for high pass filter
+var prevFilt1Out = 0;
+var filterBuf = [0,0];							// Keep previous two samples here for resonant filter
+function midBoostFilter(audioIn) {					// Filter to boost mids giving distant sound
+	let out1 = [];							// The output of the first filter goes here
+	let alpha = 0.88888889; 					// First filter is a simple high pass filter
+	out1[0] = (prevFilt1Out + audioIn[0] - prevFilt1In) * alpha;	// First value uses previous filtering values
+	for (let i=1; i<audioIn.length; i++)				// The rest are calculated the same way
+		out1[i] = (out1[i-1] + audioIn[i] - audioIn[i-1]) * alpha;
+	prevFilt1In = audioIn[audioIn.length-1];			// Save last input sample for next filter loop
+	prevFilt1Out = out1[out1.length-1];				// and last output sample for same reason
+	let audioIn2 = out1;						// The output of the previous filter is the input of this
+	let A = 1.25957111;						// Second filter is a high pass resonant filter
+	let B = -0.4816372;						// Factors for the filter. Derived during design
+	let C = 0.2220661;
+	let out2 = [];							// Filter output goes here
+	out2[0] = filterBuf[0];						// Restore values from previous filter session
+	out2[1] = filterBuf[1];
+	for (let i=0; i<audioIn2.length; i++)
+		out2[i+2] = A * out2[i+1] + B * out2[i] + C * audioIn2[i];
+	out2.splice(0,2);						// Remove first two elements from previous filter session
+	filterBuf[0] = out2[out2.length-2];				// Store the last two filter values for next filter session
+	filterBuf[1] = out2[out2.length-1];
+	return out2;
 }
 
 
