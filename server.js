@@ -74,7 +74,6 @@ var io  = require('socket.io').listen(server, { log: false });		// socketIO for 
 var upstreamName = process.env.upstream; 				// Get upstream server from heroku config variable, if present
 if (upstreamName == undefined)		
 	upstreamName ="";						// If this is empty we will connect later when it is set
-upstreamName ="";
 var upstreamServer = require('socket.io-client')(upstreamName);		// Upstream server uses client socketIO
 var packetSequence = 0;							// Sequence counter for sending upstream
 var upstreamServerChannel = -1;
@@ -129,7 +128,7 @@ upstreamServer.on('d', function (packet) {
 			rtt = now - ts;				// Measure round trip time
 		}
 	}
-	//mix = midBoostFilter(mix);				// Filter upstream audio to made it distant
+	mix = midBoostFilter(mix);				// Filter upstream audio to made it distant
 	let obj = applyAutoGain(mix,upstreamMixGain,1);		// Bring mix level down if necessary
 	upstreamMixGain = obj.finalGain;			// Store gain for next loop
 	upstreamMax = obj.peak;					// For monitoring purposes

@@ -110,11 +110,11 @@ socketIO.on('d', function (data) {
 				trace("Sequence jump Channel ",ch," jump ",(c.sequence - channels[ch].seq));
 			channels[ch].seq = c.sequence;
 		});
-//		endTalkover();						// Try to end mic talkover before setting gain
-//		let obj = applyAutoGain(mix, mixOut);			// Trim mix level 
-//		mixOut.gain= obj.finalGain;				// Store gain for next loop
-//		if (obj.peak > mixOut.peak) mixOut.peak = obj.peak;	// Note peak for display purposes
-//		if (pauseTracing) mix = midBoostFilter(mix);
+		endTalkover();						// Try to end mic talkover before setting gain
+		let obj = applyAutoGain(mix, mixOut);			// Trim mix level 
+		mixOut.gain= obj.finalGain;				// Store gain for next loop
+		if (obj.peak > mixOut.peak) mixOut.peak = obj.peak;	// Note peak for display purposes
+		if (pauseTracing) mix = midBoostFilter(mix);
 		if (mix.length != 0) {					// If there actually was some audio
 			spkrBuffer.push(...mix);			// put it on the speaker buffer
 			if (spkrBuffer.length > maxBuffSize) {		// Clip buffer if too full
@@ -534,7 +534,7 @@ function processAudio(e) {						// Main processing loop
 		if (micIn.gate > 0) {					// If gate is open prepare the audio for sending
 			micAudio = downSample(inData, soundcardSampleRate, SampleRate);
 			resampledChunkSize = micAudio.length;		// Note how much resampled audio is needed
-//			talkover();					// Mic is active so perhaps drop mix output
+			talkover();					// Mic is active so perhaps drop mix output
 			micIn.gate--;					// Gate slowly closes
 //			if (micIn.gate == 0)				// Gate is about to close
 //				fadeDown(micAudio);			// Fade sample down to zero for smooth sound
@@ -546,11 +546,11 @@ function processAudio(e) {						// Main processing loop
 		micBuffer.push(...micAudio);				// Buffer mic audio 
 		if (micBuffer.length > PacketSize) {			// If enough in buffer to fill a packet
 			let inAudio = micBuffer.splice(0, PacketSize);	// Get a packet of audio
-//			let obj = applyAutoGain(inAudio, micIn);	// Amplify mic with auto limiter
-//			if (obj.peak > micIn.peak) 
-//				micIn.peak = obj.peak;			// Note peak for local display
-//			peak = obj.peak					// peak for packet to be sent
-//			micIn.gain = obj.finalGain;			// Store gain for next loop
+			let obj = applyAutoGain(inAudio, micIn);	// Amplify mic with auto limiter
+			if (obj.peak > micIn.peak) 
+				micIn.peak = obj.peak;			// Note peak for local display
+			peak = obj.peak					// peak for packet to be sent
+			micIn.gain = obj.finalGain;			// Store gain for next loop
 			if ((peak == 0) || (micIn.muted)) { 		// Silent audio
 				inAudio = [];				// Send empty audio packet
 				peak = 0;
