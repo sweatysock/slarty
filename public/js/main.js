@@ -628,9 +628,8 @@ function handleAudio(stream) {						// We have obtained media access
 	let splitter = context.createChannelSplitter(2);		// Split signal for echo cancelling
 
 	// Time to connect everything...
-//	liveSource.connect(micFilter);					// Mic goes to micFilter
-//	micFilter.connect(node);					// micFilter goes to audio processor
-liveSource.connect(node);	
+	liveSource.connect(micFilter);					// Mic goes to micFilter
+	micFilter.connect(node);					// micFilter goes to audio processor
 	node.connect(splitter);						// our processor feeds to a splitter
 	splitter.connect(context.destination,0);			// other output goes to speaker
 
