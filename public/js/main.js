@@ -546,11 +546,11 @@ function processAudio(e) {						// Main processing loop
 		micBuffer.push(...micAudio);				// Buffer mic audio 
 		if (micBuffer.length > PacketSize) {			// If enough in buffer to fill a packet
 			let inAudio = micBuffer.splice(0, PacketSize);	// Get a packet of audio
-//			let obj = applyAutoGain(inAudio, micIn);	// Amplify mic with auto limiter
-//			if (obj.peak > micIn.peak) 
-//				micIn.peak = obj.peak;			// Note peak for local display
-//			peak = obj.peak					// peak for packet to be sent
-//			micIn.gain = obj.finalGain;			// Store gain for next loop
+			let obj = applyAutoGain(inAudio, micIn);	// Amplify mic with auto limiter
+			if (obj.peak > micIn.peak) 
+				micIn.peak = obj.peak;			// Note peak for local display
+			peak = obj.peak					// peak for packet to be sent
+			micIn.gain = obj.finalGain;			// Store gain for next loop
 			if ((peak == 0) || (micIn.muted)) { 		// Silent audio
 				inAudio = [];				// Send empty audio packet
 				peak = 0;
