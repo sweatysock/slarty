@@ -357,12 +357,11 @@ function setStatusLED(name, level) {					// Set the status LED's colour
 
 // Audio management code
 //
-var oldSample = 0;
 function midBoostFilter(input) {					// Filter to boost mids giving distant sound
 	let output = [];
 	// Second filter is a simple high pass filter
 	let alpha = 0.761904762;
-	output[0] = oldSample;
+	output[0] = input[0];
 	for (let i=1; i<input.length; i++)
 		output[i] = (output[i-1] + input[i] - input[i-1]) * alpha;
 	input = output;
@@ -372,7 +371,7 @@ function midBoostFilter(input) {					// Filter to boost mids giving distant soun
 	output[0] = input[0] * alpha;
 	for (let i=1; i<input.length; i++)
 		output[i] = output[i-1] + (input[i] -output[i-1]) * alpha;
-	oldSample = output[output.length];
+
 	return output;
 }
 
