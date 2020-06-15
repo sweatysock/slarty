@@ -128,7 +128,7 @@ upstreamServer.on('d', function (packet) {
 			rtt = now - ts;				// Measure round trip time
 		}
 	}
-	mix = midBoostFilter(mix);				// Filter upstream audio to made it distant
+	//mix = midBoostFilter(mix);				// Filter upstream audio to made it distant
 	let obj = applyAutoGain(mix,upstreamMixGain,1);		// Bring mix level down if necessary
 	upstreamMixGain = obj.finalGain;			// Store gain for next loop
 	upstreamMax = obj.peak;					// For monitoring purposes

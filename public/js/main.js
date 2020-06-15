@@ -114,7 +114,7 @@ socketIO.on('d', function (data) {
 		let obj = applyAutoGain(mix, mixOut);			// Trim mix level 
 		mixOut.gain= obj.finalGain;				// Store gain for next loop
 		if (obj.peak > mixOut.peak) mixOut.peak = obj.peak;	// Note peak for display purposes
-		if (pauseTracing) mix = midBoostFilter(mix);
+//		if (pauseTracing) mix = midBoostFilter(mix);
 		if (mix.length != 0) {					// If there actually was some audio
 			spkrBuffer.push(...mix);			// put it on the speaker buffer
 			if (spkrBuffer.length > maxBuffSize) {		// Clip buffer if too full
