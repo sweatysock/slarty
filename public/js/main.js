@@ -364,7 +364,7 @@ var filterBuf = [0,0];							// Keep previous two samples here for next filter s
 function midBoostFilter(audioIn) {					// Filter to boost mids giving distant sound
 
 	let out1 = [];							// The output of the first filter goes here
-	let alpha = 0.761904762; 					// First filter is a simple high pass filter
+	let alpha = 0.82758621; 					// First filter is a simple high pass filter
 	out1[0] = (prevFilt1Out + audioIn[0] - prevFilt1In) * alpha;	// First value uses previous filtering values
 	for (let i=1; i<audioIn.length; i++)				// The rest are calculated the same way
 		out1[i] = (out1[i-1] + audioIn[i] - audioIn[i-1]) * alpha;
@@ -373,8 +373,8 @@ function midBoostFilter(audioIn) {					// Filter to boost mids giving distant so
 
 	let audioIn2 = out1;						// The output of the previous filter is the input of this
 	// Second filter is a high pass resonant filter
-	let A = 1.35381889;						// Factors for the filter. Derived during design
-	let B = -0.575885;
+	let A = 1.25957111;						// Factors for the filter. Derived during design
+	let B = -0.4816372;
 	let C = 0.2220661;
 	let out2 = [];
 	out2[0] = filterBuf[0];					// Restore values from previous filter session
