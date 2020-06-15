@@ -106,7 +106,7 @@ upstreamServer.on('channel', function (data) {			// The response to our "Hi" is 
 	}
 });
 
-// Audio coming down from our upstream server. It is a mix of audio from above and beside us in the server tree
+// Audio coming down from our upstream server. Channels of audio from upstream plus all our peers.
 upstreamServer.on('d', function (packet) { 
 	enterState( upstreamState );				// The task here is to build a mix
 	upstreamIn++;						// and prepare this audio for sending
@@ -128,6 +128,7 @@ upstreamServer.on('d', function (packet) {
 			rtt = now - ts;				// Measure round trip time
 		}
 	}
+	mix = midBoostFilter(mix);				// Filter upstream audio to made it distant
 	let obj = applyAutoGain(mix,upstreamMixGain,1);		// Bring mix level down if necessary
 	upstreamMixGain = obj.finalGain;			// Store gain for next loop
 	upstreamMax = obj.peak;					// For monitoring purposes
@@ -304,6 +305,40 @@ function applyAutoGain(audio, startGain, maxGain) {			// Auto gain control
 	}
 	return { finalGain: endGain, peak: maxLevel };
 }
+
+//var filterBuf = [0,0];							// Keep previous two samples here for next filter session
+function midBoostFilter(input) {					// Filter to boost mids giving distant sound
+	// First filter is a high pass resonant filter
+//	let A = 1.35381889;						// Factors for the filter. Derived during design
+//	let B = -0.575885;
+//	let C = 0.2220661;
+	let output = [];
+//	output[0] = filterBuf[0];					// Restore values from previous filter session
+//	output[1] = filterBuf[1];
+//	for (let i=0; i<audio.length; i++)
+//		output[i+2] = A * output[i+1] + B * output[i] + C * input[i];
+//	output.splice(0,2);						// Remove first two elements from previous filter session
+//	filterBuf[0] = output[input.length-2];				// Store the last two output values for next filter session
+//	filterBuf[1] = output[input.length-1];
+//	input = output;
+
+	// Second filter is a simple high pass filter
+	let alpha = 0.761904762;
+	output[0] = input[0];
+	for (let i=1; i<input.length; i++)
+		output[i] = (output[i-1] + input[i] - input[i-1]) * alpha;
+	input = output;
+
+	// Third filter is a simple low pass filter
+	alpha = 0.5555556;
+	output[0] = input[0] * alpha;
+	for (let i=1; i<input.length; i++)
+		output[i] = output[i-1] + (input[i] -output[i-1]) * alpha;
+
+	return output;
+}
+
+
 
 // The main working function where audio marsahlling, mixing and sending happens
 function generateMix () {

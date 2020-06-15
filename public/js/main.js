@@ -114,6 +114,7 @@ socketIO.on('d', function (data) {
 		let obj = applyAutoGain(mix, mixOut);			// Trim mix level 
 		mixOut.gain= obj.finalGain;				// Store gain for next loop
 		if (obj.peak > mixOut.peak) mixOut.peak = obj.peak;	// Note peak for display purposes
+		if (pauseTracing) mix = midBoostFilter(mix);
 		if (mix.length != 0) {					// If there actually was some audio
 			spkrBuffer.push(...mix);			// put it on the speaker buffer
 			if (spkrBuffer.length > maxBuffSize) {		// Clip buffer if too full
@@ -356,6 +357,24 @@ function setStatusLED(name, level) {					// Set the status LED's colour
 
 // Audio management code
 //
+function midBoostFilter(input) {					// Filter to boost mids giving distant sound
+	let output = [];
+	// Second filter is a simple high pass filter
+	let alpha = 0.761904762;
+	output[0] = input[0];
+	for (let i=1; i<input.length; i++)
+		output[i] = (output[i-1] + input[i] - input[i-1]) * alpha;
+	input = output;
+
+	// Third filter is a simple low pass filter
+	alpha = 0.5555556;
+	output[0] = input[0] * alpha;
+	for (let i=1; i<input.length; i++)
+		output[i] = output[i-1] + (input[i] -output[i-1]) * alpha;
+
+	return output;
+}
+
 function maxValue( arr ) { 						// Find max value in an array
 	let max = 0;	
 	let v;
@@ -504,7 +523,7 @@ function processAudio(e) {						// Main processing loop
 	if (socketConnected) {						// Need connection to send
 		let micAudio = [];					// Our objective is to fill this with audio
 		let peak = maxValue(inData);				// Get peak of raw mic audio
-		levelClassifier(peak);					// Classify audio incoming for analysis
+		if (!pauseTracing) levelClassifier(peak);		// Classify audio incoming for analysis
 		if ((peak > micIn.threshold) &&				// if audio is above dynamic threshold
 			(peak > noiseThreshold)) {			// and noise threshold, open gate
 			if (micIn.gate == 0)
@@ -517,10 +536,10 @@ function processAudio(e) {						// Main processing loop
 			resampledChunkSize = micAudio.length;		// Note how much resampled audio is needed
 			talkover();					// Mic is active so perhaps drop mix output
 			micIn.gate--;					// Gate slowly closes
-			if (micIn.gate == 0)				// Gate is about to close
-				fadeDown(micAudio);			// Fade sample down to zero for smooth sound
-			else if (micIn.gate == gateDelay)		// Gate has just been opened so fade up
-				fadeUp(micAudio);
+//			if (micIn.gate == 0)				// Gate is about to close
+//				fadeDown(micAudio);			// Fade sample down to zero for smooth sound
+//			else if (micIn.gate == gateDelay)		// Gate has just been opened so fade up
+//				fadeUp(micAudio);
 		} else {						// Gate closed. Fill with silence.
 			micAudio = new Array(resampledChunkSize).fill(0);
 		}
@@ -585,9 +604,6 @@ function handleAudio(stream) {						// We have obtained media access
 	} else {
 		alert("Sorry, the Web Audio API is not supported by your browser. Consider upgrading or using Google Chrome or Mozilla Firefox");
 	}
-//let context = new window.AudioContext || new window.webkitAudioContext;
-console.log("Context is...");
-console.log(context);
 	soundcardSampleRate = context.sampleRate;
 	micAccessAllowed = true;
 	createChannelUI( mixOut );					// Create the output mix channel UI
