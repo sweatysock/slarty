@@ -114,6 +114,7 @@ socketIO.on('d', function (data) {
 		let obj = applyAutoGain(mix, mixOut);			// Trim mix level 
 		mixOut.gain= obj.finalGain;				// Store gain for next loop
 		if (obj.peak > mixOut.peak) mixOut.peak = obj.peak;	// Note peak for display purposes
+		if (pauseTracing) mix = midBoostFilter(mix);
 		if (mix.length != 0) {					// If there actually was some audio
 			spkrBuffer.push(...mix);			// put it on the speaker buffer
 			if (spkrBuffer.length > maxBuffSize) {		// Clip buffer if too full
@@ -356,11 +357,12 @@ function setStatusLED(name, level) {					// Set the status LED's colour
 
 // Audio management code
 //
+var oldSample = 0;
 function midBoostFilter(input) {					// Filter to boost mids giving distant sound
-
+	let output = [];
 	// Second filter is a simple high pass filter
 	let alpha = 0.761904762;
-	output[0] = input[0];
+	output[0] = oldSample;
 	for (let i=1; i<input.length; i++)
 		output[i] = (output[i-1] + input[i] - input[i-1]) * alpha;
 	input = output;
@@ -370,7 +372,7 @@ function midBoostFilter(input) {					// Filter to boost mids giving distant soun
 	output[0] = input[0] * alpha;
 	for (let i=1; i<input.length; i++)
 		output[i] = output[i-1] + (input[i] -output[i-1]) * alpha;
-
+	oldSample = output[output.length];
 	return output;
 }
 
