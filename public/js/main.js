@@ -357,7 +357,7 @@ function setStatusLED(name, level) {					// Set the status LED's colour
 
 // Audio management code
 //
-var prevFilt1In = 0; var prevFilt1out = 0; var prevFilt2Out = 0;
+var prevFilt1In = prevFilt1Out = prevFilt2Out = 0;
 function midBoostFilter(audioIn) {					// Filter to boost mids giving distant sound
 	let audioOut = [];
 
