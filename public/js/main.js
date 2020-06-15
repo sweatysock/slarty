@@ -362,37 +362,38 @@ var prevFilt1Out = 0;
 var prevFilt2Out = 0;
 var filterBuf = [0,0];							// Keep previous two samples here for next filter session
 function midBoostFilter(audioIn) {					// Filter to boost mids giving distant sound
-	// First filter is a high pass resonant filter
-//	let A = 1.35381889;						// Factors for the filter. Derived during design
-//	let B = -0.575885;
-//	let C = 0.2220661;
-//	let audioOut = [];
-//	audioOut[0] = filterBuf[0];					// Restore values from previous filter session
-//	audioOut[1] = filterBuf[1];
-//	for (let i=0; i<audioIn.length; i++)
-//		audioOut[i+2] = A * audioOut[i+1] + B * audioOut[i] + C * audioIn[i];
-//	audioOut.splice(0,2);						// Remove first two elements from previous filter session
-//	filterBuf[0] = audioOut[audioIn.length-2];				// Store the last two audioOut values for next filter session
-//	filterBuf[1] = audioOut[audioIn.length-1];
-//	return audioOut;
 
-
-	let filt1 = [];							// The output of the first filter goes here
+	let out1 = [];							// The output of the first filter goes here
 	let alpha = 0.761904762; 					// First filter is a simple high pass filter
-	filt1[0] = (prevFilt1Out+audioIn[0] - prevFilt1In) * alpha;	// First value uses previous filtering values
+	out1[0] = (prevFilt1Out + audioIn[0] - prevFilt1In) * alpha;	// First value uses previous filtering values
 	for (let i=1; i<audioIn.length; i++)				// The rest are calculated the same way
-		filt1[i] = (filt1[i-1] + audioIn[i] - audioIn[i-1]) * alpha;
+		out1[i] = (out1[i-1] + audioIn[i] - audioIn[i-1]) * alpha;
 	prevFilt1In = audioIn[audioIn.length-1];			// Save last input sample for next filter loop
-	prevFilt1Out = filt1[filt1.length-1];				// and last output sample for same reason
+	prevFilt1Out = out1[out1.length-1];				// and last output sample for same reason
 
-	let audioIn2 = filt1;						// The output of the previous filter is the input of this
-	let filt2 = [];							// The output of the second filter goes here
-	alpha = 0.5555556; 						// Second filter is a simple low pass filter
-	filt2[0] = prevFilt2Out + (audioIn[0] - prevFilt2Out) * alpha;	// First value uses previous filtering value
-	for (let i=1; i<audioIn.length; i++)				// The rest are calculated the same way
-		filt2[i] = filt2[i-1] + (audioIn[i] - filt2[i-1]) * alpha;
-	prevFilt2Out = filt2[filt2.length-1];				// Save last output sample for next filtering
-	return filt2;
+	let audioIn2 = out1;						// The output of the previous filter is the input of this
+	// Second filter is a high pass resonant filter
+	let A = 1.35381889;						// Factors for the filter. Derived during design
+	let B = -0.575885;
+	let C = 0.2220661;
+	let out2 = [];
+	out2[0] = filterBuf[0];					// Restore values from previous filter session
+	out2[1] = filterBuf[1];
+	for (let i=0; i<audioIn2.length; i++)
+		out2[i+2] = A * out2[i+1] + B * out2[i] + C * audioIn2[i];
+	out2.splice(0,2);						// Remove first two elements from previous filter session
+	filterBuf[0] = out2[out2.length-2];				// Store the last two filter values for next filter session
+	filterBuf[1] = out2[out2.length-1];
+	return out2;
+
+//	let audioIn2 = filt1;						// The output of the previous filter is the input of this
+//	let filt2 = [];							// The output of the second filter goes here
+//	alpha = 0.5555556; 						// Second filter is a simple low pass filter
+//	filt2[0] = prevFilt2Out + (audioIn[0] - prevFilt2Out) * alpha;	// First value uses previous filtering value
+//	for (let i=1; i<audioIn.length; i++)				// The rest are calculated the same way
+//		filt2[i] = filt2[i-1] + (audioIn[i] - filt2[i-1]) * alpha;
+//	prevFilt2Out = filt2[filt2.length-1];				// Save last output sample for next filtering
+//	return filt2;
 }
 
 function maxValue( arr ) { 						// Find max value in an array
