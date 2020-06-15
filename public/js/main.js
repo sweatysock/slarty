@@ -366,15 +366,15 @@ function midBoostFilter(audioIn) {					// Filter to boost mids giving distant so
 	let A = 1.35381889;						// Factors for the filter. Derived during design
 	let B = -0.575885;
 	let C = 0.2220661;
-	let output = [];
-	output[0] = filterBuf[0];					// Restore values from previous filter session
-	output[1] = filterBuf[1];
+	let audioOut = [];
+	audioOut[0] = filterBuf[0];					// Restore values from previous filter session
+	audioOut[1] = filterBuf[1];
 	for (let i=0; i<audio.length; i++)
-		output[i+2] = A * output[i+1] + B * output[i] + C * input[i];
-	output.splice(0,2);						// Remove first two elements from previous filter session
-	filterBuf[0] = output[input.length-2];				// Store the last two output values for next filter session
-	filterBuf[1] = output[input.length-1];
-	return output;
+		audioOut[i+2] = A * audioOut[i+1] + B * audioOut[i] + C * audioIn[i];
+	audioOut.splice(0,2);						// Remove first two elements from previous filter session
+	filterBuf[0] = audioOut[audioIn.length-2];				// Store the last two audioOut values for next filter session
+	filterBuf[1] = audioOut[audioIn.length-1];
+	return audioOut;
 
 
 //	let audioOut = [];
