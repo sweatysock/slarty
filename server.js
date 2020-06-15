@@ -71,9 +71,10 @@ var io  = require('socket.io').listen(server, { log: false });		// socketIO for 
 // Socket IO Client for upstream connections
 //
 //
-//var upstreamName = process.env.upstream; 				// Get upstream server from heroku config variable, if present
+var upstreamName = process.env.upstream; 				// Get upstream server from heroku config variable, if present
 if (upstreamName == undefined)		
 	upstreamName ="";						// If this is empty we will connect later when it is set
+upstreamName ="";
 var upstreamServer = require('socket.io-client')(upstreamName);		// Upstream server uses client socketIO
 var packetSequence = 0;							// Sequence counter for sending upstream
 var upstreamServerChannel = -1;
