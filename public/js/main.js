@@ -377,6 +377,7 @@ function midBoostFilter(audioIn) {					// Filter to boost mids giving distant so
 		audioOut[i] = audioOut[i-1] + (audioIn[i] - audioOut[i-1]) * alpha;
 	prevFilt2Out = audioOut.pop;					// Save last output sample for next filtering
 	return audioOut;
+
 }
 
 function maxValue( arr ) { 						// Find max value in an array
