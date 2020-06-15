@@ -360,26 +360,42 @@ function setStatusLED(name, level) {					// Set the status LED's colour
 var prevFilt1In = 0;
 var prevFilt1Out = 0;
 var prevFilt2Out = 0;
+var filterBuf = [0,0];							// Keep previous two samples here for next filter session
 function midBoostFilter(audioIn) {					// Filter to boost mids giving distant sound
-	let audioOut = [];
+	// First filter is a high pass resonant filter
+	let A = 1.35381889;						// Factors for the filter. Derived during design
+	let B = -0.575885;
+	let C = 0.2220661;
+	let output = [];
+	output[0] = filterBuf[0];					// Restore values from previous filter session
+	output[1] = filterBuf[1];
+	for (let i=0; i<audio.length; i++)
+		output[i+2] = A * output[i+1] + B * output[i] + C * input[i];
+	output.splice(0,2);						// Remove first two elements from previous filter session
+	filterBuf[0] = output[input.length-2];				// Store the last two output values for next filter session
+	filterBuf[1] = output[input.length-1];
+	return output;
 
-	let alpha = 0.761904762; 					// First filter is a simple high pass filter
-	audioIn.unshift(prevFilt1In);					// Put previous input sample at start 
-	audioOut[0] = prevFilt1Out;					// Put previous output sample at start too
-	for (let i=1; i<audioIn.length; i++)				// First output sample was processed in last filtering
-		audioOut[i] = (audioOut[i-1] + audioIn[i] - audioIn[i-1]) * alpha;
-	prevFilt1In = audioIn[audioIn.length-1];			// Save last input sample for next filter loop
-	prevFilt1Out = audioOut[audioOut.length-1];			// and last output sample for same reason
 
-	audioIn = audioOut;						// The output of the previous filter is the input of the next
+//	let audioOut = [];
 
-	alpha = 0.5555556; 						// Second filter is a simple low pass filter
-	audioOut[0] = prevFilt2Out;					// Put previous output sample at start
-	for (let i=1; i<audioIn.length; i++)				// First output sample has already been processed
-		audioOut[i] = audioOut[i-1] + (audioIn[i] - audioOut[i-1]) * alpha;
-	prevFilt2Out = audioOut[audioOut.length-1];			// Save last output sample for next filtering
-	let finalAudio = audioOut.splice(0,audioOut.length-2);
-	return finalAudio;
+//	let alpha = 0.761904762; 					// First filter is a simple high pass filter
+//	audioIn.unshift(prevFilt1In);					// Put previous input sample at start 
+//	audioOut[0] = prevFilt1Out;					// Put previous output sample at start too
+//	for (let i=1; i<audioIn.length; i++)				// First output sample was processed in last filtering
+//		audioOut[i] = (audioOut[i-1] + audioIn[i] - audioIn[i-1]) * alpha;
+//	prevFilt1In = audioIn[audioIn.length-1];			// Save last input sample for next filter loop
+//	prevFilt1Out = audioOut[audioOut.length-1];			// and last output sample for same reason
+//
+//	audioIn = audioOut;						// The output of the previous filter is the input of the next
+//
+//	alpha = 0.5555556; 						// Second filter is a simple low pass filter
+//	audioOut[0] = prevFilt2Out;					// Put previous output sample at start
+//	for (let i=1; i<audioIn.length; i++)				// First output sample has already been processed
+//		audioOut[i] = audioOut[i-1] + (audioIn[i] - audioOut[i-1]) * alpha;
+//	prevFilt2Out = audioOut[audioOut.length-1];			// Save last output sample for next filtering
+//	let finalAudio = audioOut.splice(0,audioOut.length-2);
+//	return finalAudio;
 }
 
 function maxValue( arr ) { 						// Find max value in an array
