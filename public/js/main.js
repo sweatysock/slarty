@@ -371,7 +371,7 @@ function midBoostFilter(input) {					// Filter to boost mids giving distant soun
 	output[0] = input[0] * alpha;
 	for (let i=1; i<input.length; i++)
 		output[i] = output[i-1] + (input[i] -output[i-1]) * alpha;
-	prevFiltSample = output[output.length];
+
 	return output;
 }
 
