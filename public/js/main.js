@@ -358,21 +358,21 @@ function setStatusLED(name, level) {					// Set the status LED's colour
 // Audio management code
 //
 prevFiltSample = 0;
-function midBoostFilter(input) {					// Filter to boost mids giving distant sound
-	let output = [];
-	// Second filter is a simple high pass filter
+function midBoostFilter(audioIn) {					// Filter to boost mids giving distant sound
+	let audioOut = [];
+	// First filter is a simple high pass filter
 	let alpha = 0.761904762;
-	output[0] = prevFiltSample;
-	for (let i=1; i<input.length; i++)
-		output[i] = (output[i-1] + input[i] - input[i-1]) * alpha;
-	input = output;
-	// Third filter is a simple low pass filter
+	audioOut[0] = prevFiltSample;
+	for (let i=1; i<audioIn.length; i++)
+		audioOut[i] = (audioOut[i-1] + audioIn[i] - audioIn[i-1]) * alpha;
+	audioIn = audioOut;
+	// Second filter is a simple low pass filter
 	alpha = 0.5555556;
-	output[0] = input[0] * alpha;
-	for (let i=1; i<input.length; i++)
-		output[i] = output[i-1] + (input[i] -output[i-1]) * alpha;
-
-	return output;
+	audioOut[0] = audioIn[0] * alpha;
+	for (let i=1; i<audioIn.length; i++)
+		audioOut[i] = audioOut[i-1] + (audioIn[i] -audioOut[i-1]) * alpha;
+	prevFiltSample = audioOut[audioOut.length-1];
+	return audioOut;
 }
 
 function maxValue( arr ) { 						// Find max value in an array
