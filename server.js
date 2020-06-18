@@ -97,7 +97,7 @@ upstreamServer.on('channel', function (data) {				// The response to our "Hi" is
 		upstreamServerChannel = data.channel;
 		if (myServerName == "") myServerName = "Channel " + upstreamServerChannel;
 		console.log("Upstream server has assigned us channel ",upstreamServerChannel);
-		channel[0].name = "venue";
+		channels[0].name = "venue";
 		upstreamConnected = true;
 	} else {
 		console.log("Upstream server unable to assign a channel");		
@@ -130,20 +130,20 @@ upstreamServer.on('d', function (packet) {
 	upstreamMax = obj.peak;						// For monitoring purposes
 	if (mix.length != 0) {						// If there actually was some audio
 		let p = {						// Construct the audio packet
-			name		: channel[0].name,		// Give packet our channel name
+			name		: channels[0].name,		// Give packet our channel name
 			audio		: mix,				// The audio is the mix just prepared
 			peak		: obj.peak,			// Provide peak value to save effort
 			timestamp	: ts,				// Maybe interesting to know how old it is?
 			sequence	: venueSequence++,		// Sequence number for tracking quality
 			channel		: 0,				// Upstream is assigned channel 0 everywhere
 		}
-		channel[0].packets.push(p); 				// Store upstream packet in channel 0
-		if (channel[0].packets.length > maxBufferSize) {	// Clip buffer if overflowing
-			channel[0].packets.shift();
-			channel[0].overflows++;
+		channels[0].packets.push(p); 				// Store upstream packet in channel 0
+		if (channels[0].packets.length > maxBufferSize) {	// Clip buffer if overflowing
+			channels[0].packets.shift();
+			channels[0].overflows++;
 		}
-		if (channel[0].packets.length >= channel[0].mixTriggerLevel) 
-			channel[0].newBuf = false;				// Buffer has filled enough. Channel can enter the mix
+		if (channels[0].packets.length >= channels[0].mixTriggerLevel) 
+			channels[0].newBuf = false;				// Buffer has filled enough. Channel can enter the mix
 	}
 	enterState( genMixState );
 	generateMix();
@@ -151,12 +151,12 @@ upstreamServer.on('d', function (packet) {
 });
 
 upstreamServer.on('disconnect', function () {
-	channel[0].packets = [];
-	channel[0].name = "";
-	channel[0].socketID = undefined;
-	channel[0].shortages = 0,
-	channel[0].overflows = 0,
-	channel[0].newBuf = true;
+	channels[0].packets = [];
+	channels[0].name = "";
+	channels[0].socketID = undefined;
+	channels[0].shortages = 0,
+	channels[0].overflows = 0,
+	channels[0].newBuf = true;
 	upstreamConnected = false;
 	console.log("Upstream server disconnected.");
 });
@@ -461,7 +461,7 @@ function printReport() {
 	enterState( idleState );					// Update timers in case we are inactive
 	console.log(myServerName," Activity Report");
 	console.log("Idle = ", idleState.total, " upstream = ", upstreamState.total, " downstream = ", downstreamState.total, " genMix = ", genMixState.total);
-	console.log("Clients = ",clientsLive,"  Upstream In =",upstreamIn,"Upstream Out = ",upstreamOut,"Upstream Shortages = ",channel[0].shortages," Upstream overflows = ",channel[0].overflows,"In = ",packetsIn," Out = ",packetsOut," overflows = ",overflows," shortages = ",shortages," forced mixes = ",forcedMixes," mixMax = ",mixMax," upstreamMax = ",upstreamMax," rtt = ",rtt);
+	console.log("Clients = ",clientsLive,"  Upstream In =",upstreamIn,"Upstream Out = ",upstreamOut,"Upstream Shortages = ",channels[0].shortages," Upstream overflows = ",channels[0].overflows,"In = ",packetsIn," Out = ",packetsOut," overflows = ",overflows," shortages = ",shortages," forced mixes = ",forcedMixes," mixMax = ",mixMax," upstreamMax = ",upstreamMax," rtt = ",rtt);
 	let cbs = [];
 	for (let c in channels) {
 		let t = channels[c].packets.length;
@@ -480,8 +480,8 @@ function printReport() {
 		"out":		packetsOut,
 		"upIn":		upstreamIn,
 		"upOut":	upstreamOut,
-		"upShort":	channel[0].shortages,
-		"upOver":	channel[0].overflows,
+		"upShort":	channels[0].shortages,
+		"upOver":	channels[0].overflows,
 		"overflows":	overflows,
 		"shortages":	shortages,
 		"forcedMixes":	forcedMixes,
