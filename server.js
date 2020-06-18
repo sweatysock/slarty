@@ -21,8 +21,10 @@ for (let i=0; i < NumberOfChannels; i++) {				// Create all the channels pre-ini
 }
 var upstreamBuffer = []; 						// Audio packets coming down from our upstream server 
 var oldUpstreamPacket = null;						// previous upstream packet kept in case more is needed
-var upstreamMixGain = 1;						// Gain applied to the upstream mix using auto gain control
-var mixGain = 1;							// Gain applied to the mix sent upstream 
+var venueMixGain = 1;							// Gain applied to the upstream mix using auto gain control
+var venueSequence = 0;							// Sequence counter for venue sound going downstream
+var upstreamMixGain = 1;						// Gain applied to the mix sent upstream 
+var upSequence = 0;							// Sequence counter for sending upstream
 // Mix generation is done as fast as data comes in, but should keep up a rhythmn even if downstream audio isn't sufficient....
 var nextMixTimeLimit = 0;						// The time the next mix must be sent is here:
 var myServerName = process.env.servername; 				// Get servername from heroku config variable, if present
@@ -75,27 +77,25 @@ var io  = require('socket.io').listen(server,
 var upstreamName = process.env.upstream; 				// Get upstream server from heroku config variable, if present
 if (upstreamName == undefined)		
 	upstreamName ="";						// If this is empty we will connect later when it is set
-upstreamName ="";
 var upstreamServer = require('socket.io-client')(upstreamName);		// Upstream server uses client socketIO
-var packetSequence = 0;							// Sequence counter for sending upstream
 var upstreamServerChannel = -1;
 var upstreamConnected = false;						// Flag to control sending upstream
 
 function connectUpstreamServer(server) {				// Called when upstream server name is set
 	console.log("Connecting upstream to",server);
-	var upstreamServer = require('socket.io-client')(server);		// Upstream server uses client socketIO
+	var upstreamServer = require('socket.io-client')(server);	// Upstream server uses client socketIO
 }
 
-upstreamServer.on('connect', function(socket){			// We initiate the connection as client
+upstreamServer.on('connect', function(socket){				// We initiate the connection as client
 	console.log("upstream server connected ",upstreamName);
-	upstreamServer.emit("upstreamHi",			// As client we need to say Hi 
+	upstreamServer.emit("upstreamHi",				// As client we need to say Hi 
 	{
-		"channel"	: upstreamServerChannel		// Send our channel (in case we have been re-connected)
+		"channel"	: upstreamServerChannel			// Send our channel (in case we have been re-connected)
 	});
 });
 
-upstreamServer.on('channel', function (data) {			// The response to our "Hi" is a channel assignment
-	if (data.channel > 0) {					// Assignment successful
+upstreamServer.on('channel', function (data) {				// The response to our "Hi" is a channel assignment
+	if (data.channel > 0) {						// Assignment successful
 		upstreamServerChannel = data.channel;
 		if (myServerName == "") myServerName = "Channel " + upstreamServerChannel;
 		console.log("Upstream server has assigned us channel ",upstreamServerChannel);
@@ -104,47 +104,47 @@ upstreamServer.on('channel', function (data) {			// The response to our "Hi" is 
 		console.log("Upstream server unable to assign a channel");		
 		console.log("Try a different server");		
 		upstreamName = "no upstream server";
-		upstreamServer.close();				// Disconnect and clear upstream server name
+		upstreamServer.close();					// Disconnect and clear upstream server name
 	}
 });
 
-// Audio coming down from our upstream server. Channels of audio from upstream plus all our peers.
+// Venue audio coming down from our upstream server. Channels of audio from upstream plus all our peers.
 upstreamServer.on('d', function (packet) { 
-	enterState( upstreamState );				// The task here is to build a mix
-	upstreamIn++;						// and prepare this audio for sending
-	let chan = packet.channels;				// to all downstream clients just like
-	let mix = [];						// any other audio stream
+	enterState( upstreamState );					// The task here is to build a mix
+	upstreamIn++;							// and prepare this audio for sending
+	let chan = packet.channels;					// to all downstream clients just like
+	let mix = [];							// any other audio stream
 	let ts = 0;
-	for (let c=0; c < chan.length; c++) {			// So first we need to build a mix
-		if (chan[c].socketID != upstreamServer.id) {	// Skip my audio in mix generation
+	for (let c=0; c < chan.length; c++) {				// So first we need to build a mix
+		if (chan[c].socketID != upstreamServer.id) {		// Skip my audio in mix generation
 			let a = chan[c].audio;
-			if (mix.length == 0)			// First audio in mix goes straight
+			if (mix.length == 0)				// First audio in mix goes straight
 				for (let i=0; i < a.length; i++)
 					mix[i] = a[i];
   			else
   				for (let i=0; i < a.length; i++)
-					mix[i] += a[i];		// Just add all audio together
-		} else {					// This is my own data come back
+					mix[i] += a[i];			// Just add all audio together
+		} else {						// This is my own data come back
 			let now = new Date().getTime();
 			ts = chan[c].timestamp;
-			rtt = now - ts;				// Measure round trip time
+			rtt = now - ts;					// Measure round trip time
 		}
 	}
-	mix = midBoostFilter(mix);				// Filter upstream audio to made it distant
-	let obj = applyAutoGain(mix,upstreamMixGain,1);		// Bring mix level down if necessary
-	upstreamMixGain = obj.finalGain;			// Store gain for next loop
-	upstreamMax = obj.peak;					// For monitoring purposes
-	if (mix.length != 0) {					// If there actually was some audio
-		let p = {					// Construct the audio packet
-			name		: "upstream",		// Give it an appropriate name
-			audio		: mix,			// The audio is the mix just prepared
-			peak		: obj.peak,		// Provide peak value to save effort
-			timestamp	: ts,			// Maybe interesting to know how old it is?
-			sequence	: 0,			// Not used
-			channel		: 0,			// Upstream is assigned channel 0 everywhere
+	mix = midBoostFilter(mix);					// Filter upstream audio to made it distant
+	let obj = applyAutoGain(mix,venueMixGain,1);			// Bring mix level down if necessary
+	venueMixGain = obj.finalGain;					// Store gain for next loop
+	upstreamMax = obj.peak;						// For monitoring purposes
+	if (mix.length != 0) {						// If there actually was some audio
+		let p = {						// Construct the audio packet
+			name		: "venue",			// Give it an appropriate name
+			audio		: mix,				// The audio is the mix just prepared
+			peak		: obj.peak,			// Provide peak value to save effort
+			timestamp	: ts,				// Maybe interesting to know how old it is?
+			sequence	: venueSequence++,		// Sequence number for tracking quality
+			channel		: 0,				// Upstream is assigned channel 0 everywhere
 		}
-		upstreamBuffer.push(p); 			// Store upstream packet in buffer
-		if (upstreamBuffer.length > maxBufferSize) {	// Clip buffer if overflowing
+		upstreamBuffer.push(p); 				// Store upstream packet in buffer
+		if (upstreamBuffer.length > maxBufferSize) {		// Clip buffer if overflowing
 			upstreamBuffer.shift();
 			upstreamOverflows++;
 		}
@@ -373,19 +373,18 @@ function generateMix () {
 
 		if (clientPackets.length != 0) {			// Only send audio if we have some to send
 			if (upstreamConnected == true) { 		// Send mix if connected to an upstream server
-				let obj = applyAutoGain(mix,mixGain,1);			// Adjust mix level 
-				mixGain = obj.finalGain;				// Store gain for next mix auto gain control
+				let obj = applyAutoGain(mix,upstreamMixGain,1);			// Adjust mix level 
+				upstreamMixGain = obj.finalGain;				// Store gain for next mix auto gain control
 				mixMax = obj.peak;					// For monitoring purposes
 				let now = new Date().getTime();
 				upstreamServer.emit("u", {
 					"name"		: myServerName,			// Let them know which server this comes from
 					"audio"		: mix,				// Level controlled mix of all clients here
-					"sequence"	: packetSequence,		// Good for data integrity checks
+					"sequence"	: upSequence++,			// Good for data integrity checks
 					"timestamp"	: now,				// Used for round trip time measurements
 					"peak" 		: obj.peak,			// Saves having to calculate again
 					"channel"	: upstreamServerChannel,	// Send assigned channel to help server
 				});
-				packetSequence++;
 				upstreamOut++;
 				// As we have an upstream server is there any upstream audio to send downstream?
 				if ((upstreamBuffer.length >= mixTriggerLevel) || (oldUpstreamPacket != null )) { 
