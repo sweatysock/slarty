@@ -368,9 +368,6 @@ function generateMix () {
 			}
 		}
 	});
-//	if (clientPackets.length <= 1)					// if zero or one active client left
-//		nextMixTimeLimit = 0;					// stop sample timer - no sense in forcing mixes
-
 	if (clientPackets.length != 0) {				// Only send audio if we have some to send
 		if (upstreamConnected == true) { 			// Send mix if connected to an upstream server
 			let obj = applyAutoGain(mix,upstreamMixGain,1);	// Adjust mix level 
@@ -401,14 +398,11 @@ function generateMix () {
 		});
 		packetsOut++;						// Sent data so log it and set time limit for next send
 		packetClassifier[clientPackets.length] = packetClassifier[clientPackets.length] + 1;
-		if (nextMixTimeLimit == 0) {				// If this is the first send event then start at now
-			let now = new Date().getTime();
-			nextMixTimeLimit = now;
-		}							// Next mix timeout is advanced forward by mix.length mS
+		let now = new Date().getTime();
+		if (nextMixTimeLimit == 0) nextMixTimeLimit = now;	// If this is the first send event then start at now
 		nextMixTimeLimit = nextMixTimeLimit + (packetSize * 1000)/SampleRate;
-	} else nextMixTimeLimit = 0;					// No client packets so stop forcing and wait until more
-	if (nextMixTimeLimit > 0) 					// If there is still audio to send set a timer to send it
 		mixTimer = setTimeout( forceMix, (nextMixTimeLimit - now) );	
+	} else nextMixTimeLimit = 0;					// No client packets so stop forcing and wait for more data
 }
 
 
