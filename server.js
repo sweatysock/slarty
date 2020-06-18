@@ -25,6 +25,7 @@ var upstreamMixGain = 1;						// Gain applied to the mix sent upstream
 var upSequence = 0;							// Sequence counter for sending upstream
 // Mix generation is done as fast as data comes in, but should keep up a rhythmn even if downstream audio isn't sufficient....
 var nextMixTimeLimit = 0;						// The time the next mix must be sent is here:
+var mixTimer = 0;							// Timer that triggers generateMix() if needed
 var myServerName = process.env.servername; 				// Get servername from heroku config variable, if present
 if (myServerName == undefined)						// This name is used to identify us upstream ony
 	myServerName ="";						// If this is empty it will be set when we connect upstream
@@ -97,7 +98,7 @@ upstreamServer.on('channel', function (data) {				// The response to our "Hi" is
 		upstreamServerChannel = data.channel;
 		if (myServerName == "") myServerName = "Channel " + upstreamServerChannel;
 		console.log("Upstream server has assigned us channel ",upstreamServerChannel);
-		channels[0].name = "venue";
+		channels[0].name = "Venue";
 		upstreamConnected = true;
 	} else {
 		console.log("Upstream server unable to assign a channel");		
@@ -143,10 +144,10 @@ upstreamServer.on('d', function (packet) {
 			channels[0].overflows++;
 		}
 		if (channels[0].packets.length >= channels[0].mixTriggerLevel) 
-			channels[0].newBuf = false;				// Buffer has filled enough. Channel can enter the mix
+			channels[0].newBuf = false;			// Buffer has filled enough. Channel can enter the mix
 	}
 	enterState( genMixState );
-	generateMix();
+	if (enoughAudio()) generateMix();				// If there is enough audio buffered generate a mix
 	enterState( idleState );
 });
 
@@ -242,7 +243,7 @@ io.sockets.on('connection', function (socket) {
 			channel.newBuf = false;				// Buffer has filled enough. Channel can enter the mix
 		packetsIn++;
 		enterState( genMixState );
-		generateMix();
+		if (enoughAudio()) generateMix();			// If there is enough audio buffered generate a mix
 		enterState( idleState );
 	});
 });
@@ -251,15 +252,6 @@ io.sockets.on('connection', function (socket) {
 // Audio management, marshalling and manipulation code
 //
 //
-function isTimeToMix() {						// Test if we must generate a mix regardless
-	let now = new Date().getTime();
-	if ((nextMixTimeLimit != 0) && (now >= nextMixTimeLimit))  {
-		forcedMixes++;
-		return true;
-	} else
-		return false;
-}
-
 function maxValue( arr ) { 						// Find max value in an array
 	let max = 0;
 	let v;
@@ -336,80 +328,87 @@ function midBoostFilter(audioIn) {					// Filter to boost mids giving distant so
 	return out2;
 }
 
+function forceMix() {							// The timer has triggered a mix 
+	forcedMixes++;
+	generateMix();
+}
+
+function enoughAudio() {						// Is there enough audio to build a mix before timeout?
+	let allFull = true; 
+	let fullCount = 0;		
+	channels.forEach( c => {
+		if (c.newBuf == false) {				// Check each non-new channel if it has enough audio
+			if (c.packets.length > c.mixTriggerLevel) fullCount++;
+			else allFull = false;
+		}
+	});		
+	if ((fullCount >0) && (allFull == true)) {
+		clearTimout( mixTimer );				// We are ahead of the timer, cancel it
+		return true;						// All non-new buffers are full enough so lets mix!
+	} else return false;
+}
+
 
 
 // The main working function where audio marsahlling, mixing and sending happens
 function generateMix () {
-	let readyToMix = false;
-	if (isTimeToMix()) readyToMix = true;
-	else {								// It isn't time to mix. Is there enough to mix anyway?
-		let allFull = true; 
-		let fullCount = 0;		
-		channels.forEach( c => {
-			if (c.newBuf == false) {			// Check each non-new channel if it has enough audio
-				if (c.packets.length > c.mixTriggerLevel) fullCount++;
-				else allFull = false;
+	let mix = new Array(packetSize).fill(0); 			// The mixed audio we will return to all clients
+	let clientPackets = []; 					// All client audio packets that are part of the mix
+	channels.forEach( c => {
+		if (c.newBuf == false) {				// Ignore new buffers that are filling up
+			let packet = c.packets.shift();			// Get first packet of audio
+			if (packet == undefined) {			// If this client buffer has been emptied...
+				c.shortages++;				// Note shortages for this channel
+				shortages++;				// and also for global monitoring
 			}
-		});							// If all non-new buffers are full enough lets mix!
-		if ((fullCount >0) && (allFull == true)) readyToMix = true;
-	}
-	if (readyToMix) {
-		let mix = new Array(packetSize).fill(0); 		// The mixed audio we will return to all clients
-		let clientPackets = []; 				// All client audio packets that are part of the mix
-		channels.forEach( c => {
-			if (c.newBuf == false) {			// Ignore new buffers that are filling up
-				let packet = c.packets.shift();		// Get first packet of audio
-				if (packet == undefined) {		// If this client buffer has been emptied...
-					c.shortages++;			// Note shortages for this channel
-					shortages++;			// and also for global monitoring
-				}
-				else {
-					clientPackets.push( packet );	// Store packet of source audio for sending
-					if (packet.channel != 0)	// Build mix for upstream server skipping its own audio
-						for (let i = 0; i < packet.audio.length; ++i) mix[i] = (mix[i] + packet.audio[i]);	
-				}
+			else {
+				clientPackets.push( packet );		// Store packet of source audio for sending
+				if (packet.channel != 0)		// Build mix for upstream server skipping its own audio
+					for (let i = 0; i < packet.audio.length; ++i) mix[i] = (mix[i] + packet.audio[i]);	
 			}
-		});
-//		if (clientPackets.length <= 1)				// if zero or one active client left
-//			nextMixTimeLimit = 0;				// stop sample timer - no sense in forcing mixes
+		}
+	});
+//	if (clientPackets.length <= 1)					// if zero or one active client left
+//		nextMixTimeLimit = 0;					// stop sample timer - no sense in forcing mixes
 
-		if (clientPackets.length != 0) {			// Only send audio if we have some to send
-			if (upstreamConnected == true) { 		// Send mix if connected to an upstream server
-				let obj = applyAutoGain(mix,upstreamMixGain,1);		// Adjust mix level 
-				upstreamMixGain = obj.finalGain;			// Store gain for next mix auto gain control
-				mixMax = obj.peak;					// For monitoring purposes
-				let now = new Date().getTime();
-				upstreamServer.emit("u", {
-					"name"		: myServerName,			// Let others know which server this comes from
-					"audio"		: mix,				// Level controlled mix of all clients here
-					"sequence"	: upSequence++,			// Good for data integrity checks
-					"timestamp"	: now,				// Used for round trip time measurements
-					"peak" 		: obj.peak,			// Saves having to calculate again
-					"channel"	: upstreamServerChannel,	// Send assigned channel to help server
-				});
-				upstreamOut++;
-			} 
-			let liveChannels = [];				// build snapshot of current live client buffers
-			for (let c in channels) 
-				if (channels[c].name != "") {		// Means channel is connected to a client
-					liveChannels[c] = {
-						name	: channels[c].name,
-						queue 	: channels[c].packets.length,
-					}
-				}
-			io.sockets.in('downstream').emit('d', {		// Send all audio channels to all downstream clients
-				"channels"	: clientPackets,
-				"liveChannels"	: liveChannels,		// Include server info about live clients and their queues
+	if (clientPackets.length != 0) {				// Only send audio if we have some to send
+		if (upstreamConnected == true) { 			// Send mix if connected to an upstream server
+			let obj = applyAutoGain(mix,upstreamMixGain,1);	// Adjust mix level 
+			upstreamMixGain = obj.finalGain;		// Store gain for next mix auto gain control
+			mixMax = obj.peak;				// For monitoring purposes
+			let now = new Date().getTime();
+			upstreamServer.emit("u", {
+				"name"		: myServerName,		// Let others know which server this comes from
+				"audio"		: mix,			// Level controlled mix of all clients here
+				"sequence"	: upSequence++,		// Good for data integrity checks
+				"timestamp"	: now,			// Used for round trip time measurements
+				"peak" 		: obj.peak,		// Saves having to calculate again
+				"channel"	: upstreamServerChannel,// Send assigned channel to help server
 			});
-			packetsOut++;					// Sent data so log it and set time limit for next send
-			packetClassifier[clientPackets.length] = packetClassifier[clientPackets.length] + 1;
-			if (nextMixTimeLimit == 0) {			// If this is the first send event then start at now
-				let now = new Date().getTime();
-				nextMixTimeLimit = now;
-			}						// Next mix timeout is advanced forward by mix.length mS
-			nextMixTimeLimit = nextMixTimeLimit + (packetSize * 1000)/SampleRate;
-		} else nextMixTimeLimit = 0;				// No client packets so stop forcing and wait until more
-	}
+			upstreamOut++;
+		} 
+		let liveChannels = [];					// build snapshot of current live client buffers
+		for (let c in channels) 
+			if (channels[c].name != "") {			// Means channel is connected to a client
+				liveChannels[c] = {
+					name	: channels[c].name,
+					queue 	: channels[c].packets.length,
+				}
+			}
+		io.sockets.in('downstream').emit('d', {			// Send all audio channels to all downstream clients
+			"channels"	: clientPackets,
+			"liveChannels"	: liveChannels,			// Include server info about live clients and their queues
+		});
+		packetsOut++;						// Sent data so log it and set time limit for next send
+		packetClassifier[clientPackets.length] = packetClassifier[clientPackets.length] + 1;
+		if (nextMixTimeLimit == 0) {				// If this is the first send event then start at now
+			let now = new Date().getTime();
+			nextMixTimeLimit = now;
+		}							// Next mix timeout is advanced forward by mix.length mS
+		nextMixTimeLimit = nextMixTimeLimit + (packetSize * 1000)/SampleRate;
+	} else nextMixTimeLimit = 0;					// No client packets so stop forcing and wait until more
+	if (nextMixTimeLimit > 0) 					// If there is still audio to send set a timer to send it
+		mixTimer = setTimeout( forceMix, (nextMixTimeLimit - now) );	
 }
 
 
@@ -443,8 +442,6 @@ var packetsIn = 0;
 var packetsOut = 0;
 var upstreamIn = 0;
 var upstreamOut = 0;
-var upstreamShortages = 0;
-var upstreamOverflows = 0;
 var overflows = 0;
 var shortages = 0;
 var rtt = 0;
@@ -489,31 +486,15 @@ function printReport() {
 		"pacClass":	packetClassifier,
 		"upServer":	upstreamName
 	});
-//	counterDivider++;
-//	counterDivider = counterDivider % 10;
-//	channels.forEach(c => {
-//		if (c.shortages > 3)
-//			if (c.mixTriggerLevel < 6)
-//				c.mixTriggerLevel++;			// Boost minimum buffer to reduce chances of shortfalls
-//		if (c.overflows > 3)
-//			if (c.maxBufferSize < 15)
-//				c.maxBufferSize++;			// Boost channel buffer size to reduce overflows
-//		c.shortages = 0;					// Reset counters
-//		c.overflows = 0;
-//		if (counterDivider == 0) {				// Once every 10 reports try to reduce buffers back down
-//			if (c.mixTriggerLevel > 3)
-//				c.mixTriggerLevel--;
-//			if (c.maxBufferSize > 7)
-//				c.maxBufferSize--;
-//		}
-//	});
+	channels.forEach(c => {
+		c.shortages = 0;					// Reset channel-level counters
+		c.overflows = 0;
+	});
 	packetClassifier.fill(0,0,30);
 	packetsIn = 0;
 	packetsOut = 0;
 	upstreamIn = 0;
 	upstreamOut = 0;
-	upstreamShortages = 0;
-	upstreamOverflows = 0;
 	overflows = 0;
 	shortages = 0;
 	rtt = 0;
