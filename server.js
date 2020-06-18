@@ -343,7 +343,7 @@ function enoughAudio() {						// Is there enough audio to build a mix before tim
 		}
 	});		
 	if ((fullCount >0) && (allFull == true)) {
-		clearTimout( mixTimer );				// We are ahead of the timer, cancel it
+		clearTimeout( mixTimer );				// We are ahead of the timer, cancel it
 		return true;						// All non-new buffers are full enough so lets mix!
 	} else return false;
 }
