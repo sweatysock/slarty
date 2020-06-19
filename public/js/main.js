@@ -51,7 +51,7 @@ var micIn = {								// and for microphone input
 	threshold:0.000,						// Level below which we don't send audio
 	gate	: 1,							// Threshold gate. >0 means open.
 };
-
+var recording = false;
 
 
 
@@ -249,8 +249,8 @@ function createChannelUI(obj) {
 			<div style="position:absolute;bottom:8%; left:25%; width:5%; height:0%; background-color:#999999" id="'+name+'Threshold"></div> \
 			<img style="position:absolute;right:30%; top:10%;width:40%; padding-bottom:10%;" src="images/channelOff.png" id="'+name+'Off" onclick="unmuteButton(event)">  \
 			<img style="position:absolute;right:30%; top:10%;width:40%; padding-bottom:10%;" src="images/channelOn.png" id="'+name+'On" onclick="muteButton(event)">  \
-			<img style="position:absolute;right:30%; bottom:1%;width:40%; padding-bottom:10%;" src="images/AGCOff.png" id="'+name+'Off" onclick="unmuteButton(event)">  \
-			<img style="position:absolute;right:30%; bottom:1%;width:40%; padding-bottom:10%;" src="images/AGCOn.png" id="'+name+'On" onclick="muteButton(event)">  \
+			<img style="position:absolute;right:30%; bottom:1%;width:40%; padding-bottom:10%;" src="images/AGCOff.png" id="'+name+'AGCOff" onclick="unmuteButton(event)">  \
+			<img style="position:absolute;right:30%; bottom:1%;width:40%; padding-bottom:10%;" src="images/AGCOn.png" id="'+name+'AGCOn" onclick="muteButton(event)">  \
 			<div style="position:absolute;top:1%; left:3%; width:90%; height:10%;color:#AAAAAA" id="'+name+'Name"> \
 				<marquee behavior="slide" direction="left">'+obj.name+'</marquee> \
 			</div> \
@@ -274,8 +274,8 @@ function createOutputUI(obj) {
 			<div style="position:absolute;bottom:57.5%; left:25%; width:5%; height:0%; background-color:#FF6600" id="'+name+'LevelOrange"></div> \
 			<div style="position:absolute;bottom:66.8%; left:25%; width:5%; height:0%; background-color:#FF0000" id="'+name+'LevelRed"></div> \
 			<div style="position:absolute;bottom:8%; left:25%; width:5%; height:0%; background-color:#999999" id="'+name+'Threshold"></div> \
-			<img style="position:absolute;right:30%; bottom:1%;width:40%; padding-bottom:10%;" src="images/AGCOff.png" id="'+name+'Off" onclick="unmuteButton(event)">  \
-			<img style="position:absolute;right:30%; bottom:1%;width:40%; padding-bottom:10%;" src="images/AGCOn.png" id="'+name+'On" onclick="muteButton(event)">  \
+			<img style="position:absolute;right:30%; bottom:1%;width:40%; padding-bottom:10%;" src="images/AGCOff.png" id="'+name+'AGCOff" onclick="unmuteButton(event)">  \
+			<img style="position:absolute;right:30%; bottom:1%;width:40%; padding-bottom:10%;" src="images/AGCOn.png" id="'+name+'AGCOn" onclick="muteButton(event)">  \
 			<div style="position:absolute;top:1%; left:3%; width:90%; height:10%;color:#AAAAAA" id="'+name+'Name"> \
 				<marquee behavior="slide" direction="left">'+obj.name+'</marquee> \
 			</div> \
@@ -301,12 +301,12 @@ function createMicUI(obj) {
 			<div style="position:absolute;bottom:8%; left:25%; width:5%; height:0%; background-color:#999999" id="'+name+'Threshold"></div> \
 			<img style="position:absolute;right:5%; top:10%;width:40%; padding-bottom:10%;" src="images/channelOff.png" id="'+name+'Off" onclick="unmuteButton(event)">  \
 			<img style="position:absolute;right:5%; top:10%;width:40%; padding-bottom:10%;" src="images/channelOn.png" id="'+name+'On" onclick="muteButton(event)">  \
-			<img style="position:absolute;left:5%; top:10%;width:40%; padding-bottom:10%;" src="images/talkOff.png" id="'+name+'Off" onclick="unmuteButton(event)">  \
-			<img style="position:absolute;left:5%; top:10%;width:40%; padding-bottom:10%;" src="images/talkOn.png" id="'+name+'On" onclick="muteButton(event)">  \
-			<img style="position:absolute;right:5%; bottom:1%;width:40%; padding-bottom:10%;" src="images/AGCOff.png" id="'+name+'Off" onclick="unmuteButton(event)">  \
-			<img style="position:absolute;right:5%; bottom:1%;width:40%; padding-bottom:10%;" src="images/AGCOn.png" id="'+name+'On" onclick="muteButton(event)">  \
-			<img style="position:absolute;left:5%; bottom:1%;width:40%; padding-bottom:10%;" src="images/NROff.png" id="'+name+'Off" onclick="unmuteButton(event)">  \
-			<img style="position:absolute;left:5%; bottom:1%;width:40%; padding-bottom:10%;" src="images/NROn.png" id="'+name+'On" onclick="muteButton(event)">  \
+			<img style="position:absolute;left:5%; top:10%;width:40%; padding-bottom:10%;" src="images/talkOff.png" id="'+name+'talkOff" onclick="unmuteButton(event)">  \
+			<img style="position:absolute;left:5%; top:10%;width:40%; padding-bottom:10%;" src="images/talkOn.png" id="'+name+'talkOn" onclick="recButton(event)">  \
+			<img style="position:absolute;right:5%; bottom:1%;width:40%; padding-bottom:10%;" src="images/AGCOff.png" id="'+name+'AGCOff" onclick="unmuteButton(event)">  \
+			<img style="position:absolute;right:5%; bottom:1%;width:40%; padding-bottom:10%;" src="images/AGCOn.png" id="'+name+'AGCOn" onclick="muteButton(event)">  \
+			<img style="position:absolute;left:5%; bottom:1%;width:40%; padding-bottom:10%;" src="images/NROff.png" id="'+name+'NROff" onclick="unmuteButton(event)">  \
+			<img style="position:absolute;left:5%; bottom:1%;width:40%; padding-bottom:10%;" src="images/NROn.png" id="'+name+'NROn" onclick="muteButton(event)">  \
 			<div style="position:absolute;top:1%; left:3%; width:90%; height:10%;color:#AAAAAA" id="'+name+'Name"> \
 				<marquee behavior="slide" direction="left">'+obj.name+'</marquee> \
 			</div> \
@@ -338,6 +338,15 @@ function convertIdToObj(id) {						// Translate HTML DOM IDs to JS data objects
 		id = eval(id);						// Convert the ID to the object (micIn or mixOut)
 	}
 	return id;
+}
+
+function recButton(e) {
+trace2("rec");
+	let id = event.target.parentNode.id;
+	let b = document.getElementById(id+"talkOn");
+	b.style.visibility = "hidden";
+	id = convertIdToObj(id);
+	recording = true;
 }
 
 function muteButton(e) {
@@ -604,6 +613,7 @@ function processAudio(e) {						// Main processing loop
 				"timestamp"	: now,			// Used to measure round trip time
 				"peak" 		: peak,			// Saves others having to calculate again
 				"channel"	: myChannel,		// Send assigned channel to help server
+				"recording"	: recording,
 			});
 			packetsOut++;					// For stats and monitoring
 			packetSequence++;

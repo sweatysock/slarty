@@ -238,6 +238,7 @@ io.sockets.on('connection', function (socket) {
 		channel.socketID = socket.id;				// Store socket ID associated with channel
 		packet.socketID = socket.id;				// Also store it in the packet to help client
 		channel.packets.push(packet);				// Add packet to its channel packet buffer
+		channel.recording = packet.recording;
 		if ((channel.packets.length > channel.maxBufferSize) &&	// If buffer full and we are not recording
 			(channel.recording == false)) {			// the buffer then remove the oldest packet.
 			channel.packets.shift();
@@ -363,7 +364,7 @@ function generateMix () {
 		if (c.newBuf == false) {				// Ignore new buffers that are filling up
 			let packet;
 			if (c.recording) {				// If recording then read the packet 
-				packet = c.audio[c.playhead];		// at the playhead position
+				packet = c.packets[c.playhead];		// at the playhead position
 				c.playhead++;				// and move the playhead forward
 			} else
 				packet = c.packets.shift();		// Take first packet of audio from channel buffer
