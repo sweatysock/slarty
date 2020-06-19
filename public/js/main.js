@@ -247,6 +247,58 @@ function createChannelUI(obj) {
 			<div style="position:absolute;bottom:57.5%; left:25%; width:5%; height:0%; background-color:#FF6600" id="'+name+'LevelOrange"></div> \
 			<div style="position:absolute;bottom:66.8%; left:25%; width:5%; height:0%; background-color:#FF0000" id="'+name+'LevelRed"></div> \
 			<div style="position:absolute;bottom:8%; left:25%; width:5%; height:0%; background-color:#999999" id="'+name+'Threshold"></div> \
+			<img style="position:absolute;right:30%; top:10%;width:40%; padding-bottom:10%;" src="images/channelOff.png" id="'+name+'Off" onclick="unmuteButton(event)">  \
+			<img style="position:absolute;right:30%; top:10%;width:40%; padding-bottom:10%;" src="images/channelOn.png" id="'+name+'On" onclick="muteButton(event)">  \
+			<img style="position:absolute;right:30%; bottom:1%;width:40%; padding-bottom:10%;" src="images/AGCOff.png" id="'+name+'Off" onclick="unmuteButton(event)">  \
+			<img style="position:absolute;right:30%; bottom:1%;width:40%; padding-bottom:10%;" src="images/AGCOn.png" id="'+name+'On" onclick="muteButton(event)">  \
+			<div style="position:absolute;top:1%; left:3%; width:90%; height:10%;color:#AAAAAA" id="'+name+'Name"> \
+				<marquee behavior="slide" direction="left">'+obj.name+'</marquee> \
+			</div> \
+		</div>'
+	let mixerRack = document.getElementById("mixerRack");		// Add this collection of items to the mixerRack div
+	mixerRack.innerHTML += channel;
+	obj.displayID = name;
+}
+
+function createOutputUI(obj) {
+	let name = "ID"+obj.channel;
+	// build UI elements for a single channel with element IDs that include the name requested
+	// non LED: <div style="position:absolute;bottom:8%; right:5%; width:40%; height:65%; background-color:#999999" id="'+name+'SlideBox></div> \
+	let channel =' <div id="'+name+'" style="position:relative;width:100px; height:100%; display: inline-block"> \
+			<img style="position:relative;bottom:0%; right:0%; width:100%; height:99%;" src="images/controlBG.png">  \
+			<img style="position:absolute;bottom:8%; right:5%; width:40%; height:10%;" src="images/slider.png" id="'+name+'Slider" >  \
+			<div style="position:absolute;bottom:8%; right:5%; width:90%; height:65%;" draggable="false" id="'+name+'SlideBtn" \
+				onmousedown="sliderDragStart(event)" onmousemove="sliderDrag(event)" onmouseup="sliderDragStop(event)" \
+				ontouchstart="sliderDragStart(event)" ontouchmove="sliderDrag(event)" ontouchend="sliderDragStop(event)"></div>  \
+			<div style="position:absolute;bottom:8%; left:25%; width:5%; height:0%; background-color:#66FF33" id="'+name+'LevelGreen"></div> \
+			<div style="position:absolute;bottom:57.5%; left:25%; width:5%; height:0%; background-color:#FF6600" id="'+name+'LevelOrange"></div> \
+			<div style="position:absolute;bottom:66.8%; left:25%; width:5%; height:0%; background-color:#FF0000" id="'+name+'LevelRed"></div> \
+			<div style="position:absolute;bottom:8%; left:25%; width:5%; height:0%; background-color:#999999" id="'+name+'Threshold"></div> \
+			<img style="position:absolute;right:30%; bottom:1%;width:40%; padding-bottom:10%;" src="images/AGCOff.png" id="'+name+'Off" onclick="unmuteButton(event)">  \
+			<img style="position:absolute;right:30%; bottom:1%;width:40%; padding-bottom:10%;" src="images/AGCOn.png" id="'+name+'On" onclick="muteButton(event)">  \
+			<div style="position:absolute;top:1%; left:3%; width:90%; height:10%;color:#AAAAAA" id="'+name+'Name"> \
+				<marquee behavior="slide" direction="left">'+obj.name+'</marquee> \
+			</div> \
+		</div>'
+	let mixerRack = document.getElementById("mixerRack");		// Add this collection of items to the mixerRack div
+	mixerRack.innerHTML += channel;
+	obj.displayID = name;
+}
+
+function createMicUI(obj) {
+	let name = "ID"+obj.channel;
+	// build UI elements for a single channel with element IDs that include the name requested
+	// non LED: <div style="position:absolute;bottom:8%; right:5%; width:40%; height:65%; background-color:#999999" id="'+name+'SlideBox></div> \
+	let channel =' <div id="'+name+'" style="position:relative;width:100px; height:100%; display: inline-block"> \
+			<img style="position:relative;bottom:0%; right:0%; width:100%; height:99%;" src="images/controlBG.png">  \
+			<img style="position:absolute;bottom:8%; right:5%; width:40%; height:10%;" src="images/slider.png" id="'+name+'Slider" >  \
+			<div style="position:absolute;bottom:8%; right:5%; width:90%; height:65%;" draggable="false" id="'+name+'SlideBtn" \
+				onmousedown="sliderDragStart(event)" onmousemove="sliderDrag(event)" onmouseup="sliderDragStop(event)" \
+				ontouchstart="sliderDragStart(event)" ontouchmove="sliderDrag(event)" ontouchend="sliderDragStop(event)"></div>  \
+			<div style="position:absolute;bottom:8%; left:25%; width:5%; height:0%; background-color:#66FF33" id="'+name+'LevelGreen"></div> \
+			<div style="position:absolute;bottom:57.5%; left:25%; width:5%; height:0%; background-color:#FF6600" id="'+name+'LevelOrange"></div> \
+			<div style="position:absolute;bottom:66.8%; left:25%; width:5%; height:0%; background-color:#FF0000" id="'+name+'LevelRed"></div> \
+			<div style="position:absolute;bottom:8%; left:25%; width:5%; height:0%; background-color:#999999" id="'+name+'Threshold"></div> \
 			<img style="position:absolute;right:5%; top:10%;width:40%; padding-bottom:10%;" src="images/channelOff.png" id="'+name+'Off" onclick="unmuteButton(event)">  \
 			<img style="position:absolute;right:5%; top:10%;width:40%; padding-bottom:10%;" src="images/channelOn.png" id="'+name+'On" onclick="muteButton(event)">  \
 			<img style="position:absolute;left:5%; top:10%;width:40%; padding-bottom:10%;" src="images/talkOff.png" id="'+name+'Off" onclick="unmuteButton(event)">  \
@@ -594,8 +646,8 @@ function handleAudio(stream) {						// We have obtained media access
 	}
 	soundcardSampleRate = context.sampleRate;
 	micAccessAllowed = true;
-	createChannelUI( mixOut );					// Create the output mix channel UI
-	createChannelUI( micIn );					// Create the microphone channel UI
+	createOutputUI( mixOut );					// Create the output mix channel UI
+	createMicUI( micIn );						// Create the microphone channel UI
 	let liveSource = context.createMediaStreamSource(stream); 	// Create audio source (mic)
 	let node = undefined;
 	if (!context.createScriptProcessor) {				// Audio processor node
