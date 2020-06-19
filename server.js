@@ -9,14 +9,16 @@ const NumberOfChannels = 20;						// Max number of channels in this server
 var channels = [];							// Each channel's data & buffer held here
 for (let i=0; i < NumberOfChannels; i++) {				// Create all the channels pre-initialized
 	channels[i] = {
-		packets 	: [],
-		name		: "",
-		socketID	: undefined,
-		shortages 	: 0,
-		overflows 	: 0,
-		newBuf 		: true,		
-		maxBufferSize	: maxBufferSize,
-		mixTriggerLevel	: mixTriggerLevel,
+		packets 	: [],					// the packet buffer where all channel audio is held
+		name		: "",					// name given by user or client 
+		socketID	: undefined,				// socket associated with this channel
+		shortages 	: 0,					// for monitoring
+		overflows 	: 0,					// for monitoring
+		newBuf 		: true,					// New buffers are left to build up to minTriggerLevel
+		maxBufferSize	: maxBufferSize,			// Buffer max size unless recording
+		mixTriggerLevel	: mixTriggerLevel,			// Minimum amount in buffer before forming part of mix
+		recording	: false,				// Flags that all audio is to be recorded and looped
+		playHead	: 0,					// Points to where we are reading from the buffer
 	}
 }
 var venueMixGain = 1;							// Gain applied to the upstream mix using auto gain control
@@ -174,13 +176,15 @@ io.sockets.on('connection', function (socket) {
 		console.log("User disconnected:", socket.id);
 		channels.forEach(c => {					// Find the channel assigned to this connection
 			if (c.socketID == socket.id) {			// and free up its channel
-				c.packets = [];
-				c.name = "";
-				c.socketID = undefined;
-				c.shortages = 0,
-				c.overflows = 0,
-				c.newBuf = true;
-				clientsLive--;
+				if (!c.recording) {			// If recording the channel remains unchanged
+					c.packets = [];			// so that audio can continue to be generated
+					c.name = "";
+					c.socketID = undefined;
+					c.shortages = 0,
+					c.overflows = 0,
+					c.newBuf = true;
+					clientsLive--;
+				}
 			}
 		});
 	});
@@ -234,7 +238,8 @@ io.sockets.on('connection', function (socket) {
 		channel.socketID = socket.id;				// Store socket ID associated with channel
 		packet.socketID = socket.id;				// Also store it in the packet to help client
 		channel.packets.push(packet);				// Add packet to its channel packet buffer
-		if (channel.packets.length > channel.maxBufferSize) {	// If buffer full, remove oldest item
+		if ((channel.packets.length > channel.maxBufferSize) &&	// If buffer full and we are not recording
+			(channel.recording == false)) {			// the buffer then remove the oldest packet.
 			channel.packets.shift();
 			channel.overflows++;				// Log overflows per channel
 			overflows++;					// and also globally for monitoring
@@ -356,10 +361,16 @@ function generateMix () {
 	let clientPackets = []; 					// All client audio packets that are part of the mix
 	channels.forEach( c => {
 		if (c.newBuf == false) {				// Ignore new buffers that are filling up
-			let packet = c.packets.shift();			// Get first packet of audio
+			let packet;
+			if (c.recording) {				// If recording then read the packet 
+				packet = c.audio[c.playhead];		// at the playhead position
+				c.playhead++;				// and move the playhead forward
+			} else
+				packet = c.packets.shift();		// Take first packet of audio from channel buffer
 			if (packet == undefined) {			// If this client buffer has been emptied...
 				c.shortages++;				// Note shortages for this channel
 				shortages++;				// and also for global monitoring
+				c.playhead = 0;				// Set buffer play position to the start
 			}
 			else {
 				clientPackets.push( packet );		// Store packet of source audio for sending
