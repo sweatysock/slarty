@@ -394,6 +394,7 @@ function generateMix () {
 				"timestamp"	: now,			// Used for round trip time measurements
 				"peak" 		: obj.peak,		// Saves having to calculate again
 				"channel"	: upstreamServerChannel,// Send assigned channel to help server
+				"recording"	: false,		// Make sure the upstream server never records
 			});
 			upstreamOut++;
 		} 
