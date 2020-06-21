@@ -127,7 +127,7 @@ upstreamServer.on('d', function (packet) {
 			rtt = now - ts;					// Measure round trip time
 		}
 	}
-	mix = midBoostFilter(mix);					// Filter upstream audio to made it distant
+//	mix = midBoostFilter(mix);					// Filter upstream audio to made it distant
 	let obj = applyAutoGain(mix,venueMixGain,1);			// Control mix audio level
 	venueMixGain = obj.finalGain;					// Store gain for next loop
 	upstreamMax = obj.peak;						// For monitoring purposes
@@ -205,6 +205,7 @@ io.sockets.on('connection', function (socket) {
 		}
 		socket.emit('channel', { channel:channel });		// Send channel assignment result to client
 		if (channel != -1) {					// Channel has been successfully assigned
+			// MARK store sevrer URL and active channel info and URLs if provided
 			channels[channel].packets = [];			// Reset channel values
 			channels[channel].name = "";			// This will be set when data comes in
 			channels[channel].socketID = socket.id;
@@ -402,13 +403,14 @@ function generateMix () {
 				liveChannels[c] = {
 					name	: channels[c].name,
 					queue 	: channels[c].packets.length,
-					// ADD URL if there is one (only downstream servers have them)
-					// ADD peak level for each 
+					// MARK ADD URL if there is one (only downstream servers have them)
+					// MARK ADD peak level for each 
 				}
 			}
 		io.sockets.in('downstream').emit('d', {			// Send all audio channels to all downstream clients
 			"channels"	: clientPackets,
 			"liveChannels"	: liveChannels,			// Include server info about live clients and their queues
+			// MARK SEND our server URL
 		});
 		packetsOut++;						// Sent data so log it and set time limit for next send
 		packetClassifier[clientPackets.length] = packetClassifier[clientPackets.length] + 1;
