@@ -402,6 +402,8 @@ function generateMix () {
 				liveChannels[c] = {
 					name	: channels[c].name,
 					queue 	: channels[c].packets.length,
+					// ADD URL if there is one (only downstream servers have them)
+					// ADD peak level for each 
 				}
 			}
 		io.sockets.in('downstream').emit('d', {			// Send all audio channels to all downstream clients
