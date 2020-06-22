@@ -333,7 +333,7 @@ function convertIdToObj(id) {						// Translate HTML DOM IDs to JS data objects
 	id = id.substring(2);
 	if (parseFloat(id)) id = parseFloat(id);
 console.log(id);
-	if (typeof(id) == "number") {
+	if ((typeof(id) == "number") || (id == "0")) {			// 0 seems not to come through as a number
 		id = channels[id];					// ID is channel number so get the channel object
 	} else {
 		id = eval(id);						// Convert the ID to the object (micIn or mixOut)
