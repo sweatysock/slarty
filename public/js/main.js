@@ -350,8 +350,8 @@ trace2("rec");
 }
 
 function muteButton(e) {
-trace2("mute");
 	let id = event.target.parentNode.id;
+trace2("mute ",id);
 	let b = document.getElementById(id+"On");
 	b.style.visibility = "hidden";
 	id = convertIdToObj(id);
@@ -1100,6 +1100,34 @@ function enterState( newState ) {
 
 
 
+// SVG analysis testing...
+//
+window.addEventListener("load", function(event){
+	deriveTree();							
+});
+
+function deriveTree() {
+	let svg = document.getElementById('venue').contentDocument;
+	let kids = svg.getElementsByClassName("selectable");
+	kids = svg.getElementsByTagName("rect"); 
+	for (var i=0,len=kids.length;i<len;++i) {
+		let kid = kids[i];
+		if (kid.nodeType!=1) continue;
+		switch(kid.nodeName){
+			case 'circle':
+			break;
+			case 'rect':
+				let x = parseFloat(kid.getAttributeNS(null,'x'));
+				let y = parseFloat(kid.getAttributeNS(null,'y'));
+				let width = parseFloat(kid.getAttributeNS(null,'width'));
+				let height = parseFloat(kid.getAttributeNS(null,'height'));
+				let ID = kid.getAttributeNS(null,'id');
+console.log("Found a rectangle");
+console.log(x,y,width,height,ID);
+			break;
+		}
+	}
+}
 
 enterState( idleState );
 trace("Starting V3.1");
