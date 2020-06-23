@@ -42,6 +42,8 @@ function addCommands(newCommands) {
 	if (newCommands.outGain != undefined) commands.outGain = newCommands.outGain;
 	if (newCommands.displayURL != undefined) commands.displayURL = newCommands.displayURL;
 	if (newCommands.displayText != undefined) commands.displayText = newCommands.displayText;
+console.log("NEW COMMANDS");
+console.log(commands);
 }
 
 // Network code
@@ -239,7 +241,9 @@ io.sockets.on('connection', function (socket) {
 
 	socket.on('commands', function (data) {
 		// A super has sent us a new commands
-		addCommands(data.commands);
+console.log("Commands incoming");
+console.log(data);
+		addCommands(data);
 	});
 
 	socket.on('u', function (packet) { 				// Audio coming up from one of our downstream clients
@@ -490,6 +494,7 @@ function printReport() {
 	console.log("Client buffer lengths: ",cbs);
 	console.log(packetClassifier);
 	io.sockets.in('supers').emit('s',{
+		"server":	myServerName,
 		"idle":		idleState.total,
 		"upstream":	upstreamState.total,
 		"downstream":	downstreamState.total,

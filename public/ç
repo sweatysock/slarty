@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+	<meta charset='utf-8'>
+	<title>Audence guts</title>
+	<script type="text/javascript" src="./js/jquery-2.1.3.min.js"></script>
+	<script type="text/javascript" src="./js/socket.io.js"></script>
+	<script type="text/javascript" src="./js/slartyguts.js"></script>
+
+	<link rel="stylesheet" href="./css/main.css">
+</head>
+
+<body style="background-color:#000000; font-family: Impact, Charcoal, sans-serif;font-size: 4vmin;">
+	<div id="main" style="position:fixed; top:2%; left:1%; width:98%; height:96%; background-color: #333333">
+		<div id="bigPicture" style="position:absolute; top:10%; left:10%; width:80%; height:80%; ">
+			<img id="system" style="position:absolute; width:100%; bottom:15%; right:0%; height:70%; object-fit: scale-down; " src="images/system.png">
+			<div id="upServer" style="text-align: center;color: #FFC000;position:absolute; top:7%; left:46%;transform: translate(-50%, -50%)">upstream server</div>
+			<div id="idle" style="text-align: center;color: #FFC000;position:absolute; top:19%; left:35%;transform: translate(-50%, -50%)">idle</div>
+			<div id="upstream" style="text-align: center;color: #333333;position:absolute; top:22%; left:46%;transform: translate(-50%, -50%)">upstream</div>
+			<div id="downstream" style="text-align: center;color: #333333;position:absolute; top:51%; left:30%;transform: translate(-50%, -50%)">downstream</div>
+			<div id="genMix" style="text-align: center;color: #333333;position:absolute; top:40%; left:46%;transform: translate(-50%, -50%)">genMix</div>
+			<div id="clients" style="text-align: center;color: #FFC000;position:absolute; top:76%; left:29%;transform: translate(-50%, -50%)">clients</div>
+			<div id="inC" style="text-align: center;color: #FFC000;position:absolute; top:48%; left:43%;transform: translate(-50%, -50%)">in</div>
+			<div id="out" style="text-align: center;color: #FFC000;position:absolute; top:32%; left:36%;transform: translate(-50%, -50%)">out</div>
+			<div id="upShortages" style="text-align: center;color: #FFC000;position:absolute; top:40%; left:44%;">upShort</div>
+			<div id="upOverflows" style="text-align: center;color: #FFC000;position:absolute; top:32%; left:44%;">upOver</div>
+			<div id="overflows" style="text-align: center;color: #FFC000;position:absolute; top:50%; left:58%;">overflows</div>
+			<div id="shortages" style="text-align: center;color: #FFC000;position:absolute; top:88%; left:58%;">shortages</div>
+			<div id="forcedMixes" style="text-align: center;color: #FFC000;position:absolute; top:35%; left:55%;">forced</div>
+			<div id="cbs" style="text-align: center;color: #FFC000;position:absolute; top:60%; left:58%;">cbs</div>
+			<div id="pacClass" style="text-align: center;color: #FFC000;position:absolute; top:75%; left:58%;">pacClass</div>
+			<div id="upOut" style="text-align: center;color: #FFC000;position:absolute; top:17%; left:41%;transform: translate(-50%, -50%)">upOut</div>
+			<div id="upIn" style="text-align: center;color: #FFC000;position:absolute; top:11%; left:50%;">upIn</div>
+		</div>
+	</div>
+</body>
+
+</html>
+

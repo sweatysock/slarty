@@ -7,26 +7,25 @@ socketIO.on('connect', function (socket) {
 	console.log('socket connected!');
 	socketConnected = true;
 	socketIO.emit("superHi"); 	// Say hi to the server so it adds us to its list of supervisors
+});
 
-	socketIO.on('s', function (data) { 
-		document.getElementById("idle").innerHTML = data["idle"];
-		document.getElementById("upstream").innerHTML = data["upstream"];
-		document.getElementById("downstream").innerHTML = data["downstream"];
-		document.getElementById("genMix").innerHTML = data["genMix"];
-		document.getElementById("clients").innerHTML = data["clients"];
-		document.getElementById("inC").innerHTML = data["in"];
-		document.getElementById("out").innerHTML = data["out"];
-		document.getElementById("upShortages").innerHTML = data["upShort"];
-		document.getElementById("upOverflows").innerHTML = data["upOver"];
-		document.getElementById("overflows").innerHTML = data["overflows"];
-		document.getElementById("shortages").innerHTML = data["shortages"];
-		document.getElementById("forcedMixes").innerHTML = data["forcedMixes"];
-		document.getElementById("cbs").innerHTML = data["cbs"];
-		document.getElementById("pacClass").innerHTML = data["pacClass"];
-		document.getElementById("upServer").innerHTML = data["upServer"];
-		document.getElementById("upIn").innerHTML = data["upIn"];
-		document.getElementById("upOut").innerHTML = data["upOut"];
-	});
+socketIO.on('s', function (data) { 
+	document.title = data.server;
+	document.getElementById("idle").innerHTML = data["idle"];
+	document.getElementById("upstream").innerHTML = data["upstream"];
+	document.getElementById("downstream").innerHTML = data["downstream"];
+	document.getElementById("genMix").innerHTML = data["genMix"];
+	document.getElementById("clients").innerHTML = data["clients"];
+	document.getElementById("inC").innerHTML = data["in"];
+	document.getElementById("out").innerHTML = data["out"];
+	document.getElementById("overflows").innerHTML = data["overflows"];
+	document.getElementById("shortages").innerHTML = data["shortages"];
+	document.getElementById("forcedMixes").innerHTML = data["forcedMixes"];
+	document.getElementById("cbs").innerHTML = data["cbs"];
+	document.getElementById("pacClass").innerHTML = data["pacClass"];
+	document.getElementById("upServer").innerHTML = data["upServer"];
+	document.getElementById("upIn").innerHTML = data["upIn"];
+	document.getElementById("upOut").innerHTML = data["upOut"];
 });
 
 socketIO.on('disconnect', function () {
@@ -37,16 +36,60 @@ socketIO.on('disconnect', function () {
 // Set up behaviour for UI
 //
 document.addEventListener('DOMContentLoaded', function(event){
-	var upServer = document.getElementById('upServer');
-	upServer.textContent = "no upstream server";
-	upServer.addEventListener("keypress", (e) => {
+	let muteBtn = document.getElementById('muteBtn');
+	let micOpenBtn = document.getElementById('micOpenBtn');
+	muteBtn.onclick = ( (e) => {
+		socketIO.emit("commands",
+		{
+			"mute": true,
+		});
+		muteBtn.style.visibility = "hidden";
+		micOpenBtn.style.visibility = "visible";
+console.log("muted");
+	});
+	micOpenBtn.onclick = ( (e) => {
+		socketIO.emit("commands",
+		{
+			"mute": false,
+		});
+		muteBtn.style.visibility = "visible";
+		micOpenBtn.style.visibility = "hidden";
+console.log("open");
+	});
+	let gateDelayEntry = document.getElementById('gateDelayEntry');
+	gateDelayEntry.textContent = "5";
+	gateDelayEntry.addEventListener("keypress", (e) => {
 		if (e.which === 13) {
-			console.log("new server is ",upServer.innerHTML);
-			socketIO.emit("nus",
+			socketIO.emit("commands",
 			{
-				"upstreamServer": upServer.innerHTML,
+				"gateDelay": parseFloat(gateDelayEntry.innerHTML),
 			});
 			e.preventDefault();
+console.log("set gate delay to ",gateDelayEntry.innerHTML);
+		}
+	});
+	let toLevelEntry = document.getElementById('toLevelEntry');
+	toLevelEntry.textContent = "0.8";
+	toLevelEntry.addEventListener("keypress", (e) => {
+		if (e.which === 13) {
+			socketIO.emit("commands",
+			{
+				"talkoverLevel": parseFloat(toLevelEntry.innerHTML),
+			});
+			e.preventDefault();
+console.log("set talkover level to ",toLevelEntry.innerHTML);
+		}
+	});
+	let toLagEntry = document.getElementById('toLagEntry');
+	toLagEntry.textContent = "10";
+	toLagEntry.addEventListener("keypress", (e) => {
+		if (e.which === 13) {
+			socketIO.emit("commands",
+			{
+				"talkoverLag": parseFloat(toLagEntry.innerHTML),
+			});
+			e.preventDefault();
+console.log("set talkover lag to ",toLagEntry.innerHTML);
 		}
 	});
 });
