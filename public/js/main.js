@@ -55,7 +55,6 @@ var recording = false;
 
 
 function processCommands(newCommands) {					// Apply commands sent from upstream servers
-console.log(newCommands);
 	if (newCommands.mute != undefined) micIn.muted = newCommands.mute;
 	if (newCommands.gateDelay != undefined) gateDelay = newCommands.gateDelay;
 	if (newCommands.talkoverLevel != undefined) talkoverLevel = newCommands.talkoverLevel;
@@ -91,6 +90,7 @@ socketIO.on('d', function (data) {
 	enterState( dataInState );					// This is one of our key tasks
 	packetsIn++;							// For monitoring and statistics
 	serverLiveChannels = data.liveChannels;				// Keep this info for UI updating
+console.log(data.commands);
 	processCommands(data.commands);					// Apply any commands from server
 	if (micAccessAllowed) {						// Need access to audio before outputting
 		let mix = new Array(PacketSize).fill(0);		// Build up a mix of client audio from 0s

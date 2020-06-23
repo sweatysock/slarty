@@ -42,8 +42,6 @@ function addCommands(newCommands) {
 	if (newCommands.outGain != undefined) commands.outGain = newCommands.outGain;
 	if (newCommands.displayURL != undefined) commands.displayURL = newCommands.displayURL;
 	if (newCommands.displayText != undefined) commands.displayText = newCommands.displayText;
-console.log("NEW COMMANDS");
-console.log(commands);
 }
 
 // Network code
@@ -241,8 +239,6 @@ io.sockets.on('connection', function (socket) {
 
 	socket.on('commands', function (data) {
 		// A super has sent us a new commands
-console.log("Commands incoming");
-console.log(data);
 		addCommands(data);
 	});
 
@@ -409,6 +405,7 @@ function generateMix () {
 				"peak" 		: obj.peak,		// Saves having to calculate again
 				"channel"	: upstreamServerChannel,// Send assigned channel to help server
 				"recording"	: false,		// Make sure the upstream server never records
+				// MARK send liveChannels upstream
 			});
 			upstreamOut++;
 		} 
