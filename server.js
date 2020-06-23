@@ -31,8 +31,17 @@ var mixTimer = 0;							// Timer that triggers generateMix() if needed
 var myServerName = process.env.servername; 				// Get servername from heroku config variable, if present
 if (myServerName == undefined)						// This name is used to identify us upstream ony
 	myServerName ="";						// If this is empty it will be set when we connect upstream
+var commands = {};							// Commands generated here or from upstream server
 
-
+function addCommands(newCommands) {
+	if (newCommands.mute == true) commands.mute = true; else commands.mute = undefined;
+	if (newCommands.gateDelay != undefined) commands.gateDelay = newCommands.gateDelay;
+	if (newCommands.talkoverLevel != undefined) commands.talkoverLevel = newCommands.talkoverLevel;
+	if (newCommands.talkoverLag != undefined) commands.talkoverLag = newCommands.talkoverLag;
+	if (newCommands.outGain != undefined) commands.outGain = newCommands.outGain;
+	if (newCommands.displayURL != undefined) commands.displayURL = newCommands.displayURL;
+	if (newCommands.displayText != undefined) commands.displayText = newCommands.displayText;
+}
 
 // Network code
 //
@@ -148,6 +157,7 @@ upstreamServer.on('d', function (packet) {
 		if (channels[0].packets.length >= channels[0].mixTriggerLevel) 
 			channels[0].newBuf = false;			// Buffer has filled enough. Channel can enter the mix
 	}
+	addCommands(packet.commands);					// Store upstream commands for sending downstream
 	enterState( genMixState );
 	if (enoughAudio()) generateMix();				// If there is enough audio buffered generate a mix
 	enterState( idleState );
@@ -226,10 +236,9 @@ io.sockets.on('connection', function (socket) {
 		socket.join('supers');
 	});
 
-	socket.on('nus', function (data) {
-		// A super has sent us a new upstream server to connect to
-		console.log("New upstream server ",data["upstreamServer"]," from ", socket.id);
-		connectUpstreamServer(data["upstreamServer"]);
+	socket.on('commands', function (data) {
+		// A super has sent us a new commands
+		addCommands(data.commands);
 	});
 
 	socket.on('u', function (packet) { 				// Audio coming up from one of our downstream clients
@@ -411,6 +420,7 @@ function generateMix () {
 		io.sockets.in('downstream').emit('d', {			// Send all audio channels to all downstream clients
 			"channels"	: clientPackets,
 			"liveChannels"	: liveChannels,			// Include server info about live clients and their queues
+			"commands"	: commands,			// Send commands downstream
 			// MARK SEND our server URL
 		});
 		packetsOut++;						// Sent data so log it and set time limit for next send
