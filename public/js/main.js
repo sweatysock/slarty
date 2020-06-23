@@ -52,10 +52,11 @@ var micIn = {								// and for microphone input
 	gate	: 1,							// Threshold gate. >0 means open.
 };
 var recording = false;
+var serverMuted = false;
 
 
 function processCommands(newCommands) {					// Apply commands sent from upstream servers
-	if (newCommands.mute != undefined) micIn.muted = newCommands.mute;
+	if (newCommands.mute != undefined) serverMuted = newCommands.mute; else serverMuted = false;
 	if (newCommands.gateDelay != undefined) gateDelay = newCommands.gateDelay;
 	if (newCommands.talkoverLevel != undefined) talkoverLevel = newCommands.talkoverLevel;
 	if (newCommands.talkoverLag != undefined) talkoverLag = newCommands.talkoverLag;
@@ -90,7 +91,6 @@ socketIO.on('d', function (data) {
 	enterState( dataInState );					// This is one of our key tasks
 	packetsIn++;							// For monitoring and statistics
 	serverLiveChannels = data.liveChannels;				// Keep this info for UI updating
-console.log(data.commands);
 	processCommands(data.commands);					// Apply any commands from server
 	if (micAccessAllowed) {						// Need access to audio before outputting
 		let mix = new Array(PacketSize).fill(0);		// Build up a mix of client audio from 0s
@@ -610,7 +610,7 @@ function processAudio(e) {						// Main processing loop
 				micIn.peak = obj.peak;			// Note peak for local display
 			peak = obj.peak					// peak for packet to be sent
 			micIn.gain = obj.finalGain;			// Store gain for next loop
-			if ((peak == 0) || (micIn.muted)) { 		// Silent audio
+			if ((peak == 0) || (micIn.muted) || (serverMuted)) { 	// Silent audio
 				inAudio = [];				// Send empty audio packet
 				peak = 0;
 			}
