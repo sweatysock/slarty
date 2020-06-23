@@ -34,6 +34,7 @@ if (myServerName == undefined)						// This name is used to identify us upstream
 var commands = {};							// Commands generated here or from upstream server
 
 function addCommands(newCommands) {
+	if (newCommands == undefined) return;
 	if (newCommands.mute == true) commands.mute = true; else commands.mute = undefined;
 	if (newCommands.gateDelay != undefined) commands.gateDelay = newCommands.gateDelay;
 	if (newCommands.talkoverLevel != undefined) commands.talkoverLevel = newCommands.talkoverLevel;
