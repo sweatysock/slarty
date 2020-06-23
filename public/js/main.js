@@ -55,6 +55,7 @@ var recording = false;
 
 
 function processCommands(newCommands) {					// Apply commands sent from upstream servers
+console.log(newCommands);
 	if (newCommands.mute != undefined) micIn.muted = newCommands.mute;
 	if (newCommands.gateDelay != undefined) gateDelay = newCommands.gateDelay;
 	if (newCommands.talkoverLevel != undefined) talkoverLevel = newCommands.talkoverLevel;
