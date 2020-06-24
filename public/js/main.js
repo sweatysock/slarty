@@ -642,11 +642,11 @@ function processAudio(e) {						// Main processing loop
 	}
 	let max = maxValue(outAudio);					// Get peak level of this outgoing audio
 	thresholdBuffer.unshift( max );					// add to start of dynamic threshold queue
-	micIn.threshold = (maxValue([
+	micIn.threshold = (maxValue([					// Apply most aggressive threshold near current +/-1
 		thresholdBuffer[echoTest.sampleDelay-1],
 		thresholdBuffer[echoTest.sampleDelay],	
 		thresholdBuffer[echoTest.sampleDelay+1]
-	])) * echoTest.factor * micIn.gain;				// Apply most aggressive threshold near current +/-1
+	])) * echoTest.factor * mixOut.gain;				// multiply by factor and mixOutGain
 	thresholdBuffer.pop();						// Remove oldest threshold buffer value
 	let spkrAudio = upSample(outAudio, SampleRate, soundcardSampleRate); // Bring back to HW sampling rate
 	for (let i in outData) 
@@ -1021,20 +1021,20 @@ function printReport() {
 	if ((overflows > 2) || (shortages > 2)) 
 		if (maxBuffSize < 10000) maxBuffSize += 100;		// Increase speaker buffer size if we are overflowing or short
 	if (maxBuffSize > 6000) maxBuffSize -= 20;			// Steadily drop buffer back to size to compensate
-	if (packetsOut < 30) sendShortages++;				// Monitor if we are sending enough audio
-	else sendShortages--;
-	if ((sendShortages > 10) && (displayRefresh == 100)) {		// 10 seconds of shortages is bad. Slow UI animation.
-trace("Not ending enough audio... slowing animation to 0.5s");
-		displayRefresh = 500; sendShortages = 0;
-	}
-	if ((sendShortages > 10) && (displayRefresh == 500)) {		// 10 more seconds... slow it even more
-trace("Still not ending enough audio... slowing animation to 1s");
-		displayRefresh = 1000; sendShortages = 0;
-	}
-	if ((sendShortages > 10) && (displayRefresh == 1000)) {		// another 10 seconds? Stop animation completely.
-trace("Still not sending enough audio. Stopping UI animation ");
-		displayRefresh = 2000; sendShortages = 0;
-	}
+//	if (packetsOut < 30) sendShortages++;				// Monitor if we are sending enough audio
+//	else sendShortages--;
+//	if ((sendShortages > 10) && (displayRefresh == 100)) {		// 10 seconds of shortages is bad. Slow UI animation.
+//trace("Not ending enough audio... slowing animation to 0.5s");
+//		displayRefresh = 500; sendShortages = 0;
+//	}
+//	if ((sendShortages > 10) && (displayRefresh == 500)) {		// 10 more seconds... slow it even more
+//trace("Still not ending enough audio... slowing animation to 1s");
+//		displayRefresh = 1000; sendShortages = 0;
+//	}
+//	if ((sendShortages > 10) && (displayRefresh == 1000)) {		// another 10 seconds? Stop animation completely.
+//trace("Still not sending enough audio. Stopping UI animation ");
+//		displayRefresh = 2000; sendShortages = 0;
+//	}
 	packetsIn = 0;
 	packetsOut = 0;
 	overflows = 0;
