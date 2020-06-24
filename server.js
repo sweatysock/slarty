@@ -156,12 +156,13 @@ upstreamServer.on('d', function (packet) {
 			channels[0].packets.shift();
 			channels[0].overflows++;
 		}
-		if (channels[0].packets.length >= channels[0].mixTriggerLevel) 
+		if (channels[0].packets.length >= channels[0].mixTriggerLevel) {
 			channels[0].newBuf = false;			// Buffer has filled enough. Channel can enter the mix
+			enterState( genMixState );
+			if (enoughAudio()) generateMix();		// If there is enough buffered in all other channels generate mix
+		}
 	}
 	addCommands(packet.commands);					// Store upstream commands for sending downstream
-	enterState( genMixState );
-	if (enoughAudio()) generateMix();				// If there is enough audio buffered generate a mix
 	enterState( idleState );
 });
 
@@ -257,11 +258,12 @@ io.sockets.on('connection', function (socket) {
 			channel.overflows++;				// Log overflows per channel
 			overflows++;					// and also globally for monitoring
 		}
-		if (channel.packets.length >= channel.mixTriggerLevel) 
+		if (channel.packets.length >= channel.mixTriggerLevel) {
 			channel.newBuf = false;				// Buffer has filled enough. Channel can enter the mix
+			enterState( genMixState );
+			if (enoughAudio()) generateMix();		// If there is enough audio in all channels build mix
+		}
 		packetsIn++;
-		enterState( genMixState );
-		if (enoughAudio()) generateMix();			// If there is enough audio buffered generate a mix
 		enterState( idleState );
 	});
 });
@@ -352,6 +354,8 @@ function forceMix() {							// The timer has triggered a mix
 }
 
 function enoughAudio() {						// Is there enough audio to build a mix before timeout?
+	let now = new Date().getTime();
+	if (now > nextMixTimeLimit) return true;			// If timer has failed to trigger generate the mix now
 	let allFull = true; 
 	let fullCount = 0;		
 	channels.forEach( c => {
