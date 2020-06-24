@@ -60,6 +60,7 @@ function processCommands(newCommands) {					// Apply commands sent from upstream
 	if (newCommands.gateDelay != undefined) gateDelay = newCommands.gateDelay;
 	if (newCommands.talkoverLevel != undefined) talkoverLevel = newCommands.talkoverLevel;
 	if (newCommands.talkoverLag != undefined) talkoverLag = newCommands.talkoverLag;
+	if (newCommands.tholdFactor != undefined) echoTest.factor = newCommands.tholdFactor;
 	if (newCommands.outGain != undefined);
 	if (newCommands.displayURL != undefined);
 	if (newCommands.displayText != undefined);

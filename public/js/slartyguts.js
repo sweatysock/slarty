@@ -45,7 +45,6 @@ document.addEventListener('DOMContentLoaded', function(event){
 		});
 		muteBtn.style.visibility = "hidden";
 		micOpenBtn.style.visibility = "visible";
-console.log("muted");
 	});
 	micOpenBtn.onclick = ( (e) => {
 		socketIO.emit("commands",
@@ -54,7 +53,6 @@ console.log("muted");
 		});
 		muteBtn.style.visibility = "visible";
 		micOpenBtn.style.visibility = "hidden";
-console.log("open");
 	});
 	let gateDelayEntry = document.getElementById('gateDelayEntry');
 	gateDelayEntry.textContent = "5";
@@ -65,7 +63,6 @@ console.log("open");
 				"gateDelay": parseFloat(gateDelayEntry.innerHTML),
 			});
 			e.preventDefault();
-console.log("set gate delay to ",gateDelayEntry.innerHTML);
 		}
 	});
 	let toLevelEntry = document.getElementById('toLevelEntry');
@@ -77,7 +74,6 @@ console.log("set gate delay to ",gateDelayEntry.innerHTML);
 				"talkoverLevel": parseFloat(toLevelEntry.innerHTML),
 			});
 			e.preventDefault();
-console.log("set talkover level to ",toLevelEntry.innerHTML);
 		}
 	});
 	let toLagEntry = document.getElementById('toLagEntry');
@@ -89,7 +85,18 @@ console.log("set talkover level to ",toLevelEntry.innerHTML);
 				"talkoverLag": parseFloat(toLagEntry.innerHTML),
 			});
 			e.preventDefault();
-console.log("set talkover lag to ",toLagEntry.innerHTML);
+		}
+	});
+	let tholdFactorEntry = document.getElementById('tholdFactorEntry');
+	tholdFactorEntry.textContent = "10";
+	tholdFactorEntry.addEventListener("keypress", (e) => {
+		if (e.which === 13) {
+			socketIO.emit("commands",
+			{
+				"tholdFactor": parseFloat(tholdFactorEntry.innerHTML),
+			});
+			e.preventDefault();
+console.log("set threshold factor to ",tholdFactorEntry.innerHTML);
 		}
 	});
 });
