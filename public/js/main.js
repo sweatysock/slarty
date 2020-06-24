@@ -593,7 +593,6 @@ function processAudio(e) {						// Main processing loop
 		if (micIn.gate > 0) {					// If gate is open prepare the audio for sending
 			micAudio = downSample(inData, soundcardSampleRate, SampleRate);
 			resampledChunkSize = micAudio.length;		// Note how much resampled audio is needed
-			talkover();					// Mic is active so perhaps drop mix output
 			micIn.gate--;					// Gate slowly closes
 //			if (micIn.gate == 0)				// Gate is about to close
 //				fadeDown(micAudio);			// Fade sample down to zero for smooth sound
@@ -613,7 +612,8 @@ function processAudio(e) {						// Main processing loop
 			if ((peak == 0) || (micIn.muted) || (serverMuted)) { 	// Silent audio
 				inAudio = [];				// Send empty audio packet
 				peak = 0;
-			}
+			} else
+				talkover();				// Mic is active so drop mix output
 			let now = new Date().getTime();
 			socketIO.emit("u",
 			{
