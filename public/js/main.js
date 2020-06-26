@@ -873,7 +873,7 @@ function runEchoTest(audio) {						// Test audio system in a series of tests
 					edge = j;
 				}
 			let delay = (edge*1000)/soundcardSampleRate;	// convert result to mS
-			trace2("Pulse delay is ",delay,"mS");
+			trace2("Pulse delay is ",delay,"mS",soundcardSampleRate);
 			echoTest.delays.push(delay.toFixed(0));		// Gather results n mS for each step
 //			for (j=0; j<conv.length; j++)			// Normalize output for graphs
 //				conv[j] = conv[j]/max;
