@@ -55,7 +55,6 @@ document.addEventListener('DOMContentLoaded', function(event){
 		micOpenBtn.style.visibility = "hidden";
 	});
 	let gateDelayEntry = document.getElementById('gateDelayEntry');
-	gateDelayEntry.textContent = "5";
 	gateDelayEntry.addEventListener("keypress", (e) => {
 		if (e.which === 13) {
 			socketIO.emit("commands",
@@ -66,7 +65,6 @@ document.addEventListener('DOMContentLoaded', function(event){
 		}
 	});
 	let toLevelEntry = document.getElementById('toLevelEntry');
-	toLevelEntry.textContent = "0.8";
 	toLevelEntry.addEventListener("keypress", (e) => {
 		if (e.which === 13) {
 			socketIO.emit("commands",
@@ -77,7 +75,6 @@ document.addEventListener('DOMContentLoaded', function(event){
 		}
 	});
 	let toLagEntry = document.getElementById('toLagEntry');
-	toLagEntry.textContent = "10";
 	toLagEntry.addEventListener("keypress", (e) => {
 		if (e.which === 13) {
 			socketIO.emit("commands",
@@ -88,7 +85,6 @@ document.addEventListener('DOMContentLoaded', function(event){
 		}
 	});
 	let tholdFactorEntry = document.getElementById('tholdFactorEntry');
-	tholdFactorEntry.textContent = "10";
 	tholdFactorEntry.addEventListener("keypress", (e) => {
 		if (e.which === 13) {
 			socketIO.emit("commands",
