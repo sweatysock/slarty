@@ -514,8 +514,8 @@ function fadeDown(audio) {						// Fade sample linearly over length
 		audio[i] = audio[i] * ((audio.length - i)/audio.length);
 }
 
-var talkoverLevel = 0.8;						// Ceiling for mix when mic is active, 0 = half duplex
-var talkoverLag = 10;							// mS that talkover endures on talking stops
+var talkoverLevel = 0.1;						// Ceiling for mix when mic is active, 0 = half duplex
+var talkoverLag = 1;							// mS that talkover endures on talking stops
 var talkoverTimer = 0;							// timer used to slow talkover lift off
 function talkover() {							// Suppress mix level while mic is active
 	let now = new Date().getTime();
@@ -559,7 +559,7 @@ trace2("Noise threshold: ",noiseThreshold);
 }
 
 var thresholdBuffer = new Array(10).fill(0);				// Buffer dynamic thresholds here. 4 is typical. 10 is enough
-var gateDelay = 5;							// Amount of samples (time) the gate stays open
+var gateDelay = 1;							// Amount of samples (time) the gate stays open
 
 function processAudio(e) {						// Main processing loop
 	// There are two activities here (if not performing an echo test that is): 
@@ -873,18 +873,19 @@ function runEchoTest(audio) {						// Test audio system in a series of tests
 					edge = j;
 				}
 			let delay = (edge*1000)/soundcardSampleRate;	// convert result to mS
-			trace2("Pulse delay is ",delay,"mS");
+			trace2("Pulse delay is ",delay,"mS",max,edge);
 			echoTest.delays.push(delay.toFixed(0));		// Gather results n mS for each step
 //			for (j=0; j<conv.length; j++)			// Normalize output for graphs
 //				conv[j] = conv[j]/max;
 //			drawWave(results,name,(edge*100/results.length));
 		} else {						// All tests have been analyzed. Get conclusions.
 			trace2("Reviewing results");
-			let counts = [];				// Collate results 
+			let counts = [];				// Collate results on mS values
 			echoTest.delays.forEach(d => {if (counts[d] == null) counts[d] = 1; else counts[d]++});
 			let max = 0;
 			let winner = false;
 			for (let c in counts) {				// Find most agreed on result (mode)
+				if (counts[c] > max) max = counts[c];
 				if (counts[c] >5) {
 					trace2("Delay is ",c);
 					winner = true;
@@ -913,6 +914,8 @@ function runEchoTest(audio) {						// Test audio system in a series of tests
 				trace2("Factor average is ",echoTest.factor);
 			} else {
 				trace2("No clear result");		// No agreement, no result
+				if (max > 3)
+					trace2("It may be worth repeating the test");
 			}
 			echoTest.running = false;			// Stop test 
 		}
