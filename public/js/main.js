@@ -885,7 +885,7 @@ function runEchoTest(audio) {						// Test audio system in a series of tests
 			let max = 0;
 			let winner = false;
 			for (let c in counts) {				// Find most agreed on result (mode)
-				if (counts(c) > max) max = counts(c);
+				if (counts[c] > max) max = counts[c];
 				if (counts[c] >5) {
 					trace2("Delay is ",c);
 					winner = true;
