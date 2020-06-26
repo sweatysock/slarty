@@ -514,8 +514,8 @@ function fadeDown(audio) {						// Fade sample linearly over length
 		audio[i] = audio[i] * ((audio.length - i)/audio.length);
 }
 
-var talkoverLevel = 0.8;						// Ceiling for mix when mic is active, 0 = half duplex
-var talkoverLag = 10;							// mS that talkover endures on talking stops
+var talkoverLevel = 0.1;						// Ceiling for mix when mic is active, 0 = half duplex
+var talkoverLag = 1;							// mS that talkover endures on talking stops
 var talkoverTimer = 0;							// timer used to slow talkover lift off
 function talkover() {							// Suppress mix level while mic is active
 	let now = new Date().getTime();
@@ -559,7 +559,7 @@ trace2("Noise threshold: ",noiseThreshold);
 }
 
 var thresholdBuffer = new Array(10).fill(0);				// Buffer dynamic thresholds here. 4 is typical. 10 is enough
-var gateDelay = 5;							// Amount of samples (time) the gate stays open
+var gateDelay = 1;							// Amount of samples (time) the gate stays open
 
 function processAudio(e) {						// Main processing loop
 	// There are two activities here (if not performing an echo test that is): 
@@ -799,7 +799,7 @@ var echoTest = {
 	results		: [],						// Samples of each test buffer here
 	delays 		: [],						// Array of final measurements
 	delay		: 129,	// Default value			// Final delay measurement result stored here
-	factor		: 1,	// Default value			// Final sensitivity factor stored here
+	factor		: 0.05,	// Default value			// Final sensitivity factor stored here
 	sampleDelay	: 5,	// Default value			// Final number of samples to delay dynamic threshold by
 };
 
@@ -885,6 +885,7 @@ function runEchoTest(audio) {						// Test audio system in a series of tests
 			let max = 0;
 			let winner = false;
 			for (let c in counts) {				// Find most agreed on result (mode)
+				if (counts(c) > max) max = counts(c);
 				if (counts[c] >5) {
 					trace2("Delay is ",c);
 					winner = true;
@@ -909,11 +910,12 @@ function runEchoTest(audio) {						// Test audio system in a series of tests
 					}
 				}
 				// Get average factor value
-//				echoTest.factor = avgValue(factors) * 1.1; // boost factor to give echo margin
-				echoTest.factor = 1.2;			// In the end it seems better to boost!
+				echoTest.factor = avgValue(factors) * 1.1; // boost factor to give echo margin
 				trace2("Factor average is ",echoTest.factor);
 			} else {
 				trace2("No clear result");		// No agreement, no result
+				if (max > 3)
+					trace2("It may be worth repeating the test");
 			}
 			echoTest.running = false;			// Stop test 
 		}
