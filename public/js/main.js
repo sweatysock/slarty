@@ -866,14 +866,14 @@ function runEchoTest(audio) {						// Test audio system in a series of tests
 				conv.push(sum);				// push each result to output
 			}
 			let max = 0;
-			let edge;
+			let edge = 0;
 			for (j=0; j<conv.length; j++)			// Find max = edge of pulse
 				if (conv[j] > max) {
 					max = conv[j];
 					edge = j;
 				}
-			let delay = (edge*1000)/soundcardSampleRate;	// convert result to mS
-			trace2("Pulse delay is ",delay,"mS",max,edge);
+			let delay = Math.floor((edge*100)/soundcardSampleRate)*10;	// convert result to nearest 10mS
+			trace2("Pulse delay is ",delay,"mS");
 			echoTest.delays.push(delay.toFixed(0));		// Gather results n mS for each step
 //			for (j=0; j<conv.length; j++)			// Normalize output for graphs
 //				conv[j] = conv[j]/max;
