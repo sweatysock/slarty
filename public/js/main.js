@@ -680,7 +680,7 @@ function handleAudio(stream) {						// We have obtained media access
 	node.onaudioprocess = processAudio;				// Link the callback to the node
 
 	let lowFreq = 300;						// Bandpass to clean up Mic
-	let highFreq = 2000;
+	let highFreq = 4000;
 	let geometricMean = Math.sqrt(lowFreq * highFreq);
 	let micFilter1 = context.createBiquadFilter();
 	micFilter1.type = 'bandpass';
@@ -902,7 +902,7 @@ function runEchoTest(audio) {						// Test audio system in a series of tests
 			let winner = false;
 			for (let c in counts) {				// Find most agreed on result (mode)
 				if (counts[c] > max) max = counts[c];
-				if (counts[c] >5) {
+				if ((c > 0) && (counts[c] > 5)) {
 					trace2("Delay is ",c);
 					winner = true;
 					echoTest.delay = c;		// Store final delay result
