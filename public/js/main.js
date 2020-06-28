@@ -56,7 +56,6 @@ var serverMuted = false;
 
 
 function processCommands(newCommands) {					// Apply commands sent from upstream servers
-	console.log(newCommands);
 	if (newCommands.mute != undefined) serverMuted = newCommands.mute; else serverMuted = false;
 	if (newCommands.gateDelay != undefined) gateDelay = newCommands.gateDelay;
 	if (newCommands.talkoverLevel != undefined) talkoverLevel = newCommands.talkoverLevel;
@@ -680,19 +679,34 @@ function handleAudio(stream) {						// We have obtained media access
 	}
 	node.onaudioprocess = processAudio;				// Link the callback to the node
 
-	let lowFreq = 100;						// Bandpass to clean up Mic
-	let highFreq = 4000;
+	let lowFreq = 300;						// Bandpass to clean up Mic
+	let highFreq = 2000;
 	let geometricMean = Math.sqrt(lowFreq * highFreq);
-	let micFilter = context.createBiquadFilter();
-	micFilter.type = 'bandpass';
-	micFilter.frequency.value = geometricMean;
-	micFilter.Q.value = geometricMean / (highFreq - lowFreq);
+	let micFilter1 = context.createBiquadFilter();
+	micFilter1.type = 'bandpass';
+	micFilter1.frequency.value = geometricMean;
+	micFilter1.Q.value = geometricMean / (highFreq - lowFreq);
+	let micFilter2 = context.createBiquadFilter();
+	micFilter2.type = 'bandpass';
+	micFilter2.frequency.value = geometricMean;
+	micFilter2.Q.value = geometricMean / (highFreq - lowFreq);
+	let micFilter3 = context.createBiquadFilter();
+	micFilter3.type = 'bandpass';
+	micFilter3.frequency.value = geometricMean;
+	micFilter3.Q.value = geometricMean / (highFreq - lowFreq);
+	let micFilter4 = context.createBiquadFilter();
+	micFilter4.type = 'bandpass';
+	micFilter4.frequency.value = geometricMean;
+	micFilter4.Q.value = geometricMean / (highFreq - lowFreq);
 	
 	let splitter = context.createChannelSplitter(2);		// Split signal for echo cancelling
 
 	// Time to connect everything...
-	liveSource.connect(micFilter);					// Mic goes to micFilter
-	micFilter.connect(node);					// micFilter goes to audio processor
+	liveSource.connect(micFilter1);					// Mic goes to micFilter1
+	micFilter1.connect(micFilter2);					// the rest are chained togather
+	micFilter2.connect(micFilter3);					// the rest are chained togather
+	micFilter3.connect(micFilter4);					// the rest are chained togather
+	micFilter4.connect(node);					// micFilter goes to audio processor
 	node.connect(splitter);						// our processor feeds to a splitter
 	splitter.connect(context.destination,0);			// other output goes to speaker
 
@@ -1007,7 +1021,7 @@ function printReport() {
 	if (!pauseTracing) {
 		trace("Idle = ", idleState.total, " data in = ", dataInState.total, " audio in/out = ", audioInOutState.total," UI work = ",UIState.total);
 		trace("Sent = ",packetsOut," Heard = ",packetsIn," overflows = ",overflows," shortages = ",shortages," RTT = ",rtt.toFixed(1));
-		trace("Threshold delay:",echoTest.delay,"micIn.peak: ",micIn.peak.toFixed(1)," mixOut.peak: ",mixOut.peak.toFixed(1)," speaker buff: ",spkrBuffer.length," Max Buff: ",maxBuffSize);
+		trace("Threshold delay:",echoTest.delay," micIn.peak:",micIn.peak.toFixed(1)," mixOut.peak:",mixOut.peak.toFixed(1)," speaker buff:",spkrBuffer.length," Max Buff:",maxBuffSize);
 		trace("Levels of output: ",levelCategories);
 	}
 //	setNoiseThreshold();						// Set mic noise threshold based on level categories
