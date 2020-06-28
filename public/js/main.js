@@ -56,7 +56,7 @@ var serverMuted = false;
 
 
 function processCommands(newCommands) {					// Apply commands sent from upstream servers
-	trace2(newCommands);
+	console.log(newCommands);
 	if (newCommands.mute != undefined) serverMuted = newCommands.mute; else serverMuted = false;
 	if (newCommands.gateDelay != undefined) gateDelay = newCommands.gateDelay;
 	if (newCommands.talkoverLevel != undefined) talkoverLevel = newCommands.talkoverLevel;
