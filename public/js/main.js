@@ -61,6 +61,7 @@ function processCommands(newCommands) {					// Apply commands sent from upstream
 	if (newCommands.talkoverLevel != undefined) talkoverLevel = newCommands.talkoverLevel;
 	if (newCommands.talkoverLag != undefined) talkoverLag = newCommands.talkoverLag;
 	if (newCommands.tholdFactor != undefined) echoTest.factor = newCommands.tholdFactor;
+	if (newCommands.noiseThreshold != undefined) noiseThreshold = newCommands.noiseThreshold;
 	if (newCommands.outGain != undefined);
 	if (newCommands.displayURL != undefined);
 	if (newCommands.displayText != undefined);
@@ -542,7 +543,7 @@ function levelClassifier( v ) {
 	}
 }
 
-var noiseThreshold = 0;							// Base threshold for mic signal
+var noiseThreshold = 0.5;							// Base threshold for mic signal
 function setNoiseThreshold () {						// Set the mic threshold to remove most background noise
 	let max = 0;
 	for (let i=0; i<14; i++)
@@ -1005,7 +1006,7 @@ function printReport() {
 	if (!pauseTracing) {
 		trace("Idle = ", idleState.total, " data in = ", dataInState.total, " audio in/out = ", audioInOutState.total," UI work = ",UIState.total);
 		trace("Sent = ",packetsOut," Heard = ",packetsIn," overflows = ",overflows," shortages = ",shortages," RTT = ",rtt.toFixed(1));
-		trace("micIn.peak: ",micIn.peak.toFixed(1)," micIn.gain: ",micIn.gain.toFixed(1)," mixOut.peak: ",mixOut.peak.toFixed(1)," mixOut.gain: ",mixOut.gain.toFixed(1)," speaker buff: ",spkrBuffer.length," Max Buff: ",maxBuffSize);
+		trace("Threshold delay:",echoTest.delay,"micIn.peak: ",micIn.peak.toFixed(1)," mixOut.peak: ",mixOut.peak.toFixed(1)," speaker buff: ",spkrBuffer.length," Max Buff: ",maxBuffSize);
 		trace("Levels of output: ",levelCategories);
 	}
 //	setNoiseThreshold();						// Set mic noise threshold based on level categories

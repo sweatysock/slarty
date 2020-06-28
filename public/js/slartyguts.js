@@ -95,6 +95,17 @@ document.addEventListener('DOMContentLoaded', function(event){
 console.log("set threshold factor to ",tholdFactorEntry.innerHTML);
 		}
 	});
+	let noiseThresholdEntry = document.getElementById('noiseThresholdEntry');
+	noiseThresholdEntry.addEventListener("keypress", (e) => {
+		if (e.which === 13) {
+			socketIO.emit("commands",
+			{
+				"noiseThreshold": parseFloat(noiseThresholdEntry.innerHTML),
+			});
+			e.preventDefault();
+console.log("set noise threshold to ",noiseThresholdEntry.innerHTML);
+		}
+	});
 });
 
 
