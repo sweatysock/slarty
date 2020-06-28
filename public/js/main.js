@@ -56,8 +56,9 @@ var serverMuted = false;
 
 
 function processCommands(newCommands) {					// Apply commands sent from upstream servers
+	trace2(newCommands);
 	if (newCommands.mute != undefined) serverMuted = newCommands.mute; else serverMuted = false;
-	if (newCommands.gateDelay != undefined) {gateDelay = newCommands.gateDelay;trace2("gate delay = ", gateDelay); }
+	if (newCommands.gateDelay != undefined) gateDelay = newCommands.gateDelay;
 	if (newCommands.talkoverLevel != undefined) talkoverLevel = newCommands.talkoverLevel;
 	if (newCommands.talkoverLag != undefined) talkoverLag = newCommands.talkoverLag;
 	if (newCommands.tholdFactor != undefined) echoTest.factor = newCommands.tholdFactor;
