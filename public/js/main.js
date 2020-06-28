@@ -57,11 +57,11 @@ var serverMuted = false;
 
 function processCommands(newCommands) {					// Apply commands sent from upstream servers
 	if (newCommands.mute != undefined) serverMuted = newCommands.mute; else serverMuted = false;
-	if (newCommands.gateDelay != undefined) gateDelay = newCommands.gateDelay;
+	if (newCommands.gateDelay != undefined) {gateDelay = newCommands.gateDelay;trace2("gate delay = ", gateDelay); }
 	if (newCommands.talkoverLevel != undefined) talkoverLevel = newCommands.talkoverLevel;
 	if (newCommands.talkoverLag != undefined) talkoverLag = newCommands.talkoverLag;
 	if (newCommands.tholdFactor != undefined) echoTest.factor = newCommands.tholdFactor;
-	if (newCommands.noiseThreshold != undefined) {trace2("noise threshold = ", noiseThreshold); noiseThreshold = newCommands.noiseThreshold;}
+	if (newCommands.noiseThreshold != undefined) {noiseThreshold = newCommands.noiseThreshold;trace2("noise threshold = ", noiseThreshold); }
 	if (newCommands.outGain != undefined);
 	if (newCommands.displayURL != undefined);
 	if (newCommands.displayText != undefined);
