@@ -42,7 +42,7 @@ var micIn = {								// and for microphone input
 	name 	: "Mic",
 	gain	: 0,
 	gainRate: 200,
-	manGain : 1,
+	manGain : 4,
 	ceiling : 1,
 	agc	: true,
 	muted	: false,
