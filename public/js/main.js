@@ -515,7 +515,7 @@ function fadeDown(audio) {						// Fade sample linearly over length
 		audio[i] = audio[i] * ((audio.length - i)/audio.length);
 }
 
-var talkoverLevel = 0.1;						// Ceiling for mix when mic is active, 0 = half duplex
+var talkoverLevel = 0.01;						// Ceiling for mix when mic is active, 0 = half duplex
 var talkoverLag = 1;							// mS that talkover endures on talking stops
 var talkoverTimer = 0;							// timer used to slow talkover lift off
 function talkover() {							// Suppress mix level while mic is active
@@ -543,7 +543,7 @@ function levelClassifier( v ) {
 	}
 }
 
-var noiseThreshold = 0.5;							// Base threshold for mic signal
+var noiseThreshold = 0.02;							// Base threshold for mic signal
 function setNoiseThreshold () {						// Set the mic threshold to remove most background noise
 	let max = 0;
 	for (let i=0; i<14; i++)
@@ -560,7 +560,7 @@ trace2("Noise threshold: ",noiseThreshold);
 }
 
 var thresholdBuffer = new Array(10).fill(0);				// Buffer dynamic thresholds here. 4 is typical. 10 is enough
-var gateDelay = 1;							// Amount of samples (time) the gate stays open
+var gateDelay = 30;							// Amount of samples (time) the gate stays open
 
 function processAudio(e) {						// Main processing loop
 	// There are two activities here (if not performing an echo test that is): 
@@ -681,35 +681,34 @@ function handleAudio(stream) {						// We have obtained media access
 	}
 	node.onaudioprocess = processAudio;				// Link the callback to the node
 
-	let lowFreq = 200;						// Bandpass to clean up Mic
-	let highFreq = 5000;
+	let lowFreq = 300;						// Bandpass to clean up Mic
+	let highFreq = 4000;
 	let geometricMean = Math.sqrt(lowFreq * highFreq);
-//	let micFilter1 = context.createBiquadFilter();
-//	micFilter1.type = 'bandpass';
-//	micFilter1.frequency.value = geometricMean;
-//	micFilter1.Q.value = geometricMean / (highFreq - lowFreq);
-//	let micFilter2 = context.createBiquadFilter();
-//	micFilter2.type = 'bandpass';
-//	micFilter2.frequency.value = geometricMean;
-//	micFilter2.Q.value = geometricMean / (highFreq - lowFreq);
-//	let micFilter3 = context.createBiquadFilter();
-//	micFilter3.type = 'bandpass';
-//	micFilter3.frequency.value = geometricMean;
-//	micFilter3.Q.value = geometricMean / (highFreq - lowFreq);
-//	let micFilter4 = context.createBiquadFilter();
-//	micFilter4.type = 'bandpass';
-//	micFilter4.frequency.value = geometricMean;
-//	micFilter4.Q.value = geometricMean / (highFreq - lowFreq);
+	let micFilter1 = context.createBiquadFilter();
+	micFilter1.type = 'bandpass';
+	micFilter1.frequency.value = geometricMean;
+	micFilter1.Q.value = geometricMean / (highFreq - lowFreq);
+	let micFilter2 = context.createBiquadFilter();
+	micFilter2.type = 'bandpass';
+	micFilter2.frequency.value = geometricMean;
+	micFilter2.Q.value = geometricMean / (highFreq - lowFreq);
+	let micFilter3 = context.createBiquadFilter();
+	micFilter3.type = 'bandpass';
+	micFilter3.frequency.value = geometricMean;
+	micFilter3.Q.value = geometricMean / (highFreq - lowFreq);
+	let micFilter4 = context.createBiquadFilter();
+	micFilter4.type = 'bandpass';
+	micFilter4.frequency.value = geometricMean;
+	micFilter4.Q.value = geometricMean / (highFreq - lowFreq);
 	
 	let splitter = context.createChannelSplitter(2);		// Split signal for echo cancelling
 
 	// Time to connect everything...
-//	liveSource.connect(micFilter1);					// Mic goes to micFilter1
-//	micFilter1.connect(micFilter2);					// the rest are chained togather
-//	micFilter2.connect(micFilter3);					// the rest are chained togather
-//	micFilter3.connect(micFilter4);					// the rest are chained togather
-//	micFilter4.connect(node);					// micFilter goes to audio processor
-liveSource.connect(node);
+	liveSource.connect(micFilter1);					// Mic goes to micFilter1
+	micFilter1.connect(micFilter2);					// the rest are chained togather
+	micFilter2.connect(micFilter3);					// the rest are chained togather
+	micFilter3.connect(micFilter4);					// the rest are chained togather
+	micFilter4.connect(node);					// micFilter goes to audio processor
 	node.connect(splitter);						// our processor feeds to a splitter
 	splitter.connect(context.destination,0);			// other output goes to speaker
 
@@ -818,7 +817,7 @@ var echoTest = {
 	results		: [],						// Samples of each test buffer here
 	delays 		: [],						// Array of final measurements
 	delay		: 129,	// Default value			// Final delay measurement result stored here
-	factor		: 0.05,	// Default value			// Final sensitivity factor stored here
+	factor		: 2,	// Default value			// Final sensitivity factor stored here
 	sampleDelay	: 5,	// Default value			// Final number of samples to delay dynamic threshold by
 };
 
