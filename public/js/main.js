@@ -681,34 +681,35 @@ function handleAudio(stream) {						// We have obtained media access
 	}
 	node.onaudioprocess = processAudio;				// Link the callback to the node
 
-	let lowFreq = 300;						// Bandpass to clean up Mic
-	let highFreq = 4000;
+	let lowFreq = 200;						// Bandpass to clean up Mic
+	let highFreq = 5000;
 	let geometricMean = Math.sqrt(lowFreq * highFreq);
-	let micFilter1 = context.createBiquadFilter();
-	micFilter1.type = 'bandpass';
-	micFilter1.frequency.value = geometricMean;
-	micFilter1.Q.value = geometricMean / (highFreq - lowFreq);
-	let micFilter2 = context.createBiquadFilter();
-	micFilter2.type = 'bandpass';
-	micFilter2.frequency.value = geometricMean;
-	micFilter2.Q.value = geometricMean / (highFreq - lowFreq);
-	let micFilter3 = context.createBiquadFilter();
-	micFilter3.type = 'bandpass';
-	micFilter3.frequency.value = geometricMean;
-	micFilter3.Q.value = geometricMean / (highFreq - lowFreq);
-	let micFilter4 = context.createBiquadFilter();
-	micFilter4.type = 'bandpass';
-	micFilter4.frequency.value = geometricMean;
-	micFilter4.Q.value = geometricMean / (highFreq - lowFreq);
+//	let micFilter1 = context.createBiquadFilter();
+//	micFilter1.type = 'bandpass';
+//	micFilter1.frequency.value = geometricMean;
+//	micFilter1.Q.value = geometricMean / (highFreq - lowFreq);
+//	let micFilter2 = context.createBiquadFilter();
+//	micFilter2.type = 'bandpass';
+//	micFilter2.frequency.value = geometricMean;
+//	micFilter2.Q.value = geometricMean / (highFreq - lowFreq);
+//	let micFilter3 = context.createBiquadFilter();
+//	micFilter3.type = 'bandpass';
+//	micFilter3.frequency.value = geometricMean;
+//	micFilter3.Q.value = geometricMean / (highFreq - lowFreq);
+//	let micFilter4 = context.createBiquadFilter();
+//	micFilter4.type = 'bandpass';
+//	micFilter4.frequency.value = geometricMean;
+//	micFilter4.Q.value = geometricMean / (highFreq - lowFreq);
 	
 	let splitter = context.createChannelSplitter(2);		// Split signal for echo cancelling
 
 	// Time to connect everything...
-	liveSource.connect(micFilter1);					// Mic goes to micFilter1
-	micFilter1.connect(micFilter2);					// the rest are chained togather
-	micFilter2.connect(micFilter3);					// the rest are chained togather
-	micFilter3.connect(micFilter4);					// the rest are chained togather
-	micFilter4.connect(node);					// micFilter goes to audio processor
+//	liveSource.connect(micFilter1);					// Mic goes to micFilter1
+//	micFilter1.connect(micFilter2);					// the rest are chained togather
+//	micFilter2.connect(micFilter3);					// the rest are chained togather
+//	micFilter3.connect(micFilter4);					// the rest are chained togather
+//	micFilter4.connect(node);					// micFilter goes to audio processor
+liveSource.connect(node);
 	node.connect(splitter);						// our processor feeds to a splitter
 	splitter.connect(context.destination,0);			// other output goes to speaker
 
