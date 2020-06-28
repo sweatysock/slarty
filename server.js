@@ -40,6 +40,7 @@ function addCommands(newCommands) {
 	if (newCommands.talkoverLevel != undefined) commands.talkoverLevel = newCommands.talkoverLevel;
 	if (newCommands.talkoverLag != undefined) commands.talkoverLag = newCommands.talkoverLag;
 	if (newCommands.tholdFactor != undefined) commands.tholdFactor = newCommands.tholdFactor;
+	if (newCommands.noiseThreshold != undefined) commands.noiseThreshold = newCommands.noiseThreshold;
 	if (newCommands.outGain != undefined) commands.outGain = newCommands.outGain;
 	if (newCommands.displayURL != undefined) commands.displayURL = newCommands.displayURL;
 	if (newCommands.displayText != undefined) commands.displayText = newCommands.displayText;
