@@ -890,7 +890,7 @@ function runEchoTest(audio) {						// Test audio system in a series of tests
 					max = conv[j];
 					edge = j;
 				}
-			let delay = Math.floor((edge*100)/soundcardSampleRate)*10;	// convert result to nearest 10mS
+			let delay = Math.round((edge*100)/soundcardSampleRate)*10;	// convert result to nearest 10mS
 			trace2("Pulse delay is ",delay,"mS");
 			echoTest.delays.push(delay.toFixed(0));		// Gather results n mS for each step
 //			for (j=0; j<conv.length; j++)			// Normalize output for graphs
@@ -908,7 +908,7 @@ function runEchoTest(audio) {						// Test audio system in a series of tests
 					trace2("Delay is ",c);
 					winner = true;
 					echoTest.delay = c;		// Store final delay result
-					echoTest.sampleDelay = Math.floor((echoTest.delay * soundcardSampleRate / 1000)/1024)
+					echoTest.sampleDelay = Math.round((echoTest.delay * soundcardSampleRate / 1000)/1024)
 					trace2("Sample delay is ",echoTest.sampleDelay);
 				}
 			}
