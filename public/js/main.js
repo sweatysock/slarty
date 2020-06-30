@@ -42,7 +42,7 @@ var micIn = {								// and for microphone input
 	name 	: "Mic",
 	gain	: 0,
 	gainRate: 200,
-	manGain : 4,
+	manGain : 1,
 	ceiling : 1,
 	agc	: true,
 	muted	: false,
@@ -818,7 +818,7 @@ var echoTest = {
 	delays 		: [],						// Array of final measurements
 	delay		: 129,	// Default value			// Final delay measurement result stored here
 	factor		: 2,	// Default value			// Final sensitivity factor stored here
-	sampleDelay	: 5,	// Default value			// Final number of samples to delay dynamic threshold by
+	sampleDelay	: 6,	// Default value			// Final number of samples to delay dynamic threshold by
 };
 
 echoTest.steps.forEach(i => {						// Build test tones
