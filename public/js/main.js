@@ -708,6 +708,8 @@ document.addEventListener('DOMContentLoaded', function(event){
 	initAudio();							// Call initAudio() once loaded
 });
 
+var video = document.querySelector('video');
+
 function initAudio() {							// Set up all audio handling here
 	let constraints = { 						// Try to get the right audio setup
 		mandatory: {						// There don't really work though
@@ -721,7 +723,12 @@ function initAudio() {							// Set up all audio handling here
 	navigator.getUM = (navigator.getUserMedia || navigator.webKitGetUserMedia || navigator.moxGetUserMedia || navigator.mozGetUserMedia || navigator.msGetUserMedia);
 	if (navigator.mediaDevices.getUserMedia) {			// The new way to request media
 		trace("Using GUM with promise");			// is using .mediaDevices and promises
-		navigator.mediaDevices.getUserMedia({  audio: constraints }) .then(function (stream) {
+		navigator.mediaDevices.getUserMedia({  audio: constraints, viedo: true }) .then(function (stream) {
+			video.srcObject = stream;
+			video.onloadedmetadata = function(e) {
+				video.play();
+				video.muted = true;
+			};
 			handleAudio(stream);
 		})
 		.catch(function (e) { trace(e.name + ": " + e.message); });
