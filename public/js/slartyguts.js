@@ -74,12 +74,12 @@ document.addEventListener('DOMContentLoaded', function(event){
 			e.preventDefault();
 		}
 	});
-	let toLagEntry = document.getElementById('toLagEntry');
-	toLagEntry.addEventListener("keypress", (e) => {
+	let perfEntry = document.getElementById('perfEntry');
+	perfEntry.addEventListener("keypress", (e) => {
 		if (e.which === 13) {
-			socketIO.emit("commands",
+			socketIO.emit("setPerformer",
 			{
-				"talkoverLag": parseFloat(toLagEntry.innerHTML),
+				"channel": parseFloat(perfEntry.innerHTML),
 			});
 			e.preventDefault();
 		}

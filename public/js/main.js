@@ -41,7 +41,7 @@ var mixOut = {								// Similar structures for the mix output
 var micIn = {								// and for microphone input
 	name 	: "Mic",
 	gain	: 0,
-	gainRate: 200,
+	gainRate: 100,
 	manGain : 1,
 	ceiling : 1,
 	agc	: true,
@@ -88,6 +88,15 @@ socketIO.on('channel', function (data) {				// Message assigning us a channel
 	}
 });
 
+var performer = false;							// Indicates if we are the performer
+socketIO.on('perf', function (data) {					// Performer status notification
+	performer = data.live;
+	if (performer == true)
+		document.getElementById("onair").style.visibility = "visible";
+	else
+		document.getElementById("onair").style.visibility = "hidden";
+});
+
 // Data coming down from upstream server: Group mix plus separate member audios
 socketIO.on('d', function (data) { 
 	enterState( dataInState );					// This is one of our key tasks
@@ -112,16 +121,18 @@ socketIO.on('d', function (data) {
 			} else {					// This is my own data come back
 				let now = new Date().getTime();
 				rtt = (rtt + (now - c.timestamp))/2;	// Measure round trip time rolling average
-				if (rtt > MaxRTT) { 			// If it is too long
-//					trace("RTT: ",rtt,"instant rtt: ",(now - c.timestamp)," time: ",now," timestamp: ",c.timestamp," Requsting connection reset");
-//					resetConnection();		// reset the socket.
-//					rtt = 0;			// reset rtt too.
-				}
 			}
 			if (c.sequence != (channels[ch].seq + 1)) 	// Monitor audio transfer quality
 				trace("Sequence jump Channel ",ch," jump ",(c.sequence - channels[ch].seq));
 			channels[ch].seq = c.sequence;
 		});
+		performer = (data.perf.chan == myChannel);
+		if ((data.perf.live) && (!performer)) {			// If there is a live performer and it isn't us
+			// MARK Display frame if present
+			let a = data.perf.packet.audio;			// Get the performer audio
+			for (let i=0; i < a.length; i++)
+				mix[i] += a[i];				// Performer audio goes straight into mix
+		}
 		endTalkover();						// Try to end mic talkover before setting gain
 		let obj = applyAutoGain(mix, mixOut);			// Trim mix level 
 		mixOut.gain= obj.finalGain;				// Store gain for next loop
@@ -1014,6 +1025,10 @@ function printReport() {
 		trace("Levels of output: ",levelCategories);
 	}
 //	setNoiseThreshold();						// Set mic noise threshold based on level categories
+	if (performer == true)
+		document.getElementById("onair").style.visibility = "visible";
+	else
+		document.getElementById("onair").style.visibility = "hidden";
 	let state = "Green";
 	if ((overflows > 1) || (shortages >1)) state = "Orange";
 	if (socketConnected == false) state = "Red";

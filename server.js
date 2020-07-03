@@ -21,6 +21,11 @@ for (let i=0; i < NumberOfChannels; i++) {				// Create all the channels pre-ini
 		playHead	: 0,					// Points to where we are reading from the buffer
 	}
 }
+var perf = {								// Performer data structure
+	live	: false,						// Flag to indicate if we have performer is on air or not
+	chan	: 0,							// Performer's channel if connected directly here (venue server = no upstream)
+	packet	: null,							// Performer audio/video packet. It gets sent downstream immediately
+}
 var venueMixGain = 1;							// Gain applied to the upstream mix using auto gain control
 var venueSequence = 0;							// Sequence counter for venue sound going downstream
 var upstreamMixGain = 1;						// Gain applied to the mix sent upstream 
@@ -124,18 +129,23 @@ upstreamServer.on('channel', function (data) {				// The response to our "Hi" is
 
 // Venue audio coming down from our upstream server. Channels of audio from upstream plus all our peers.
 upstreamServer.on('d', function (packet) { 
-	enterState( upstreamState );					// The task here is to build a mix
-	upstreamIn++;							// and prepare this audio for sending
-	let chan = packet.channels;					// to all downstream clients just like
-	let mix = new Array(packetSize).fill(0); 			// any other audio stream
-	let ts = 0;
+	enterState( upstreamState );					
+	upstreamIn++;						
+
+	addCommands(packet.commands);					// Store upstream commands for sending downstream
+
+	perf.live = packet.perf.live;					// Performer status is shared by all servers
+	if (perf.live) perf.packet = packet.perf.packet;		// If performer is live store the audio/video packet 
+
+	let chan = packet.channels;					// Build a mix just like the clients do
+	let mix = new Array(packetSize).fill(0); 			// and send mix downstream
 	for (let c=0; c < chan.length; c++) {				// So first we need to build a mix
 		if (chan[c].socketID != upstreamServer.id) {		// Skip my audio in mix generation
 			let a = chan[c].audio;
   			for (let i=0; i < a.length; i++) mix[i] += a[i]	// Build mix. 
 		} else {						// This is my own data come back
 			let now = new Date().getTime();
-			ts = chan[c].timestamp;
+			let ts = chan[c].timestamp;
 			rtt = now - ts;					// Measure round trip time
 		}
 	}
@@ -163,7 +173,11 @@ upstreamServer.on('d', function (packet) {
 			if (enoughAudio()) generateMix();		// If there is enough buffered in all other channels generate mix
 		}
 	}
-	addCommands(packet.commands);					// Store upstream commands for sending downstream
+
+	if (perf.live) {						// If there is a live performer no mix will have been genereated yet
+		enterState( genMixState );				// We always generate a mix with performer data however
+		generateMix();						// so call generate mix now
+	}
 	enterState( idleState );
 });
 
@@ -203,7 +217,7 @@ io.sockets.on('connection', function (socket) {
 		});
 	});
 
-	socket.on('upstreamHi', function (data) { 			// A downstream client requests to join
+	socket.on('upstreamHi', function (data) { 			// A downstream client or server requests to join
 		console.log("New client ", socket.id);
 		let requestedChannel = data.channel;			// If a reconnect they will already have a channel
 		let channel = -1;					// Assigned channel. -1 means none (default response)
@@ -223,6 +237,7 @@ io.sockets.on('connection', function (socket) {
 			channels[channel].packets = [];			// Reset channel values
 			channels[channel].name = "";			// This will be set when data comes in
 			channels[channel].socketID = socket.id;
+			channels[channel].socket = socket;
 			channels[channel].shortages = 0;
 			channels[channel].overflows = 0;
 			channels[channel].newBuf = true;		
@@ -233,16 +248,30 @@ io.sockets.on('connection', function (socket) {
 			console.log("No channels available. Client rejected.");
 	});
 
-	socket.on('superHi', function (data) {
-		// A downstream server or client is registering with us
-		// Add the downstream node to the group for notifications
+	socket.on('superHi', function (data) {				// A supervisor is registering for status updates PROTECT
 		console.log("New super ", socket.id);
-		socket.join('supers');
+		socket.join('supers');					// Add them to the supervisor group
 	});
 
-	socket.on('commands', function (data) {
-		// A super has sent us a new commands
+	socket.on('commands', function (data) { 			// A super has sent us a new commands PROTECT
 		addCommands(data);
+	});
+
+	socket.on('setPerformer', function (data) { 			// A super wants to set Performer channel PROTECT
+		if (upstreamConnected) 		 			// upstream server means this not venue server so no performer
+			return;
+		if ((perf.live) 				  	// If performer is already set and is connected 
+			&& (channels[perf.chan].socketID != undefined))	// communicate they are no longer live
+			channels[perf.chan].socket.emit("perf", {live:false});
+		perf.chan = data.channel;
+		if ((perf.chan > 0) 					// If we have a valid performer channel that is connected
+			&& (channels[perf.chan].socketID != undefined))	{
+			channels[perf.chan].socket.emit("perf", {live:true}); // Inform the client they are on air
+			perf.live = true;
+		} else {
+			perf.live = false;
+			perf.chan = 0;
+		}
 	});
 
 	socket.on('u', function (packet) { 				// Audio coming up from one of our downstream clients
@@ -251,18 +280,24 @@ io.sockets.on('connection', function (socket) {
 		channel.name = packet.name;				// Update name of channel in case it has changed
 		channel.socketID = socket.id;				// Store socket ID associated with channel
 		packet.socketID = socket.id;				// Also store it in the packet to help client
-		channel.packets.push(packet);				// Add packet to its channel packet buffer
-		channel.recording = packet.recording;
-		if ((channel.packets.length > channel.maxBufferSize) &&	// If buffer full and we are not recording
-			(channel.recording == false)) {			// the buffer then remove the oldest packet.
-			channel.packets.shift();
-			channel.overflows++;				// Log overflows per channel
-			overflows++;					// and also globally for monitoring
-		}
-		if (channel.packets.length >= channel.mixTriggerLevel) {
-			channel.newBuf = false;				// Buffer has filled enough. Channel can enter the mix
+		if (packet.channel == perf.chan) {			// This is the performer. Note: Channel 0 never enters here
+			perf.packet = packet;				// Store performer audio/video. It will be sent right now.
 			enterState( genMixState );
-			if (enoughAudio()) generateMix();		// If there is enough audio in all channels build mix
+			generateMix();					// The performer marks when data goes out. period.
+		} else {
+			channel.packets.push(packet);			// Add packet to its channel packet buffer
+			channel.recording = packet.recording;
+			if ((channel.packets.length > channel.maxBufferSize) &&	// If buffer full and we are not recording
+				(channel.recording == false)) {			// the buffer then remove the oldest packet.
+				channel.packets.shift();
+				channel.overflows++;				// Log overflows per channel
+				overflows++;					// and also globally for monitoring
+			}
+			if (channel.packets.length >= channel.mixTriggerLevel) {
+				channel.newBuf = false;				// Buffer has filled enough. Channel can enter the mix
+				enterState( genMixState );
+				if (enoughAudio()) generateMix();		// If there is enough audio in all channels build mix
+			}
 		}
 		packetsIn++;
 		enterState( idleState );
@@ -356,6 +391,7 @@ function forceMix() {							// The timer has triggered a mix
 }
 
 function enoughAudio() {						// Is there enough audio to build a mix before timeout?
+	if (perf.live) return false;					// If there is a performer they drive the mix clock so return false
 	let now = new Date().getTime();
 	if (now > nextMixTimeLimit) return true;			// If timer has failed to trigger generate the mix now
 	let allFull = true; 
@@ -398,47 +434,51 @@ function generateMix () {
 			}
 		}
 	});
-	if (clientPackets.length != 0) {				// Only send audio if we have some to send
-		if (upstreamConnected == true) { 			// Send mix if connected to an upstream server
-			let obj = applyAutoGain(mix,upstreamMixGain,1);	// Adjust mix level 
-			upstreamMixGain = obj.finalGain;		// Store gain for next mix auto gain control
-			mixMax = obj.peak;				// For monitoring purposes
-			let now = new Date().getTime();
-			upstreamServer.emit("u", {
-				"name"		: myServerName,		// Let others know which server this comes from
-				"audio"		: mix,			// Level controlled mix of all clients here
-				"sequence"	: upSequence++,		// Good for data integrity checks
-				"timestamp"	: now,			// Used for round trip time measurements
-				"peak" 		: obj.peak,		// Saves having to calculate again
-				"channel"	: upstreamServerChannel,// Send assigned channel to help server
-				"recording"	: false,		// Make sure the upstream server never records
-				// MARK send liveChannels upstream
-			});
-			upstreamOut++;
-		} 
-		let liveChannels = [];					// build snapshot of current live client buffers
-		for (let c in channels) 
-			if (channels[c].name != "") {			// Means channel is connected to a client
-				liveChannels[c] = {
-					name	: channels[c].name,
-					queue 	: channels[c].packets.length,
-					// MARK ADD URL if there is one (only downstream servers have them)
-					// MARK ADD peak level for each 
-				}
-			}
-		io.sockets.in('downstream').emit('d', {			// Send all audio channels to all downstream clients
-			"channels"	: clientPackets,
-			"liveChannels"	: liveChannels,			// Include server info about live clients and their queues
-			"commands"	: commands,			// Send commands downstream
-			// MARK SEND our server URL
-		});
-		packetsOut++;						// Sent data so log it and set time limit for next send
-		packetClassifier[clientPackets.length] = packetClassifier[clientPackets.length] + 1;
+	if (clientPackets.length == 0) nextMixTimeLimit = 0;		// No client packets so stop forcing and wait for more data
+	if (upstreamConnected == true) { 				// Send mix if connected to an upstream server
+		let obj = applyAutoGain(mix,upstreamMixGain,1);		// Adjust mix level 
+		upstreamMixGain = obj.finalGain;			// Store gain for next mix auto gain control
+		mixMax = obj.peak;					// For monitoring purposes
 		let now = new Date().getTime();
-		if (nextMixTimeLimit == 0) nextMixTimeLimit = now;	// If this is the first send event then start at now
-		nextMixTimeLimit = nextMixTimeLimit + (packetSize * 1000)/SampleRate;
+		upstreamServer.emit("u", {
+			"name"		: myServerName,			// Let others know which server this comes from
+			"audio"		: mix,				// Level controlled mix of all clients here
+			"sequence"	: upSequence++,			// Good for data integrity checks
+			"timestamp"	: now,				// Used for round trip time measurements
+			"peak" 		: obj.peak,			// Saves having to calculate again
+			"channel"	: upstreamServerChannel,	// Send assigned channel to help server
+			"recording"	: false,			// Make sure the upstream server never records
+			// MARK send liveChannels upstream
+		});
+		upstreamOut++;
+	} 
+	let liveChannels = [];						// build snapshot of current live client buffers
+	for (let c in channels) 					// to keep client UIs in sync with server state
+		if (channels[c].name != "") {				// Means channel is connected to a client
+			liveChannels[c] = {
+				name	: channels[c].name,
+				queue 	: channels[c].packets.length,
+				// MARK ADD URL for downstream servers needed for heckler control
+				// MARK ADD peak level for each for audio visualization
+			}
+		}
+	io.sockets.in('downstream').emit('d', {				// Send all audio channels to all downstream clients
+		"perf"		: perf,					// Send performer audio/video + live flag downstream
+		"channels"	: clientPackets,			// All channels in this server plus filtered upstream mix
+		"liveChannels"	: liveChannels,				// Include server info about live clients and their queues
+		"commands"	: commands,				// Send commands downstream to reach all client endpoints
+		// MARK SEND our server URL for heckler control
+	});
+	packetsOut++;							// Sent data so log it and set time limit for next send
+	packetClassifier[clientPackets.length] = packetClassifier[clientPackets.length] + 1;
+	if (!perf.live) {						// If no live performance then clock samples
+		let now = new Date().getTime();
+		if (nextMixTimeLimit == 0) 
+			nextMixTimeLimit = now;				// If this is the first send event then start at now
+		nextMixTimeLimit = nextMixTimeLimit + (packetSize * 1010)/SampleRate;
+		// MARK Should remove old timeout before creating new one right???
 		mixTimer = setTimeout( forceMix, (nextMixTimeLimit - now) );	
-	} else nextMixTimeLimit = 0;					// No client packets so stop forcing and wait for more data
+	} else nextMixTimeLimit = 0;					// If live performer stop mix forcing
 }
 
 
