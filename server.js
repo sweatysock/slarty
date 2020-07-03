@@ -139,13 +139,14 @@ upstreamServer.on('d', function (packet) {
 
 	let chan = packet.channels;					// Build a mix just like the clients do
 	let mix = new Array(packetSize).fill(0); 			// and send mix downstream
+	let ts = 0;						
 	for (let c=0; c < chan.length; c++) {				// So first we need to build a mix
 		if (chan[c].socketID != upstreamServer.id) {		// Skip my audio in mix generation
 			let a = chan[c].audio;
   			for (let i=0; i < a.length; i++) mix[i] += a[i]	// Build mix. 
 		} else {						// This is my own data come back
 			let now = new Date().getTime();
-			let ts = chan[c].timestamp;
+			ts = chan[c].timestamp;
 			rtt = now - ts;					// Measure round trip time
 		}
 	}
