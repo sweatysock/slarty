@@ -708,8 +708,6 @@ document.addEventListener('DOMContentLoaded', function(event){
 	initAudio();							// Call initAudio() once loaded
 });
 
-var video = document.querySelector('video');
-
 function initAudio() {							// Set up all audio handling here
 	let constraints = { 						// Try to get the right audio setup
 		mandatory: {						// There don't really work though
@@ -723,12 +721,7 @@ function initAudio() {							// Set up all audio handling here
 	navigator.getUM = (navigator.getUserMedia || navigator.webKitGetUserMedia || navigator.moxGetUserMedia || navigator.mozGetUserMedia || navigator.msGetUserMedia);
 	if (navigator.mediaDevices.getUserMedia) {			// The new way to request media
 		trace("Using GUM with promise");			// is using .mediaDevices and promises
-		navigator.mediaDevices.getUserMedia({  audio: constraints, viedo: true }) .then(function (stream) {
-			video.srcObject = stream;
-			video.onloadedmetadata = function(e) {
-				video.play();
-				video.muted = true;
-			};
+		navigator.mediaDevices.getUserMedia({  audio: constraints }) .then(function (stream) {
 			handleAudio(stream);
 		})
 		.catch(function (e) { trace(e.name + ": " + e.message); });
@@ -1132,7 +1125,9 @@ window.addEventListener("load", function(event){
 });
 
 function deriveTree() {
-	let svg = document.getElementById('venue').contentDocument;
+	let svg = document.getElementById('venue');
+	if (svg == null) return;
+	svg = svg.contentDocument;
 	let kids = svg.getElementsByClassName("selectable");
 	kids = svg.getElementsByTagName("rect"); 
 	for (var i=0,len=kids.length;i<len;++i) {
