@@ -476,7 +476,7 @@ function generateMix () {
 		let now = new Date().getTime();
 		if (nextMixTimeLimit == 0) 
 			nextMixTimeLimit = now;				// If this is the first send event then start at now
-		nextMixTimeLimit = nextMixTimeLimit + (packetSize * 1010)/SampleRate;
+		nextMixTimeLimit = nextMixTimeLimit + (packetSize * 1000)/SampleRate;
 		// MARK Should remove old timeout before creating new one right???
 		mixTimer = setTimeout( forceMix, (nextMixTimeLimit - now) );	
 	} else nextMixTimeLimit = 0;					// If live performer stop mix forcing
