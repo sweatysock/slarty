@@ -532,17 +532,17 @@ const updateTimer = 1000;						// Frequency of updates to the console
 var counterDivider = 0;							// Used to execute operation 10x slower than the reporting loop
 function printReport() {
 	enterState( idleState );					// Update timers in case we are inactive
-	console.log(myServerName," Activity Report");
-	console.log("Idle = ", idleState.total, " upstream = ", upstreamState.total, " downstream = ", downstreamState.total, " genMix = ", genMixState.total);
-	console.log("Clients = ",clientsLive,"  Upstream In =",upstreamIn,"Upstream Out = ",upstreamOut,"Upstream Shortages = ",channels[0].shortages," Upstream overflows = ",channels[0].overflows,"In = ",packetsIn," Out = ",packetsOut," overflows = ",overflows," shortages = ",shortages," forced mixes = ",forcedMixes," mixMax = ",mixMax," upstreamMax = ",upstreamMax," rtt = ",rtt);
+//	console.log(myServerName," Activity Report");
+//	console.log("Idle = ", idleState.total, " upstream = ", upstreamState.total, " downstream = ", downstreamState.total, " genMix = ", genMixState.total);
+//	console.log("Clients = ",clientsLive,"  Upstream In =",upstreamIn,"Upstream Out = ",upstreamOut,"Upstream Shortages = ",channels[0].shortages," Upstream overflows = ",channels[0].overflows,"In = ",packetsIn," Out = ",packetsOut," overflows = ",overflows," shortages = ",shortages," forced mixes = ",forcedMixes," mixMax = ",mixMax," upstreamMax = ",upstreamMax," rtt = ",rtt);
 	let cbs = [];
 	for (let c in channels) {
 		let t = channels[c].packets.length;
 		if (channels[c].newBuf == true) t = t + "n";
 		cbs.push(t);
 	}
-	console.log("Client buffer lengths: ",cbs);
-	console.log(packetClassifier);
+//	console.log("Client buffer lengths: ",cbs);
+//	console.log(packetClassifier);
 	io.sockets.in('supers').emit('s',{
 		"server":	myServerName,
 		"idle":		idleState.total,
