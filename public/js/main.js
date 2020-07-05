@@ -927,7 +927,7 @@ function runEchoTest(audio) {						// Test audio system in a series of tests
 					}
 				}
 				// Get average factor value
-				echoTest.factor = avgValue(factors) * 1.5; // boost factor to give echo margin
+				echoTest.factor = avgValue(factors) * 2; // boost factor to give echo margin
 				trace2("Factor average is ",echoTest.factor);
 			} else {
 				trace2("No clear result");		// No agreement, no result
