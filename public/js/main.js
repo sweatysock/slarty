@@ -80,7 +80,8 @@ socketIO.on('channel', function (data) {				// Message assigning us a channel
 		myChannel = data.channel;
 		if (myName == "") myName = "Input " + myChannel;	// Name my channel if empty
 		micIn.name = "Mic ("+ myChannel +")";			// Indicate channel in Mic name
-		document.getElementById("ID"+micIn.channel+"Name").innerHTML = micIn.name;
+		let id = document.getElementById("ID"+micIn.channel+"Name")
+		if (id != null) id.innerHTML = micIn.name;		// Update onscreen name if created
 		trace('Channel assigned: ',myChannel);
 		socketConnected = true;					// The socket can be used once we have a channel
 	} else {
