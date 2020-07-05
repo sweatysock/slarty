@@ -934,7 +934,8 @@ function runEchoTest(audio) {						// Test audio system in a series of tests
 				}
 				// Get average factor value
 				echoTest.factor = avgValue(factors) * 3; // boost factor to give echo margin
-				trace2("Factor average is ",echoTest.factor);
+				echoTest.factor = 2;			// Force strong factor always
+				trace2("Forced factor is ",echoTest.factor);
 			} else {
 				trace2("No clear result");		// No agreement, no result
 				if (max > 3)
@@ -1036,18 +1037,18 @@ function printReport() {
 		document.getElementById("onair").style.visibility = "visible";
 	else
 		document.getElementById("onair").style.visibility = "hidden";
-	let state = "Green";
-	if ((overflows > 1) || (shortages >1)) state = "Orange";
-	if (socketConnected == false) state = "Red";
-	setStatusLED("GeneralStatus",state);
-	state = "Green";
-	if ((packetsOut < 30) || (packetsOut > 35)) state = "Orange";
-	if (packetsOut < 5) state = "Red";
-	setStatusLED("UpStatus",state);
-	state = "Green";
-	if ((packetsIn < 30) || (packetsIn > 35)) state = "Orange";
-	if (packetsIn < 5) state = "Red";
-	setStatusLED("DownStatus",state);
+	let generalStatus = "Green";
+	if ((overflows > 1) || (shortages >1)) generalStatus = "Orange";
+	if (socketConnected == false) generalStatus = "Red";
+	setStatusLED("GeneralStatus",generalStatus);
+	let upStatus = "Green";
+	if ((packetsOut < 30) || (packetsOut > 35)) upStatus = "Orange";
+	if (packetsOut < 5) upStatus = "Red";
+	setStatusLED("UpStatus",upStatus);
+	downStatus = "Green";
+	if ((packetsIn < 30) || (packetsIn > 35)) downStatus = "Orange";
+	if (packetsIn < 5) downStatus = "Red";
+	setStatusLED("DownStatus",downStatus);
 	if ((overflows > 2) || (shortages > 2)) 
 		if (maxBuffSize < 10000) maxBuffSize += 100;		// Increase speaker buffer size if we are overflowing or short
 	if (maxBuffSize > 6000) maxBuffSize -= 20;			// Steadily drop buffer back to size to compensate
