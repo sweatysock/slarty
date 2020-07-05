@@ -94,10 +94,13 @@ socketIO.on('channel', function (data) {				// Message assigning us a channel
 var performer = false;							// Indicates if we are the performer
 socketIO.on('perf', function (data) {					// Performer status notification
 	performer = data.live;
-	if (performer == true)
+	if (performer == true) {
+		talkoverLag = 500;
 		document.getElementById("onair").style.visibility = "visible";
-	else
+	} else {
+		talkoverLag = 1;
 		document.getElementById("onair").style.visibility = "hidden";
+	}
 });
 
 // Data coming down from upstream server: Group mix plus separate member audios
@@ -530,7 +533,7 @@ function fadeDown(audio) {						// Fade sample linearly over length
 }
 
 var talkoverLevel = 0.01;						// Ceiling for mix when mic is active, 0 = half duplex
-var talkoverLag = 1;							// mS that talkover endures on talking stops
+var talkoverLag = 1;							// mS that talkover endures after mic goes quiet
 var talkoverTimer = 0;							// timer used to slow talkover lift off
 function talkover() {							// Suppress mix level while mic is active
 	let now = new Date().getTime();
