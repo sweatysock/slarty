@@ -79,6 +79,7 @@ socketIO.on('channel', function (data) {				// Message assigning us a channel
 	if (data.channel > 0) {						// Assignment successful
 		myChannel = data.channel;
 		if (myName == "") myName = "Input " + myChannel;
+		micIn.name = "Mic ("+ myChannel +")";
 		trace('Channel assigned: ',myChannel);
 		socketConnected = true;					// The socket can be used once we have a channel
 	} else {
