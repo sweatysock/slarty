@@ -142,7 +142,8 @@ socketIO.on('d', function (data) {
 		mixOut.gain= obj.finalGain;				// Store gain for next loop
 		if (obj.peak > mixOut.peak) mixOut.peak = obj.peak;	// Note peak for display purposes
 		if (mix.length != 0) {					// If there actually was some audio
-//			mix = upSample(mix, SampleRate, soundcardSampleRate); // Bring back to HW sampling rate
+console.log(mix,SampleRate, soundcardSampleRate);
+			mix = upSample(mix, SampleRate, soundcardSampleRate); // Bring back to HW sampling rate
 			spkrBuffer.push(...mix);			// put it on the speaker buffer
 			if (spkrBuffer.length > maxBuffSize) {		// Clip buffer if too full
 				spkrBuffer.splice(0, (spkrBuffer.length-maxBuffSize)); 	
@@ -671,6 +672,7 @@ function processAudio(e) {						// Main processing loop
 		thresholdBuffer[echoTest.sampleDelay+2]
 	])) * echoTest.factor * mixOut.gain;				// multiply by factor and mixOutGain
 	thresholdBuffer.pop();						// Remove oldest threshold buffer value
+console.log("outputting",outAudio,SampleRate, soundcardSampleRate);
 	for (let i in outData) 
 		outData[i] = outAudio[i];				// Copy audio to output
 	enterState( idleState );					// We are done. Back to Idling
