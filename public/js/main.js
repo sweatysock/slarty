@@ -142,8 +142,8 @@ socketIO.on('d', function (data) {
 		mixOut.gain= obj.finalGain;				// Store gain for next loop
 		if (obj.peak > mixOut.peak) mixOut.peak = obj.peak;	// Note peak for display purposes
 		if (mix.length != 0) {					// If there actually was some audio
-			let m = upSample(mix, SampleRate, soundcardSampleRate); // Bring back to HW sampling rate
-			spkrBuffer.push(...m);				// put it on the speaker buffer
+//			mix = upSample(mix, SampleRate, soundcardSampleRate); // Bring back to HW sampling rate
+			spkrBuffer.push(...mix);			// put it on the speaker buffer
 			if (spkrBuffer.length > maxBuffSize) {		// Clip buffer if too full
 				spkrBuffer.splice(0, (spkrBuffer.length-maxBuffSize)); 	
 				overflows++;				// Note for monitoring purposes
