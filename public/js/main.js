@@ -571,7 +571,7 @@ trace2("Noise threshold: ",noiseThreshold);
 				((levelCategories[i]/max)*100.0);	// Keep old data to obtain slower threshold changes
 }
 
-var thresholdBuffer = new Array(10).fill(0);				// Buffer dynamic thresholds here. 4 is typical. 10 is enough
+var thresholdBuffer = new Array(20).fill(0);				// Buffer dynamic thresholds here for delayed mic muting
 var gateDelay = 30;							// Amount of samples (time) the gate stays open
 
 function processAudio(e) {						// Main processing loop
@@ -907,7 +907,7 @@ function runEchoTest(audio) {						// Test audio system in a series of tests
 					trace2("Delay is ",c);
 					winner = true;
 					echoTest.delay = c;		// Store final delay result
-					echoTest.sampleDelay = Math.round((echoTest.delay * soundcardSampleRate / 1000)/1024)
+					echoTest.sampleDelay = Math.ceil((echoTest.delay * soundcardSampleRate / 1000)/1024)
 					trace2("Sample delay is ",echoTest.sampleDelay);
 				}
 			}
@@ -927,7 +927,7 @@ function runEchoTest(audio) {						// Test audio system in a series of tests
 					}
 				}
 				// Get average factor value
-				echoTest.factor = avgValue(factors) * 2; // boost factor to give echo margin
+				echoTest.factor = avgValue(factors) * 3; // boost factor to give echo margin
 				trace2("Factor average is ",echoTest.factor);
 			} else {
 				trace2("No clear result");		// No agreement, no result
