@@ -95,7 +95,7 @@ var performer = false;							// Indicates if we are the performer
 socketIO.on('perf', function (data) {					// Performer status notification
 	performer = data.live;
 	if (performer == true) {
-		talkoverLag = 500;
+		talkoverLag = 200;
 		document.getElementById("onair").style.visibility = "visible";
 	} else {
 		talkoverLag = 1;
@@ -532,7 +532,7 @@ function fadeDown(audio) {						// Fade sample linearly over length
 		audio[i] = audio[i] * ((audio.length - i)/audio.length);
 }
 
-var talkoverLevel = 0.01;						// Ceiling for mix when mic is active, 0 = half duplex
+var talkoverLevel = 0.1;						// Ceiling for mix when mic is active, 0 = half duplex
 var talkoverLag = 1;							// mS that talkover endures after mic goes quiet
 var talkoverTimer = 0;							// timer used to slow talkover lift off
 function talkover() {							// Suppress mix level while mic is active
@@ -609,6 +609,7 @@ function processAudio(e) {						// Main processing loop
 			else						// which means fade up the sample
 				micIn.gate = gateDelay;
 		} 
+		if (performer) micIn.gate = 1				// Performer's mic is always open
 		if (micIn.gate > 0) {					// If gate is open prepare the audio for sending
 			micAudio = downSample(inData, soundcardSampleRate, SampleRate);
 			resampledChunkSize = micAudio.length;		// Note how much resampled audio is needed
