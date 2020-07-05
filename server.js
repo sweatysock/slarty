@@ -237,7 +237,7 @@ io.sockets.on('connection', function (socket) {
 		}
 		socket.emit('channel', { channel:channel });		// Send channel assignment result to client
 		if (channel != -1) {					// Channel has been successfully assigned
-			// MARK store sevrer URL and active channel info and URLs if provided
+			// MARK store server URL and active channel info and URLs if provided
 			channels[channel].packets = [];			// Reset channel values
 			channels[channel].name = "";			// This will be set when data comes in
 			channels[channel].socketID = socket.id;
@@ -276,6 +276,7 @@ io.sockets.on('connection', function (socket) {
 			perf.live = false;
 			perf.chan = 0;
 		}
+console.log("performer set to ",perf.chan," perf.live = ",perf.live);
 	});
 
 	socket.on('u', function (packet) { 				// Audio coming up from one of our downstream clients
