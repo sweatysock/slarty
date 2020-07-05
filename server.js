@@ -206,8 +206,13 @@ io.sockets.on('connection', function (socket) {
 
 	socket.on('disconnect', function () {
 		console.log("User disconnected:", socket.id);
-		channels.forEach(c => {					// Find the channel assigned to this connection
-			if (c.socketID == socket.id) {			// and free up its channel
+		for (ch in channels) {					// Find the channel assigned to this connection
+			let c = channels[ch];				// and free up its channel
+			if (c.socketID == socket.id) {
+				if (perf.chan == ch) {			// If this was the performer channel stop performing
+					perf.chan = 0;
+					perf.live = false;
+				}
 				if (!c.recording) {			// If recording the channel remains unchanged
 					c.packets = [];			// so that audio can continue to be generated
 					c.name = "";
@@ -218,7 +223,7 @@ io.sockets.on('connection', function (socket) {
 					clientsLive--;
 				}
 			}
-		});
+		}
 	});
 
 	socket.on('upstreamHi', function (data) { 			// A downstream client or server requests to join
