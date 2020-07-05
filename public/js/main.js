@@ -95,10 +95,8 @@ var performer = false;							// Indicates if we are the performer
 socketIO.on('perf', function (data) {					// Performer status notification
 	performer = data.live;
 	if (performer == true) {
-		talkoverLag = 200;
 		document.getElementById("onair").style.visibility = "visible";
 	} else {
-		talkoverLag = 1;
 		document.getElementById("onair").style.visibility = "hidden";
 	}
 });
@@ -532,7 +530,9 @@ function fadeDown(audio) {						// Fade sample linearly over length
 		audio[i] = audio[i] * ((audio.length - i)/audio.length);
 }
 
-var talkoverLevel = 0.1;						// Ceiling for mix when mic is active, 0 = half duplex
+var talkoverLevel = 0.01;						// Ceiling for mix when mic is active, 0 = half duplex
+if (navigator.userAgent.toLowerCase().indexOf('firefox') > -1) 		// If we are on Firefox echo cancelling is good 
+	talkoverLevel = 1;
 var talkoverLag = 1;							// mS that talkover endures after mic goes quiet
 var talkoverTimer = 0;							// timer used to slow talkover lift off
 function talkover() {							// Suppress mix level while mic is active
