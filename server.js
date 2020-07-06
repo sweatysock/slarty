@@ -3,7 +3,7 @@
 const maxBufferSize = 10;						// Max number of packets to store per client
 const mixTriggerLevel = 5;						// When all clients have this many packets we create a mix
 const packetSize = 500;							// Number of samples in the client audio packets
-const SampleRate = 16000; 						// All audio in audence runs at this sample rate. 
+const SampleRate = 8000; 						// All audio in audence runs at this sample rate. 
 const MaxOutputLevel = 1;						// Max output level for INT16, for auto gain control
 const NumberOfChannels = 20;						// Max number of channels in this server
 var channels = [];							// Each channel's data & buffer held here
