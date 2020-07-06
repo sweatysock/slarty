@@ -136,15 +136,16 @@ socketIO.on('d', function (data) {
 		if ((data.perf.live) && (!performer)) {			// If there is a live performer and it isn't us
 			// MARK Display frame if present
 			let a = data.perf.packet.audio;			// Get the performer audio
+			a = reSample(mix, PerfSampleRate, soundcardSampleRate, upCachePerf); // Bring back to HW sampling rate
 			for (let i=0; i < a.length; i++)
 				mix[i] += a[i];				// Performer audio goes straight into mix
 		}
-		endTalkover();						// Try to end mic talkover before setting gain
-		let obj = applyAutoGain(mix, mixOut);			// Trim mix level 
-		mixOut.gain= obj.finalGain;				// Store gain for next loop
-		if (obj.peak > mixOut.peak) mixOut.peak = obj.peak;	// Note peak for display purposes
 		if (mix.length != 0) {					// If there actually was some audio
 			mix = reSample(mix, SampleRate, soundcardSampleRate, upCache); // Bring back to HW sampling rate
+			endTalkover();						// Try to end mic talkover before setting gain
+			let obj = applyAutoGain(mix, mixOut);			// Trim mix level 
+			mixOut.gain= obj.finalGain;				// Store gain for next loop
+			if (obj.peak > mixOut.peak) mixOut.peak = obj.peak;	// Note peak for display purposes
 			spkrBuffer.push(...mix);			// put it on the speaker buffer
 			if (spkrBuffer.length > maxBuffSize) {		// Clip buffer if too full
 				spkrBuffer.splice(0, (spkrBuffer.length-maxBuffSize)); 	
@@ -618,8 +619,9 @@ function processAudio(e) {						// Main processing loop
 		} 
 		if (performer) micIn.gate = 1				// Performer's mic is always open
 		let sr = (performer ? PerfSampleRate : SampleRate);	// Set sample rate to normal or performer rate
+		let cache = (performer ? downCachePerf : downCache);	// Use the correct resample cache
 		if (micIn.gate > 0) {					// If gate is open prepare the audio for sending
-			micAudio = reSample(inData, soundcardSampleRate, sr, downCache);
+			micAudio = reSample(inData, soundcardSampleRate, sr, cache);
 			resampledChunkSize = micAudio.length;		// Note how much resampled audio is needed
 			micIn.gate--;					// Gate slowly closes
 //			if (micIn.gate == 0)				// Gate is about to close
