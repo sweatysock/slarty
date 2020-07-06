@@ -617,7 +617,7 @@ function processAudio(e) {						// Main processing loop
 		} 
 		if (performer) micIn.gate = 1				// Performer's mic is always open
 		if (micIn.gate > 0) {					// If gate is open prepare the audio for sending
-			micAudio = upSample(inData, soundcardSampleRate, SampleRate, downCache);
+			micAudio = reSample(inData, soundcardSampleRate, SampleRate, downCache);
 			resampledChunkSize = micAudio.length;		// Note how much resampled audio is needed
 			micIn.gate--;					// Gate slowly closes
 //			if (micIn.gate == 0)				// Gate is about to close
