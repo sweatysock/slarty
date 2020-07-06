@@ -634,7 +634,7 @@ function processAudio(e) {						// Main processing loop
 		micBuffer.push(...micAudio);				// Buffer mic audio 
 		let ps = (performer ? (PacketSize*PerfSampleRate/SampleRate) : PacketSize);
 		if (micBuffer.length > ps) {				// If enough in buffer to fill a packet
-			let inAudio = micBuffer.splice(0, ps);		// Get a packet of audio (size varies if performer)
+			let inAudio = micBuffer.splice(0, ps);		// Get a packet of audio (larger if performer)
 			let obj = applyAutoGain(inAudio, micIn);	// Amplify mic with auto limiter
 			if (obj.peak > micIn.peak) 
 				micIn.peak = obj.peak;			// Note peak for local display
