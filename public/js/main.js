@@ -1,6 +1,7 @@
 //Global variables
 //
 const SampleRate = 8000; 						// Global sample rate used for all audio
+const HighFilterFreq = SampleRate/2.2;					// Mic filter to remove high frequencies before resampling
 const PerfSampleRate = 32000; 						// Global sample rate used for all audio
 const PacketSize = 500;							// Server packet size we must conform to
 const MaxRTT = 800;							// Round Trip Times above this will cause a socket reset
@@ -616,8 +617,9 @@ function processAudio(e) {						// Main processing loop
 				micIn.gate = gateDelay;
 		} 
 		if (performer) micIn.gate = 1				// Performer's mic is always open
+		let sr = (performer ? PerfSampleRate : SampleRate);	// Set sample rate to normal or performer rate
 		if (micIn.gate > 0) {					// If gate is open prepare the audio for sending
-			micAudio = reSample(inData, soundcardSampleRate, SampleRate, downCache);
+			micAudio = reSample(inData, soundcardSampleRate, sr, downCache);
 			resampledChunkSize = micAudio.length;		// Note how much resampled audio is needed
 			micIn.gate--;					// Gate slowly closes
 //			if (micIn.gate == 0)				// Gate is about to close
@@ -628,8 +630,9 @@ function processAudio(e) {						// Main processing loop
 			micAudio = new Array(resampledChunkSize).fill(0);
 		}
 		micBuffer.push(...micAudio);				// Buffer mic audio 
-		if (micBuffer.length > PacketSize) {			// If enough in buffer to fill a packet
-			let inAudio = micBuffer.splice(0, PacketSize);	// Get a packet of audio
+		let ps = (performer ? (PacketSize*PerfSampleRate/SampleRate) : PacketSize);
+		if (micBuffer.length > ps) {				// If enough in buffer to fill a packet
+			let inAudio = micBuffer.splice(0, ps);		// Get a packet of audio (size varies if performer)
 			let obj = applyAutoGain(inAudio, micIn);	// Amplify mic with auto limiter
 			if (obj.peak > micIn.peak) 
 				micIn.peak = obj.peak;			// Note peak for local display
@@ -649,7 +652,7 @@ function processAudio(e) {						// Main processing loop
 				"timestamp"	: now,			// Used to measure round trip time
 				"peak" 		: peak,			// Saves others having to calculate again
 				"channel"	: myChannel,		// Send assigned channel to help server
-				"recording"	: recording,
+				"recording"	: recording,		// Flag used for recording - test function
 			});
 			packetsOut++;					// For stats and monitoring
 			packetSequence++;
@@ -706,7 +709,7 @@ function handleAudio(stream) {						// We have obtained media access
 
 	let micFilter1 = context.createBiquadFilter();
 	micFilter1.type = 'lowpass';
-	micFilter1.frequency.value = 4000;
+	micFilter1.frequency.value = HighFilterFreq;
 	micFilter1.Q.value = 1;
 	let micFilter2 = context.createBiquadFilter();
 	micFilter2.type = 'highpass';
