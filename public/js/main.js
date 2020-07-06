@@ -133,12 +133,16 @@ socketIO.on('d', function (data) {
 			channels[ch].seq = c.sequence;
 		});
 		if (mix.length != 0) {					// If there actually was some audio
+console.log("mix length pre resample:",mix.length);
 			mix = reSample(mix, SampleRate, soundcardSampleRate, upCache); // Bring mix to HW sampling rate
+console.log("mix length after resample:",mix.length);
 			performer = (data.perf.chan == myChannel);	// Update performer flag just in case
 			if ((data.perf.live) && (!performer)) {		// If there is a live performer and it isn't us
 				// MARK Display frame if present
 				let a = data.perf.packet.audio;		// Get the performer audio
+console.log("perf length before resample:",a.length);
 				a = reSample(mix, PerfSampleRate, soundcardSampleRate, upCachePerf); // Bring back to HW sampling rate
+console.log("perf length after resample:",a.length);
 				for (let i=0; i < a.length; i++)
 					mix[i] += a[i];			// Performer audio goes straight into mix
 			}
