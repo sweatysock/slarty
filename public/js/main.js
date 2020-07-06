@@ -1044,12 +1044,14 @@ function printReport() {
 	if ((overflows > 1) || (shortages >1)) generalStatus = "Orange";
 	if (socketConnected == false) generalStatus = "Red";
 	setStatusLED("GeneralStatus",generalStatus);
+	let upperLimit = SampleRate/PacketSize * 120%
+	let lowerLimit = SampleRate/PacketSize * 80%
 	let upStatus = "Green";
-	if ((packetsOut < 30) || (packetsOut > 35)) upStatus = "Orange";
+	if ((packetsOut < lowerLimit) || (packetsOut > upperLimit)) upStatus = "Orange";
 	if (packetsOut < 5) upStatus = "Red";
 	setStatusLED("UpStatus",upStatus);
 	downStatus = "Green";
-	if ((packetsIn < 30) || (packetsIn > 35)) downStatus = "Orange";
+	if ((packetsIn < lowerLimit) || (packetsIn > upperLimit)) downStatus = "Orange";
 	if (packetsIn < 5) downStatus = "Red";
 	setStatusLED("DownStatus",downStatus);
 	if ((overflows > 2) || (shortages > 2)) 
