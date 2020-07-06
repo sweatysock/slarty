@@ -143,7 +143,7 @@ socketIO.on('d', function (data) {
 		mixOut.gain= obj.finalGain;				// Store gain for next loop
 		if (obj.peak > mixOut.peak) mixOut.peak = obj.peak;	// Note peak for display purposes
 		if (mix.length != 0) {					// If there actually was some audio
-			mix = upSample(mix, SampleRate, soundcardSampleRate); // Bring back to HW sampling rate
+			mix = reSample(mix, SampleRate, soundcardSampleRate, upCache); // Bring back to HW sampling rate
 			spkrBuffer.push(...mix);			// put it on the speaker buffer
 			if (spkrBuffer.length > maxBuffSize) {		// Clip buffer if too full
 				spkrBuffer.splice(0, (spkrBuffer.length-maxBuffSize)); 	
@@ -581,6 +581,10 @@ trace2("Noise threshold: ",noiseThreshold);
 var thresholdBuffer = new Array(20).fill(0);				// Buffer dynamic thresholds here for delayed mic muting
 var gateDelay = 30;							// Amount of samples (time) the gate stays open
 
+var  downCache = [0.0,0.0];						// Resampling cache for audio from mic
+var  upCache = [0.0,0.0];						// cache for audio mix to speaker
+var  downCachePerf = [0.0,0.0];						// cache for performer audio from mic
+var  upCachePerf = [0.0,0.0];						// cache for performer audio to mix and send to speaker
 function processAudio(e) {						// Main processing loop
 	// There are two activities here (if not performing an echo test that is): 
 	// 1. Get Mic audio, down-sample it, buffer it, and, if enough, send to server
@@ -613,7 +617,7 @@ function processAudio(e) {						// Main processing loop
 		} 
 		if (performer) micIn.gate = 1				// Performer's mic is always open
 		if (micIn.gate > 0) {					// If gate is open prepare the audio for sending
-			micAudio = downSample(inData, soundcardSampleRate, SampleRate);
+			micAudio = upSample(inData, soundcardSampleRate, SampleRate, downCache);
 			resampledChunkSize = micAudio.length;		// Note how much resampled audio is needed
 			micIn.gate--;					// Gate slowly closes
 //			if (micIn.gate == 0)				// Gate is about to close
@@ -753,10 +757,9 @@ function initAudio() {							// Set up all audio handling here
 }
 
 
-// Resamplers
+// Resampler
 //
-var  downCache = [0.0,0.0];
-function downSample( buffer, originalSampleRate, resampledRate) {
+function reSample( buffer, originalSampleRate, resampledRate, cache) {
 	let resampledBufferLength = Math.round( buffer.length * resampledRate / originalSampleRate );
 	let resampleRatio = buffer.length / resampledBufferLength;
 	let outputData = new Array(resampledBufferLength).fill(0);
@@ -765,33 +768,13 @@ function downSample( buffer, originalSampleRate, resampledRate) {
 		let nearestPoint = Math.round( resampleValue );
 		for ( let tap = -1; tap < 2; tap++ ) {
 			let sampleValue = buffer[ nearestPoint + tap ];
-			if (isNaN(sampleValue)) sampleValue = upCache[ 1 + tap ];
+			if (isNaN(sampleValue)) sampleValue = cache[ 1 + tap ];
 				if (isNaN(sampleValue)) sampleValue = buffer[ nearestPoint ];
 			outputData[ i ] += sampleValue * magicKernel( resampleValue - nearestPoint - tap );
 		}
 	}
-	downCache[ 0 ] = buffer[ buffer.length - 2 ];
-	downCache[ 1 ] = outputData[ resampledBufferLength - 1 ] = buffer[ buffer.length - 1 ];
-	return outputData;
-}
-
-var  upCache = [0.0,0.0];
-function upSample( buffer, originalSampleRate, resampledRate) {
-	let resampledBufferLength = Math.round( buffer.length * resampledRate / originalSampleRate );
-	let resampleRatio = buffer.length / resampledBufferLength;
-	let outputData = new Array(resampledBufferLength).fill(0);
-	for ( var i = 0; i < resampledBufferLength - 1; i++ ) {
-		let resampleValue = ( resampleRatio - 1 ) + ( i * resampleRatio );
-		let nearestPoint = Math.round( resampleValue );
-		for ( let tap = -1; tap < 2; tap++ ) {
-			let sampleValue = buffer[ nearestPoint + tap ];
-			if (isNaN(sampleValue)) sampleValue = upCache[ 1 + tap ];
-				if (isNaN(sampleValue)) sampleValue = buffer[ nearestPoint ];
-			outputData[ i ] += sampleValue * magicKernel( resampleValue - nearestPoint - tap );
-		}
-	}
-	upCache[ 0 ] = buffer[ buffer.length - 2 ];
-	upCache[ 1 ] = outputData[ resampledBufferLength - 1 ] = buffer[ buffer.length - 1 ];
+	cache[ 0 ] = buffer[ buffer.length - 2 ];
+	cache[ 1 ] = outputData[ resampledBufferLength - 1 ] = buffer[ buffer.length - 1 ];
 	return outputData;
 }
 
