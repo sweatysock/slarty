@@ -1044,15 +1044,15 @@ function printReport() {
 	if ((overflows > 1) || (shortages >1)) generalStatus = "Orange";
 	if (socketConnected == false) generalStatus = "Red";
 	setStatusLED("GeneralStatus",generalStatus);
-	let upperLimit = SampleRate/PacketSize * 120%
-	let lowerLimit = SampleRate/PacketSize * 80%
+	let upperLimit = SampleRate/PacketSize * 1.2;
+	let lowerLimit = SampleRate/PacketSize * 0.8;
 	let upStatus = "Green";
 	if ((packetsOut < lowerLimit) || (packetsOut > upperLimit)) upStatus = "Orange";
-	if (packetsOut < 5) upStatus = "Red";
+	if (packetsOut < lowerLimit/3) upStatus = "Red";
 	setStatusLED("UpStatus",upStatus);
 	downStatus = "Green";
 	if ((packetsIn < lowerLimit) || (packetsIn > upperLimit)) downStatus = "Orange";
-	if (packetsIn < 5) downStatus = "Red";
+	if (packetsIn < lowerLimit/3) downStatus = "Red";
 	setStatusLED("DownStatus",downStatus);
 	if ((overflows > 2) || (shortages > 2)) 
 		if (maxBuffSize < 10000) maxBuffSize += 100;		// Increase speaker buffer size if we are overflowing or short
