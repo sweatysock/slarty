@@ -132,19 +132,19 @@ socketIO.on('d', function (data) {
 				trace("Sequence jump Channel ",ch," jump ",(c.sequence - channels[ch].seq));
 			channels[ch].seq = c.sequence;
 		});
-		performer = (data.perf.chan == myChannel);
-		if ((data.perf.live) && (!performer)) {			// If there is a live performer and it isn't us
-			// MARK Display frame if present
-			let a = data.perf.packet.audio;			// Get the performer audio
-			a = reSample(mix, PerfSampleRate, soundcardSampleRate, upCachePerf); // Bring back to HW sampling rate
-			for (let i=0; i < a.length; i++)
-				mix[i] += a[i];				// Performer audio goes straight into mix
-		}
 		if (mix.length != 0) {					// If there actually was some audio
-			mix = reSample(mix, SampleRate, soundcardSampleRate, upCache); // Bring back to HW sampling rate
-			endTalkover();						// Try to end mic talkover before setting gain
-			let obj = applyAutoGain(mix, mixOut);			// Trim mix level 
-			mixOut.gain= obj.finalGain;				// Store gain for next loop
+			mix = reSample(mix, SampleRate, soundcardSampleRate, upCache); // Bring mix to HW sampling rate
+			performer = (data.perf.chan == myChannel);	// Update performer flag just in case
+			if ((data.perf.live) && (!performer)) {		// If there is a live performer and it isn't us
+				// MARK Display frame if present
+				let a = data.perf.packet.audio;		// Get the performer audio
+				a = reSample(mix, PerfSampleRate, soundcardSampleRate, upCachePerf); // Bring back to HW sampling rate
+				for (let i=0; i < a.length; i++)
+					mix[i] += a[i];			// Performer audio goes straight into mix
+			}
+			endTalkover();					// Try to end mic talkover before setting gain
+			let obj = applyAutoGain(mix, mixOut);		// Trim mix level 
+			mixOut.gain= obj.finalGain;			// Store gain for next loop
 			if (obj.peak > mixOut.peak) mixOut.peak = obj.peak;	// Note peak for display purposes
 			spkrBuffer.push(...mix);			// put it on the speaker buffer
 			if (spkrBuffer.length > maxBuffSize) {		// Clip buffer if too full
