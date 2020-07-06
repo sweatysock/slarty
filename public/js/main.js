@@ -763,7 +763,7 @@ function initAudio() {							// Set up all audio handling here
 // Resampler
 //
 function reSample( buffer, originalSampleRate, resampledRate, cache) {
-	let resampledBufferLength = Math.round( buffer.length * resampledRate / originalSampleRate );
+	let resampledBufferLength = Math.floor( buffer.length * resampledRate / originalSampleRate );
 	let resampleRatio = buffer.length / resampledBufferLength;
 	let outputData = new Array(resampledBufferLength).fill(0);
 	for ( let i = 0; i < resampledBufferLength - 1; i++ ) {
