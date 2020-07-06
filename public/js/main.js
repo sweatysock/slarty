@@ -2,7 +2,7 @@
 //
 const SampleRate = 16000; 						// Global sample rate used for all audio
 const HighFilterFreq = SampleRate/2.2;					// Mic filter to remove high frequencies before resampling
-const PerfSampleRate = 16000; 						// Global sample rate used for all audio
+const PerfSampleRate = 32000; 						// Global sample rate used for all audio
 const PacketSize = 500;							// Server packet size we must conform to
 const MaxRTT = 800;							// Round Trip Times above this will cause a socket reset
 var chunkSize = 1024;							// Audio chunk size. Fixed by js script processor
