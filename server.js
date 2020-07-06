@@ -131,6 +131,7 @@ upstreamServer.on('channel', function (data) {				// The response to our "Hi" is
 upstreamServer.on('d', function (packet) { 
 
 	if ( clientsLive == 0 ) return;					// If no clients no reason to process upstream data
+console.log("data from upstream");
 
 	enterState( upstreamState );					
 	upstreamIn++;						
@@ -422,6 +423,7 @@ function enoughAudio() {						// Is there enough audio to build a mix before tim
 
 // The main working function where audio marsahlling, mixing and sending happens
 function generateMix () {
+console.log("gen mix");
 	let mix = new Array(packetSize).fill(0); 			// The mixed audio we will return to all clients
 	let clientPackets = []; 					// All client audio packets that are part of the mix
 	channels.forEach( c => {

@@ -2,7 +2,7 @@
 //
 const SampleRate = 16000; 						// Global sample rate used for all audio
 const HighFilterFreq = SampleRate/2.2;					// Mic filter to remove high frequencies before resampling
-const PerfSampleRate = 32000; 						// Global sample rate used for all audio
+const PerfSampleRate = 16000; 						// Global sample rate used for all audio
 const PacketSize = 500;							// Server packet size we must conform to
 const MaxRTT = 800;							// Round Trip Times above this will cause a socket reset
 var chunkSize = 1024;							// Audio chunk size. Fixed by js script processor
@@ -633,6 +633,7 @@ function processAudio(e) {						// Main processing loop
 		}
 		micBuffer.push(...micAudio);				// Buffer mic audio 
 		let ps = (performer ? (PacketSize*PerfSampleRate/SampleRate) : PacketSize);
+console.log("Mic sample rate:",sr," packet size:",ps);
 		if (micBuffer.length > ps) {				// If enough in buffer to fill a packet
 			let inAudio = micBuffer.splice(0, ps);		// Get a packet of audio (larger if performer)
 			let obj = applyAutoGain(inAudio, micIn);	// Amplify mic with auto limiter
