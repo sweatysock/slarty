@@ -143,7 +143,6 @@ socketIO.on('d', function (data) {
 		mixOut.gain= obj.finalGain;				// Store gain for next loop
 		if (obj.peak > mixOut.peak) mixOut.peak = obj.peak;	// Note peak for display purposes
 		if (mix.length != 0) {					// If there actually was some audio
-console.log(mix,SampleRate, soundcardSampleRate);
 			mix = upSample(mix, SampleRate, soundcardSampleRate); // Bring back to HW sampling rate
 			spkrBuffer.push(...mix);			// put it on the speaker buffer
 			if (spkrBuffer.length > maxBuffSize) {		// Clip buffer if too full
@@ -673,7 +672,6 @@ function processAudio(e) {						// Main processing loop
 		thresholdBuffer[echoTest.sampleDelay+2]
 	])) * echoTest.factor * mixOut.gain;				// multiply by factor and mixOutGain
 	thresholdBuffer.pop();						// Remove oldest threshold buffer value
-console.log("outputting",outAudio,SampleRate, soundcardSampleRate);
 	for (let i in outData) 
 		outData[i] = outAudio[i];				// Copy audio to output
 	enterState( idleState );					// We are done. Back to Idling
@@ -1046,6 +1044,7 @@ function printReport() {
 	setStatusLED("GeneralStatus",generalStatus);
 	let upperLimit = SampleRate/PacketSize * 1.2;
 	let lowerLimit = SampleRate/PacketSize * 0.8;
+console.log(upperLimit, lowerLimit);
 	let upStatus = "Green";
 	if ((packetsOut < lowerLimit) || (packetsOut > upperLimit)) upStatus = "Orange";
 	if (packetsOut < lowerLimit/3) upStatus = "Red";
