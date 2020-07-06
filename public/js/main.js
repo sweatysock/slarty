@@ -1044,7 +1044,6 @@ function printReport() {
 	setStatusLED("GeneralStatus",generalStatus);
 	let upperLimit = SampleRate/PacketSize * 1.2;
 	let lowerLimit = SampleRate/PacketSize * 0.8;
-console.log(upperLimit, lowerLimit);
 	let upStatus = "Green";
 	if ((packetsOut < lowerLimit) || (packetsOut > upperLimit)) upStatus = "Orange";
 	if (packetsOut < lowerLimit/3) upStatus = "Red";
