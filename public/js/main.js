@@ -2,6 +2,7 @@
 //
 const SampleRate = 16000; 						// Global sample rate used for all audio
 const HighFilterFreq = SampleRate/2.2;					// Mic filter to remove high frequencies before resampling
+const LowFilterFreq = 200;						// Mic filter to remove low frequencies before resampling
 const PerfSampleRate = 32000; 						// Global sample rate used for all audio
 const PacketSize = 500;							// Server packet size we must conform to
 const MaxRTT = 800;							// Round Trip Times above this will cause a socket reset
@@ -98,8 +99,12 @@ socketIO.on('perf', function (data) {					// Performer status notification
 	performer = data.live;
 	if (performer == true) {
 		document.getElementById("onair").style.visibility = "visible";
+		micFilter1.frequency.value = PerfSampleRate/2.2;	// Change mic filter for performance audio
+		micFilter2.frequency.value = 20;
 	} else {
 		document.getElementById("onair").style.visibility = "hidden";
+		micFilter1.frequency.value = HighFilterFreq		// Return mic filter to normal settings
+		micFilter2.frequency.value = LowFilterFreq;
 	}
 });
 
@@ -583,10 +588,6 @@ trace2("Noise threshold: ",noiseThreshold);
 var thresholdBuffer = new Array(20).fill(0);				// Buffer dynamic thresholds here for delayed mic muting
 var gateDelay = 30;							// Amount of samples (time) the gate stays open
 
-var  downCache = [0.0,0.0];						// Resampling cache for audio from mic
-var  upCache = [0.0,0.0];						// cache for audio mix to speaker
-var  downCachePerf = [0.0,0.0];						// cache for performer audio from mic
-var  upCachePerf = [0.0,0.0];						// cache for performer audio to mix and send to speaker
 function processAudio(e) {						// Main processing loop
 	// There are two activities here (if not performing an echo test that is): 
 	// 1. Get Mic audio, down-sample it, buffer it, and, if enough, send to server
@@ -633,7 +634,6 @@ function processAudio(e) {						// Main processing loop
 		}
 		micBuffer.push(...micAudio);				// Buffer mic audio 
 		let ps = (performer ? (PacketSize*PerfSampleRate/SampleRate) : PacketSize);
-console.log("Mic sample rate:",sr," packet size:",ps);
 		if (micBuffer.length > ps) {				// If enough in buffer to fill a packet
 			let inAudio = micBuffer.splice(0, ps);		// Get a packet of audio (larger if performer)
 			let obj = applyAutoGain(inAudio, micIn);	// Amplify mic with auto limiter
@@ -687,6 +687,8 @@ console.log("Mic sample rate:",sr," packet size:",ps);
 	enterState( idleState );					// We are done. Back to Idling
 }
 
+var micFilter1;
+var micFilter2;
 function handleAudio(stream) {						// We have obtained media access
 	let context;
 	let AudioContext = window.AudioContext 				// Default
@@ -710,13 +712,13 @@ function handleAudio(stream) {						// We have obtained media access
 	}
 	node.onaudioprocess = processAudio;				// Link the callback to the node
 
-	let micFilter1 = context.createBiquadFilter();
+	micFilter1 = context.createBiquadFilter();
 	micFilter1.type = 'lowpass';
 	micFilter1.frequency.value = HighFilterFreq;
 	micFilter1.Q.value = 1;
-	let micFilter2 = context.createBiquadFilter();
+	micFilter2 = context.createBiquadFilter();
 	micFilter2.type = 'highpass';
-	micFilter2.frequency.value = 200;
+	micFilter2.frequency.value = LowFilterFreq;
 	micFilter2.Q.value = 1;
 	
 	let splitter = context.createChannelSplitter(2);		// Split signal for echo cancelling
@@ -765,6 +767,10 @@ function initAudio() {							// Set up all audio handling here
 
 // Resampler
 //
+var  downCache = [0.0,0.0];						// Resampling cache for audio from mic
+var  upCache = [0.0,0.0];						// cache for audio mix to speaker
+var  downCachePerf = [0.0,0.0];						// cache for performer audio from mic
+var  upCachePerf = [0.0,0.0];						// cache for performer audio to mix and send to speaker
 function reSample( buffer, originalSampleRate, resampledRate, cache) {
 	let resampledBufferLength = Math.floor( buffer.length * resampledRate / originalSampleRate );
 	let resampleRatio = buffer.length / resampledBufferLength;
@@ -1023,10 +1029,15 @@ function printReport() {
 		trace("Levels of output: ",levelCategories);
 	}
 //	setNoiseThreshold();						// Set mic noise threshold based on level categories
-	if (performer == true)
+	if (performer == true) {
 		document.getElementById("onair").style.visibility = "visible";
-	else
+		micFilter1.frequency.value = PerfSampleRate/2.2;	// Change mic filter for performance audio
+		micFilter2.frequency.value = 20;
+	} else	{
 		document.getElementById("onair").style.visibility = "hidden";
+		micFilter1.frequency.value = HighFilterFreq		// Return mic filter to normal settings
+		micFilter2.frequency.value = LowFilterFreq;
+	}
 	let generalStatus = "Green";
 	if ((overflows > 1) || (shortages >1)) generalStatus = "Orange";
 	if (socketConnected == false) generalStatus = "Red";
