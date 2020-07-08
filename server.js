@@ -153,7 +153,7 @@ upstreamServer.on('d', function (packet) {
 		}
 	}
 if (traceCount > 0) console.log(mix);
-	mix = midBoostFilter(mix);					// Filter upstream audio to made it distant
+//	mix = midBoostFilter(mix);					// Filter upstream audio to made it distant
 	let obj = applyAutoGain(mix,venueMixGain,1);			// Control mix audio level
 	venueMixGain = obj.finalGain;					// Store gain for next loop
 	upstreamMax = obj.peak;						// For monitoring purposes
