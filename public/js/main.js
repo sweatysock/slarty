@@ -3,7 +3,7 @@
 const SampleRate = 16000; 						// Global sample rate used for all audio
 const HighFilterFreq = SampleRate/2.2;					// Mic filter to remove high frequencies before resampling
 const LowFilterFreq = 200;						// Mic filter to remove low frequencies before resampling
-const PerfSampleRate = 32000; 						// Global sample rate used for all audio
+const PerfSampleRate = 32000; 						// Global sample rate used for all performer audio
 const PacketSize = 500;							// Server packet size we must conform to
 const MaxRTT = 800;							// Round Trip Times above this will cause a socket reset
 var chunkSize = 1024;							// Audio chunk size. Fixed by js script processor
@@ -656,6 +656,7 @@ function processAudio(e) {						// Main processing loop
 				"peak" 		: peak,			// Saves others having to calculate again
 				"channel"	: myChannel,		// Send assigned channel to help server
 				"recording"	: recording,		// Flag used for recording - test function
+				"sampleRate"	: sr,			// Send sample rate to help processing
 			});
 			packetsOut++;					// For stats and monitoring
 			packetSequence++;
@@ -1055,20 +1056,6 @@ function printReport() {
 	if ((overflows > 2) || (shortages > 2)) 
 		if (maxBuffSize < 20000) maxBuffSize += 100;		// Increase speaker buffer size if we are overflowing or short
 	if (maxBuffSize > 6000) maxBuffSize -= 20;			// Steadily drop buffer back to size to compensate
-//	if (packetsOut < 30) sendShortages++;				// Monitor if we are sending enough audio
-//	else sendShortages--;
-//	if ((sendShortages > 10) && (displayRefresh == 100)) {		// 10 seconds of shortages is bad. Slow UI animation.
-//trace("Not ending enough audio... slowing animation to 0.5s");
-//		displayRefresh = 500; sendShortages = 0;
-//	}
-//	if ((sendShortages > 10) && (displayRefresh == 500)) {		// 10 more seconds... slow it even more
-//trace("Still not ending enough audio... slowing animation to 1s");
-//		displayRefresh = 1000; sendShortages = 0;
-//	}
-//	if ((sendShortages > 10) && (displayRefresh == 1000)) {		// another 10 seconds? Stop animation completely.
-//trace("Still not sending enough audio. Stopping UI animation ");
-//		displayRefresh = 2000; sendShortages = 0;
-//	}
 	packetsIn = 0;
 	packetsOut = 0;
 	overflows = 0;

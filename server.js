@@ -4,6 +4,7 @@ const maxBufferSize = 10;						// Max number of packets to store per client
 const mixTriggerLevel = 5;						// When all clients have this many packets we create a mix
 const packetSize = 500;							// Number of samples in the client audio packets
 const SampleRate = 16000; 						// All audio in audence runs at this sample rate. 
+const PerfSampleRate = 32000; 						// Global sample rate used for all performer audio
 const MaxOutputLevel = 1;						// Max output level for INT16, for auto gain control
 const NumberOfChannels = 20;						// Max number of channels in this server
 var channels = [];							// Each channel's data & buffer held here
@@ -287,24 +288,29 @@ io.sockets.on('connection', function (socket) {
 		let channel = channels[packet.channel];			// This client sends their channel to save server effort
 		channel.name = packet.name;				// Update name of channel in case it has changed
 		channel.socketID = socket.id;				// Store socket ID associated with channel
-		packet.socketID = socket.id;				// Also store it in the packet to help client
-		if (packet.channel == perf.chan) {			// This is the performer. Note: Channel 0 never enters here
-			perf.packet = packet;				// Store performer audio/video. It will be sent right now.
-			enterState( genMixState );
-			generateMix();					// The performer marks when data goes out. period.
-		} else {
-			channel.packets.push(packet);			// Add packet to its channel packet buffer
-			channel.recording = packet.recording;
-			if ((channel.packets.length > channel.maxBufferSize) &&	// If buffer full and we are not recording
-				(channel.recording == false)) {			// the buffer then remove the oldest packet.
-				channel.packets.shift();
-				channel.overflows++;				// Log overflows per channel
-				overflows++;					// and also globally for monitoring
-			}
-			if (channel.packets.length >= channel.mixTriggerLevel) {
-				channel.newBuf = false;				// Buffer has filled enough. Channel can enter the mix
+		packet.socketID = socket.id;				// Also store it in the packet to help client skip own audio
+		if (packet.channel == perf.chan) { 			// This is the performer. Note: Channel 0 never enters here
+			if (packet.sampleRate == PerfSampleRate) {	// Sample rate needs to be correct for performer channel
+				perf.packet = packet;			// Store performer audio/video. It will be sent immediately
 				enterState( genMixState );
-				if (enoughAudio()) generateMix();		// If there is enough audio in all channels build mix
+				generateMix();				// The performer marks when data goes out. period.
+			}
+		} else {						// Normal audio: buffer it, clip it, and mix it 
+			if (packet.sampleRate == SampleRate) {		// Sample rate needs to be correct for regular channel
+				channel.packets.push(packet);		// Add packet to its channel packet buffer
+				channel.recording = packet.recording;	// Recording is used for testing purposes only
+				if ((channel.packets.length > channel.maxBufferSize) &&	
+					(channel.recording == false)) {	// If buffer full and we are not recording this channel
+					channel.packets.shift();	// then remove the oldest packet.
+					channel.overflows++;		// Log overflows per channel
+					overflows++;			// and also globally for monitoring
+				}
+				if (channel.packets.length >= channel.mixTriggerLevel) {
+					channel.newBuf = false;		// Buffer has filled enough. Channel can enter the mix
+					enterState( genMixState );
+					if (enoughAudio()) 
+						generateMix();		// If there is enough audio in all channels build mix
+				}
 			}
 		}
 		packetsIn++;
@@ -368,8 +374,9 @@ function applyAutoGain(audio, startGain, maxGain) {			// Auto gain control
 
 var prevFilt1In = 0;							// Save last in & out samples for high pass filter
 var prevFilt1Out = 0;
-var filterBuf = [0,0];							// Keep previous two samples here for resonant filter
 function midBoostFilter(audioIn) {					// Filter to boost mids giving distant sound
+	if (isNaN(prevFilt1In)) prevFilt1In = 0;
+	if (isNaN(prevFilt1Out)) prevFilt1Out = 0;
 	let out1 = [];							// The output of the first filter goes here
 	let alpha = 0.88888889; 					// First filter is a simple high pass filter
 	out1[0] = (prevFilt1Out + audioIn[0] - prevFilt1In) * alpha;	// First value uses previous filtering values
@@ -377,8 +384,6 @@ function midBoostFilter(audioIn) {					// Filter to boost mids giving distant so
 		out1[i] = (out1[i-1] + audioIn[i] - audioIn[i-1]) * alpha;
 	prevFilt1In = audioIn[audioIn.length-1];			// Save last input sample for next filter loop
 	prevFilt1Out = out1[out1.length-1];				// and last output sample for same reason
-if (isNaN(prevFilt1In)) console.log("IN ",prevFilt1In,audioIn);
-if (isNaN(prevFilt1Out)) console.log("OUT ",prevFilt1Out,audioIn);
 	return out1;							// Testing with just the high pass filter
 }
 
