@@ -139,8 +139,6 @@ upstreamServer.on('d', function (packet) {
 
 	perf.live = packet.perf.live;					// Performer status is shared by all servers
 	if (perf.live) perf.packet = packet.perf.packet;		// If performer is live store the audio/video packet 
-if (traceCount > 0) console.log(packet);
-traceCount--;
 	let chan = packet.channels;					// Build a mix just like the clients do
 	let mix = new Array(packetSize).fill(0); 			// and send mix downstream
 	let ts = 0;						
@@ -168,6 +166,8 @@ traceCount--;
 			channel		: 0,				// Upstream is assigned channel 0 everywhere
 		}
 		channels[0].packets.push(p); 				// Store upstream packet in channel 0
+if (traceCount > 0) console.log(p);
+traceCount--;
 		if (channels[0].packets.length > maxBufferSize) {	// Clip buffer if overflowing
 			channels[0].packets.shift();
 			channels[0].overflows++;
