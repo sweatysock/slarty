@@ -482,20 +482,25 @@ function applyAutoGain(audio, obj) {
 	let startGain = obj.gain;
 	let targetGain = obj.manGain;
 	let ceiling = obj.ceiling;
+	let negCeiling = ceiling * -1;
 	let gainRate = obj.gainRate;
 	let tempGain, maxLevel, endGain, p, x, transitionLength; 
 	maxLevel = maxValue(audio);					// Find peak audio level 
 	endGain = ceiling / maxLevel;					// Desired gain to avoid overload
 	maxLevel = 0;							// Use this to capture peak
 	if (endGain > targetGain) endGain = targetGain;			// No higher than targetGain 
-	else obj.gainRate = 100000;					// clipping! slow gain increases - set obj value
+	else {
+		obj.gainRate = 10000;					// clipping! slow gain increases - set obj value
+		trace2("Clipping gain");
+	}
 	if (endGain >= startGain) {					// Gain adjustment speed varies
 		transitionLength = audio.length;			// Gain increases are over entire sample
 		endGain = startGain + ((endGain - startGain)/gainRate);	// and are very gentle
 	}
-	else
-//		transitionLength = Math.floor(audio.length/10);		// Gain decreases are fast
+	else {
 		transitionLength = Math.floor(audio.length/10);		// Gain decreases are fast
+		trace2("Gain dropping");
+	}
 	tempGain = startGain;						// Start at current gain level
 	for (let i = 0; i < transitionLength; i++) {			// Adjust gain over transition
 		x = i/transitionLength;
@@ -507,7 +512,7 @@ function applyAutoGain(audio, obj) {
 		tempGain = startGain + (endGain - startGain) * x;
 	 	audio[i] = audio[i] * tempGain;
 		if (audio[i] >= ceiling) audio[i] = ceiling;
-		else if (audio[i] <= (ceiling * -1)) audio[i] = ceiling * -1;
+		else if (audio[i] <= negCeiling) audio[i] = negCeiling;
 		x = Math.abs(audio[i]);
 		if (x > maxLevel) maxLevel = x;
 	}
@@ -516,7 +521,7 @@ function applyAutoGain(audio, obj) {
 		for (let i = transitionLength; i < audio.length; i++) {
 			audio[i] = audio[i] * tempGain;
 			if (audio[i] >= ceiling) audio[i] = ceiling;
-			else if (audio[i] <= (ceiling * -1)) audio[i] = ceiling * -1;
+			else if (audio[i] <= negCeiling) audio[i] = negCeiling;
 			x = Math.abs(audio[i]);
 			if (x > maxLevel) maxLevel = x;
 		}

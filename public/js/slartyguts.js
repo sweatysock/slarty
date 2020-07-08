@@ -26,6 +26,7 @@ socketIO.on('s', function (data) {
 	document.getElementById("upServer").innerHTML = data["upServer"];
 	document.getElementById("upIn").innerHTML = data["upIn"];
 	document.getElementById("upOut").innerHTML = data["upOut"];
+	document.getElementById("perfEntry").innerHTML = data["perf"]+"*";
 });
 
 socketIO.on('disconnect', function () {
@@ -77,7 +78,7 @@ document.addEventListener('DOMContentLoaded', function(event){
 	let perfEntry = document.getElementById('perfEntry');
 	perfEntry.addEventListener("keypress", (e) => {
 		if (e.which === 13) {
-			socketIO.emit("setPerformer",
+			socketIO.emit("performer",
 			{
 				"channel": parseFloat(perfEntry.innerHTML),
 			});
