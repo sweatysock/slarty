@@ -165,6 +165,7 @@ upstreamServer.on('d', function (packet) {
 			timestamp	: ts,				// Maybe interesting to know how old it is?
 			sequence	: venueSequence++,		// Sequence number for tracking quality
 			channel		: 0,				// Upstream is assigned channel 0 everywhere
+			sampleRate	: SampleRate,			// Send sample rate to help processing
 		}
 		channels[0].packets.push(p); 				// Store upstream packet in channel 0
 		if (channels[0].packets.length > maxBufferSize) {	// Clip buffer if overflowing
@@ -450,6 +451,7 @@ function generateMix () {
 			"peak" 		: obj.peak,			// Saves having to calculate again
 			"channel"	: upstreamServerChannel,	// Send assigned channel to help server
 			"recording"	: false,			// Make sure the upstream server never records
+			"sampleRate"	: SampleRate,			// Send sample rate to help processing
 			// MARK send liveChannels upstream
 		});
 		upstreamOut++;

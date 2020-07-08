@@ -1040,7 +1040,7 @@ function printReport() {
 		micFilter2.frequency.value = LowFilterFreq;
 	}
 	let generalStatus = "Green";
-	if ((overflows > 1) || (shortages >1)) generalStatus = "Orange";
+	if ((overflows > 1) || (shortages >1) || (rtt >500)) generalStatus = "Orange";
 	if (socketConnected == false) generalStatus = "Red";
 	setStatusLED("GeneralStatus",generalStatus);
 	let upperLimit = SampleRate/PacketSize * 1.2;
