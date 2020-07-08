@@ -167,6 +167,7 @@ traceCount--;
 			sequence	: venueSequence++,		// Sequence number for tracking quality
 			channel		: 0,				// Upstream is assigned channel 0 everywhere
 		}
+if (traceCount > 0) console.log(p);
 		channels[0].packets.push(p); 				// Store upstream packet in channel 0
 		if (channels[0].packets.length > maxBufferSize) {	// Clip buffer if overflowing
 			channels[0].packets.shift();
