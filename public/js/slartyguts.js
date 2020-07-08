@@ -78,8 +78,7 @@ document.addEventListener('DOMContentLoaded', function(event){
 	let perfEntry = document.getElementById('perfEntry');
 	perfEntry.addEventListener("keypress", (e) => {
 		if (e.which === 13) {
-console.log("sending perf");
-			socketIO.emit("performer",
+			socketIO.emit("setPerformer",
 			{
 				"channel": parseFloat(perfEntry.innerHTML),
 			});
