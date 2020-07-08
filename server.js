@@ -139,12 +139,11 @@ upstreamServer.on('d', function (packet) {
 
 	perf.live = packet.perf.live;					// Performer status is shared by all servers
 	if (perf.live) perf.packet = packet.perf.packet;		// If performer is live store the audio/video packet 
-console.log("Perf flag from above is ",perf.live);
-
+if (traceCount) console.log(packet);
+traceCount--;
 	let chan = packet.channels;					// Build a mix just like the clients do
 	let mix = new Array(packetSize).fill(0); 			// and send mix downstream
 	let ts = 0;						
-console.log("processing ",chan.length," channels from upstream");
 	for (let c=0; c < chan.length; c++) {				// So first we need to build a mix
 		if (chan[c].socketID != upstreamServer.id) {		// Skip my audio in mix generation
 			let a = chan[c].audio;
@@ -537,9 +536,12 @@ packetClassifier.fill(0,0,30);
 var mixMax = 0;
 var upstreamMax = 0;
 
+var traceCount = 1;
+
 const updateTimer = 1000;						// Frequency of updates to the console
 var counterDivider = 0;							// Used to execute operation 10x slower than the reporting loop
 function printReport() {
+	traceCount = 1;
 	enterState( idleState );					// Update timers in case we are inactive
 //	console.log(myServerName," Activity Report");
 //	console.log("Idle = ", idleState.total, " upstream = ", upstreamState.total, " downstream = ", downstreamState.total, " genMix = ", genMixState.total);
