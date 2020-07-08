@@ -139,7 +139,7 @@ upstreamServer.on('d', function (packet) {
 
 	perf.live = packet.perf.live;					// Performer status is shared by all servers
 	if (perf.live) perf.packet = packet.perf.packet;		// If performer is live store the audio/video packet 
-if (traceCount) console.log(packet);
+if (traceCount > 0) console.log(packet);
 traceCount--;
 	let chan = packet.channels;					// Build a mix just like the clients do
 	let mix = new Array(packetSize).fill(0); 			// and send mix downstream
