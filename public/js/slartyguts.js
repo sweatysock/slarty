@@ -26,7 +26,7 @@ socketIO.on('s', function (data) {
 	document.getElementById("upServer").innerHTML = data["upServer"];
 	document.getElementById("upIn").innerHTML = data["upIn"];
 	document.getElementById("upOut").innerHTML = data["upOut"];
-	document.getElementById("perfEntry").innerHTML = data["perf"]+"*";
+	document.getElementById("perf").innerHTML = "*"+data["perf"]+"*";
 });
 
 socketIO.on('disconnect', function () {
