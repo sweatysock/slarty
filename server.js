@@ -566,7 +566,7 @@ function printReport() {
 		"cbs":		cbs,
 		"pacClass":	packetClassifier,
 		"upServer":	upstreamName,
-		"perf":		perf.channel,
+		"perf":		perf.chan,
 	});
 	channels.forEach(c => {
 		c.shortages = 0;					// Reset channel-level counters
