@@ -139,10 +139,12 @@ upstreamServer.on('d', function (packet) {
 
 	perf.live = packet.perf.live;					// Performer status is shared by all servers
 	if (perf.live) perf.packet = packet.perf.packet;		// If performer is live store the audio/video packet 
+console.log("Perf flag from above is ",perf.live);
 
 	let chan = packet.channels;					// Build a mix just like the clients do
 	let mix = new Array(packetSize).fill(0); 			// and send mix downstream
 	let ts = 0;						
+console.log("processing ",chan.length," channels from upstream");
 	for (let c=0; c < chan.length; c++) {				// So first we need to build a mix
 		if (chan[c].socketID != upstreamServer.id) {		// Skip my audio in mix generation
 			let a = chan[c].audio;
@@ -479,6 +481,8 @@ function generateMix () {
 		"commands"	: commands,				// Send commands downstream to reach all client endpoints
 		// MARK SEND our server URL for heckler control
 	});
+	perf.packet = [];						// perf data has been sent. Can empty variables now.
+	perf.frame = [];
 	packetsOut++;							// Sent data so log it and set time limit for next send
 	packetClassifier[clientPackets.length] = packetClassifier[clientPackets.length] + 1;
 	if (!perf.live) {						// If no live performance then clock samples

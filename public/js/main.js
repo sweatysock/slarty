@@ -100,7 +100,7 @@ socketIO.on('perf', function (data) {					// Performer status notification
 	if (performer == true) {
 		document.getElementById("onair").style.visibility = "visible";
 		micFilter1.frequency.value = PerfSampleRate/2.2;	// Change mic filter for performance audio
-		micFilter2.frequency.value = 20;
+		micFilter2.frequency.value = 50;
 	} else {
 		document.getElementById("onair").style.visibility = "hidden";
 		micFilter1.frequency.value = HighFilterFreq		// Return mic filter to normal settings
@@ -1032,7 +1032,7 @@ function printReport() {
 	if (performer == true) {
 		document.getElementById("onair").style.visibility = "visible";
 		micFilter1.frequency.value = PerfSampleRate/2.2;	// Change mic filter for performance audio
-		micFilter2.frequency.value = 20;
+		micFilter2.frequency.value = 50;
 	} else	{
 		document.getElementById("onair").style.visibility = "hidden";
 		micFilter1.frequency.value = HighFilterFreq		// Return mic filter to normal settings
