@@ -152,6 +152,8 @@ upstreamServer.on('d', function (packet) {
 			rtt = now - ts;					// Measure round trip time
 		}
 	}
+if (traceCount > 0) console.log(mix);
+traceCount--;
 	mix = midBoostFilter(mix);					// Filter upstream audio to made it distant
 	let obj = applyAutoGain(mix,venueMixGain,1);			// Control mix audio level
 	venueMixGain = obj.finalGain;					// Store gain for next loop
@@ -166,8 +168,6 @@ upstreamServer.on('d', function (packet) {
 			channel		: 0,				// Upstream is assigned channel 0 everywhere
 		}
 		channels[0].packets.push(p); 				// Store upstream packet in channel 0
-if (traceCount > 0) console.log(p);
-traceCount--;
 		if (channels[0].packets.length > maxBufferSize) {	// Clip buffer if overflowing
 			channels[0].packets.shift();
 			channels[0].overflows++;
