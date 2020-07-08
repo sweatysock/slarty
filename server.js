@@ -268,6 +268,7 @@ io.sockets.on('connection', function (socket) {
 	});
 
 	socket.on('setPerformer', function (data) { 			// A super wants to set Performer channel PROTECT
+console.log("Performer request ",perf.chan);
 		if (upstreamConnected) 		 			// upstream server means this not venue server so no performer
 			return;
 		if ((perf.live) 				  	// If performer is already set and is connected 
