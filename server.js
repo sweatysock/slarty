@@ -152,8 +152,7 @@ upstreamServer.on('d', function (packet) {
 			rtt = now - ts;					// Measure round trip time
 		}
 	}
-if (traceCount > 0) console.log(mix);
-//	mix = midBoostFilter(mix);					// Filter upstream audio to made it distant
+	mix = midBoostFilter(mix);					// Filter upstream audio to made it distant
 	let obj = applyAutoGain(mix,venueMixGain,1);			// Control mix audio level
 	venueMixGain = obj.finalGain;					// Store gain for next loop
 	upstreamMax = obj.peak;						// For monitoring purposes
@@ -166,8 +165,6 @@ if (traceCount > 0) console.log(mix);
 			sequence	: venueSequence++,		// Sequence number for tracking quality
 			channel		: 0,				// Upstream is assigned channel 0 everywhere
 		}
-if (traceCount > 0) console.log(p);
-traceCount--;
 		channels[0].packets.push(p); 				// Store upstream packet in channel 0
 		if (channels[0].packets.length > maxBufferSize) {	// Clip buffer if overflowing
 			channels[0].packets.shift();
@@ -283,7 +280,6 @@ io.sockets.on('connection', function (socket) {
 			perf.live = false;
 			perf.chan = 0;
 		}
-console.log("performer set to ",perf.chan," perf.live = ",perf.live);
 	});
 
 	socket.on('u', function (packet) { 				// Audio coming up from one of our downstream clients
@@ -381,20 +377,9 @@ function midBoostFilter(audioIn) {					// Filter to boost mids giving distant so
 		out1[i] = (out1[i-1] + audioIn[i] - audioIn[i-1]) * alpha;
 	prevFilt1In = audioIn[audioIn.length-1];			// Save last input sample for next filter loop
 	prevFilt1Out = out1[out1.length-1];				// and last output sample for same reason
+if (prevFilt1In.isNaN()) console.log(audioIn);
+if (prevFilt1Out.isNaN()) console.log(audioIn);
 	return out1;							// Testing with just the high pass filter
-//	let audioIn2 = out1;						// The output of the previous filter is the input of this
-//	let A = 1.25957111;						// Second filter is a high pass resonant filter
-//	let B = -0.4816372;						// Factors for the filter. Derived during design
-//	let C = 0.2220661;
-//	let out2 = [];							// Filter output goes here
-//	out2[0] = filterBuf[0];						// Restore values from previous filter session
-//	out2[1] = filterBuf[1];
-//	for (let i=0; i<audioIn2.length; i++)
-//		out2[i+2] = A * out2[i+1] + B * out2[i] + C * audioIn2[i];
-//	out2.splice(0,2);						// Remove first two elements from previous filter session
-//	filterBuf[0] = out2[out2.length-2];				// Store the last two filter values for next filter session
-//	filterBuf[1] = out2[out2.length-1];
-//	return out2;
 }
 
 function forceMix() {							// The timer has triggered a mix 
