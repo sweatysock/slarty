@@ -407,7 +407,7 @@ trace2("agc off");
 		b.style.visibility = "inherit";
 trace2("agc on");
 	}
-	oid.agc = !old.agc;
+	oid.agc = !oid.agc;
 }
 
 function unmuteButton(e) {
