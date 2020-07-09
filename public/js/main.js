@@ -453,12 +453,11 @@ function sliderDrag(event) {
 			gain = (p -8)/34;
 		else
 			gain = (p - 39.5)/2.5;
-trace2(id," gain set to ",gain);
 		id = convertIdToObj(id);				// Get the js object ID for this UI element
 		id.gain = gain;						// Set the object's gain level 
+trace2(id," gain set to ",gain," for ",id.channel);
 //		if (id.targetGain != undefined) id.targetGain = gain;	// If this object has a target gain manually set it too
 		id.agc = false;						// AGC is now off for this object
-trace2("agc set to ",id.agc);
 	}
 }
 
@@ -507,7 +506,6 @@ function applyAutoGain(audio, obj) {
 	let agc = obj.agc;
 	let tempGain, maxLevel, endGain, p, x, transitionLength; 
 	if (!agc) targetGain = startGain;				// If no AGC not much to do. Just clip and apply ceiling
-console.log(agc, targetGain, startGain);
 	maxLevel = maxValue(audio);					// Find peak audio level 
 	endGain = ceiling / maxLevel;					// Our endGain can never exceed this to avoid overload
 	maxLevel = 0;							// Use this to capture peak
@@ -550,7 +548,6 @@ console.log(agc, targetGain, startGain);
 			if (x > maxLevel) maxLevel = x;
 		}
 	}
-console.log("AGC End gain is ",endGain);
 	return { finalGain: endGain, peak: maxLevel };
 }
 
