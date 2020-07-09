@@ -401,7 +401,7 @@ trace2("mute ",id);
 }
 
 function agcButton(e) {
-trace2("unmute");
+trace2("agc on");
 	let id = event.target.parentNode.id;
 	let b = document.getElementById(id+"AGCOff");
 	b.style.visibility = "inherit";
@@ -448,7 +448,7 @@ function sliderDrag(event) {
 		if (p > 65) p = 65;
 		o.style.bottom = p;					// Move the slider to the desired position
 		let agc = document.getElementById(id+"AGCOn");
-		agc.visibility = false;					// By sliding the fader AGC is switched off. Hide indicator
+		agc.visibility = "hidden";				// By sliding the fader AGC is switched off. Hide indicator
 		let gain;						// Now calculate the gain this position implies
 		if (p < 42) 						// Inverse equations used for slider positioning
 			gain = (p -8)/34;
@@ -458,6 +458,7 @@ trace2(id," gain set to ",gain);
 		id = convertIdToObj(id);				// Get the js object ID for this UI element
 		id.gain = gain;						// Set the object's gain level 
 		id.agc = false;						// AGC is now off for this object
+trace2("agc set to ",id.agc);
 	}
 }
 
