@@ -1033,7 +1033,7 @@ var sendShortages = 0;
 function printReport() {
 	enterState( UIState );						// Measure time spent updating UI even for reporting!
 	let aud=document.getElementById('audioDiv');
-	trace2(aud);
+	trace2(aud.volume);
 	if (!pauseTracing) {
 		trace("Idle = ", idleState.total, " data in = ", dataInState.total, " audio in/out = ", audioInOutState.total," UI work = ",UIState.total);
 		trace("Sent = ",packetsOut," Heard = ",packetsIn," overflows = ",overflows," shortages = ",shortages," RTT = ",rtt.toFixed(1));
