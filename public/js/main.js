@@ -547,6 +547,7 @@ function applyAutoGain(audio, obj) {
 			if (x > maxLevel) maxLevel = x;
 		}
 	}
+	if (ceiling != 1) endGain = startGain;				// If talkover ceiling impact on gain is temporary
 	return { finalGain: endGain, peak: maxLevel };
 }
 
@@ -580,7 +581,6 @@ function endTalkover() {
 	let now = new Date().getTime();
 	if (now > talkoverTimer) { 					// Mix ceiling can raise after timeout
 		mixOut.ceiling = 1;
-		if (mixOut.agc) mixOut.gain = mixOut.targetGain;	// Gain returns to desired gain level
 	}
 }
 
