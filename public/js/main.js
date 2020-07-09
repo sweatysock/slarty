@@ -751,8 +751,8 @@ document.addEventListener('DOMContentLoaded', function(event){
 
 function initAudio() {							// Set up all audio handling here
 	let constraints = { 						// Try to get the right audio setup
-		mandatory: {						// There don't really work though
- 			googEchoCancellation: true,
+		mandatory: {						// These don't really work though!
+ 			googEchoCancellation: false,
 			googAutoGainControl: false,
 			googNoiseSuppression: false,
 			googHighpassFilter: false 
@@ -1032,6 +1032,8 @@ var tracecount = 0;
 var sendShortages = 0;
 function printReport() {
 	enterState( UIState );						// Measure time spent updating UI even for reporting!
+	let aud=document.getElementById('audioDiv');
+	trace2(aud);
 	if (!pauseTracing) {
 		trace("Idle = ", idleState.total, " data in = ", dataInState.total, " audio in/out = ", audioInOutState.total," UI work = ",UIState.total);
 		trace("Sent = ",packetsOut," Heard = ",packetsIn," overflows = ",overflows," shortages = ",shortages," RTT = ",rtt.toFixed(1));
