@@ -263,9 +263,10 @@ function setThresholdPos( obj ) {					// Set threshold indicator position
 }
 
 function setSliderPos( obj ) {
-	if (obj.gain < 1) pos = (34 * obj.gain) + 8; 
+	let gain = (obj.agc ? obj.gain : obj.manGain);			// With AGC slider shows actual gain, otherwise manual gain
+	if (gain < 1) pos = (34 * gain) + 8; 
 	else
-		pos = (2.5 * obj.gain) + 39.5;
+		pos = (2.5 * gain) + 39.5;
 	let sl = document.getElementById(obj.displayID + "Slider");
 	sl.style.bottom = pos + "%" ;
 }
@@ -446,6 +447,8 @@ function sliderDrag(event) {
 		if (p < 8) p = 8;					// Limit slider movement
 		if (p > 65) p = 65;
 		o.style.bottom = p;					// Move the slider to the desired position
+		let agc = document.getElementById(id+"AGCOn");
+		agc.visibility = false;					// By sliding the fader AGC is switched off. Hide indicator
 		let gain;						// Now calculate the gain this position implies
 		if (p < 42) 						// Inverse equations used for slider positioning
 			gain = (p -8)/34;
@@ -453,10 +456,7 @@ function sliderDrag(event) {
 			gain = (p - 39.5)/2.5;
 		id = convertIdToObj(id);				// Get the js object ID for this UI element
 		id.gain = gain;						// Set the object's gain level 
-trace2(id," gain set to ",gain);
-		id.agc = false;						// By sliding the fader AGC is switched off
-		let agc = document.getElementById(id+"AGCOn");
-		agc.visibility = false;					// Hide the AGC On light
+		id.agc = false;						// AGC is now off for this object
 	}
 }
 
