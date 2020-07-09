@@ -21,8 +21,7 @@ var channels = [];							// Each channel's data & buffer held here
 for (let i=0; i < NumberOfChannels; i++) {				// Create all the channels pre-initialized
 	channels[i] = {
 		name	: "",						// Each client names their channel
-		manGain : 1,						// Manual gain level set by fader. Desired gain.
-		gain 	: 1,						// Actual gain level for the channel
+		gain 	: 1,						// Gain level for the channel
 		agc	: true,						// Flag if control is manual or auto
 		muted	: false,					// Local mute
 		peak	: 0,						// Animated peak channel audio level 
@@ -36,7 +35,7 @@ var mixOut = {								// Similar structures for the mix output
 	name 	: "Output",
 	gain	: 0,
 	gainRate: 100,
-	manGain : 1,
+	targetGain: 1,
 	ceiling : 1,
 	agc	: true,
 	muted	: false,
@@ -47,7 +46,7 @@ var micIn = {								// and for microphone input
 	name 	: "Mic",
 	gain	: 0,
 	gainRate: 100,
-	manGain : 1,
+	targetGain: 1,
 	ceiling : 1,
 	agc	: true,
 	muted	: false,
@@ -127,8 +126,8 @@ socketIO.on('d', function (data) {
 					chan.peak = c.peak;		// even if muted
 				if (!chan.muted) {			// We can skip a muted channel
 					let a = c.audio;		// Get the incoming channel audio
-					let g = (chan.agc 		// Apply gain. If AGC use mix gain, else manual gain
-						? mixOut.gain : chan.manGain);	
+					let g = (chan.agc 		// Apply gain. If AGC use mix gain, else channel gain
+						? mixOut.gain : chan.gain);	
 					chan.gain = g;			// Channel gain level should reflect gain used here
 	  				for (let i=0; i < a.length; i++)
 						mix[i] += a[i] * g;
@@ -188,10 +187,7 @@ function resetConnection() {						// Use this to reset the socket if needed
 
 // Media management and display code (audio in and out)
 //
-var displayRefresh = 100;						// mS between UI updates. May be increased if CPU struggling
-//document.addEventListener('DOMContentLoaded', function(event){
-//	setTimeout(displayAnimation, displayRefresh);			// Call animated display once. It will need to reset timeout everytime.
-//});
+var displayRefresh = 100;						// mS between UI updates. MARK change to animation frame
 
 function displayAnimation() { 						// called 100mS to animate audio displays
 	enterState( UIState );						// Measure time spent updating UI
@@ -267,9 +263,7 @@ function setThresholdPos( obj ) {					// Set threshold indicator position
 }
 
 function setSliderPos( obj ) {
-	let gain = obj.gain;			// With AGC slider shows actual gain, otherwise manual gain
-//	let gain = (obj.agc ? obj.gain : obj.manGain);			// With AGC slider shows actual gain, otherwise manual gain
-console.log(obj.name," ",obj.agc," ",obj.gain," ",obj.manGain," gain set to ",gain);
+	let gain = obj.gain;						// With AGC slider shows actual gain, otherwise manual gain
 	if (gain < 1) pos = (34 * gain) + 8; 
 	else
 		pos = (2.5 * gain) + 39.5;
@@ -277,10 +271,8 @@ console.log(obj.name," ",obj.agc," ",obj.gain," ",obj.manGain," gain set to ",ga
 	sl.style.bottom = pos + "%" ;
 }
 
-function createChannelUI(obj) {
+function createChannelUI(obj) {						// build single channel UI with IDs using name requested
 	let name = "ID"+obj.channel;
-	// build UI elements for a single channel with element IDs that include the name requested
-	// non LED: <div style="position:absolute;bottom:8%; right:5%; width:40%; height:65%; background-color:#999999" id="'+name+'SlideBox></div> \
 	let channel =' <div id="'+name+'" style="position:relative;width:100px; height:100%; display: inline-block"> \
 			<img style="position:relative;bottom:0%; right:0%; width:100%; height:99%;" src="images/controlBG.png">  \
 			<img style="position:absolute;bottom:8%; right:5%; width:40%; height:10%;" src="images/slider.png" id="'+name+'Slider" >  \
@@ -304,10 +296,8 @@ function createChannelUI(obj) {
 	obj.displayID = name;
 }
 
-function createOutputUI(obj) {
+function createOutputUI(obj) {						// UI for output channel
 	let name = "ID"+obj.channel;
-	// build UI elements for a single channel with element IDs that include the name requested
-	// non LED: <div style="position:absolute;bottom:8%; right:5%; width:40%; height:65%; background-color:#999999" id="'+name+'SlideBox></div> \
 	let channel =' <div id="'+name+'" style="position:relative;width:100px; height:100%; display: inline-block"> \
 			<img style="position:relative;bottom:0%; right:0%; width:100%; height:99%;" src="images/controlBG.png">  \
 			<img style="position:absolute;bottom:8%; right:5%; width:40%; height:10%;" src="images/slider.png" id="'+name+'Slider" >  \
@@ -330,10 +320,8 @@ function createOutputUI(obj) {
 	obj.displayID = name;
 }
 
-function createMicUI(obj) {
+function createMicUI(obj) {						// UI for mic input channel
 	let name = "ID"+obj.channel;
-	// build UI elements for a single channel with element IDs that include the name requested
-	// non LED: <div style="position:absolute;bottom:8%; right:5%; width:40%; height:65%; background-color:#999999" id="'+name+'SlideBox></div> \
 	let channel =' <div id="'+name+'" style="position:relative;width:100px; height:100%; display: inline-block"> \
 			<img style="position:relative;bottom:0%; right:0%; width:100%; height:99%;" src="images/controlBG.png">  \
 			<img style="position:absolute;bottom:8%; right:5%; width:40%; height:10%;" src="images/slider.png" id="'+name+'Slider" >  \
@@ -348,8 +336,8 @@ function createMicUI(obj) {
 			<img style="position:absolute;right:5%; top:10%;width:40%; padding-bottom:10%;" src="images/channelOn.png" id="'+name+'On" onclick="muteButton(event)">  \
 			<img style="position:absolute;left:5%; top:10%;width:40%; padding-bottom:10%;" src="images/talkOff.png" id="'+name+'talkOff" >  \
 			<img style="position:absolute;left:5%; top:10%;width:40%; padding-bottom:10%;" src="images/talkOn.png" id="'+name+'talkOn" >  \
-			<img style="position:absolute;right:5%; bottom:1%;width:40%; padding-bottom:10%;" src="images/AGCOff.png" id="'+name+'AGCOff" >  \
-			<img style="position:absolute;right:5%; bottom:1%;width:40%; padding-bottom:10%;" src="images/AGCOn.png" id="'+name+'AGCOn" >  \
+			<img style="position:absolute;right:5%; bottom:1%;width:40%; padding-bottom:10%;" src="images/AGCOff.png" id="'+name+'AGCOff" onclick="agcButton(event)">  \
+			<img style="position:absolute;right:5%; bottom:1%;width:40%; padding-bottom:10%;" src="images/AGCOn.png" id="'+name+'AGCOn" onclick="agcButton(event)">  \
 			<img style="position:absolute;left:5%; bottom:1%;width:40%; padding-bottom:10%;" src="images/NROff.png" id="'+name+'NROff" ">  \
 			<img style="position:absolute;left:5%; bottom:1%;width:40%; padding-bottom:10%;" src="images/NROn.png" id="'+name+'NROn" ">  \
 			<div style="position:absolute;top:1%; left:3%; width:90%; height:10%;color:#AAAAAA" id="'+name+'Name"> \
@@ -407,12 +395,17 @@ trace2("mute ",id);
 }
 
 function agcButton(e) {
-trace2("agc on");
 	let id = event.target.parentNode.id;
-	let b = document.getElementById(id+"AGCOff");
-	b.style.visibility = "inherit";
-	id = convertIdToObj(id);
-	id.agc = true;
+	let oid = convertIdToObj(id);
+	let b = document.getElementById(id+"AGCOn");
+	if (oid.agc) {
+		b.style.visibility = "hidden";
+trace2("agc off");
+	} else {
+		b.style.visibility = "inherit";
+trace2("agc on");
+	}
+	oid.agc = !old.agc;
 }
 
 function unmuteButton(e) {
@@ -506,7 +499,7 @@ function avgValue( arr ) { 						// Find average value in an array
 
 function applyAutoGain(audio, obj) {
 	let startGain = obj.gain;
-	let targetGain = obj.manGain;
+	let targetGain = obj.targetGain;
 	let ceiling = obj.ceiling;
 	let negCeiling = ceiling * -1;
 	let gainRate = obj.gainRate;
@@ -587,7 +580,7 @@ function endTalkover() {
 	let now = new Date().getTime();
 	if (now > talkoverTimer) { 					// Mix ceiling can raise after timeout
 		mixOut.ceiling = 1;
-		mixOut.gain = mixOut.manGain;				// Gain returns to desired gain level
+		mixOut.gain = mixOut.targetGain;				// Gain returns to desired gain level
 	}
 }
 
