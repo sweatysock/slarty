@@ -746,7 +746,7 @@ document.addEventListener('DOMContentLoaded', function(event){
 	let aud=document.getElementById('audioDiv');
 	main.addEventListener('volumechange', function() {
 		trace2("volume changed");
-	}, true);
+	}, false);
 });
 
 function initAudio() {							// Set up all audio handling here
