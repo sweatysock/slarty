@@ -21,7 +21,8 @@ var channels = [];							// Each channel's data & buffer held here
 for (let i=0; i < NumberOfChannels; i++) {				// Create all the channels pre-initialized
 	channels[i] = {
 		name	: "",						// Each client names their channel
-		gain 	: 1,						// Manual gain level. Start at zero and fade up
+		manGain : 1,						// Manual gain level set by fader. Desired gain.
+		gain 	: 1,						// Actual gain level for the channel
 		agc	: true,						// Flag if control is manual or auto
 		muted	: false,					// Local mute
 		peak	: 0,						// Animated peak channel audio level 
@@ -119,13 +120,16 @@ socketIO.on('d', function (data) {
 		data.channels.forEach(c => {
 			let ch = c.channel;
 			if (c.socketID != socketIO.id) {		// Don't include my audio in mix
-				channels[ch].name = c.name;		// Update the channel name
-				channels[ch].channel = ch;		// Update the channel number
-				if (channels[ch].peak < c.peak)		// set the peak for level display
-					channels[ch].peak = c.peak;	// even if muted
-				if (!channels[ch].muted) {		// We can skip a muted channel
-					let a = c.audio;
-					let g = channels[ch].gain;	// apply manual gain, if different from 1
+				let chan = channels[ch];
+				chan.name = c.name;			// Update the channel name
+				chan.channel = ch;			// Update the channel number
+				if (chan.peak < c.peak)			// set the peak for level display
+					chan.peak = c.peak;		// even if muted
+				if (!chanch].muted) {			// We can skip a muted channel
+					let a = c.audio;		// Get the incoming channel audio
+					let g = (chan.agc 		// Apply gain. If AGC use mix gain, else manual gain
+						? mixOut.gain : chan.manGain);	
+					chan.gain = g;			// Channel gain level should reflect gain used here
 	  				for (let i=0; i < a.length; i++)
 						mix[i] += a[i] * g;
 				}
