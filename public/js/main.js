@@ -119,13 +119,13 @@ socketIO.on('d', function (data) {
 		let mix = new Array(PacketSize).fill(0);		// Build up a mix of client audio from 0s
 		data.channels.forEach(c => {
 			let ch = c.channel;
+			let chan = channels[ch];
 			if (c.socketID != socketIO.id) {		// Don't include my audio in mix
-				let chan = channels[ch];
 				chan.name = c.name;			// Update the channel name
 				chan.channel = ch;			// Update the channel number
 				if (chan.peak < c.peak)			// set the peak for level display
 					chan.peak = c.peak;		// even if muted
-				if (!chanch].muted) {			// We can skip a muted channel
+				if (!chan.muted) {			// We can skip a muted channel
 					let a = c.audio;		// Get the incoming channel audio
 					let g = (chan.agc 		// Apply gain. If AGC use mix gain, else manual gain
 						? mixOut.gain : chan.manGain);	
@@ -137,9 +137,9 @@ socketIO.on('d', function (data) {
 				let now = new Date().getTime();
 				rtt = (rtt + (now - c.timestamp))/2;	// Measure round trip time rolling average
 			}
-			if (c.sequence != (channels[ch].seq + 1)) 	// Monitor audio transfer quality
-				trace("Sequence jump Channel ",ch," jump ",(c.sequence - channels[ch].seq));
-			channels[ch].seq = c.sequence;
+			if (c.sequence != (chan.seq + 1)) 		// Monitor audio transfer quality
+				trace("Sequence jump Channel ",ch," jump ",(c.sequence - chan.seq));
+			chan.seq = c.sequence;
 		});
 		if (mix.length != 0) {					// If there actually was some audio
 			mix = reSample(mix, SampleRate, soundcardSampleRate, upCache); // Bring mix to HW sampling rate
