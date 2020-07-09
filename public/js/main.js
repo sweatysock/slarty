@@ -581,7 +581,7 @@ function endTalkover() {
 	let now = new Date().getTime();
 	if (now > talkoverTimer) { 					// Mix ceiling can raise after timeout
 		mixOut.ceiling = 1;
-		mixOut.gain = mixOut.targetGain;				// Gain returns to desired gain level
+		if (mixOut.agc) mixOut.gain = mixOut.targetGain;	// Gain returns to desired gain level
 	}
 }
 
