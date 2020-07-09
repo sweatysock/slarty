@@ -454,6 +454,7 @@ function sliderDrag(event) {
 			gain = (p -8)/34;
 		else
 			gain = (p - 39.5)/2.5;
+trace2(id," gain set to ",gain);
 		id = convertIdToObj(id);				// Get the js object ID for this UI element
 		id.gain = gain;						// Set the object's gain level 
 		id.agc = false;						// AGC is now off for this object
