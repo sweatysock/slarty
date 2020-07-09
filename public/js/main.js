@@ -455,7 +455,6 @@ function sliderDrag(event) {
 			gain = (p - 39.5)/2.5;
 		id = convertIdToObj(id);				// Get the js object ID for this UI element
 		id.gain = gain;						// Set the object's gain level 
-trace2(id," gain set to ",gain," for ",id.channel);
 //		if (id.targetGain != undefined) id.targetGain = gain;	// If this object has a target gain manually set it too
 		id.agc = false;						// AGC is now off for this object
 	}
@@ -511,7 +510,7 @@ function applyAutoGain(audio, obj) {
 	maxLevel = 0;							// Use this to capture peak
 	if (endGain > targetGain) endGain = targetGain;			// endGain is the max, but if target is lower then use that
 	else {
-		obj.gainRate = 10000;					// clipping! slow gain increases - set obj value
+//		obj.gainRate = 10000;					// clipping! slow gain increases - set obj value
 		trace2("Clipping gain");
 	}
 	if (endGain >= startGain) {					// Gain adjustment speed varies
