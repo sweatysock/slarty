@@ -743,6 +743,10 @@ function handleAudio(stream) {						// We have obtained media access
 	
 document.addEventListener('DOMContentLoaded', function(event){
 	initAudio();							// Call initAudio() once loaded
+	let aud=document.getElementById('main');
+	main.addEventListener('volumechange', function() {
+		trace2("volume changed");
+	}, false);
 });
 
 function initAudio() {							// Set up all audio handling here
