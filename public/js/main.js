@@ -267,7 +267,8 @@ function setThresholdPos( obj ) {					// Set threshold indicator position
 }
 
 function setSliderPos( obj ) {
-	let gain = (obj.agc ? obj.gain : obj.manGain);			// With AGC slider shows actual gain, otherwise manual gain
+	let gain = obj.gain;			// With AGC slider shows actual gain, otherwise manual gain
+//	let gain = (obj.agc ? obj.gain : obj.manGain);			// With AGC slider shows actual gain, otherwise manual gain
 console.log(obj.name," ",obj.agc," ",obj.gain," ",obj.manGain," gain set to ",gain);
 	if (gain < 1) pos = (34 * gain) + 8; 
 	else
