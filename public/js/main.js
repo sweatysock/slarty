@@ -129,7 +129,6 @@ socketIO.on('d', function (data) {
 					let g = (chan.agc 		// Apply gain. If AGC use mix gain, else channel gain
 						? mixOut.gain : chan.gain);	
 					chan.gain = g;			// Channel gain level should reflect gain used here
-console.log("channel ",ch," gain ",chan.gain);
 	  				for (let i=0; i < a.length; i++)
 						mix[i] += a[i] * g;
 				}
@@ -264,7 +263,6 @@ function setThresholdPos( obj ) {					// Set threshold indicator position
 }
 
 function setSliderPos( obj ) {
-console.log(obj.displayID, obj.gain);
 	let gain = obj.gain;						// With AGC slider shows actual gain, otherwise manual gain
 	if (gain < 1) pos = (34 * gain) + 8; 
 	else
@@ -509,6 +507,7 @@ function applyAutoGain(audio, obj) {
 	let agc = obj.agc;
 	let tempGain, maxLevel, endGain, p, x, transitionLength; 
 	if (!agc) targetGain = startGain;				// If no AGC not much to do. Just clip and apply ceiling
+console.log(agc, targetGain, startGain);
 	maxLevel = maxValue(audio);					// Find peak audio level 
 	endGain = ceiling / maxLevel;					// Our endGain can never exceed this to avoid overload
 	maxLevel = 0;							// Use this to capture peak
@@ -551,6 +550,7 @@ function applyAutoGain(audio, obj) {
 			if (x > maxLevel) maxLevel = x;
 		}
 	}
+console.log("AGC End gain is ",endGain);
 	return { finalGain: endGain, peak: maxLevel };
 }
 
