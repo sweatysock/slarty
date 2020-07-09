@@ -264,6 +264,7 @@ function setThresholdPos( obj ) {					// Set threshold indicator position
 
 function setSliderPos( obj ) {
 	let gain = (obj.agc ? obj.gain : obj.manGain);			// With AGC slider shows actual gain, otherwise manual gain
+console.log(obj.name," ",obj.agc," ",obj.gain," ",obj.manGain," gain set to ",gain);
 	if (gain < 1) pos = (34 * gain) + 8; 
 	else
 		pos = (2.5 * gain) + 39.5;
@@ -448,7 +449,7 @@ function sliderDrag(event) {
 		if (p > 65) p = 65;
 		o.style.bottom = p;					// Move the slider to the desired position
 		let agc = document.getElementById(id+"AGCOn");
-		agc.visibility = "hidden";				// By sliding the fader AGC is switched off. Hide indicator
+		agc.style.visibility = "hidden";				// By sliding the fader AGC is switched off. Hide indicator
 		let gain;						// Now calculate the gain this position implies
 		if (p < 42) 						// Inverse equations used for slider positioning
 			gain = (p -8)/34;
