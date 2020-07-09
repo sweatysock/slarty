@@ -311,7 +311,7 @@ function createOutputUI(obj) {
 			<div style="position:absolute;bottom:57.5%; left:25%; width:5%; height:0%; background-color:#FF6600" id="'+name+'LevelOrange"></div> \
 			<div style="position:absolute;bottom:66.8%; left:25%; width:5%; height:0%; background-color:#FF0000" id="'+name+'LevelRed"></div> \
 			<div style="position:absolute;bottom:8%; left:25%; width:5%; height:0%; background-color:#999999" id="'+name+'Threshold"></div> \
-			<img style="position:absolute;right:5%; top:10%;width:80%; padding-bottom:10%;object-fit: scale-down;visibility: hidden" src="images/live.png" id="'+name+'live" >  \
+			<img style="position:absolute;right:5%; top:10%;width:90%; padding-bottom:10%;object-fit: scale-down;visibility: hidden" src="images/live.png" id="'+name+'live" >  \
 			<img style="position:absolute;right:30%; bottom:1%;width:40%; padding-bottom:10%;" src="images/AGCOff.png" id="'+name+'AGCOff" >  \
 			<img style="position:absolute;right:30%; bottom:1%;width:40%; padding-bottom:10%;" src="images/AGCOn.png" id="'+name+'AGCOn" >  \
 			<div style="position:absolute;top:1%; left:3%; width:90%; height:10%;color:#AAAAAA" id="'+name+'Name"> \
@@ -399,6 +399,15 @@ trace2("mute ",id);
 	id.muted = true;
 }
 
+function agcButton(e) {
+trace2("unmute");
+	let id = event.target.parentNode.id;
+	let b = document.getElementById(id+"AGCOff");
+	b.style.visibility = "inherit";
+	id = convertIdToObj(id);
+	id.agc = true;
+}
+
 function unmuteButton(e) {
 trace2("unmute");
 	let id = event.target.parentNode.id;
@@ -444,6 +453,10 @@ function sliderDrag(event) {
 			gain = (p - 39.5)/2.5;
 		id = convertIdToObj(id);				// Get the js object ID for this UI element
 		id.gain = gain;						// Set the object's gain level 
+trace2(id," gain set to ",gain);
+		id.agc = false;						// By sliding the fader AGC is switched off
+		let agc = document.getElementById(id+"AGCOn");
+		agc.visibility = false;					// Hide the AGC On light
 	}
 }
 
@@ -489,18 +502,20 @@ function applyAutoGain(audio, obj) {
 	let ceiling = obj.ceiling;
 	let negCeiling = ceiling * -1;
 	let gainRate = obj.gainRate;
+	let agc = obj.agc;
 	let tempGain, maxLevel, endGain, p, x, transitionLength; 
 	maxLevel = maxValue(audio);					// Find peak audio level 
-	endGain = ceiling / maxLevel;					// Desired gain to avoid overload
+	endGain = ceiling / maxLevel;					// Our endGain can never exceed this to avoid overload
 	maxLevel = 0;							// Use this to capture peak
-	if (endGain > targetGain) endGain = targetGain;			// No higher than targetGain 
+	if (endGain > targetGain) endGain = targetGain;			// endGain is the max, but if target is lower then use that
 	else {
 		obj.gainRate = 10000;					// clipping! slow gain increases - set obj value
 		trace2("Clipping gain");
 	}
 	if (endGain >= startGain) {					// Gain adjustment speed varies
 		transitionLength = audio.length;			// Gain increases are over entire sample
-		endGain = startGain + ((endGain - startGain)/gainRate);	// and are very gentle
+		if (agc) endGain = startGain 				// and, if using AGC, are very gentle
+			+ ((endGain - startGain)/gainRate);	 	
 	}
 	else {
 		transitionLength = Math.floor(audio.length/10);		// Gain decreases are fast
@@ -552,7 +567,7 @@ function fadeDown(audio) {						// Fade sample linearly over length
 var talkoverLevel = 0.01;						// Ceiling for mix when mic is active, 0 = half duplex
 if (navigator.userAgent.toLowerCase().indexOf('firefox') > -1) 		// If we are on Firefox echo cancelling is good 
 	talkoverLevel = 1;
-var talkoverLag = 1;							// mS that talkover endures after mic goes quiet
+var talkoverLag = 50;							// mS that talkover endures after mic goes quiet
 var talkoverTimer = 0;							// timer used to slow talkover lift off
 function talkover() {							// Suppress mix level while mic is active
 	let now = new Date().getTime();
@@ -564,7 +579,7 @@ function endTalkover() {
 	let now = new Date().getTime();
 	if (now > talkoverTimer) { 					// Mix ceiling can raise after timeout
 		mixOut.ceiling = 1;
-		mixOut.gainRate = 10;
+		mixOut.gain = mixOut.manGain;				// Gain returns to desired gain level
 	}
 }
 
@@ -1051,7 +1066,7 @@ function printReport() {
 		micFilter2.frequency.value = LowFilterFreq;
 	}
 	if (liveShow)
-		document.getElementById("ID"+mixOut.channel+"live").style.visibility = "visible";
+		document.getElementById("ID"+mixOut.channel+"live").style.visibility = "inherit";
 	else
 		document.getElementById("ID"+mixOut.channel+"live").style.visibility = "hidden";
 	let generalStatus = "Green";
