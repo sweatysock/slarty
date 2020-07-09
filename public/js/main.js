@@ -12,7 +12,7 @@ var resampledChunkSize = 0;						// Once resampled the chunks are this size
 var socketConnected = false; 						// True when socket is up
 var micAccessAllowed = false; 						// Need to get user permission
 var spkrBuffer = []; 							// Audio buffer going to speaker
-var maxBuffSize = 10000;						// Max audio buffer chunks for playback. 
+var maxBuffSize = 20000;						// Max audio buffer chunks for playback. 
 var micBuffer = [];							// Buffer mic audio before sending
 var myChannel = -1;							// The server assigns us an audio channel
 var myName = "";							// Name assigned to my audio channel
@@ -29,6 +29,7 @@ for (let i=0; i < NumberOfChannels; i++) {				// Create all the channels pre-ini
 		seq	:0,						// Track channel sequence numbers to monitor quality
 	};
 }
+var liveShow = false;							// If there is a live show underway 
 var serverLiveChannels = [];						// Server will keep us updated on its live channels here
 var mixOut = {								// Similar structures for the mix output
 	name 	: "Output",
@@ -54,9 +55,8 @@ var micIn = {								// and for microphone input
 	threshold:0.000,						// Level below which we don't send audio
 	gate	: 1,							// Threshold gate. >0 means open.
 };
-var recording = false;
+var recording = false;							// Used for testing purposes
 var serverMuted = false;
-
 
 function processCommands(newCommands) {					// Apply commands sent from upstream servers
 	if (newCommands.mute != undefined) serverMuted = newCommands.mute; else serverMuted = false;
@@ -140,6 +140,7 @@ socketIO.on('d', function (data) {
 		if (mix.length != 0) {					// If there actually was some audio
 			mix = reSample(mix, SampleRate, soundcardSampleRate, upCache); // Bring mix to HW sampling rate
 			performer = (data.perf.chan == myChannel);	// Update performer flag just in case
+			liveShow = data.perf.live;			// Update the live show flag to update display
 			if ((data.perf.live) && (!performer)) {		// If there is a live performer and it isn't us
 				// MARK Display frame if present
 				let a = data.perf.packet.audio;		// Get the performer audio
@@ -285,8 +286,8 @@ function createChannelUI(obj) {
 			<div style="position:absolute;bottom:8%; left:25%; width:5%; height:0%; background-color:#999999" id="'+name+'Threshold"></div> \
 			<img style="position:absolute;right:30%; top:10%;width:40%; padding-bottom:10%;" src="images/channelOff.png" id="'+name+'Off" onclick="unmuteButton(event)">  \
 			<img style="position:absolute;right:30%; top:10%;width:40%; padding-bottom:10%;" src="images/channelOn.png" id="'+name+'On" onclick="muteButton(event)">  \
-			<img style="position:absolute;right:30%; bottom:1%;width:40%; padding-bottom:10%;" src="images/AGCOff.png" id="'+name+'AGCOff" onclick="unmuteButton(event)">  \
-			<img style="position:absolute;right:30%; bottom:1%;width:40%; padding-bottom:10%;" src="images/AGCOn.png" id="'+name+'AGCOn" onclick="muteButton(event)">  \
+			<img style="position:absolute;right:30%; bottom:1%;width:40%; padding-bottom:10%;" src="images/AGCOff.png" id="'+name+'AGCOff" >  \
+			<img style="position:absolute;right:30%; bottom:1%;width:40%; padding-bottom:10%;" src="images/AGCOn.png" id="'+name+'AGCOn" >  \
 			<div style="position:absolute;top:1%; left:3%; width:90%; height:10%;color:#AAAAAA" id="'+name+'Name"> \
 				<marquee behavior="slide" direction="left">'+obj.name+'</marquee> \
 			</div> \
@@ -310,8 +311,9 @@ function createOutputUI(obj) {
 			<div style="position:absolute;bottom:57.5%; left:25%; width:5%; height:0%; background-color:#FF6600" id="'+name+'LevelOrange"></div> \
 			<div style="position:absolute;bottom:66.8%; left:25%; width:5%; height:0%; background-color:#FF0000" id="'+name+'LevelRed"></div> \
 			<div style="position:absolute;bottom:8%; left:25%; width:5%; height:0%; background-color:#999999" id="'+name+'Threshold"></div> \
-			<img style="position:absolute;right:30%; bottom:1%;width:40%; padding-bottom:10%;" src="images/AGCOff.png" id="'+name+'AGCOff" onclick="unmuteButton(event)">  \
-			<img style="position:absolute;right:30%; bottom:1%;width:40%; padding-bottom:10%;" src="images/AGCOn.png" id="'+name+'AGCOn" onclick="muteButton(event)">  \
+			<img style="position:absolute;right:5%; top:10%;width:80%; padding-bottom:10%;object-fit: scale-down;visibility: hidden" src="images/live.png" id="'+name+'live" >  \
+			<img style="position:absolute;right:30%; bottom:1%;width:40%; padding-bottom:10%;" src="images/AGCOff.png" id="'+name+'AGCOff" >  \
+			<img style="position:absolute;right:30%; bottom:1%;width:40%; padding-bottom:10%;" src="images/AGCOn.png" id="'+name+'AGCOn" >  \
 			<div style="position:absolute;top:1%; left:3%; width:90%; height:10%;color:#AAAAAA" id="'+name+'Name"> \
 				<marquee behavior="slide" direction="left">'+obj.name+'</marquee> \
 			</div> \
@@ -337,12 +339,12 @@ function createMicUI(obj) {
 			<div style="position:absolute;bottom:8%; left:25%; width:5%; height:0%; background-color:#999999" id="'+name+'Threshold"></div> \
 			<img style="position:absolute;right:5%; top:10%;width:40%; padding-bottom:10%;" src="images/channelOff.png" id="'+name+'Off" onclick="unmuteButton(event)">  \
 			<img style="position:absolute;right:5%; top:10%;width:40%; padding-bottom:10%;" src="images/channelOn.png" id="'+name+'On" onclick="muteButton(event)">  \
-			<img style="position:absolute;left:5%; top:10%;width:40%; padding-bottom:10%;" src="images/talkOff.png" id="'+name+'talkOff" onclick="unmuteButton(event)">  \
-			<img style="position:absolute;left:5%; top:10%;width:40%; padding-bottom:10%;" src="images/talkOn.png" id="'+name+'talkOn" onclick="recButton(event)">  \
-			<img style="position:absolute;right:5%; bottom:1%;width:40%; padding-bottom:10%;" src="images/AGCOff.png" id="'+name+'AGCOff" onclick="unmuteButton(event)">  \
-			<img style="position:absolute;right:5%; bottom:1%;width:40%; padding-bottom:10%;" src="images/AGCOn.png" id="'+name+'AGCOn" onclick="muteButton(event)">  \
-			<img style="position:absolute;left:5%; bottom:1%;width:40%; padding-bottom:10%;" src="images/NROff.png" id="'+name+'NROff" onclick="unmuteButton(event)">  \
-			<img style="position:absolute;left:5%; bottom:1%;width:40%; padding-bottom:10%;" src="images/NROn.png" id="'+name+'NROn" onclick="muteButton(event)">  \
+			<img style="position:absolute;left:5%; top:10%;width:40%; padding-bottom:10%;" src="images/talkOff.png" id="'+name+'talkOff" >  \
+			<img style="position:absolute;left:5%; top:10%;width:40%; padding-bottom:10%;" src="images/talkOn.png" id="'+name+'talkOn" >  \
+			<img style="position:absolute;right:5%; bottom:1%;width:40%; padding-bottom:10%;" src="images/AGCOff.png" id="'+name+'AGCOff" >  \
+			<img style="position:absolute;right:5%; bottom:1%;width:40%; padding-bottom:10%;" src="images/AGCOn.png" id="'+name+'AGCOn" >  \
+			<img style="position:absolute;left:5%; bottom:1%;width:40%; padding-bottom:10%;" src="images/NROff.png" id="'+name+'NROff" ">  \
+			<img style="position:absolute;left:5%; bottom:1%;width:40%; padding-bottom:10%;" src="images/NROn.png" id="'+name+'NROn" ">  \
 			<div style="position:absolute;top:1%; left:3%; width:90%; height:10%;color:#AAAAAA" id="'+name+'Name"> \
 				<marquee behavior="slide" direction="left">'+obj.name+'</marquee> \
 			</div> \
@@ -351,6 +353,9 @@ function createMicUI(obj) {
 	mixerRack.innerHTML += channel;
 	obj.displayID = name;
 }
+
+// Keeping this handy for now...
+//			<img style="position:absolute;left:5%; top:10%;width:40%; padding-bottom:10%;" src="images/talkOn.png" id="'+name+'talkOn" onclick="recButton(event)">  \
 
 function removeChannelUI(obj) {
 	trace2("Removing channel ",obj.name);
@@ -743,10 +748,6 @@ function handleAudio(stream) {						// We have obtained media access
 	
 document.addEventListener('DOMContentLoaded', function(event){
 	initAudio();							// Call initAudio() once loaded
-	let aud=document.getElementById('audioDiv');
-	main.addEventListener('volumechange', function() {
-		trace2("volume changed");
-	}, false);
 });
 
 function initAudio() {							// Set up all audio handling here
@@ -1033,7 +1034,6 @@ var sendShortages = 0;
 function printReport() {
 	enterState( UIState );						// Measure time spent updating UI even for reporting!
 	let aud=document.getElementById('audioDiv');
-	trace2(aud.volume);
 	if (!pauseTracing) {
 		trace("Idle = ", idleState.total, " data in = ", dataInState.total, " audio in/out = ", audioInOutState.total," UI work = ",UIState.total);
 		trace("Sent = ",packetsOut," Heard = ",packetsIn," overflows = ",overflows," shortages = ",shortages," RTT = ",rtt.toFixed(1));
@@ -1050,6 +1050,10 @@ function printReport() {
 		micFilter1.frequency.value = HighFilterFreq		// Return mic filter to normal settings
 		micFilter2.frequency.value = LowFilterFreq;
 	}
+	if (liveShow)
+		document.getElementById("ID"+mixOut.channel+"live").style.visibility = "visible";
+	else
+		document.getElementById("ID"+mixOut.channel+"live").style.visibility = "hidden";
 	let generalStatus = "Green";
 	if ((overflows > 1) || (shortages >1) || (rtt >500)) generalStatus = "Orange";
 	if (socketConnected == false) generalStatus = "Red";
