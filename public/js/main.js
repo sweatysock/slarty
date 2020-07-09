@@ -129,6 +129,7 @@ socketIO.on('d', function (data) {
 					let g = (chan.agc 		// Apply gain. If AGC use mix gain, else channel gain
 						? mixOut.gain : chan.gain);	
 					chan.gain = g;			// Channel gain level should reflect gain used here
+console.log("channel ",ch," gain ",chan.gain);
 	  				for (let i=0; i < a.length; i++)
 						mix[i] += a[i] * g;
 				}
@@ -263,6 +264,7 @@ function setThresholdPos( obj ) {					// Set threshold indicator position
 }
 
 function setSliderPos( obj ) {
+console.log(obj.displayID, obj.gain);
 	let gain = obj.gain;						// With AGC slider shows actual gain, otherwise manual gain
 	if (gain < 1) pos = (34 * gain) + 8; 
 	else
