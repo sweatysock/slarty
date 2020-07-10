@@ -26,7 +26,7 @@ var perf = {								// Performer data structure
 	live	: false,						// Flag to indicate if we have performer is on air or not
 	chan	: 0,							// Performer's channel if connected directly here (venue server = no upstream)
 	packets	: [],							// Performer audio/video packet buffer. 
-	streaming:false;						// Flag that indicates the performer buffer is full enough to start streaming
+	streaming:false,						// Flag that indicates the performer buffer is full enough to start streaming
 }
 var venueMixGain = 1;							// Gain applied to the upstream mix using auto gain control
 var venueSequence = 0;							// Sequence counter for venue sound going downstream
