@@ -299,10 +299,13 @@ io.sockets.on('connection', function (socket) {
 		packet.socketID = socket.id;				// Also store it in the packet to help client skip own audio
 		if (packet.channel == perf.chan) { 			// This is the performer. Note: Channel 0 comes down in 'd' packets
 			if (packet.sampleRate == PerfSampleRate) {	// Sample rate needs to be correct for performer channel
+console.log("performer with correct sample rate");
 				perf.packets.push(packet);		// Store performer audio/video packet
+console.log("perf buffer size:",perf.packets.length;
 				if ((!perf.streaming) && (perf.packets.length > 5))
 					perf.streaming = true;		// If not streaming but enough now buffered, performer is go!
 				if (perf.streaming) {			// If performer is go we will generate a mix
+console.log("perf streaming now");
 					enterState( genMixState );
 					generateMix();			
 				}
