@@ -140,7 +140,9 @@ upstreamServer.on('d', function (packet) {
 	addCommands(packet.commands);					// Store upstream commands for sending downstream
 
 	perf.live = packet.perf.live;					// Performer status is shared by all servers
-	if (perf.live) perf.packets.push(packet.perf.packet);		// If performer is live store the audio/video packet 
+	if (perf.live) {perf.packets.push(packet.perf.packet);		// If performer is live store the audio/video packet 
+console.log("perf buffer size:",perf.packets.length);
+	}
 	if ((!perf.streaming) && (perf.packets.length > 5))		// If not streaming but enough perf data buffered
 		perf.streaming = true;					// performer is now streaming from here
 	let chan = packet.channels;					// Build a mix just like the clients do
@@ -275,13 +277,11 @@ io.sockets.on('connection', function (socket) {
 			return;
 		if ((perf.live) 				  	// If performer is already set and is connected 
 			&& (channels[perf.chan].socketID != undefined)){	// communicate they are no longer live
-console.log("Removing perf from channel ",perf.chan);
 			channels[perf.chan].socket.emit("perf", {live:false});
 		}
 		perf.chan = data.channel;
 		if ((perf.chan > 0) 					// If we have a valid performer channel that is connected
 			&& (channels[perf.chan].socketID != undefined))	{
-console.log("ASSIGNING perf to channel ",perf.chan);
 			channels[perf.chan].socket.emit("perf", {live:true}); // Inform the client they are on air
 			perf.live = true;				// Performer is live. This will go to all servers & clients
 			perf.streaming = false;				// But not streaming yet. Have to buffer some packets first
