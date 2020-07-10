@@ -308,7 +308,7 @@ function createOutputUI(obj) {						// UI for output channel
 			<div style="position:absolute;bottom:57.5%; left:25%; width:5%; height:0%; background-color:#FF6600" id="'+name+'LevelOrange"></div> \
 			<div style="position:absolute;bottom:66.8%; left:25%; width:5%; height:0%; background-color:#FF0000" id="'+name+'LevelRed"></div> \
 			<div style="position:absolute;bottom:8%; left:25%; width:5%; height:0%; background-color:#999999" id="'+name+'Threshold"></div> \
-			<img style="position:absolute;right:5%; top:9%;width:90%; padding-bottom:10%;object-fit: scale-down;visibility: hidden" src="images/live.png" id="'+name+'live" >  \
+			<img style="position:absolute;right:5%; top:0%;width:90%; padding-bottom:10%;object-fit: scale-down;visibility: hidden" src="images/live.png" id="'+name+'live" >  \
 			<img style="position:absolute;right:30%; bottom:1%;width:40%; padding-bottom:10%;" src="images/AGCOff.png" id="'+name+'AGCOff" onclick="agcButton(event)">  \
 			<img style="position:absolute;right:30%; bottom:1%;width:40%; padding-bottom:10%;" src="images/AGCOn.png" id="'+name+'AGCOn" onclick="agcButton(event)">  \
 			<div style="position:absolute;top:1%; left:3%; width:90%; height:10%;color:#AAAAAA" id="'+name+'Name"> \
@@ -658,12 +658,10 @@ function processAudio(e) {						// Main processing loop
 		} else {						// Gate closed. Fill with silence.
 			micAudio = new Array(resampledChunkSize).fill(0);
 		}
-console.log("sr =",sr," resampled chunk size =",resampledChunkSize," micAudio length =",micAudio.length);
 		micBuffer.push(...micAudio);				// Buffer mic audio 
 		let ps = (performer ? (PacketSize*PerfSampleRate/SampleRate) : PacketSize);
 		if (micBuffer.length > ps) {				// If enough in buffer to fill a packet
 			let inAudio = micBuffer.splice(0, ps);		// Get a packet of audio (larger if performer)
-console.log("ps =",ps);
 			let obj = applyAutoGain(inAudio, micIn);	// Amplify mic with auto limiter
 			if (obj.peak > micIn.peak) 
 				micIn.peak = obj.peak;			// Note peak for local display
@@ -1117,6 +1115,7 @@ function trace(){
 		let s ="";
 		for (let i=0; i<arguments.length; i++)
 			s += arguments[i];
+		console.log(s);
 		traceArray.push(s+"<br>");
 		if (traceArray.length > maxTraces) traceArray.shift(0,1);
 		if (traceDiv != null) {
@@ -1130,6 +1129,7 @@ function trace2(){
 		let s ="";
 		for (let i=0; i<arguments.length; i++)
 			s += arguments[i];
+		console.log(s);
 		traceArray2.push(s+"<br>");
 		if (traceArray2.length > maxTraces) traceArray2.shift(0,1);
 		if (traceDiv2 != null) {
