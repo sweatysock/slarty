@@ -405,7 +405,7 @@ function midBoostFilter(audioIn) {					// Filter to boost mids giving distant so
 function forceMix() {							// The timer has triggered a mix 
 console.log("force mix");
 	if (perf.live) 							// If there is a performer don't force mixes if...
-		if ((!perf.streaming) || (perf.packets.length >0))	// they are not streaming yet, or there is no perf data left
+		if ((!perf.streaming) || (perf.packets.length == 0))	// they are not streaming yet, or there is no perf data left
 			return;
 console.log("Yes force mix");
 	forcedMixes++;							// Either no performer, or enough perf buffered already
@@ -506,7 +506,9 @@ function generateMix () {
 		clearTimeout(mixTimer);
 		mixTimer = setTimeout( forceMix, (nextMixTimeLimit - now) );	
 console.log("timer set ",(nextMixTimeLimit - now),"mS ahead for next clock sample if needed");
-	} else nextMixTimeLimit = 0;					// If live performer stop mix forcing
+	} else {nextMixTimeLimit = 0;					// If live performer stop mix forcing
+console.log("resetting timer to 0");
+	}
 }
 
 
