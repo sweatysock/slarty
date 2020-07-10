@@ -498,13 +498,13 @@ function generateMix () {
 	packetsOut++;							// Sent data so log it and set time limit for next send
 	packetClassifier[clientPackets.length] = packetClassifier[clientPackets.length] + 1;
 	if ((!perf.live) || (perf.streaming)) {				// If no live performance or perf is streaming then clock samples
-console.log("setting timer for next clock sample if needed");
 		let now = new Date().getTime();
 		if (nextMixTimeLimit == 0) 
 			nextMixTimeLimit = now;				// If this is the first send event then start at now
 		nextMixTimeLimit = nextMixTimeLimit + (packetSize * 1000)/SampleRate;
 		// MARK Should remove old timeout before creating new one right???
 		mixTimer = setTimeout( forceMix, (nextMixTimeLimit - now) );	
+console.log("timer set ",(nextMixTimeLimit - now),"mS ahead for next clock sample if needed");
 	} else nextMixTimeLimit = 0;					// If live performer stop mix forcing
 }
 
