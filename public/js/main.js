@@ -142,7 +142,7 @@ socketIO.on('d', function (data) {
 		});
 		if (mix.length != 0) {					// If there actually was some audio
 			mix = reSample(mix, SampleRate, soundcardSampleRate, upCache); // Bring mix to HW sampling rate
-			performer = (data.perf.chan == myChannel);	// Update performer flag just in case
+//			performer = (data.perf.chan == myChannel);	// Update performer flag just in case
 			liveShow = data.perf.live;			// Update the live show flag to update display
 			if ((data.perf.live) && (!performer)) {		// If there is a live performer and it isn't us
 				// MARK Display frame if present
