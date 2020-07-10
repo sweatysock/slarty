@@ -274,11 +274,13 @@ io.sockets.on('connection', function (socket) {
 		if (upstreamConnected) 		 			// upstream server means this not venue server so no performer
 			return;
 		if ((perf.live) 				  	// If performer is already set and is connected 
-			&& (channels[perf.chan].socketID != undefined))	// communicate they are no longer live
+			&& (channels[perf.chan].socketID != undefined)){	// communicate they are no longer live
+console.log("Removing perf from channel ",perf.chan);
 			channels[perf.chan].socket.emit("perf", {live:false});
 		perf.chan = data.channel;
 		if ((perf.chan > 0) 					// If we have a valid performer channel that is connected
 			&& (channels[perf.chan].socketID != undefined))	{
+console.log("ASSIGNING perf to channel ",perf.chan);
 			channels[perf.chan].socket.emit("perf", {live:true}); // Inform the client they are on air
 			perf.live = true;				// Performer is live. This will go to all servers & clients
 			perf.streaming = false;				// But not streaming yet. Have to buffer some packets first
