@@ -277,6 +277,7 @@ io.sockets.on('connection', function (socket) {
 			&& (channels[perf.chan].socketID != undefined)){	// communicate they are no longer live
 console.log("Removing perf from channel ",perf.chan);
 			channels[perf.chan].socket.emit("perf", {live:false});
+		}
 		perf.chan = data.channel;
 		if ((perf.chan > 0) 					// If we have a valid performer channel that is connected
 			&& (channels[perf.chan].socketID != undefined))	{
