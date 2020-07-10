@@ -403,9 +403,11 @@ function midBoostFilter(audioIn) {					// Filter to boost mids giving distant so
 }
 
 function forceMix() {							// The timer has triggered a mix 
+console.log("force mix");
 	if (perf.live) 							// If there is a performer don't force mixes if...
 		if ((!perf.streaming) || (perf.packets.length >0))	// they are not streaming yet, or there is no perf data left
 			return;
+console.log("Yes force mix");
 	forcedMixes++;							// Either no performer, or enough perf buffered already
 	generateMix();							// We need to push out a mix
 }
@@ -496,6 +498,7 @@ function generateMix () {
 	packetsOut++;							// Sent data so log it and set time limit for next send
 	packetClassifier[clientPackets.length] = packetClassifier[clientPackets.length] + 1;
 	if ((!perf.live) || (perf.streaming)) {				// If no live performance or perf is streaming then clock samples
+console.log("setting timer for next clock sample if needed");
 		let now = new Date().getTime();
 		if (nextMixTimeLimit == 0) 
 			nextMixTimeLimit = now;				// If this is the first send event then start at now
