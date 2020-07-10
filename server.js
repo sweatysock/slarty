@@ -25,7 +25,8 @@ for (let i=0; i < NumberOfChannels; i++) {				// Create all the channels pre-ini
 var perf = {								// Performer data structure
 	live	: false,						// Flag to indicate if we have performer is on air or not
 	chan	: 0,							// Performer's channel if connected directly here (venue server = no upstream)
-	packet	: null,							// Performer audio/video packet. It gets sent downstream immediately
+	packets	: [],							// Performer audio/video packet buffer. 
+	streaming:false;						// Flag that indicates the performer buffer is full enough to start streaming
 }
 var venueMixGain = 1;							// Gain applied to the upstream mix using auto gain control
 var venueSequence = 0;							// Sequence counter for venue sound going downstream
@@ -139,7 +140,9 @@ upstreamServer.on('d', function (packet) {
 	addCommands(packet.commands);					// Store upstream commands for sending downstream
 
 	perf.live = packet.perf.live;					// Performer status is shared by all servers
-	if (perf.live) perf.packet = packet.perf.packet;		// If performer is live store the audio/video packet 
+	if (perf.live) perf.packets.push(packet.perf.packet);		// If performer is live store the audio/video packet 
+	if ((!perf.streaming) && (perf.packets.length > 5))		// If not streaming but enough perf data buffered
+		perf.streaming = true;					// performer is now streaming from here
 	let chan = packet.channels;					// Build a mix just like the clients do
 	let mix = new Array(packetSize).fill(0); 			// and send mix downstream
 	let ts = 0;						
@@ -179,7 +182,7 @@ upstreamServer.on('d', function (packet) {
 		}
 	}
 
-	if (perf.live) {						// If there is a live performer no mix will have been genereated yet
+	if ((perf.streaming) {						// If live performer is streaming no mix will have been genereated yet
 		enterState( genMixState );				// We always generate a mix with performer data however
 		generateMix();						// so call generate mix now
 	}
@@ -277,10 +280,14 @@ io.sockets.on('connection', function (socket) {
 		if ((perf.chan > 0) 					// If we have a valid performer channel that is connected
 			&& (channels[perf.chan].socketID != undefined))	{
 			channels[perf.chan].socket.emit("perf", {live:true}); // Inform the client they are on air
-			perf.live = true;
+			perf.live = true;				// Performer is live. This will go to all servers & clients
+			perf.streaming = false;				// But not streaming yet. Have to buffer some packets first
+			perf.packets = [];				// Empty the packet queue for good measure
 		} else {
-			perf.live = false;
+			perf.live = false;				// Not a valid performer channel so reset variables
 			perf.chan = 0;
+			perf.packets = [];
+			perf.streaming = false;
 		}
 	});
 
@@ -290,11 +297,15 @@ io.sockets.on('connection', function (socket) {
 		channel.name = packet.name;				// Update name of channel in case it has changed
 		channel.socketID = socket.id;				// Store socket ID associated with channel
 		packet.socketID = socket.id;				// Also store it in the packet to help client skip own audio
-		if (packet.channel == perf.chan) { 			// This is the performer. Note: Channel 0 never enters here
+		if (packet.channel == perf.chan) { 			// This is the performer. Note: Channel 0 comes down in 'd' packets
 			if (packet.sampleRate == PerfSampleRate) {	// Sample rate needs to be correct for performer channel
-				perf.packet = packet;			// Store performer audio/video. It will be sent immediately
-				enterState( genMixState );
-				generateMix();				// The performer marks when data goes out. period.
+				perf.packets.push(packet);		// Store performer audio/video packet
+				if ((!perf.streaming) && (perf.packets.length > 5))
+					perf.streaming = true;		// If not streaming but enough now buffered, performer is go!
+				if (perf.streaming) {			// If performer is go we will generate a mix
+					enterState( genMixState );
+					generateMix();			
+				}
 			}
 		} else {						// Normal audio: buffer it, clip it, and mix it 
 			if (packet.sampleRate == SampleRate) {		// Sample rate needs to be correct for regular channel
@@ -389,8 +400,11 @@ function midBoostFilter(audioIn) {					// Filter to boost mids giving distant so
 }
 
 function forceMix() {							// The timer has triggered a mix 
-	forcedMixes++;
-	generateMix();
+	if (perf.live) 							// If there is a performer don't force mixes if...
+		if ((!perf.streaming) || (perf.packets.length >0))	// they are not streaming yet, or there is no perf data left
+			return;
+	forcedMixes++;							// Either no performer, or enough perf buffered already
+	generateMix();							// We need to push out a mix
 }
 
 function enoughAudio() {						// Is there enough audio to build a mix before timeout?
@@ -466,18 +480,19 @@ function generateMix () {
 				// MARK ADD peak level for each for audio visualization
 			}
 		}
+	let perfPacket = {};
+	if (perf.streaming) && (perf.packets.length > 0))		// Pull a performer packet from its queue if any
+		perfPacket = perf.packets.shift();
 	io.sockets.in('downstream').emit('d', {				// Send all audio channels to all downstream clients
-		"perf"		: perf,					// Send performer audio/video + live flag downstream
+		"perf"		: perfPacket,				// Send performer audio/video + live flag downstream
 		"channels"	: clientPackets,			// All channels in this server plus filtered upstream mix
 		"liveChannels"	: liveChannels,				// Include server info about live clients and their queues
 		"commands"	: commands,				// Send commands downstream to reach all client endpoints
 		// MARK SEND our server URL for heckler control
 	});
-	perf.packet = [];						// perf data has been sent. Can empty variables now.
-	perf.frame = [];
 	packetsOut++;							// Sent data so log it and set time limit for next send
 	packetClassifier[clientPackets.length] = packetClassifier[clientPackets.length] + 1;
-	if (!perf.live) {						// If no live performance then clock samples
+	if ((!perf.live) || (perf.streaming)) {				// If no live performance or perf is streaming then clock samples
 		let now = new Date().getTime();
 		if (nextMixTimeLimit == 0) 
 			nextMixTimeLimit = now;				// If this is the first send event then start at now
