@@ -503,6 +503,7 @@ function generateMix () {
 			nextMixTimeLimit = now;				// If this is the first send event then start at now
 		nextMixTimeLimit = nextMixTimeLimit + (packetSize * 1000)/SampleRate;
 		// MARK Should remove old timeout before creating new one right???
+		clearTimeout(mixTimer);
 		mixTimer = setTimeout( forceMix, (nextMixTimeLimit - now) );	
 console.log("timer set ",(nextMixTimeLimit - now),"mS ahead for next clock sample if needed");
 	} else nextMixTimeLimit = 0;					// If live performer stop mix forcing
