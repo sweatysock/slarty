@@ -493,11 +493,11 @@ function generateMix () {
 				// MARK ADD peak level for each for audio visualization
 			}
 		}
-	let perfPacket = {};
+	let p = {live:perf.live, chan:perf.chan, packet:null};		// Send downstream a copy of the perf object with no packet
 	if ((perf.streaming) && (perf.packets.length > 0))		// Pull a performer packet from its queue if any
-		perfPacket = perf.packets.shift();
+		p.packet = perf.packets.shift();			// add to copy of perf to replace the null packet
 	io.sockets.in('downstream').emit('d', {				// Send all audio channels to all downstream clients
-		"perf"		: perfPacket,				// Send performer audio/video + live flag downstream
+		"perf"		: p,					// Send performer audio/video packet + other flags
 		"channels"	: clientPackets,			// All channels in this server plus filtered upstream mix
 		"liveChannels"	: liveChannels,				// Include server info about live clients and their queues
 		"commands"	: commands,				// Send commands downstream to reach all client endpoints
