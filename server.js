@@ -143,8 +143,10 @@ upstreamServer.on('d', function (packet) {
 	if (perf.live) {perf.packets.push(packet.perf.packet);		// If performer is live store the audio/video packet 
 console.log("perf buffer size:",perf.packets.length);
 	}
-	if ((!perf.streaming) && (perf.packets.length > 5))		// If not streaming but enough perf data buffered
+	if ((!perf.streaming) && (perf.packets.length > 5)){		// If not streaming but enough perf data buffered
+console.log("enough perf buffered... streaming time");
 		perf.streaming = true;					// performer is now streaming from here
+	}
 	let chan = packet.channels;					// Build a mix just like the clients do
 	let mix = new Array(packetSize).fill(0); 			// and send mix downstream
 	let ts = 0;						
@@ -185,6 +187,7 @@ console.log("perf buffer size:",perf.packets.length);
 	}
 
 	if (perf.streaming) {						// If live performer is streaming no mix will have been genereated yet
+console.log("perf streaming... gen mix");
 		enterState( genMixState );				// We always generate a mix with performer data however
 		generateMix();						// so call generate mix now
 	}
