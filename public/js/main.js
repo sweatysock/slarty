@@ -739,6 +739,8 @@ function handleAudio(stream) {						// We have obtained media access
 	}
 	node.onaudioprocess = processAudio;				// Link the callback to the node
 
+	let combiner = context.createChannelMerger();			// Combiner node to turn stereo input to mono
+
 	micFilter1 = context.createBiquadFilter();
 	micFilter1.type = 'lowpass';
 	micFilter1.frequency.value = HighFilterFreq;
@@ -751,7 +753,8 @@ function handleAudio(stream) {						// We have obtained media access
 	let splitter = context.createChannelSplitter(2);		// Split signal for echo cancelling
 
 	// Time to connect everything...
-	liveSource.connect(micFilter1);					// Mic goes to micFilter1
+	liveSource.connect(combiner);					// Mic goes to combiner
+	combiner.connect(micFilter1);					// Combiner goes to micFilter1
 	micFilter1.connect(micFilter2);					// the rest are chained togather
 	micFilter2.connect(node);					// micFilter goes to audio processor
 	node.connect(splitter);						// our processor feeds to a splitter
