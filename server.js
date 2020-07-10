@@ -182,7 +182,7 @@ upstreamServer.on('d', function (packet) {
 		}
 	}
 
-	if ((perf.streaming) {						// If live performer is streaming no mix will have been genereated yet
+	if (perf.streaming) {						// If live performer is streaming no mix will have been genereated yet
 		enterState( genMixState );				// We always generate a mix with performer data however
 		generateMix();						// so call generate mix now
 	}
@@ -481,7 +481,7 @@ function generateMix () {
 			}
 		}
 	let perfPacket = {};
-	if (perf.streaming) && (perf.packets.length > 0))		// Pull a performer packet from its queue if any
+	if ((perf.streaming) && (perf.packets.length > 0))		// Pull a performer packet from its queue if any
 		perfPacket = perf.packets.shift();
 	io.sockets.in('downstream').emit('d', {				// Send all audio channels to all downstream clients
 		"perf"		: perfPacket,				// Send performer audio/video + live flag downstream
