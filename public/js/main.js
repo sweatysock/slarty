@@ -658,10 +658,12 @@ function processAudio(e) {						// Main processing loop
 		} else {						// Gate closed. Fill with silence.
 			micAudio = new Array(resampledChunkSize).fill(0);
 		}
+console.log("sr =",sr," resampled chunk size =",resampledChunkSize," micAudio length =",micAudio.length);
 		micBuffer.push(...micAudio);				// Buffer mic audio 
 		let ps = (performer ? (PacketSize*PerfSampleRate/SampleRate) : PacketSize);
 		if (micBuffer.length > ps) {				// If enough in buffer to fill a packet
 			let inAudio = micBuffer.splice(0, ps);		// Get a packet of audio (larger if performer)
+console.log("ps =",ps);
 			let obj = applyAutoGain(inAudio, micIn);	// Amplify mic with auto limiter
 			if (obj.peak > micIn.peak) 
 				micIn.peak = obj.peak;			// Note peak for local display
@@ -1115,7 +1117,6 @@ function trace(){
 		let s ="";
 		for (let i=0; i<arguments.length; i++)
 			s += arguments[i];
-		console.log(s);
 		traceArray.push(s+"<br>");
 		if (traceArray.length > maxTraces) traceArray.shift(0,1);
 		if (traceDiv != null) {
@@ -1129,7 +1130,6 @@ function trace2(){
 		let s ="";
 		for (let i=0; i<arguments.length; i++)
 			s += arguments[i];
-		console.log(s);
 		traceArray2.push(s+"<br>");
 		if (traceArray2.length > maxTraces) traceArray2.shift(0,1);
 		if (traceDiv2 != null) {
