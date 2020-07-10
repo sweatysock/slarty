@@ -302,8 +302,10 @@ io.sockets.on('connection', function (socket) {
 console.log("performer with correct sample rate");
 				perf.packets.push(packet);		// Store performer audio/video packet
 console.log("perf buffer size:",perf.packets.length);
-				if ((!perf.streaming) && (perf.packets.length > 5))
+				if ((!perf.streaming) && (perf.packets.length > 5)) {
+					nextMixTimeLimit = 0;		// Reset the mix timer so that it doesn't empty the buffer right away
 					perf.streaming = true;		// If not streaming but enough now buffered, performer is go!
+				}
 				if (perf.streaming) {			// If performer is go we will generate a mix
 console.log("perf streaming now");
 					enterState( genMixState );
@@ -404,9 +406,12 @@ function midBoostFilter(audioIn) {					// Filter to boost mids giving distant so
 
 function forceMix() {							// The timer has triggered a mix 
 console.log("force mix");
-	if (perf.live) 							// If there is a performer don't force mixes if...
-		if ((!perf.streaming) || (perf.packets.length == 0))	// they are not streaming yet, or there is no perf data left
+	if (perf.live) {						// If there is a performer don't force mixes if...
+		if ((!perf.streaming) || (perf.packets.length == 0)){	// they are not streaming yet, or there is no perf data left
+console.log("not forcing. streaming:",perf.streaming,"perf buffer:",perf.packets.length);
 			return;
+		}
+	}
 console.log("Yes force mix");
 	forcedMixes++;							// Either no performer, or enough perf buffered already
 	generateMix();							// We need to push out a mix
