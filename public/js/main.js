@@ -651,7 +651,6 @@ function processAudio(e) {						// Main processing loop
 		let cache = (performer ? downCachePerf : downCache);	// Use the correct resample cache
 		if (micIn.gate > 0) {					// If gate is open prepare the audio for sending
 			micAudio = reSample(inData, soundcardSampleRate, sr, cache);
-console.log("Resampled ",inData.length," of mic audio from ",soundcardSampleRate," to ",sr," samples");
 			micIn.gate--;					// Gate slowly closes
 //			if (micIn.gate == 0)				// Gate is about to close
 //				fadeDown(micAudio);			// Fade sample down to zero for smooth sound
@@ -663,12 +662,10 @@ console.log("Resampled ",inData.length," of mic audio from ",soundcardSampleRate
 			else
 				micAudio = new Array(resampledChunkSize).fill(0);
 		}
-console.log("pushing ",micAudio.length," of resampled mic to buffer");
 		micBuffer.push(...micAudio);				// Buffer mic audio 
 		let ps = (performer ? PerfPacketSize : PacketSize);	// Packet size depends on performer mode
 		if (micBuffer.length > ps) {				// If enough in buffer to fill a packet
 			let inAudio = micBuffer.splice(0, ps);		// Get a packet of audio (larger if performer)
-console.log("Got ",ps," of mic audio frmo micBuffer");
 			let obj = applyAutoGain(inAudio, micIn);	// Amplify mic with auto limiter
 			if (obj.peak > micIn.peak) 
 				micIn.peak = obj.peak;			// Note peak for local display

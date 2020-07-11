@@ -1,4 +1,10 @@
-
+// Variables that the supervisor can control ofr all clients and their default values:
+globalMute = false;							// Mute all clients
+gateDelay = 30;								// the delay in mS on all clients for mic gate staying open
+talkoverLevel = 0.01;							// Output level when mic is active and talkover is happening
+perfChannel = 0;							// performer channel on this (venue) server
+tholdFactor = 2;							// how much to boost the mic threshold to stop echo
+noisethreshold = 0.02;							// mic gate threshold to remove background noise
 
 // Network code
 //
@@ -6,7 +12,9 @@ var socketIO = io();
 socketIO.on('connect', function (socket) {
 	console.log('socket connected!');
 	socketConnected = true;
-	socketIO.emit("superHi"); 	// Say hi to the server so it adds us to its list of supervisors
+	socketIO.emit("superHi"); 					// Say hi to the server so it adds us to its list of supervisors
+	sendCommands();							// Send server our command settings: reconnect may be due to server reset
+	sendPerformer();						// Send the performer channel for the same reason. Server reset forgets all
 });
 
 socketIO.on('s', function (data) { 
@@ -39,74 +47,88 @@ socketIO.on('disconnect', function () {
 document.addEventListener('DOMContentLoaded', function(event){
 	let muteBtn = document.getElementById('muteBtn');
 	let micOpenBtn = document.getElementById('micOpenBtn');
+	if (globalMute) {
+		muteBtn.style.visibility = "hidden";
+		micOpenBtn.style.visibility = "visible";
+	} else {
+		muteBtn.style.visibility = "visible";
+		micOpenBtn.style.visibility = "hidden";
+	}
 	muteBtn.onclick = ( (e) => {
-		socketIO.emit("commands",
-		{
-			"mute": true,
-		});
+		globalMute = true;
+		sendCommands();
 		muteBtn.style.visibility = "hidden";
 		micOpenBtn.style.visibility = "visible";
 	});
 	micOpenBtn.onclick = ( (e) => {
-		socketIO.emit("commands",
-		{
-			"mute": false,
-		});
+		globalMute = false;
+		sendCommands();
 		muteBtn.style.visibility = "visible";
 		micOpenBtn.style.visibility = "hidden";
 	});
 	let gateDelayEntry = document.getElementById('gateDelayEntry');
+	gateDelayEntry.innerHTML = gateDelay;
 	gateDelayEntry.addEventListener("keypress", (e) => {
 		if (e.which === 13) {
-			socketIO.emit("commands",
-			{
-				"gateDelay": parseFloat(gateDelayEntry.innerHTML),
-			});
+			gateDelay = parseFloat(gateDelayEntry.innerHTML);
+			sendCommands();
 			e.preventDefault();
 		}
 	});
 	let toLevelEntry = document.getElementById('toLevelEntry');
+	toLevelEntry.innerHTML = talkoverLevel;
 	toLevelEntry.addEventListener("keypress", (e) => {
 		if (e.which === 13) {
-			socketIO.emit("commands",
-			{
-				"talkoverLevel": parseFloat(toLevelEntry.innerHTML),
-			});
+			talkoverLevel = parseFloat(toLevelEntry.innerHTML);
+			sendCommands();
 			e.preventDefault();
 		}
 	});
 	let perfEntry = document.getElementById('perfEntry');
+	perfEntry.innerHTML = perfChannel;
 	perfEntry.addEventListener("keypress", (e) => {
 		if (e.which === 13) {
-			socketIO.emit("setPerformer",
-			{
-				"channel": parseFloat(perfEntry.innerHTML),
-			});
+			perfChannel = parseFloat(perfEntry.innerHTML);
+			sendPerformer();
 			e.preventDefault();
 		}
 	});
 	let tholdFactorEntry = document.getElementById('tholdFactorEntry');
+	tholdFactorEntry.innerHTML = tholdFactor;
 	tholdFactorEntry.addEventListener("keypress", (e) => {
 		if (e.which === 13) {
-			socketIO.emit("commands",
-			{
-				"tholdFactor": parseFloat(tholdFactorEntry.innerHTML),
-			});
+			tholdFactor = parseFloat(tholdFactorEntry.innerHTML);
+			sendCommands();
 			e.preventDefault();
-console.log("set threshold factor to ",tholdFactorEntry.innerHTML);
 		}
 	});
 	let noiseThresholdEntry = document.getElementById('noiseThresholdEntry');
+	noiseThresholdEntry.innerHTML = noisethreshold;
 	noiseThresholdEntry.addEventListener("keypress", (e) => {
 		if (e.which === 13) {
-			socketIO.emit("commands",
-			{
-				"noiseThreshold": parseFloat(noiseThresholdEntry.innerHTML),
-			});
+			noisethreshold = parseFloat(noiseThresholdEntry.innerHTML);
+			sendCommands();
 			e.preventDefault();
-console.log("set noise threshold to ",noiseThresholdEntry.innerHTML);
 		}
 	});
 });
+
+function sendCommands() {
+	socketIO.emit("commands",
+	{							
+		mute		: globalMute,
+		gateDelay	: gateDelay,
+		talkoverLevel	: talkoverLevel,
+		tholdFactor	: tholdFactor,
+		noiseThreshold	: noisethreshold,
+	});
+}
+
+function sendPerformer() {
+	socketIO.emit("setPerformer",
+	{
+		channel: perfChannel,
+	});
+}
 
 
