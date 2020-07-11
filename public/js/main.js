@@ -664,7 +664,7 @@ console.log("pushing ",micAudio.length," of resampled mic to buffer");
 		let ps = (performer ? (PacketSize*PerfSampleRate/SampleRate) : PacketSize);
 		if (micBuffer.length > ps) {				// If enough in buffer to fill a packet
 			let inAudio = micBuffer.splice(0, ps);		// Get a packet of audio (larger if performer)
-console.log("Got ",ps" of mic audio frmo micBuffer");
+console.log("Got ",ps," of mic audio frmo micBuffer");
 			let obj = applyAutoGain(inAudio, micIn);	// Amplify mic with auto limiter
 			if (obj.peak > micIn.peak) 
 				micIn.peak = obj.peak;			// Note peak for local display
