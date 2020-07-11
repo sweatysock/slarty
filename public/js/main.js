@@ -5,10 +5,12 @@ const HighFilterFreq = SampleRate/2.2;					// Mic filter to remove high frequenc
 const LowFilterFreq = 200;						// Mic filter to remove low frequencies before resampling
 const PerfSampleRate = 32000; 						// Global sample rate used for all performer audio
 const PacketSize = 500;							// Server packet size we must conform to
+const PerfPacketSize = PacketSize*PerfSampleRate/SampleRate;		// Performer packets are larger in order to preserve packet rate
 const MaxRTT = 800;							// Round Trip Times above this will cause a socket reset
 var chunkSize = 1024;							// Audio chunk size. Fixed by js script processor
 var soundcardSampleRate = null; 					// Get this from context 
 var resampledChunkSize = 0;						// Once resampled the chunks are this size
+var perfResampledChunkSize = 0;						// Perf mode has a different resampled chunk size
 var socketConnected = false; 						// True when socket is up
 var micAccessAllowed = false; 						// Need to get user permission
 var spkrBuffer = []; 							// Audio buffer going to speaker
@@ -650,18 +652,20 @@ function processAudio(e) {						// Main processing loop
 		if (micIn.gate > 0) {					// If gate is open prepare the audio for sending
 			micAudio = reSample(inData, soundcardSampleRate, sr, cache);
 console.log("Resampled ",inData.length," of mic audio from ",soundcardSampleRate," to ",sr," samples");
-			resampledChunkSize = micAudio.length;		// Note how much resampled audio is needed
 			micIn.gate--;					// Gate slowly closes
 //			if (micIn.gate == 0)				// Gate is about to close
 //				fadeDown(micAudio);			// Fade sample down to zero for smooth sound
 //			else if (micIn.gate == gateDelay)		// Gate has just been opened so fade up
 //				fadeUp(micAudio);
 		} else {						// Gate closed. Fill with silence.
-			micAudio = new Array(resampledChunkSize).fill(0);
+			if (performer)					// Fill with 0's relevant amount of samples
+				micAudio = new Array(perfResampledChunkSize).fill(0);
+			else
+				micAudio = new Array(resampledChunkSize).fill(0);
 		}
 console.log("pushing ",micAudio.length," of resampled mic to buffer");
 		micBuffer.push(...micAudio);				// Buffer mic audio 
-		let ps = (performer ? (PacketSize*PerfSampleRate/SampleRate) : PacketSize);
+		let ps = (performer ? PerfPacketSize : PacketSize);	// Packet size depends on performer mode
 		if (micBuffer.length > ps) {				// If enough in buffer to fill a packet
 			let inAudio = micBuffer.splice(0, ps);		// Get a packet of audio (larger if performer)
 console.log("Got ",ps," of mic audio frmo micBuffer");
@@ -729,7 +733,11 @@ function handleAudio(stream) {						// We have obtained media access
 	} else {
 		alert("Sorry, the Web Audio API is not supported by your browser. Consider upgrading or using Google Chrome or Mozilla Firefox");
 	}
-	soundcardSampleRate = context.sampleRate;
+	soundcardSampleRate = context.sampleRate;			// Get HW sample rate... varies per platform
+	resampledChunkSize = Math.floor(chunkSize * 			// Calculate size of internal data chunks
+		SampleRate / soundcardSampleRate);			// for internal audence sample rate
+	perfResampledChunkSize = Math.floor(chunkSize *			// Same for performer mode audio too
+		PerfSampleRate / soundcardSampleRate);
 	micAccessAllowed = true;
 	createOutputUI( mixOut );					// Create the output mix channel UI
 	createMicUI( micIn );						// Create the microphone channel UI
