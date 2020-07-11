@@ -141,10 +141,8 @@ upstreamServer.on('d', function (packet) {
 
 	perf.live = packet.perf.live;					// Performer status is shared by all servers
 	if (perf.live) {perf.packets.push(packet.perf.packet);		// If performer is live store the audio/video packet 
-console.log("perf buffer size:",perf.packets.length);
 	}
 	if ((!perf.streaming) && (perf.packets.length > 5)){		// If not streaming but enough perf data buffered
-console.log("enough perf buffered... streaming time");
 		perf.streaming = true;					// performer is now streaming from here
 	}
 	let chan = packet.channels;					// Build a mix just like the clients do
@@ -187,7 +185,6 @@ console.log("enough perf buffered... streaming time");
 	}
 
 	if (perf.streaming) {						// If live performer is streaming no mix will have been genereated yet
-console.log("perf streaming... gen mix");
 		enterState( genMixState );				// We always generate a mix with performer data however
 		generateMix();						// so call generate mix now
 	}
@@ -305,15 +302,12 @@ io.sockets.on('connection', function (socket) {
 		packet.socketID = socket.id;				// Also store it in the packet to help client skip own audio
 		if (packet.channel == perf.chan) { 			// This is the performer. Note: Channel 0 comes down in 'd' packets
 			if (packet.sampleRate == PerfSampleRate) {	// Sample rate needs to be correct for performer channel
-console.log("performer with correct sample rate");
 				perf.packets.push(packet);		// Store performer audio/video packet
-console.log("perf buffer size:",perf.packets.length);
 				if ((!perf.streaming) && (perf.packets.length > 5)) {
 					nextMixTimeLimit = 0;		// Reset the mix timer so that it doesn't empty the buffer right away
 					perf.streaming = true;		// If not streaming but enough now buffered, performer is go!
 				}
 				if (perf.streaming) {			// If performer is go we will generate a mix
-console.log("perf streaming now");
 					enterState( genMixState );
 					generateMix();			
 				}
@@ -411,20 +405,16 @@ function midBoostFilter(audioIn) {					// Filter to boost mids giving distant so
 }
 
 function forceMix() {							// The timer has triggered a mix 
-console.log("force mix");
 	if (perf.live) {						// If there is a performer don't force mixes if...
 		if ((!perf.streaming) || (perf.packets.length == 0)){	// they are not streaming yet, or there is no perf data left
-console.log("not forcing. streaming:",perf.streaming,"perf buffer:",perf.packets.length);
 			return;
 		}
 	}
-console.log("Yes force mix");
 	forcedMixes++;							// Either no performer, or enough perf buffered already
 	generateMix();							// We need to push out a mix
 }
 
 function enoughAudio() {						// Is there enough audio to build a mix before timeout?
-console.log("Enough audio test. Perf live is ",perf.live);
 	if (perf.live) return false;					// If there is a performer they drive the mix clock so return false
 	let now = new Date().getTime();
 	if (now > nextMixTimeLimit) return true;			// If timer has failed to trigger generate the mix now
@@ -517,9 +507,7 @@ function generateMix () {
 		// MARK Should remove old timeout before creating new one right???
 		clearTimeout(mixTimer);
 		mixTimer = setTimeout( forceMix, (nextMixTimeLimit - now) );	
-console.log("timer set ",(nextMixTimeLimit - now),"mS ahead for next clock sample if needed");
 	} else {nextMixTimeLimit = 0;					// If live performer stop mix forcing
-console.log("resetting timer to 0");
 	}
 }
 

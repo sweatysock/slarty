@@ -153,7 +153,7 @@ socketIO.on('d', function (data) {
 				for (let i=0; i < a.length; i++)
 					mix[i] += a[i];			// Performer audio goes straight into mix
 			}
-			endTalkover();					// Try to end mic talkover before setting gain
+//			endTalkover();					// Try to end mic talkover before setting gain
 			let obj = applyAutoGain(mix, mixOut);		// Trim mix level 
 			mixOut.gain= obj.finalGain;			// Store gain for next loop
 			if (obj.peak > mixOut.peak) mixOut.peak = obj.peak;	// Note peak for display purposes
@@ -674,8 +674,9 @@ function processAudio(e) {						// Main processing loop
 			if ((peak == 0) || (micIn.muted) || (serverMuted)) { 	// Silent audio
 				inAudio = [];				// Send empty audio packet
 				peak = 0;
-			} else
-				talkover();				// Mic is active so drop mix output
+			} else {
+//				talkover();				// Mic is active so drop mix output
+			}
 			let now = new Date().getTime();
 			socketIO.emit("u",
 			{
