@@ -12,7 +12,6 @@ for (let i=0; i < NumberOfChannels; i++) {				// Create all the channels pre-ini
 	channels[i] = {
 		packets 	: [],					// the packet buffer where all channel audio is held
 		name		: "",					// name given by user or client 
-		group		: "",					// Group that channel belongs to
 		socketID	: undefined,				// socket associated with this channel
 		shortages 	: 0,					// for monitoring
 		overflows 	: 0,					// for monitoring
@@ -29,7 +28,7 @@ var perf = {								// Performer data structure
 	packets	: [],							// Performer audio/video packet buffer. 
 	streaming:false,						// Flag that indicates the performer buffer is full enough to start streaming
 }
-var packetBuf = [];							// Buffer of packets sent, subtracted from venue mix later
+var venueMixGain = 1;							// Gain applied to the upstream mix using auto gain control
 var venueSequence = 0;							// Sequence counter for venue sound going downstream
 var upstreamMixGain = 1;						// Gain applied to the mix sent upstream 
 var upSequence = 0;							// Sequence counter for sending upstream
@@ -132,42 +131,47 @@ upstreamServer.on('channel', function (data) {				// The response to our "Hi" is
 
 // Venue audio coming down from our upstream server. Channels of audio from upstream plus all our peers.
 upstreamServer.on('d', function (packet) { 
+
 	if ( clientsLive == 0 ) return;					// If no clients no reason to process upstream data
+
 	enterState( upstreamState );					
 	upstreamIn++;						
+
 	addCommands(packet.commands);					// Store upstream commands for sending downstream
-	// 1. Gather performer audio and queue it up
+
 	perf.live = packet.perf.live;					// Performer status is shared by all servers
-	if (perf.live) perf.packets.push(packet.perf.packet);		// If performer is live store the audio/video packet 
+	if (perf.live) {perf.packets.push(packet.perf.packet);		// If performer is live store the audio/video packet 
+	}
 	if ((!perf.streaming) && (perf.packets.length > 5)){		// If not streaming but enough perf data buffered
 		perf.streaming = true;					// performer is now streaming from here
 	}
-	// 2. Subtract our buffered audio from upstream mix
-	let mix = packet.channels[0].audio;				// We are not part of a group so we only get channel 0 (venue) audio
-	let s = packet.channels[0].seqNos[chan.channel];		// Channel 0's comes with a list of the packet seq nos in the mix
-	while (packetBuf.length) {					// Scan our packet buffer for the packet with our sequence
-		let p = packetBuf.shift();				// Remove the oldest packet from the buffer
-		if (p.sequence == s) {					// We have found the right sequence number
-			let a = p.audio;				// Get packet's audio, apply same gain as server applied & subtract from mix
-			for (let i=0; i < a.length; p++) mix[i] = mix[i] - a[i] * p.gain;
-			break;						// Packet found. Stop scanning the packet buffer. 
+	let chan = packet.channels;					// Build a mix just like the clients do
+	let mix = new Array(packetSize).fill(0); 			// and send mix downstream
+	let ts = 0;						
+	for (let c=0; c < chan.length; c++) {				// So first we need to build a mix
+		if (chan[c].socketID != upstreamServer.id) {		// Skip my audio in mix generation
+			let a = chan[c].audio;
+  			for (let i=0; i < a.length; i++) mix[i] += a[i]	// Build mix. 
+		} else {						// This is my own data come back
+			let now = new Date().getTime();
+			ts = chan[c].timestamp;
+			rtt = now - ts;					// Measure round trip time
 		}
 	}
-	// 3. Build a channel 0 packet . WHY NOT JUST USE THE CHANNEL 0 PACKET ALREADY???  
+	mix = midBoostFilter(mix);					// Filter upstream audio to made it distant
+	let obj = applyAutoGain(mix,venueMixGain,1);			// Control mix audio level
+	venueMixGain = obj.finalGain;					// Store gain for next loop
+	upstreamMax = obj.peak;						// For monitoring purposes
 	if (mix.length != 0) {						// If there actually was some audio
-		mix = midBoostFilter(mix);				// Filter upstream audio to made it distant
-		upstreamMax = packet.channels[0].peak;			// For monitoring purposes
 		let p = {						// Construct the audio packet
 			name		: channels[0].name,		// Give packet our channel name
 			audio		: mix,				// The audio is the mix just prepared
-			peak		: upstreamMax,			// Provide peak value to save effort
-			timestamp	: 0,				// Channel 0 (venue) audio never returns so no rtt to measure
+			peak		: obj.peak,			// Provide peak value to save effort
+			timestamp	: ts,				// Maybe interesting to know how old it is?
 			sequence	: venueSequence++,		// Sequence number for tracking quality
 			channel		: 0,				// Upstream is assigned channel 0 everywhere
 			sampleRate	: SampleRate,			// Send sample rate to help processing
-			group		: "",				// No group for venue channel
 		}
-		// 4. Store the packet in the channel 0 buffer
 		channels[0].packets.push(p); 				// Store upstream packet in channel 0
 		if (channels[0].packets.length > maxBufferSize) {	// Clip buffer if overflowing
 			channels[0].packets.shift();
@@ -179,7 +183,7 @@ upstreamServer.on('d', function (packet) {
 			if (enoughAudio()) generateMix();		// If there is enough buffered in all other channels generate mix
 		}
 	}
-	// 5. Generate the mix if we are in performer mode
+
 	if (perf.streaming) {						// If live performer is streaming no mix will have been genereated yet
 		enterState( genMixState );				// We always generate a mix with performer data however
 		generateMix();						// so call generate mix now
@@ -190,7 +194,6 @@ upstreamServer.on('d', function (packet) {
 upstreamServer.on('disconnect', function () {
 	channels[0].packets = [];
 	channels[0].name = "";
-	channels[0].group = "";
 	channels[0].socketID = undefined;
 	channels[0].shortages = 0,
 	channels[0].overflows = 0,
@@ -219,7 +222,6 @@ io.sockets.on('connection', function (socket) {
 				if (!c.recording) {			// If recording the channel remains unchanged
 					c.packets = [];			// so that audio can continue to be generated
 					c.name = "";
-					c.group = "";
 					c.socketID = undefined;
 					c.shortages = 0,
 					c.overflows = 0,
@@ -249,13 +251,12 @@ io.sockets.on('connection', function (socket) {
 			// MARK store server URL and active channel info and URLs if provided
 			channels[channel].packets = [];			// Reset channel values
 			channels[channel].name = "";			// This will be set when data comes in
-			channels[channel].group = "individual";		// Default group name
 			channels[channel].socketID = socket.id;
 			channels[channel].socket = socket;
 			channels[channel].shortages = 0;
 			channels[channel].overflows = 0;
 			channels[channel].newBuf = true;		
-			socket.join(channels[channel].group);		// Add to default group for downstream data
+			socket.join('downstream');			// Add to group for downstream data
 			clientsLive++;					// For monitoring purposes
 			console.log("Client assigned channel ",channel);
 		} else
@@ -297,11 +298,6 @@ io.sockets.on('connection', function (socket) {
 		enterState( downstreamState );
 		let channel = channels[packet.channel];			// This client sends their channel to save server effort
 		channel.name = packet.name;				// Update name of channel in case it has changed
-		if (channel.group != packet.group) {			// If the user has changed their group
-			socket.leave(channel.group);			// leave the group they were in
-			channel.group = packet.group;			// update group channel belongs to
-			socket.join(channel.group);			// and join this new group
-		}
 		channel.socketID = socket.id;				// Store socket ID associated with channel
 		packet.socketID = socket.id;				// Also store it in the packet to help client skip own audio
 		if (packet.channel == perf.chan) { 			// This is the performer. Note: Channel 0 comes down in 'd' packets
@@ -438,26 +434,12 @@ function enoughAudio() {						// Is there enough audio to build a mix before tim
 
 
 
-// The main working function where audio marshalling, venue mixing and sending up and downstream happens
-// Six steps: 1. Prep performer audio 2. Build mix and colate group data 3. Send mix upstream 4. Build venue mix 5. Send to all groups of clients & 6. Clean up & set timers
-function generateMix () { 
-	// 1. Get perf packet if performing and enough perf audio buffered to start streaming
-	let p = {live:perf.live, chan:perf.chan, packet:null};		// Send downstream by default a perf object with no packet
-	if ((perf.streaming) && (perf.packets.length > 0))		// Pull a performer packet from its queue if any
-		p.packet = perf.packets.shift();			// add to copy of perf to replace the null packet
-	// 2. Generate mix with all channels except 0 (upstream venue track) ready for sending upstream
-	let mix = new Array(packetSize).fill(0);			// Mix of this server's audio to send upstream and also add to venue
-	let seqNos = [];						// Array of packet sequence numbers used in the mix (channel is index)
-	let channel0Packet = null;					// The channel 0 (venue) audio packet
-	let groups = [];						// Data collated by group for sending downstream
-	channels.forEach( c, chan => {					// Review all channels for audio and activity, and build server mix
-		if (c.name != "")					// If channel is active it will have a name
-			if (groups[c.group] == null)			// If first member of group the entry will be null
-				groups[c.group] = {			// Create object
-					clientPackets:[],		// with a buffer of clientPackets for all members
-					liveChannels:[],		// and a liveChannels list too
-				};
-		if (c.newBuf == false) {				// Only process channels that are non-new
+// The main working function where audio marsahlling, mixing and sending happens
+function generateMix () {
+	let mix = new Array(packetSize).fill(0); 			// The mixed audio we will return to all clients
+	let clientPackets = []; 					// All client audio packets that are part of the mix
+	channels.forEach( c => {
+		if (c.newBuf == false) {				// Ignore new buffers that are filling up
 			let packet;
 			if (c.recording) {				// If recording then read the packet 
 				packet = c.packets[c.playhead];		// at the playhead position
@@ -469,29 +451,20 @@ function generateMix () {
 				shortages++;				// and also for global monitoring
 				c.playhead = 0;				// Set buffer play position to the start
 			}
-			else {						// Got a packet. Now store it and build server mix
-				if (c.group != "individual") {		// Keep packets and live channels for group members (not individuals)
-					groups[c.group].clientPackets.push( packet );
-					groups[c.group].liveChannels[chan] = true;
-									// MARK ADD URL for downstream servers needed for heckler control
-									// MARK ADD peak level for each for audio visualization
-				}
-				if (packet.channel != 0) {		// Build mix for upstream server (so skip upstream (venue / channel 0) audio
+			else {
+				clientPackets.push( packet );		// Store packet of source audio for sending
+				if (packet.channel != 0)		// Build mix for upstream server skipping its own audio
 					for (let i = 0; i < packet.audio.length; ++i) mix[i] = (mix[i] + packet.audio[i]);	
-					seqNos[packet.channel] 		// Store the seq number of the packet just added to the mix
-						= packet.sequence;	// so that it can be subtracted in the client to stop echo
-				}
-				else channel0Packet = packet;		// keep the packet for channel 0 (venue) for adding later
 			}
 		}
 	});
-	// 3. AGC server mix and send upstream if we have an upstream server connected
-	let obj = applyAutoGain(mix,upstreamMixGain,1);			// Adjust mix level 
-	upstreamMixGain = obj.finalGain;				// Store gain for next mix auto gain control
-	mixMax = obj.peak;						// For monitoring purposes
+	if (clientPackets.length == 0) nextMixTimeLimit = 0;		// No client packets so stop forcing and wait for more data
 	if (upstreamConnected == true) { 				// Send mix if connected to an upstream server
+		let obj = applyAutoGain(mix,upstreamMixGain,1);		// Adjust mix level 
+		upstreamMixGain = obj.finalGain;			// Store gain for next mix auto gain control
+		mixMax = obj.peak;					// For monitoring purposes
 		let now = new Date().getTime();
-		let packet = {						// Build the packet the same as any client packet
+		upstreamServer.emit("u", {
 			"name"		: myServerName,			// Let others know which server this comes from
 			"audio"		: mix,				// Level controlled mix of all clients here
 			"sequence"	: upSequence++,			// Good for data integrity checks
@@ -500,49 +473,32 @@ function generateMix () {
 			"channel"	: upstreamServerChannel,	// Send assigned channel to help server
 			"recording"	: false,			// Make sure the upstream server never records
 			"sampleRate"	: SampleRate,			// Send sample rate to help processing
-			"group"		: "individual",			// Not part of a group in upstream server
 			// MARK send liveChannels upstream
 		});
-		upstreamServer.emit("u",packet); 			// Send the packet upstream
-		packetBuf.push(packet);					// Add sent packet to LILO buffer for echo cancelling 
 		upstreamOut++;
 	} 
-	// 4. Now that mix has gone upstream build downstream venue mix by adding mix to channel 0
-	if (channel0Packet != null) {					// If there is a venue packet add our mix to venue audio
-		let a = channel0Packet.audio;
-		for (let i = 0; i < a.length; i++) a[i] = a[i] + mix[i];
-	} else {							// No venue audio so use our mix as venue audio
-		channel0Packet = {					// Construct the audio packet
-			name		: "VENUE",			// Give packet main venue name
-			audio		: mix,				// Venue audio is the mix just prepared
-			peak		: obj.peak,			// Provide peak value to save effort
-			timestamp	: 0,				// No need to trace RTT here
-			sequence	: venueSequence++,		// Sequence number for tracking quality
-			channel		: 0,				// Upstream is assigned channel 0 everywhere
-			sampleRate	: SampleRate,			// Send sample rate to help processing
-			group		: "",				// No group for venue channel
+	let liveChannels = [];						// build snapshot of current live client buffers
+	for (let c in channels) 					// to keep client UIs in sync with server state
+		if (channels[c].name != "") {				// Means channel is connected to a client
+			liveChannels[c] = {
+				name	: channels[c].name,
+				queue 	: channels[c].packets.length,
+				// MARK ADD URL for downstream servers needed for heckler control
+				// MARK ADD peak level for each for audio visualization
+			}
 		}
-	}
-	channel0Packet.seqNos = seqNos;					// Add to channel 0 packet the list of seqNos that were used
-	channel0Packet.gain = upstreamMixGain;				// and the gain applied. Both are needed to subtract audio in client
-	// 5. Send packets to all clients group by group, adding performer, channel 0 (venue) and group audio, plus group live channels and commands
-	groups.forEach( g , group => {
-		let clientPackets = g.clientPackets;			// Get group specific packets to send to all group members
-		clientPackets.push( channel0Packet );			// Add channel 0 (venue audio) to the packets for every group
-		let liveChannels = g.liveChannels;			// Get group specific live channels list for all members too
-		liveChannels[0] = true;					// Add channel 0 to the live channels list for all members
-		io.sockets.in(group).emit('d', {			// Send to all group members group specific data
-			"perf"		: p,				// Send performer audio/video packet + other flags
-			"channels"	: clientPackets,		// All channels in this server plus filtered upstream mix
-			"liveChannels"	: liveChannels,			// Include server info about live clients and their queues
-			"commands"	: commands,			// Send commands downstream to reach all client endpoints
-		});
+	// Build venue mix by adding all channels. Note seq numbers + channels to help cancelling in client.
+	let p = {live:perf.live, chan:perf.chan, packet:null};		// Send downstream a copy of the perf object with no packet
+	if ((perf.streaming) && (perf.packets.length > 0))		// Pull a performer packet from its queue if any
+		p.packet = perf.packets.shift();			// add to copy of perf to replace the null packet
+	io.sockets.in('downstream').emit('d', {				// Send all audio channels to all downstream clients
+		"perf"		: p,					// Send performer audio/video packet + other flags
+		"channels"	: clientPackets,			// All channels in this server plus filtered upstream mix
+		"liveChannels"	: liveChannels,				// Include server info about live clients and their queues
+		"commands"	: commands,				// Send commands downstream to reach all client endpoints
 	});
-	// 6. Clean up, trace, minitor, and set timer for next marshalling point limit
 	packetsOut++;							// Sent data so log it and set time limit for next send
 	packetClassifier[clientPackets.length] = packetClassifier[clientPackets.length] + 1;
-	if ((!perf.live) && (clientPackets.length == 0)) 		// If not performing and no client packets 
-		nextMixTimeLimit = 0;					// stop forcing mix as there is no data to force
 	if ((!perf.live) || (perf.streaming)) {				// If no live performance or perf is streaming then clock samples
 		let now = new Date().getTime();
 		if (nextMixTimeLimit == 0) 

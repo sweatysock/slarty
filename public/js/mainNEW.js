@@ -116,47 +116,34 @@ socketIO.on('perf', function (data) {					// Performer status notification
 socketIO.on('d', function (data) { 
 	enterState( dataInState );					// This is one of our key tasks
 	packetsIn++;							// For monitoring and statistics
-	serverLiveChannels = data.liveChannels;				// Server live channels are for UI updating
-	processCommands(data.commands);					// Process commands from server
+	serverLiveChannels = data.liveChannels;				// Keep this info for UI updating
+	processCommands(data.commands);					// Apply any commands from server
 	if (micAccessAllowed) {						// Need access to audio before outputting
-		let mix = new Array(PacketSize).fill(0);		// We are here to build a mix. Start with an array of 0's
-		// 1. Channel 0 venue mix from server includes our audio sent a few mS ago. Subtract it using seq no. and gain to stop echo
-		let venueGain = data.channels[0].gain;			// Channel 0's mix has had this gain applied to all its' channels
-		let s = data.channels[0].seqNos[chan.channel];		// Channel 0's mix contains our audio. This is its sequence no.
-		while (packetBuf.length) {				// Scan the packet buffer for the packet with this sequence
-			let p = packetBuf.shift();			// Remove the oldest packet from the buffer
-			if (p.sequence == s) {				// We have found the right sequence number
-				let a = p.audio;			// Get packet's audio, apply same gain as server applied & subtract from mix
-				for (let i=0; i < a.length; p++) mix[i] = mix[i] - a[i] * venueGain;
-				break;					// Packet found. Stop scanning the packet buffer. 
-			}
-		}
-		// 1. Build a mix of all incoming channels. For individuals this is just channel 0, For groups it is more
-		data.channels.forEach(c => {				// Process all audio channel packets sent from server
-			let ch = c.channel;				// Channel number the packet belongs to
-			let chan = channels[ch];			// Internal data structure for this channel
+		let mix = new Array(PacketSize).fill(0);		// Build up a mix of client audio from 0s
+		data.channels.forEach(c => {
+			let ch = c.channel;
+			let chan = channels[ch];
 			if (c.socketID != socketIO.id) {		// Don't include my audio in mix
-				chan.name = c.name;			// Update internal structure's channel name
-				chan.channel = ch;			// Keep channel number too. It helps speed lookups
-				if (chan.peak < c.peak)			// set the peak for this channel's level display
+				chan.name = c.name;			// Update the channel name
+				chan.channel = ch;			// Update the channel number
+				if (chan.peak < c.peak)			// set the peak for level display
 					chan.peak = c.peak;		// even if muted
-				if (!chan.muted) {			// We skip a muted channel in the mix
-					let a = c.audio;		// Get the audio from the packet
+				if (!chan.muted) {			// We can skip a muted channel
+					let a = c.audio;		// Get the incoming channel audio
 					let g = (chan.agc 		// Apply gain. If AGC use mix gain, else channel gain
 						? mixOut.gain : chan.gain);	
 					chan.gain = g;			// Channel gain level should reflect gain used here
-	  				for (let i=0; i < a.length; i++)// Add channel to mix, subtracting audio already included
-						mix[i] += a[i] * (g - venueGain);	
+	  				for (let i=0; i < a.length; i++)
+						mix[i] += a[i] * g;
 				}
 			} else {					// This is my own data come back
 				let now = new Date().getTime();
-				rtt = (rtt + (now - c.timestamp))/2;	// Measure round trip time using a rolling average
+				rtt = (rtt + (now - c.timestamp))/2;	// Measure round trip time rolling average
 			}
-			if (c.sequence != (chan.seq + 1)) 		// Monitor audio transfer quality for all channels
+			if (c.sequence != (chan.seq + 1)) 		// Monitor audio transfer quality
 				trace("Sequence jump Channel ",ch," jump ",(c.sequence - chan.seq));
 			chan.seq = c.sequence;
 		});
-		// 3. Upsample the mix, upsample performer audio, mix all together, apply final AGC and send to speaker
 		if (mix.length != 0) {					// If there actually was some audio
 			mix = reSample(mix, SampleRate, soundcardSampleRate, upCache); // Bring mix to HW sampling rate
 			performer = (data.perf.chan == myChannel);	// Update performer flag just in case
@@ -706,7 +693,7 @@ function processAudio(e) {						// Main processing loop
 				"group"		: myGroup,		// Group name this user belings to
 			};
 			socketIO.emit("u",packet);
-			packetBuf.push(packet);				// Add sent packet to LILO buffer for echo cancelling 
+			packetBuf.push(packet);				// Buffer sent packet for echo cancelling 
 			packetsOut++;					// For stats and monitoring
 			packetSequence++;
 		}
