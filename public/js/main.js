@@ -114,8 +114,6 @@ socketIO.on('perf', function (data) {					// Performer status notification
 
 // Data coming down from upstream server: Group mix plus separate member audios
 socketIO.on('d', function (data) { 
-console.log("incoming data d");
-console.log(data);
 	enterState( dataInState );					// This is one of our key tasks
 	packetsIn++;							// For monitoring and statistics
 	serverLiveChannels = data.liveChannels;				// Server live channels are for UI updating
@@ -140,7 +138,7 @@ console.log(data);
 				}
 			}
 		} else mix = new Array(PacketSize).fill(0);		// If there was no venue audio start with silence
-		// 1. Build a mix of all incoming channels. For individuals this is just channel 0, For groups it is more
+		// 2. Build a mix of all incoming channels. For individuals this is just channel 0, For groups it is more
 		data.channels.forEach(c => {				// Process all audio channel packets sent from server
 			let ch = c.channel;				// Channel number the packet belongs to
 			let chan = channels[ch];			// Internal data structure for this channel
