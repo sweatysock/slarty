@@ -145,6 +145,7 @@ upstreamServer.on('d', function (packet) {
 	// 2. Subtract our buffered audio from upstream mix
 	let mix = packet.channels[0].audio;				// We are not part of a group so we only get channel 0 (venue) audio
 	let s = packet.channels[0].seqNos[upstreamServerChannel];	// Channel 0 comes with list of packet seq nos in mix. Get ours.
+console.log("about to search for packet in buffer");
 	while (packetBuf.length) {					// Scan our packet buffer for the packet with our sequence
 		let p = packetBuf.shift();				// Remove the oldest packet from the buffer
 		if (p.sequence == s) {					// We have found the right sequence number
@@ -153,6 +154,7 @@ upstreamServer.on('d', function (packet) {
 			break;						// Packet found. Stop scanning the packet buffer. 
 		}
 	}
+console.log("search complete");
 	// 3. Build a channel 0 packet . WHY NOT JUST USE THE CHANNEL 0 PACKET ALREADY???  
 	if (mix.length != 0) {						// If there actually was some audio
 		mix = midBoostFilter(mix);				// Filter upstream audio to made it distant
