@@ -121,35 +121,26 @@ console.log(data);
 	serverLiveChannels = data.liveChannels;				// Server live channels are for UI updating
 	processCommands(data.commands);					// Process commands from server
 	if (micAccessAllowed) {						// Need access to audio before outputting
-		let mix = new Array(PacketSize).fill(0);		// We are here to build a mix. Start with an array of 0's
 		// 1. Channel 0 venue mix from server includes our audio sent a few mS ago. Subtract it using seq no. and gain to stop echo
-		let venueGain = data.channels[0].gain;			// Channel 0's mix has had this gain applied to all its' channels
-console.log("venueGain = ",venueGain );
-		let s = data.channels[0].seqNos[myChannel];		// Channel 0's mix contains our audio. This is its sequence no.
-		if (s == null)
-			trace("No sequence number for our audio in mix");
-		else {
-console.log("packetBuf");
-console.log(packetBuf);
-console.log(s);
-			let searching = true;
-			while (searching) {			// Scan the packet buffer for the packet with this sequence
-console.log("scanning for our packet in the packet buffer");
-				let p = packetBuf.shift();		// Remove the oldest packet from the buffer
-console.log("p.sequence = ",p.sequence," s = ",s);
-				if (p.sequence == s) {			// We have found the right sequence number
-console.log("p.audio.length = ",p.audio.length);
-console.log(mix);
-					let a = p.audio;		// Get packet's audio, apply same gain as server applied & subtract from mix
-					for (let i=0; i < a.length; p++) {mix[i] = mix[i] - (a[i] * venueGain);}
-					searching = false;				// Packet found. Stop scanning the packet buffer. 
+		let mix = [];						// We are here to build a mix
+		let venueGain = 0;					// Default venue gain in case there was no channel 0 audio
+		if (data.channels[0] != null) {				// If there is venue audio (can't take it for granted)
+			venueGain = data.channels[0].gain;		// Channel 0's mix has had this gain applied to all its' channels
+			let s = data.channels[0].seqNos[myChannel];	// Channel 0's mix contains our audio. This is its sequence no.
+			if (s == null)
+				trace("No sequence number for our audio in mix");
+			else {
+				while (packetBuf.length) {		// Scan the packet buffer for the packet with this sequence
+					let p = packetBuf.shift();	// Remove the oldest packet from the buffer
+					if (p.sequence == s) {		// We have found the right sequence number
+						let a = p.audio;	// Get packet's audio, apply same gain as server applied & invert
+						for (let i=0; i < a.length; i++) mix[i] =  -1 * a[i] * venueGain;
+						break;			// Packet found. Stop scanning the packet buffer. 
+					}
 				}
-console.log("looping");
 			}
-		}
+		} else mix = new Array(PacketSize).fill(0);		// If there was no venue audio start with silence
 		// 1. Build a mix of all incoming channels. For individuals this is just channel 0, For groups it is more
-console.log("building mix");
-console.log(data.channels);
 		data.channels.forEach(c => {				// Process all audio channel packets sent from server
 			let ch = c.channel;				// Channel number the packet belongs to
 			let chan = channels[ch];			// Internal data structure for this channel
@@ -174,7 +165,6 @@ console.log(data.channels);
 				trace("Sequence jump Channel ",ch," jump ",(c.sequence - chan.seq));
 			chan.seq = c.sequence;
 		});
-console.log("mix built");
 		// 3. Upsample the mix, upsample performer audio, mix all together, apply final AGC and send to speaker
 		if (mix.length != 0) {					// If there actually was some audio
 			mix = reSample(mix, SampleRate, soundcardSampleRate, upCache); // Bring mix to HW sampling rate
