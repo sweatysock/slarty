@@ -529,7 +529,8 @@ console.log(groups);
 	channel0Packet.seqNos = seqNos;					// Add to channel 0 packet the list of seqNos that were used
 	channel0Packet.gain = upstreamMixGain;				// and the gain applied. Both are needed to subtract audio in client
 	// 5. Send packets to all clients group by group, adding performer, channel 0 (venue) and group audio, plus group live channels and commands
-	groups.forEach( (g , group) => {
+	for (group in groups) {
+		let g = groups[group];
 console.log(g, group);
 		let clientPackets = g.clientPackets;			// Get group specific packets to send to all group members
 		clientPackets.push( channel0Packet );			// Add channel 0 (venue audio) to the packets for every group
