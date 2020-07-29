@@ -450,7 +450,8 @@ function generateMix () {
 	let seqNos = [];						// Array of packet sequence numbers used in the mix (channel is index)
 	let channel0Packet = null;					// The channel 0 (venue) audio packet
 	let groups = [];						// Data collated by group for sending downstream
-	channels.forEach( c, chan => {					// Review all channels for audio and activity, and build server mix
+	let packetCount = 0;						// Keep count of packets that make the mix
+	channels.forEach( (c, chan) => {				// Review all channels for audio and activity, and build server mix
 		if (c.name != "")					// If channel is active it will have a name
 			if (groups[c.group] == null)			// If first member of group the entry will be null
 				groups[c.group] = {			// Create object
@@ -470,6 +471,7 @@ function generateMix () {
 				c.playhead = 0;				// Set buffer play position to the start
 			}
 			else {						// Got a packet. Now store it and build server mix
+				packetCount++;				// Count how many packets have made the mix
 				if (c.group != "individual") {		// Keep packets and live channels for group members (not individuals)
 					groups[c.group].clientPackets.push( packet );
 					groups[c.group].liveChannels[chan] = true;
@@ -502,7 +504,7 @@ function generateMix () {
 			"sampleRate"	: SampleRate,			// Send sample rate to help processing
 			"group"		: "individual",			// Not part of a group in upstream server
 			// MARK send liveChannels upstream
-		});
+		};
 		upstreamServer.emit("u",packet); 			// Send the packet upstream
 		packetBuf.push(packet);					// Add sent packet to LILO buffer for echo cancelling 
 		upstreamOut++;
@@ -526,7 +528,7 @@ function generateMix () {
 	channel0Packet.seqNos = seqNos;					// Add to channel 0 packet the list of seqNos that were used
 	channel0Packet.gain = upstreamMixGain;				// and the gain applied. Both are needed to subtract audio in client
 	// 5. Send packets to all clients group by group, adding performer, channel 0 (venue) and group audio, plus group live channels and commands
-	groups.forEach( g , group => {
+	groups.forEach( (g , group) => {
 		let clientPackets = g.clientPackets;			// Get group specific packets to send to all group members
 		clientPackets.push( channel0Packet );			// Add channel 0 (venue audio) to the packets for every group
 		let liveChannels = g.liveChannels;			// Get group specific live channels list for all members too
@@ -538,10 +540,10 @@ function generateMix () {
 			"commands"	: commands,			// Send commands downstream to reach all client endpoints
 		});
 	});
-	// 6. Clean up, trace, minitor, and set timer for next marshalling point limit
+	// 6. Clean up, trace, monitor, and set timer for next marshalling point limit
 	packetsOut++;							// Sent data so log it and set time limit for next send
-	packetClassifier[clientPackets.length] = packetClassifier[clientPackets.length] + 1;
-	if ((!perf.live) && (clientPackets.length == 0)) 		// If not performing and no client packets 
+	packetClassifier[packetCount] = packetClassifier[packetCount] + 1;
+	if ((!perf.live) && (packetCount == 0))		 		// If not performing and no client packets in mix
 		nextMixTimeLimit = 0;					// stop forcing mix as there is no data to force
 	if ((!perf.live) || (perf.streaming)) {				// If no live performance or perf is streaming then clock samples
 		let now = new Date().getTime();
