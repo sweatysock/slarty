@@ -128,6 +128,9 @@ console.log(data);
 		if (s == null)
 			trace("No sequence number for our audio in mix");
 		else
+console.log("packetBuf");
+console.log(packetBuf);
+console.log(s);
 //			while (packetBuf.length) {			// Scan the packet buffer for the packet with this sequence
 //console.log("scanning for our packet in the packet buffer");
 //				let p = packetBuf.shift();		// Remove the oldest packet from the buffer
