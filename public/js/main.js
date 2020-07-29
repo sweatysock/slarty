@@ -114,6 +114,7 @@ socketIO.on('perf', function (data) {					// Performer status notification
 
 // Data coming down from upstream server: Group mix plus separate member audios
 socketIO.on('d', function (data) { 
+console.log(data);
 	enterState( dataInState );					// This is one of our key tasks
 	packetsIn++;							// For monitoring and statistics
 	serverLiveChannels = data.liveChannels;				// Server live channels are for UI updating
@@ -122,15 +123,19 @@ socketIO.on('d', function (data) {
 		let mix = new Array(PacketSize).fill(0);		// We are here to build a mix. Start with an array of 0's
 		// 1. Channel 0 venue mix from server includes our audio sent a few mS ago. Subtract it using seq no. and gain to stop echo
 		let venueGain = data.channels[0].gain;			// Channel 0's mix has had this gain applied to all its' channels
+console.log("venue gain is ",venueGain);
 		let s = data.channels[0].seqNos[chan.channel];		// Channel 0's mix contains our audio. This is its sequence no.
-		while (packetBuf.length) {				// Scan the packet buffer for the packet with this sequence
-			let p = packetBuf.shift();			// Remove the oldest packet from the buffer
-			if (p.sequence == s) {				// We have found the right sequence number
-				let a = p.audio;			// Get packet's audio, apply same gain as server applied & subtract from mix
-				for (let i=0; i < a.length; p++) mix[i] = mix[i] - a[i] * venueGain;
-				break;					// Packet found. Stop scanning the packet buffer. 
+		if (s == null)
+			trace("No sequence number for our audio in mix");
+		else
+			while (packetBuf.length) {			// Scan the packet buffer for the packet with this sequence
+				let p = packetBuf.shift();		// Remove the oldest packet from the buffer
+				if (p.sequence == s) {			// We have found the right sequence number
+					let a = p.audio;		// Get packet's audio, apply same gain as server applied & subtract from mix
+					for (let i=0; i < a.length; p++) mix[i] = mix[i] - a[i] * venueGain;
+					break;				// Packet found. Stop scanning the packet buffer. 
+				}
 			}
-		}
 		// 1. Build a mix of all incoming channels. For individuals this is just channel 0, For groups it is more
 		data.channels.forEach(c => {				// Process all audio channel packets sent from server
 			let ch = c.channel;				// Channel number the packet belongs to
