@@ -122,7 +122,7 @@ socketIO.on('d', function (data) {
 		let mix = new Array(PacketSize).fill(0);		// We are here to build a mix. Start with an array of 0's
 		// 1. Channel 0 venue mix from server includes our audio sent a few mS ago. Subtract it using seq no. and gain to stop echo
 		let venueGain = data.channels[0].gain;			// Channel 0's mix has had this gain applied to all its' channels
-		let s = data.channels[0].seqNos[chan.channel];		// Channel 0's mix contains our audio. This is its sequence no.
+		let s = data.channels[0].seqNos[myChannel];		// Channel 0's mix contains our audio. This is its sequence no.
 		if (s == null)
 			trace("No sequence number for our audio in mix");
 		else
