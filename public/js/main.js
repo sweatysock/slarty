@@ -145,7 +145,7 @@ console.log(s);
 //				}
 //console.log("looping");
 //			}
-//		}
+		}
 		// 1. Build a mix of all incoming channels. For individuals this is just channel 0, For groups it is more
 console.log("building mix");
 console.log(data.channels);
