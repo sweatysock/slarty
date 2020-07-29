@@ -137,8 +137,11 @@ console.log("p.sequence = ",p.sequence," s = ",s);
 					for (let i=0; i < a.length; p++) mix[i] = mix[i] - a[i] * venueGain;
 					break;				// Packet found. Stop scanning the packet buffer. 
 				}
+console.log("looping");
 			}
 		// 1. Build a mix of all incoming channels. For individuals this is just channel 0, For groups it is more
+console.log("building mix");
+console.log(data.channels);
 		data.channels.forEach(c => {				// Process all audio channel packets sent from server
 			let ch = c.channel;				// Channel number the packet belongs to
 			let chan = channels[ch];			// Internal data structure for this channel
@@ -163,6 +166,7 @@ console.log("p.sequence = ",p.sequence," s = ",s);
 				trace("Sequence jump Channel ",ch," jump ",(c.sequence - chan.seq));
 			chan.seq = c.sequence;
 		});
+console.log("mix built");
 		// 3. Upsample the mix, upsample performer audio, mix all together, apply final AGC and send to speaker
 		if (mix.length != 0) {					// If there actually was some audio
 			mix = reSample(mix, SampleRate, soundcardSampleRate, upCache); // Bring mix to HW sampling rate
