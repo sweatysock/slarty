@@ -128,19 +128,19 @@ console.log(data);
 		if (s == null)
 			trace("No sequence number for our audio in mix");
 		else
-			while (packetBuf.length) {			// Scan the packet buffer for the packet with this sequence
-console.log("scanning for our packet in the packet buffer");
-				let p = packetBuf.shift();		// Remove the oldest packet from the buffer
-console.log("p.sequence = ",p.sequence," s = ",s);
-				if (p.sequence == s) {			// We have found the right sequence number
-console.log("p.audio.length = ",p.audio.length);
-console.log(mix);
-					let a = p.audio;		// Get packet's audio, apply same gain as server applied & subtract from mix
-					for (let i=0; i < a.length; p++) mix[i] = mix[i] - a[i] * venueGain;
-					break;				// Packet found. Stop scanning the packet buffer. 
-				}
-console.log("looping");
-			}
+//			while (packetBuf.length) {			// Scan the packet buffer for the packet with this sequence
+//console.log("scanning for our packet in the packet buffer");
+//				let p = packetBuf.shift();		// Remove the oldest packet from the buffer
+//console.log("p.sequence = ",p.sequence," s = ",s);
+//				if (p.sequence == s) {			// We have found the right sequence number
+//console.log("p.audio.length = ",p.audio.length);
+//console.log(mix);
+//					let a = p.audio;		// Get packet's audio, apply same gain as server applied & subtract from mix
+//					for (let i=0; i < a.length; p++) mix[i] = mix[i] - a[i] * venueGain;
+//					break;				// Packet found. Stop scanning the packet buffer. 
+//				}
+//console.log("looping");
+//			}
 		// 1. Build a mix of all incoming channels. For individuals this is just channel 0, For groups it is more
 console.log("building mix");
 console.log(data.channels);
