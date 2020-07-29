@@ -132,7 +132,8 @@ console.log("venueGain = ",venueGain );
 console.log("packetBuf");
 console.log(packetBuf);
 console.log(s);
-			while (packetBuf.length) {			// Scan the packet buffer for the packet with this sequence
+			let searching = true;
+			while (searching) {			// Scan the packet buffer for the packet with this sequence
 console.log("scanning for our packet in the packet buffer");
 				let p = packetBuf.shift();		// Remove the oldest packet from the buffer
 console.log("p.sequence = ",p.sequence," s = ",s);
@@ -141,7 +142,7 @@ console.log("p.audio.length = ",p.audio.length);
 console.log(mix);
 					let a = p.audio;		// Get packet's audio, apply same gain as server applied & subtract from mix
 					for (let i=0; i < a.length; p++) {mix[i] = mix[i] - (a[i] * venueGain);}
-					break;				// Packet found. Stop scanning the packet buffer. 
+					searching = false;				// Packet found. Stop scanning the packet buffer. 
 				}
 console.log("looping");
 			}
