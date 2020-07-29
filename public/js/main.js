@@ -114,6 +114,8 @@ socketIO.on('perf', function (data) {					// Performer status notification
 
 // Data coming down from upstream server: Group mix plus separate member audios
 socketIO.on('d', function (data) { 
+console.log("incoming data d");
+console.log(data);
 	enterState( dataInState );					// This is one of our key tasks
 	packetsIn++;							// For monitoring and statistics
 	serverLiveChannels = data.liveChannels;				// Server live channels are for UI updating
@@ -127,7 +129,9 @@ socketIO.on('d', function (data) {
 			trace("No sequence number for our audio in mix");
 		else
 			while (packetBuf.length) {			// Scan the packet buffer for the packet with this sequence
+console.log("scanning for our packet in the packet buffer");
 				let p = packetBuf.shift();		// Remove the oldest packet from the buffer
+console.log("p.sequence = ",p.sequence," s = ",s);
 				if (p.sequence == s) {			// We have found the right sequence number
 					let a = p.audio;		// Get packet's audio, apply same gain as server applied & subtract from mix
 					for (let i=0; i < a.length; p++) mix[i] = mix[i] - a[i] * venueGain;
