@@ -539,6 +539,9 @@ function generateMix () {
 			"liveChannels"	: liveChannels,			// Include server info about live clients and their queues
 			"commands"	: commands,			// Send commands downstream to reach all client endpoints
 		});
+console.log("sent to group ",group);
+console.log(clientPackets);
+console.log(liveChannels);
 	});
 	// 6. Clean up, trace, monitor, and set timer for next marshalling point limit
 	packetsOut++;							// Sent data so log it and set time limit for next send
