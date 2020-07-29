@@ -99,7 +99,7 @@ var upstreamName = process.env.upstream; 				// Get upstream server from heroku 
 if (upstreamName == undefined)		
 	upstreamName ="";						// If this is empty we will connect later when it is set
 var upstreamServer = require('socket.io-client')(upstreamName);		// Upstream server uses client version of socketIO
-var upstreamServerChannel = -1;
+var upstreamServerChannel = -1;						// Channel assigned to us by upstream server
 var upstreamConnected = false;						// Flag to control sending upstream
 
 function connectUpstreamServer(server) {				// Called when upstream server name is set
@@ -144,7 +144,7 @@ upstreamServer.on('d', function (packet) {
 	}
 	// 2. Subtract our buffered audio from upstream mix
 	let mix = packet.channels[0].audio;				// We are not part of a group so we only get channel 0 (venue) audio
-	let s = packet.channels[0].seqNos[chan.channel];		// Channel 0's comes with a list of the packet seq nos in the mix
+	let s = packet.channels[0].seqNos[upstreamServerChannel];	// Channel 0 comes with list of packet seq nos in mix. Get ours.
 	while (packetBuf.length) {					// Scan our packet buffer for the packet with our sequence
 		let p = packetBuf.shift();				// Remove the oldest packet from the buffer
 		if (p.sequence == s) {					// We have found the right sequence number
