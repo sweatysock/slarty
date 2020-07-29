@@ -525,12 +525,12 @@ function generateMix () {
 			group		: "",				// No group for venue channel
 		}
 	}
-console.log(channel0Packet);
 console.log(groups);
 	channel0Packet.seqNos = seqNos;					// Add to channel 0 packet the list of seqNos that were used
 	channel0Packet.gain = upstreamMixGain;				// and the gain applied. Both are needed to subtract audio in client
 	// 5. Send packets to all clients group by group, adding performer, channel 0 (venue) and group audio, plus group live channels and commands
 	groups.forEach( (g , group) => {
+console.log(g, group);
 		let clientPackets = g.clientPackets;			// Get group specific packets to send to all group members
 		clientPackets.push( channel0Packet );			// Add channel 0 (venue audio) to the packets for every group
 		let liveChannels = g.liveChannels;			// Get group specific live channels list for all members too
@@ -541,6 +541,8 @@ console.log(groups);
 			"liveChannels"	: liveChannels,			// Include server info about live clients and their queues
 			"commands"	: commands,			// Send commands downstream to reach all client endpoints
 		});
+console.log(clientPackets);
+console.log(liveChannels);
 	});
 	// 6. Clean up, trace, monitor, and set timer for next marshalling point limit
 	packetsOut++;							// Sent data so log it and set time limit for next send
