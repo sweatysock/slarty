@@ -114,8 +114,6 @@ socketIO.on('perf', function (data) {					// Performer status notification
 
 // Data coming down from upstream server: Group mix plus separate member audios
 socketIO.on('d', function (data) { 
-console.log("NEW PACKET");
-console.log(data);
 	enterState( dataInState );					// This is one of our key tasks
 	packetsIn++;							// For monitoring and statistics
 	serverLiveChannels = data.liveChannels;				// Server live channels are for UI updating
@@ -134,6 +132,8 @@ console.log(data);
 					let p = packetBuf.shift();	// Remove the oldest packet from the buffer
 					if (p.sequence == s) {		// We have found the right sequence number
 						let a = p.audio;	// Fill mix with my inverted level-corrected audio
+console.log("Buffered audio is...");
+console.log(a);
 						for (let i=0; i < a.length; i++) mix[i] =  -1 * a[i] * venueGain;
 						break;			// Packet found. Stop scanning the packet buffer. 
 					}
@@ -152,6 +152,7 @@ console.log("Mixing channel ",ch);
 					chan.peak = c.peak;		// even if muted
 				if (!chan.muted) {			// We skip a muted channel in the mix
 					let a = c.audio;		// Get the audio from the packet
+console.log(a);
 					let g = (chan.agc 		// Apply gain. If AGC use mix gain, else channel gain
 						? mixOut.gain : chan.gain);	
 g = 1;
@@ -189,7 +190,6 @@ console.log(temp);
 			if (obj.peak > mixOut.peak) mixOut.peak = obj.peak;	// Note peak for display purposes
 if (obj.peak > 0) {
 console.log("output above zero...");
-console.log(mix);
 }
 			spkrBuffer.push(...mix);			// put it on the speaker buffer
 			if (spkrBuffer.length > maxBuffSize) {		// Clip buffer if too full
