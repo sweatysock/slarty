@@ -136,7 +136,8 @@ console.log("venue gain = ",venueGain);
 console.log("my packet in buffer:");
 console.log(a);
 console.log("mix before subtracting my buffer");
-console.log(mix);
+let temp = []; for (let i=0;i < 20;i++) temp[i] = mix[i];
+console.log(temp);
 						for (let i=0; i < a.length; i++) mix[i] =  -1 * a[i] * venueGain;
 						break;			// Packet found. Stop scanning the packet buffer. 
 					}
