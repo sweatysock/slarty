@@ -120,7 +120,6 @@ socketIO.on('d', function (data) {
 	processCommands(data.commands);					// Process commands from server
 	if (micAccessAllowed) {						// Need access to audio before outputting
 		// 1. Channel 0 venue mix from server includes our audio sent a few mS ago. Subtract it using seq no. and gain to stop echo
-		let mix = [];						// We are here to build a mix
 		let venueGain = 0;					// Default venue gain in case there was no channel 0 audio
 		if (data.channels[0] != null) {				// If there is venue audio (can't take it for granted)
 			venueGain = data.channels[0].gain;		// Channel 0's mix has had this gain applied to all its' channels
@@ -133,18 +132,16 @@ socketIO.on('d', function (data) {
 					let p = packetBuf.shift();	// Remove the oldest packet from the buffer
 					if (p.sequence == s) {		// We have found the right sequence number
 						let a = p.audio;	// Fill mix with my inverted level-corrected audio
-console.log("Buffered audio is...");
-console.log(a);
 						for (let i=0; i < a.length; i++) c0audio[i] -= a[i] * venueGain;
 						break;			// Packet found. Stop scanning the packet buffer. 
 					}
 				}
 			}
-		} else mix = new Array(PacketSize).fill(0);		// If there was no venue audio start with silence
+		} 
+		let mix = new Array(PacketSize).fill(0);		// Now we build the mix starting from 0's
 		// 2. Build a mix of all incoming channels. For individuals this is just channel 0, For groups it is more
 		data.channels.forEach(c => {				// Process all audio channel packets sent from server
 			let ch = c.channel;				// Channel number the packet belongs to
-console.log("Mixing channel ",ch);
 			let chan = channels[ch];			// Local data structure for this channel
 			if (c.socketID != socketIO.id) {		// Don't include my audio in mix
 				chan.name = c.name;			// Update local structure's channel name
@@ -153,7 +150,6 @@ console.log("Mixing channel ",ch);
 					chan.peak = c.peak;		// even if muted
 				if (!chan.muted) {			// We skip a muted channel in the mix
 					let a = c.audio;		// Get the audio from the packet
-console.log(a);
 					let g = (chan.agc 		// Apply gain. If AGC use mix gain, else channel gain
 						? mixOut.gain : chan.gain);	
 					chan.gain = g;			// Channel gain level should reflect gain used here
