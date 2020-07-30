@@ -186,6 +186,10 @@ console.log(c.audio);
 			let obj = applyAutoGain(mix, mixOut);		// Trim mix level 
 			mixOut.gain= obj.finalGain;			// Store gain for next loop
 			if (obj.peak > mixOut.peak) mixOut.peak = obj.peak;	// Note peak for display purposes
+if (obj.peak > 0) {
+console.log("output above zero...");
+console.log(mix);
+}
 			spkrBuffer.push(...mix);			// put it on the speaker buffer
 			if (spkrBuffer.length > maxBuffSize) {		// Clip buffer if too full
 				spkrBuffer.splice(0, (spkrBuffer.length-maxBuffSize)); 	
