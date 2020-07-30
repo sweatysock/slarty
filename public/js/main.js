@@ -124,6 +124,7 @@ socketIO.on('d', function (data) {
 		let venueGain = 0;					// Default venue gain in case there was no channel 0 audio
 		if (data.channels[0] != null) {				// If there is venue audio (can't take it for granted)
 			venueGain = data.channels[0].gain;		// Channel 0's mix has had this gain applied to all its' channels
+console.log("venue gain = ",venueGain);
 			let s = data.channels[0].seqNos[myChannel];	// Channel 0's mix contains our audio. This is its sequence no.
 			if (s == null)
 				trace("No sequence number for our audio in mix");
@@ -132,6 +133,10 @@ socketIO.on('d', function (data) {
 					let p = packetBuf.shift();	// Remove the oldest packet from the buffer
 					if (p.sequence == s) {		// We have found the right sequence number
 						let a = p.audio;	// Fill mix with my inverted level-corrected audio
+console.log("my packet in buffer:");
+console.log(a);
+console.log("mix before subtracting my buffer");
+console.log(mix);
 						for (let i=0; i < a.length; i++) mix[i] =  -1 * a[i] * venueGain;
 						break;			// Packet found. Stop scanning the packet buffer. 
 					}
