@@ -125,6 +125,7 @@ socketIO.on('d', function (data) {
 		if (data.channels[0] != null) {				// If there is venue audio (can't take it for granted)
 			venueGain = data.channels[0].gain;		// Channel 0's mix has had this gain applied to all its' channels
 			let s = data.channels[0].seqNos[myChannel];	// Channel 0's mix contains our audio. This is its sequence no.
+			let c0audio = data.channels[0].audio;		// Get the channel 0 audio
 			if (s == null)
 				trace("No sequence number for our audio in mix");
 			else {
@@ -134,7 +135,7 @@ socketIO.on('d', function (data) {
 						let a = p.audio;	// Fill mix with my inverted level-corrected audio
 console.log("Buffered audio is...");
 console.log(a);
-						for (let i=0; i < a.length; i++) mix[i] =  -1 * a[i] * venueGain;
+						for (let i=0; i < a.length; i++) c0audio[i] -= a[i] * venueGain;
 						break;			// Packet found. Stop scanning the packet buffer. 
 					}
 				}
@@ -155,7 +156,6 @@ console.log("Mixing channel ",ch);
 console.log(a);
 					let g = (chan.agc 		// Apply gain. If AGC use mix gain, else channel gain
 						? mixOut.gain : chan.gain);	
-g = 1;
 					chan.gain = g;			// Channel gain level should reflect gain used here
 	  				for (let i=0; i < a.length; i++)// Add channel to mix, subtracting audio already included
 						mix[i] += a[i] * (g - venueGain);	
@@ -190,6 +190,9 @@ console.log(temp);
 			if (obj.peak > mixOut.peak) mixOut.peak = obj.peak;	// Note peak for display purposes
 if (obj.peak > 0) {
 console.log("output above zero...");
+let temp2 = [];
+for (let i=0;i<20;i++) temp2[i] = mix[i];
+console.log(temp2);
 }
 			spkrBuffer.push(...mix);			// put it on the speaker buffer
 			if (spkrBuffer.length > maxBuffSize) {		// Clip buffer if too full
