@@ -132,6 +132,7 @@ socketIO.on('d', function (data) {
 					let p = packetBuf.shift();	// Remove the oldest packet from the buffer
 					if (p.sequence == s) {		// We have found the right sequence number
 						let a = p.audio;	// Fill mix with my inverted level-corrected audio
+console.log(c0audio);
 						for (let i=0; i < a.length; i++) c0audio[i] -= a[i] * venueGain;
 						break;			// Packet found. Stop scanning the packet buffer. 
 					}
@@ -141,7 +142,6 @@ socketIO.on('d', function (data) {
 		// 2. Build a mix of all incoming channels. For individuals this is just channel 0, For groups it is more
 		let mix = new Array(PacketSize).fill(0);		// Now we build the mix starting from 0's
 		data.channels.forEach(c => {				// Process all audio channel packets sent from server
-console.log(c.audio);
 			let ch = c.channel;				// Channel number the packet belongs to
 			let chan = channels[ch];			// Local data structure for this channel
 			if (c.socketID != socketIO.id) {		// Don't include my audio in mix
