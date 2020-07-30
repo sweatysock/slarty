@@ -2,7 +2,7 @@
 //
 const maxBufferSize = 10;						// Max number of packets to store per client
 const mixTriggerLevel = 5;						// When all clients have this many packets we create a mix
-const packetSize = 500;							// Number of samples in the client audio packets
+const PacketSize = 500;							// Number of samples in the client audio packets
 const SampleRate = 16000; 						// All audio in audence runs at this sample rate. 
 const PerfSampleRate = 32000; 						// Global sample rate used for all performer audio
 const MaxOutputLevel = 1;						// Max output level for INT16, for auto gain control
@@ -146,7 +146,7 @@ upstreamServer.on('d', function (packet) {
 	let mix = [];
 	if (packet.channels[0] != null) {
 		mix = packet.channels[0].audio;				// We are not part of a group so we only get channel 0 (venue) audio
-		let venueGain = data.channels[0].gain;			// Channel 0's mix has had this gain applied to all its' channels
+		let venueGain = packet.channels[0].gain;		// Channel 0's mix has had this gain applied to all its' channels
 		let s =packet.channels[0].seqNos[upstreamServerChannel];// Channel 0 comes with list of packet seq nos in mix. Get ours.
 		while (packetBuf.length) {				// Scan our packet buffer for the packet with our sequence
 			let p = packetBuf.shift();			// Remove the oldest packet from the buffer
@@ -450,7 +450,7 @@ function generateMix () {
 	if ((perf.streaming) && (perf.packets.length > 0))		// Pull a performer packet from its queue if any
 		p.packet = perf.packets.shift();			// add to copy of perf to replace the null packet
 	// 2. Generate mix with all channels except 0 (upstream venue track) ready for sending upstream
-	let mix = new Array(packetSize).fill(0);			// Mix of this server's audio to send upstream and also add to venue
+	let mix = new Array(PacketSize).fill(0);			// Mix of this server's audio to send upstream and also add to venue
 	let seqNos = [];						// Array of packet sequence numbers used in the mix (channel is index)
 	let channel0Packet = null;					// The channel 0 (venue) audio packet
 	let groups = [];						// Data collated by group for sending downstream
@@ -554,7 +554,7 @@ function generateMix () {
 		let now = new Date().getTime();
 		if (nextMixTimeLimit == 0) 
 			nextMixTimeLimit = now;				// If this is the first send event then start at now
-		nextMixTimeLimit = nextMixTimeLimit + (packetSize * 1000)/SampleRate;
+		nextMixTimeLimit = nextMixTimeLimit + (PacketSize * 1000)/SampleRate;
 		// MARK Should remove old timeout before creating new one right???
 		clearTimeout(mixTimer);
 		mixTimer = setTimeout( forceMix, (nextMixTimeLimit - now) );	
