@@ -492,7 +492,8 @@ function generateMix () {
 		}
 	});
 	// 3. AGC server mix and send upstream if we have an upstream server connected
-	let obj = applyAutoGain(mix,upstreamMixGain,1);			// Adjust mix level 
+//	let obj = applyAutoGain(mix,upstreamMixGain,1);			// Adjust mix level 
+	let obj = {finalGain:1,peak:maxValue(mix)};
 	upstreamMixGain = obj.finalGain;				// Store gain for next mix auto gain control
 	mixMax = obj.peak;						// For monitoring purposes
 	if (upstreamConnected == true) { 				// Send mix if connected to an upstream server
