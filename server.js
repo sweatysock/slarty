@@ -143,18 +143,20 @@ upstreamServer.on('d', function (packet) {
 		perf.streaming = true;					// performer is now streaming from here
 	}
 	// 2. Subtract our buffered audio from upstream mix
-	let mix = packet.channels[0].audio;				// We are not part of a group so we only get channel 0 (venue) audio
-	let s = packet.channels[0].seqNos[upstreamServerChannel];	// Channel 0 comes with list of packet seq nos in mix. Get ours.
-console.log("about to search for packet in buffer");
-	while (packetBuf.length) {					// Scan our packet buffer for the packet with our sequence
-		let p = packetBuf.shift();				// Remove the oldest packet from the buffer
-		if (p.sequence == s) {					// We have found the right sequence number
-			let a = p.audio;				// Get packet's audio, apply same gain as server applied & subtract from mix
-			for (let i=0; i < a.length; p++) mix[i] = mix[i] - a[i] * p.gain;
-			break;						// Packet found. Stop scanning the packet buffer. 
+	let mix = [];
+	if (packet.channels[0] != null) {
+		mix = packet.channels[0].audio;				// We are not part of a group so we only get channel 0 (venue) audio
+		let venueGain = data.channels[0].gain;			// Channel 0's mix has had this gain applied to all its' channels
+		let s =packet.channels[0].seqNos[upstreamServerChannel];// Channel 0 comes with list of packet seq nos in mix. Get ours.
+		while (packetBuf.length) {				// Scan our packet buffer for the packet with our sequence
+			let p = packetBuf.shift();			// Remove the oldest packet from the buffer
+			if (p.sequence == s) {				// We have found the right sequence number
+				let a = p.audio;			// Subtract my level-corrected audio from mix
+				for (let i=0; i < a.length; i++) mix[i] = mix[i] - a[i] * p.gain;
+				break;					// Packet found. Stop scanning the packet buffer. 
+			}
 		}
-	}
-console.log("search complete");
+	} else mix = new Array(PacketSize).fill(0);			// If there was no venue audio start with silence
 	// 3. Build a channel 0 packet . WHY NOT JUST USE THE CHANNEL 0 PACKET ALREADY???  
 	if (mix.length != 0) {						// If there actually was some audio
 		mix = midBoostFilter(mix);				// Filter upstream audio to made it distant

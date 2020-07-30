@@ -131,7 +131,7 @@ socketIO.on('d', function (data) {
 				while (packetBuf.length) {		// Scan the packet buffer for the packet with this sequence
 					let p = packetBuf.shift();	// Remove the oldest packet from the buffer
 					if (p.sequence == s) {		// We have found the right sequence number
-						let a = p.audio;	// Get packet's audio, apply same gain as server applied & invert
+						let a = p.audio;	// Fill mix with my inverted level-corrected audio
 						for (let i=0; i < a.length; i++) mix[i] =  -1 * a[i] * venueGain;
 						break;			// Packet found. Stop scanning the packet buffer. 
 					}
