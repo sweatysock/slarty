@@ -124,7 +124,7 @@ socketIO.on('d', function (data) {
 		if (data.channels[0] != null) {				// If there is venue audio (can't take it for granted)
 			venueGain = data.channels[0].gain;		// Channel 0's mix has had this gain applied to all its' channels
 			let s = data.channels[0].seqNos[myChannel];	// Channel 0's mix contains our audio. This is its sequence no.
-			let c0audio = data.channels[0].audio;		// Get the channel 0 audio
+			let c0audio = data.channels[0].audio;		// Get channel 0 audio so we can subtract our audio from it
 			if (s == null)
 				trace("No sequence number for our audio in mix");
 			else {
@@ -138,8 +138,8 @@ socketIO.on('d', function (data) {
 				}
 			}
 		} 
-		let mix = new Array(PacketSize).fill(0);		// Now we build the mix starting from 0's
 		// 2. Build a mix of all incoming channels. For individuals this is just channel 0, For groups it is more
+		let mix = new Array(PacketSize).fill(0);		// Now we build the mix starting from 0's
 		data.channels.forEach(c => {				// Process all audio channel packets sent from server
 			let ch = c.channel;				// Channel number the packet belongs to
 			let chan = channels[ch];			// Local data structure for this channel
@@ -164,10 +164,6 @@ socketIO.on('d', function (data) {
 				trace("Sequence jump Channel ",ch," jump ",(c.sequence - chan.seq));
 			chan.seq = c.sequence;
 		});
-console.log("Mix is now...");
-let temp = [];
-for (let i=0;i<20;i++) temp[i] = mix[i];
-console.log(temp);
 		// 3. Upsample the mix, upsample performer audio, mix all together, apply final AGC and send to speaker
 		if (mix.length != 0) {					// If there actually was some audio
 			mix = reSample(mix, SampleRate, soundcardSampleRate, upCache); // Bring mix to HW sampling rate
@@ -184,12 +180,6 @@ console.log(temp);
 			let obj = applyAutoGain(mix, mixOut);		// Trim mix level 
 			mixOut.gain= obj.finalGain;			// Store gain for next loop
 			if (obj.peak > mixOut.peak) mixOut.peak = obj.peak;	// Note peak for display purposes
-if (obj.peak > 0) {
-console.log("output above zero...");
-let temp2 = [];
-for (let i=0;i<20;i++) temp2[i] = mix[i];
-console.log(temp2);
-}
 			spkrBuffer.push(...mix);			// put it on the speaker buffer
 			if (spkrBuffer.length > maxBuffSize) {		// Clip buffer if too full
 				spkrBuffer.splice(0, (spkrBuffer.length-maxBuffSize)); 	
