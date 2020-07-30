@@ -114,7 +114,6 @@ socketIO.on('perf', function (data) {					// Performer status notification
 
 // Data coming down from upstream server: Group mix plus separate member audios
 socketIO.on('d', function (data) { 
-console.log("NEW PACKET");
 console.log(data);
 	enterState( dataInState );					// This is one of our key tasks
 	packetsIn++;							// For monitoring and statistics
@@ -143,7 +142,6 @@ console.log(data);
 		// 2. Build a mix of all incoming channels. For individuals this is just channel 0, For groups it is more
 		data.channels.forEach(c => {				// Process all audio channel packets sent from server
 			let ch = c.channel;				// Channel number the packet belongs to
-console.log("Mixing channel ",ch);
 			let chan = channels[ch];			// Local data structure for this channel
 			if (c.socketID != socketIO.id) {		// Don't include my audio in mix
 				chan.name = c.name;			// Update local structure's channel name
@@ -167,10 +165,6 @@ g = 1;
 				trace("Sequence jump Channel ",ch," jump ",(c.sequence - chan.seq));
 			chan.seq = c.sequence;
 		});
-console.log("Mix is now...");
-let temp = [];
-for (let i=0;i<20;i++) temp[i] = mix[i];
-console.log(temp);
 		// 3. Upsample the mix, upsample performer audio, mix all together, apply final AGC and send to speaker
 		if (mix.length != 0) {					// If there actually was some audio
 			mix = reSample(mix, SampleRate, soundcardSampleRate, upCache); // Bring mix to HW sampling rate
@@ -187,10 +181,6 @@ console.log(temp);
 			let obj = applyAutoGain(mix, mixOut);		// Trim mix level 
 			mixOut.gain= obj.finalGain;			// Store gain for next loop
 			if (obj.peak > mixOut.peak) mixOut.peak = obj.peak;	// Note peak for display purposes
-if (obj.peak > 0) {
-console.log("output above zero...");
-console.log(mix);
-}
 			spkrBuffer.push(...mix);			// put it on the speaker buffer
 			if (spkrBuffer.length > maxBuffSize) {		// Clip buffer if too full
 				spkrBuffer.splice(0, (spkrBuffer.length-maxBuffSize)); 	
