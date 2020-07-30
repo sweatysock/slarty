@@ -155,6 +155,7 @@ console.log("Mixing channel ",ch);
 					let g = (chan.agc 		// Apply gain. If AGC use mix gain, else channel gain
 						? mixOut.gain : chan.gain);	
 					chan.gain = g;			// Channel gain level should reflect gain used here
+console.log("gain is ",g);
 	  				for (let i=0; i < a.length; i++)// Add channel to mix, subtracting audio already included
 						mix[i] += a[i] * (g - venueGain);	
 				}
