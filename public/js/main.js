@@ -135,9 +135,6 @@ console.log("venue gain = ",venueGain);
 						let a = p.audio;	// Fill mix with my inverted level-corrected audio
 console.log("my packet in buffer:");
 console.log(a);
-console.log("mix before subtracting my buffer");
-let temp = []; for (let i=0;i < 20;i++) temp[i] = mix[i];
-console.log(temp);
 						for (let i=0; i < a.length; i++) mix[i] =  -1 * a[i] * venueGain;
 						break;			// Packet found. Stop scanning the packet buffer. 
 					}
@@ -147,9 +144,13 @@ console.log(temp);
 		// 2. Build a mix of all incoming channels. For individuals this is just channel 0, For groups it is more
 		data.channels.forEach(c => {				// Process all audio channel packets sent from server
 			let ch = c.channel;				// Channel number the packet belongs to
-			let chan = channels[ch];			// Internal data structure for this channel
+if (ch == 0) {
+console.log("channel 0 audio...");
+console.log(c.audio);
+}
+			let chan = channels[ch];			// Local data structure for this channel
 			if (c.socketID != socketIO.id) {		// Don't include my audio in mix
-				chan.name = c.name;			// Update internal structure's channel name
+				chan.name = c.name;			// Update local structure's channel name
 				chan.channel = ch;			// Keep channel number too. It helps speed lookups
 				if (chan.peak < c.peak)			// set the peak for this channel's level display
 					chan.peak = c.peak;		// even if muted
