@@ -525,8 +525,7 @@ function generateMix () {
 	// 4. Now that mix has gone upstream build downstream venue mix by adding mix to channel 0
 	if (channel0Packet != null) {					// If there is a venue packet add our mix to venue audio
 		let a = channel0Packet.audio;
-//		for (let i = 0; i < a.length; i++) a[i] = a[i] + mix[i];
-		for (let i = 0; i < a.length; i++) a[i] = mix[i];
+		for (let i = 0; i < a.length; i++) a[i] = a[i] + mix[i];
 	} else {							// No venue audio so use our mix as venue audio
 		channel0Packet = {					// Construct the audio packet
 			name		: "VENUE",			// Give packet main venue name
