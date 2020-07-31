@@ -125,12 +125,12 @@ socketIO.on('d', function (data) {
 			venueGain = data.channels[0].gain;		// Channel 0's mix has had this gain applied to all its' channels
 			let s = data.channels[0].seqNos[myChannel];	// Channel 0's mix contains our audio. This is its sequence no.
 			let c0audio = data.channels[0].audio;		// Get channel 0 audio so we can subtract our audio from it
-if (data.channels[0].peak > 0) {
-console.log("VENUE audio...");
-let temp = [];
-for (i=0;i<20;i++) temp[i] = c0audio[i];
-console.log(temp);
-}
+//if (data.channels[0].peak > 0) {
+//console.log("VENUE audio...");
+//let temp = [];
+//for (i=0;i<20;i++) temp[i] = c0audio[i];
+//console.log(temp);
+//}
 			if (s == null)
 				trace("No sequence number for our audio in mix");
 			else {
@@ -139,17 +139,17 @@ console.log(temp);
 					if (p.sequence == s) {		// We have found the right sequence number
 						let a = p.audio;	// Get our audio, level-correct and subtract it, and then add
 						for (let i=0; i < a.length; i++) // this * venueGain back in for later subtraction
-							c0audio[i] -= venueGain * (a[i] - coaudio[i] + a[i] * venueGain);
+							c0audio[i] -= venueGain * (a[i] - c0audio[i] + a[i] * venueGain);
 						break;			// Packet found. Stop scanning the packet buffer. 
 					}
 				}
 			}
-if (data.channels[0].peak > 0) {
-console.log("venue audio after subtraction and extras...");
-let temp2 = [];
-for (i=0;i<20;i++) temp2[i] = c0audio[i];
-console.log(temp2);
-}
+//if (data.channels[0].peak > 0) {
+//console.log("venue audio after subtraction and extras...");
+//let temp2 = [];
+//for (i=0;i<20;i++) temp2[i] = c0audio[i];
+//console.log(temp2);
+//}
 		} 
 		// 2. Build a mix of all incoming channels. For individuals this is just channel 0, For groups it is more
 		let mix = new Array(PacketSize).fill(0);		// Now we build the mix starting from 0's
@@ -177,10 +177,10 @@ console.log(temp2);
 				trace("Sequence jump Channel ",ch," jump ",(c.sequence - chan.seq));
 			chan.seq = c.sequence;
 		});
-console.log("mix...");
-let temp3 = [];
-for (i=0;i<20;i++) temp3[i] = mix[i];
-console.log(temp3);
+//console.log("mix...");
+//let temp3 = [];
+//for (i=0;i<20;i++) temp3[i] = mix[i];
+//console.log(temp3);
 		// 3. Upsample the mix, upsample performer audio, mix all together, apply final AGC and send to speaker
 		if (mix.length != 0) {					// If there actually was some audio
 			mix = reSample(mix, SampleRate, soundcardSampleRate, upCache); // Bring mix to HW sampling rate
