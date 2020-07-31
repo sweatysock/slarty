@@ -126,6 +126,7 @@ socketIO.on('d', function (data) {
 			let s = c0.seqNos[myChannel];			// Channel 0's mix contains our audio. This is its sequence no.
 			let c0audio = c0.audio;				// Get channel 0 audio so we can subtract our audio from it
 			let c0pCount = c0.pCount;			// Number of packets in venue mix. = all people in venue in fact
+console.log("packet count is ",c0pCount);
 //if (c0.peak > 0) {
 //console.log("VENUE audio...");
 //let temp = [];
@@ -144,7 +145,9 @@ socketIO.on('d', function (data) {
 //for (i=0;i<20;i++) temp4[i] = a[i];
 //console.log(temp4);
 						if (a.length > 0) {	// if it wasn't a silent audio packet that is!
-							venueSize = (venueSize + c0.pCount)/2;		// Rolling average of venue size
+							if (venueSize == 0) venueSize = c0pCount;	// At start set venueSize
+							venueSize = (venueSize + c0pCount)/2;		// Rolling average of venue size
+console.log("venue size is ",venueSize);
 							for (let i=0; i < a.length; i++) 		// Subtract our audio from venue
 								c0audio[i] = ( c0audio[i] 		// and scale venue audio down by
 									- a[i] ) / venueSize;		// the number of people in venue.
