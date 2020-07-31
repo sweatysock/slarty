@@ -61,6 +61,7 @@ var micIn = {								// and for microphone input
 };
 var recording = false;							// Used for testing purposes
 var serverMuted = false;
+var venueSize = 0;							// Number of people in the venue. Used for adjusting venue audio.
 
 function processCommands(newCommands) {					// Apply commands sent from upstream servers
 	if (newCommands.mute != undefined) serverMuted = newCommands.mute; else serverMuted = false;
@@ -120,13 +121,12 @@ socketIO.on('d', function (data) {
 	processCommands(data.commands);					// Process commands from server
 	if (micAccessAllowed) {						// Need access to audio before outputting
 		// 1. Channel 0 venue mix from server includes our audio sent a few mS ago. Subtract it using seq no. and gain to stop echo
-		let venueGain = 0;					// Default venue gain in case there was no channel 0 audio
-		if (data.channels[0] != null) {				// If there is venue audio (can't take it for granted)
-			venueGain = data.channels[0].gain;		// Channel 0's mix has had this gain applied to all its' channels
-			let s = data.channels[0].seqNos[myChannel];	// Channel 0's mix contains our audio. This is its sequence no.
-			let c0audio = data.channels[0].audio;		// Get channel 0 audio so we can subtract our audio from it
-			let c0pCount = data.channels[0].pCount;		// Number of packets in venue mix. = all people in venue in fact
-//if (data.channels[0].peak > 0) {
+		let c0 = data.channels[0];				// Shorthand for channel 0 venue input
+		if (c0 != null) {					// If there is venue audio (can't take it for granted)
+			let s = c0.seqNos[myChannel];			// Channel 0's mix contains our audio. This is its sequence no.
+			let c0audio = c0.audio;				// Get channel 0 audio so we can subtract our audio from it
+			let c0pCount = c0.pCount;			// Number of packets in venue mix. = all people in venue in fact
+//if (c0.peak > 0) {
 //console.log("VENUE audio...");
 //let temp = [];
 //for (i=0;i<20;i++) temp[i] = c0audio[i];
@@ -143,14 +143,18 @@ socketIO.on('d', function (data) {
 //let temp4 = [];
 //for (i=0;i<20;i++) temp4[i] = a[i];
 //console.log(temp4);
-						if (a.length > 0)	// if it wasn't a silent audio packet that is!
-							for (let i=0; i < a.length; i++) c0audio[i] -= venueGain * a[i];
-// Gain adjust mix according to c0pCount to give a fair level of attenuation to venue before mixing with channels and perf audio
-						break;			// Packet found. Stop scanning the packet buffer. 
+						if (a.length > 0) {	// if it wasn't a silent audio packet that is!
+							venueSize = (venueSize + c0.pCount)/2;		// Rolling average of venue size
+							for (let i=0; i < a.length; i++) 		// Subtract our audio from venue
+								c0audio[i] = ( c0audio[i] 		// and scale venue audio down by
+									- a[i] ) / venueSize;		// the number of people in venue.
+							packet.channels[0].peak = maxValue(mix);	// Recalculate venue peak audio
+						}
+						break;			// Packet found so stop scanning the packet buffer. 
 					}
 				}
 			}
-//if (data.channels[0].peak > 0) {
+//if (c0.peak > 0) {
 //console.log("venue audio after subtraction and extras...");
 //let temp2 = [];
 //for (i=0;i<20;i++) temp2[i] = c0audio[i];
@@ -174,8 +178,8 @@ socketIO.on('d', function (data) {
 					chan.gain = g;			// Channel gain level should reflect gain used here
 					if (ch == 0)			// Mix is different for channel 0 just add with gain
 	  					for (let i=0; i < a.length; i++) mix[i] += a[i] * g;	
-					else				// Add channel*g to mix, subtracting audio already included
-	  					for (let i=0; i < a.length; i++) mix[i] += a[i] * (g - venueGain);	
+					else				// Add channel*g to mix less audio in venue mix scaled down
+	  					for (let i=0; i < a.length; i++) mix[i] += a[i] * (g - 1/venueSize);	
 				}
 			} else {					// This is my own data come back
 				let now = new Date().getTime();

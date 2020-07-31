@@ -31,7 +31,6 @@ var perf = {								// Performer data structure
 }
 var packetBuf = [];							// Buffer of packets sent, subtracted from venue mix later
 var venueSequence = 0;							// Sequence counter for venue sound going downstream
-var upstreamMixGain = 1;						// Gain applied to the mix sent upstream 
 var upSequence = 0;							// Sequence counter for sending upstream
 // Mix generation is done as fast as data comes in, but should keep up a rhythmn even if downstream audio isn't sufficient....
 var nextMixTimeLimit = 0;						// The time the next mix must be sent is here:
@@ -146,7 +145,6 @@ upstreamServer.on('d', function (packet) {
 	let mix = [];
 	if (packet.channels[0] != null) {
 		mix = packet.channels[0].audio;				// We are not part of a group so we only get channel 0 (venue) audio
-		let venueGain = packet.channels[0].gain;		// Channel 0's mix has had this gain applied to all its' channels
 		let s =packet.channels[0].seqNos[upstreamServerChannel];// Channel 0 comes with list of packet seq nos in mix. Get ours.
 		while (packetBuf.length) {				// Scan our packet buffer for the packet with our sequence
 			let p = packetBuf.shift();			// Remove the oldest packet from the buffer
@@ -156,7 +154,7 @@ upstreamServer.on('d', function (packet) {
 //let temp = [];
 //for (i=0;i<20;i++) temp[i]=mix[i];
 //console.log(temp);
-				for (let i=0; i < a.length; i++) mix[i] = mix[i] - a[i] * venueGain;
+				for (let i=0; i < a.length; i++) mix[i] = mix[i] - a[i];
 //console.log("upstream mix AFTER subtracting");
 //let temp2 = [];
 //for (i=0;i<20;i++) temp2[i]=mix[i];
@@ -168,11 +166,10 @@ upstreamServer.on('d', function (packet) {
 	// 3. Build a channel 0 packet . WHY NOT JUST USE THE CHANNEL 0 PACKET ALREADY???  
 	if (mix.length != 0) {						// If there actually was some audio
 		mix = midBoostFilter(mix);				// Filter upstream audio to made it distant
-		upstreamMax = packet.channels[0].peak;			// For monitoring purposes
 		let p = {						// Construct the audio packet
 			name		: channels[0].name,		// Give packet our channel name
 			audio		: mix,				// The audio is the mix just prepared
-			peak		: upstreamMax,			// Provide peak value to save effort
+			peak		: 99,				// This is calculated in the client.  99 = intentionally not set.
 			timestamp	: 0,				// Channel 0 (venue) audio never returns so no rtt to measure
 			sequence	: venueSequence++,		// Sequence number for tracking quality
 			channel		: 0,				// Upstream is assigned channel 0 everywhere
@@ -365,46 +362,6 @@ function maxValue( arr ) { 						// Find max value in an array
 	return max;
 }
 
-function applyAutoGain(audio, startGain, maxGain) {			// Auto gain control
-	const MaxOutputLevel = 1;					// Max output level permitted
-	let tempGain, maxLevel, endGain, p, x, transitionLength; 
-	maxLevel = maxValue(audio);					// Find peak audio level 
-	endGain = MaxOutputLevel / maxLevel;				// Desired gain to avoid overload
-	maxLevel = 0;							// Use this to capture peak
-	if (endGain > maxGain) endGain = maxGain;			// Gain is limited to maxGain
-	if (endGain >= startGain) {					// Gain adjustment speed varies
-		transitionLength = audio.length;			// Gain increases are gentle
-		endGain = startGain + ((endGain - startGain)/10);	// Slow the rate of gain change
-	}
-	else
-		transitionLength = Math.floor(audio.length/10);		// Gain decreases are fast
-	tempGain = startGain;						// Start at current gain level
-	for (let i = 0; i < transitionLength; i++) {			// Adjust gain over transition
-		x = i/transitionLength;
-		if (i < (2*transitionLength/3))				// Use the Magic formula
-			p = 3*x*x/2;
-		else
-			p = -3*x*x + 6*x -2;
-		tempGain = startGain + (endGain - startGain) * p;
-		audio[i] = audio[i] * tempGain;
-		if (audio[i] >= MaxOutputLevel) audio[i] = MaxOutputLevel;
-		else if (audio[i] <= (MaxOutputLevel * -1)) audio[i] = MaxOutputLevel * -1;
-		x = Math.abs(audio[i]);
-		if (x > maxLevel) maxLevel = x;
-	}
-	if (transitionLength != audio.length) {				// Still audio left to adjust?
-		tempGain = endGain;					// Apply endGain to rest
-		for (let i = transitionLength; i < audio.length; i++) {
-			audio[i] = audio[i] * tempGain;
-			if (audio[i] >= MaxOutputLevel) audio[i] = MaxOutputLevel;
-			else if (audio[i] <= (MaxOutputLevel * -1)) audio[i] = MaxOutputLevel * -1;
-			x = Math.abs(audio[i]);
-			if (x > maxLevel) maxLevel = x;
-		}
-	}
-	return { finalGain: endGain, peak: maxLevel };
-}
-
 var prevFilt1In = 0;							// Save last in & out samples for high pass filter
 var prevFilt1Out = 0;
 function midBoostFilter(audioIn) {					// Filter to boost mids giving distant sound
@@ -502,10 +459,7 @@ function generateMix () {
 		}
 	});
 	// 3. AGC server mix and send upstream if we have an upstream server connected
-//	let obj = applyAutoGain(mix,upstreamMixGain,1);			// Adjust mix level 
-	let obj = {finalGain:1,peak:maxValue(mix)};
-	upstreamMixGain = obj.finalGain;				// Store gain for next mix auto gain control
-	mixMax = obj.peak;						// For monitoring purposes
+	mixMax =  maxValue(mix);					// For monitoring purposes
 	if (upstreamConnected == true) { 				// Send mix if connected to an upstream server
 		let now = new Date().getTime();
 		let packet = {						// Build the packet the same as any client packet
@@ -514,7 +468,7 @@ function generateMix () {
 			pCount		: totalPacketCount,		// Packets in mix incl downstream mix packets
 			sequence	: upSequence++,			// Good for data integrity checks
 			timestamp	: now,				// Used for round trip time measurements
-			peak 		: obj.peak,			// Saves having to calculate again
+			peak 		: mixMax,			// Saves having to calculate again
 			channel		: upstreamServerChannel,	// Send assigned channel to help server
 			recording	: false,			// Make sure the upstream server never records
 			sampleRate	: SampleRate,			// Send sample rate to help processing
@@ -543,7 +497,6 @@ function generateMix () {
 		}
 	}
 	channel0Packet.seqNos = seqNos;					// Add to channel 0 packet the list of seqNos that were used
-	channel0Packet.gain = upstreamMixGain;				// and the gain applied. Both are needed to subtract audio in client
 	// 5. Send packets to all clients group by group, adding performer, channel 0 (venue) and group audio, plus group live channels and commands
 	for (group in groups) {
 		let g = groups[group];
