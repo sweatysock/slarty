@@ -143,13 +143,13 @@ console.log(temp);
 						break;			// Packet found. Stop scanning the packet buffer. 
 					}
 				}
+			}
 if (data.channels[0].peak > 0) {
 console.log("venue audio after subtraction and extras...");
 let temp2 = [];
 for (i=0;i<20;i++) temp2[i] = c0audio[i];
 console.log(temp2);
 }
-			}
 		} 
 		// 2. Build a mix of all incoming channels. For individuals this is just channel 0, For groups it is more
 		let mix = new Array(PacketSize).fill(0);		// Now we build the mix starting from 0's
@@ -179,7 +179,7 @@ console.log(temp2);
 		});
 console.log("mix...");
 let temp3 = [];
-for (i=0;i<20;i++) temp3[i] = c0audio[i];
+for (i=0;i<20;i++) temp3[i] = mix[i];
 console.log(temp3);
 		// 3. Upsample the mix, upsample performer audio, mix all together, apply final AGC and send to speaker
 		if (mix.length != 0) {					// If there actually was some audio
