@@ -463,6 +463,7 @@ function generateMix () {
 	let channel0Packet = null;					// The channel 0 (venue) audio packet
 	let groups = [];						// Data collated by group for sending downstream
 	let packetCount = 0;						// Keep count of packets that make the mix
+	let totalPacketCount = 0;					// Count accumulated packets in mix incl. downstream server mixes
 	channels.forEach( (c, chan) => {				// Review all channels for audio and activity, and build server mix
 		if (c.name != "")					// If channel is active it will have a name
 			if (groups[c.group] == null)			// If first member of group the entry will be null
@@ -483,7 +484,8 @@ function generateMix () {
 				c.playhead = 0;				// Set buffer play position to the start
 			}
 			else {						// Got a packet. Now store it and build server mix
-				packetCount++;				// Count how many packets have made the mix
+				packetCount++;				// Count how many packets have made the mix for tracing
+				totalPacketCount += packet.pCount;	// Add the packets that made up this packet's audio (may be from downstream server)
 				if (c.group != "individual") {		// Keep packets and live channels for group members (not individuals)
 					groups[c.group].clientPackets.push( packet );
 					groups[c.group].liveChannels[chan] = true;
@@ -507,15 +509,16 @@ function generateMix () {
 	if (upstreamConnected == true) { 				// Send mix if connected to an upstream server
 		let now = new Date().getTime();
 		let packet = {						// Build the packet the same as any client packet
-			"name"		: myServerName,			// Let others know which server this comes from
-			"audio"		: mix,				// Level controlled mix of all clients here
-			"sequence"	: upSequence++,			// Good for data integrity checks
-			"timestamp"	: now,				// Used for round trip time measurements
-			"peak" 		: obj.peak,			// Saves having to calculate again
-			"channel"	: upstreamServerChannel,	// Send assigned channel to help server
-			"recording"	: false,			// Make sure the upstream server never records
-			"sampleRate"	: SampleRate,			// Send sample rate to help processing
-			"group"		: "individual",			// Not part of a group in upstream server
+			name		: myServerName,			// Let others know which server this comes from
+			audio		: mix,				// Level controlled mix of all clients here
+			pCount		: totalPacketCount,		// Packets in mix incl downstream mix packets
+			sequence	: upSequence++,			// Good for data integrity checks
+			timestamp	: now,				// Used for round trip time measurements
+			peak 		: obj.peak,			// Saves having to calculate again
+			channel		: upstreamServerChannel,	// Send assigned channel to help server
+			recording	: false,			// Make sure the upstream server never records
+			sampleRate	: SampleRate,			// Send sample rate to help processing
+			group		: "individual",			// Not part of a group in upstream server
 			// MARK send liveChannels upstream
 		};
 		upstreamServer.emit("u",packet); 			// Send the packet upstream
@@ -530,6 +533,7 @@ function generateMix () {
 		channel0Packet = {					// Construct the audio packet
 			name		: "VENUE",			// Give packet main venue name
 			audio		: mix,				// Venue audio is the mix just prepared
+			pCount		: totalPacketCount,		// Packets in mix incl all downstream mix packets
 			peak		: obj.peak,			// Provide peak value to save effort
 			timestamp	: 0,				// No need to trace RTT here
 			sequence	: venueSequence++,		// Sequence number for tracking quality
@@ -548,10 +552,10 @@ function generateMix () {
 		let liveChannels = g.liveChannels;			// Get group specific live channels list for all members too
 		liveChannels[0] = true;					// Add channel 0 to the live channels list for all members
 		io.sockets.in(group).emit('d', {			// Send to all group members group specific data
-			"perf"		: p,				// Send performer audio/video packet + other flags
-			"channels"	: clientPackets,		// All channels in this server plus filtered upstream mix
-			"liveChannels"	: liveChannels,			// Include server info about live clients and their queues
-			"commands"	: commands,			// Send commands downstream to reach all client endpoints
+			perf		: p,				// Send performer audio/video packet + other flags
+			channels	: clientPackets,		// All channels in this server plus filtered upstream mix
+			liveChannels	: liveChannels,			// Include server info about live clients and their queues
+			commands	: commands,			// Send commands downstream to reach all client endpoints
 		});
 	}
 	// 6. Clean up, trace, monitor, and set timer for next marshalling point limit

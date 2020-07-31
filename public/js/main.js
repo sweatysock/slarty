@@ -125,6 +125,7 @@ socketIO.on('d', function (data) {
 			venueGain = data.channels[0].gain;		// Channel 0's mix has had this gain applied to all its' channels
 			let s = data.channels[0].seqNos[myChannel];	// Channel 0's mix contains our audio. This is its sequence no.
 			let c0audio = data.channels[0].audio;		// Get channel 0 audio so we can subtract our audio from it
+			let c0pCount = data.channels[0].pCount;		// Number of packets in venue mix. = all people in venue in fact
 //if (data.channels[0].peak > 0) {
 //console.log("VENUE audio...");
 //let temp = [];
@@ -137,13 +138,14 @@ socketIO.on('d', function (data) {
 				while (packetBuf.length) {		// Scan the packet buffer for the packet with this sequence
 					let p = packetBuf.shift();	// Remove the oldest packet from the buffer
 					if (p.sequence == s) {		// We have found the right sequence number
-						let a = p.audio;	// Get our audio, level-correct and subtract it from channel 0/venue 
+						let a = p.audio;	// Get our audio, level-correct and subtract it from channel 0(venue)
 //console.log("our audio...");
 //let temp4 = [];
 //for (i=0;i<20;i++) temp4[i] = a[i];
 //console.log(temp4);
-						for (let i=0; i < a.length; i++) // this * venueGain back in for later subtraction
-							c0audio[i] -= venueGain * a[i];
+						if (a.length > 0)	// if it wasn't a silent audio packet that is!
+							for (let i=0; i < a.length; i++) c0audio[i] -= venueGain * a[i];
+// Gain adjust mix according to c0pCount to give a fair level of attenuation to venue before mixing with channels and perf audio
 						break;			// Packet found. Stop scanning the packet buffer. 
 					}
 				}
@@ -726,15 +728,16 @@ function processAudio(e) {						// Main processing loop
 			}
 			let now = new Date().getTime();
 			let packet = {
-				"name"		: myName,		// Send the name we have chosen 
-				"audio"		: inAudio,		// Resampled, level-corrected audio
-				"sequence"	: packetSequence,	// Usefull for detecting data losses
-				"timestamp"	: now,			// Used to measure round trip time
-				"peak" 		: peak,			// Saves others having to calculate again
-				"channel"	: myChannel,		// Send assigned channel to help server
-				"recording"	: recording,		// Flag used for recording - test function
-				"sampleRate"	: sr,			// Send sample rate to help processing
-				"group"		: myGroup,		// Group name this user belings to
+				name		: myName,		// Send the name we have chosen 
+				audio		: inAudio,		// Resampled, level-corrected audio
+				pCount		: 1,			// This is audio from a single source
+				sequence	: packetSequence,	// Usefull for detecting data losses
+				timestamp	: now,			// Used to measure round trip time
+				peak 		: peak,			// Saves others having to calculate again
+				channel		: myChannel,		// Send assigned channel to help server
+				recording	: recording,		// Flag used for recording - test function
+				sampleRate	: sr,			// Send sample rate to help processing
+				group		: myGroup,		// Group name this user belings to
 			};
 			socketIO.emit("u",packet);
 			packetBuf.push(packet);				// Add sent packet to LILO buffer for echo cancelling 
