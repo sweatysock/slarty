@@ -146,12 +146,12 @@ console.log("packet count is ",c0pCount);
 //console.log(temp4);
 						if (a.length > 0) {	// if it wasn't a silent audio packet that is!
 							if (venueSize == 0) venueSize = c0pCount;	// At start set venueSize
-							venueSize = (venueSize + c0pCount)/2;		// Rolling average of venue size
+							venueSize = (venueSize + c0pCount)/2;		// Smoothed average of venue size
 console.log("venue size is ",venueSize);
 							for (let i=0; i < a.length; i++) 		// Subtract our audio from venue
 								c0audio[i] = ( c0audio[i] 		// and scale venue audio down by
 									- a[i] ) / venueSize;		// the number of people in venue.
-							c0.peak = maxValue(mix);			// Recalculate venue peak audio
+							c0.peak = maxValue(c0audio);			// Recalculate venue peak audio
 						}
 						break;			// Packet found so stop scanning the packet buffer. 
 					}
