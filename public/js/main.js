@@ -137,13 +137,13 @@ console.log(temp);
 				while (packetBuf.length) {		// Scan the packet buffer for the packet with this sequence
 					let p = packetBuf.shift();	// Remove the oldest packet from the buffer
 					if (p.sequence == s) {		// We have found the right sequence number
-						let a = p.audio;	// Get our audio, level-correct and subtract it, and then add
+						let a = p.audio;	// Get our audio, level-correct and subtract it from channel 0/venue 
 console.log("our audio...");
 let temp4 = [];
 for (i=0;i<20;i++) temp4[i] = a[i];
 console.log(temp4);
 						for (let i=0; i < a.length; i++) // this * venueGain back in for later subtraction
-							c0audio[i] -= venueGain * (a[i] - c0audio[i] + a[i] * venueGain);
+							c0audio[i] -= venueGain * a[i];
 						break;			// Packet found. Stop scanning the packet buffer. 
 					}
 				}
@@ -170,8 +170,10 @@ console.log(temp2);
 					let g = (chan.agc 		// Apply gain. If AGC use mix gain, else channel gain
 						? mixOut.gain : chan.gain);	
 					chan.gain = g;			// Channel gain level should reflect gain used here
-	  				for (let i=0; i < a.length; i++)// Add channel to mix, subtracting audio already included
-						mix[i] += a[i] * (g - venueGain);	
+					if (ch == 0)			// Mix is different for channel 0 just add with gain
+	  					for (let i=0; i < a.length; i++) mix[i] += a[i] * g;	
+					else				// Add channel*g to mix, subtracting audio already included
+	  					for (let i=0; i < a.length; i++) mix[i] += a[i] * (g - venueGain);	
 				}
 			} else {					// This is my own data come back
 				let now = new Date().getTime();
