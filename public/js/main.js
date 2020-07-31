@@ -127,12 +127,12 @@ socketIO.on('d', function (data) {
 			let c0audio = c0.audio;				// Get channel 0 audio so we can subtract our audio from it
 			let c0pCount = c0.pCount;			// Number of packets in venue mix. = all people in venue in fact
 console.log("packet count is ",c0pCount);
-//if (c0.peak > 0) {
-//console.log("VENUE audio...");
-//let temp = [];
-//for (i=0;i<20;i++) temp[i] = c0audio[i];
-//console.log(temp);
-//}
+if (c0.peak > 0) {
+console.log("VENUE audio...");
+let temp = [];
+for (i=0;i<20;i++) temp[i] = c0audio[i];
+console.log(temp);
+}
 			if (s == null)
 				trace("No sequence number for our audio in mix");
 			else {
@@ -140,10 +140,10 @@ console.log("packet count is ",c0pCount);
 					let p = packetBuf.shift();	// Remove the oldest packet from the buffer
 					if (p.sequence == s) {		// We have found the right sequence number
 						let a = p.audio;	// Get our audio, level-correct and subtract it from channel 0(venue)
-//console.log("our audio...");
-//let temp4 = [];
-//for (i=0;i<20;i++) temp4[i] = a[i];
-//console.log(temp4);
+console.log("our audio...");
+let temp4 = [];
+for (i=0;i<20;i++) temp4[i] = a[i];
+console.log(temp4);
 						if (a.length > 0) {	// if it wasn't a silent audio packet that is!
 							if (venueSize == 0) venueSize = c0pCount;	// At start set venueSize
 							venueSize = (venueSize + c0pCount)/2;		// Smoothed average of venue size
@@ -157,12 +157,12 @@ console.log("venue size is ",venueSize);
 					}
 				}
 			}
-//if (c0.peak > 0) {
-//console.log("venue audio after subtraction and extras...");
-//let temp2 = [];
-//for (i=0;i<20;i++) temp2[i] = c0audio[i];
-//console.log(temp2);
-//}
+if (c0.peak > 0) {
+console.log("venue audio after subtraction and extras...");
+let temp2 = [];
+for (i=0;i<20;i++) temp2[i] = c0audio[i];
+console.log(temp2);
+}
 		} 
 		// 2. Build a mix of all incoming channels. For individuals this is just channel 0, For groups it is more
 		let mix = new Array(PacketSize).fill(0);		// Now we build the mix starting from 0's
