@@ -159,6 +159,7 @@ upstreamServer.on('d', function (packet) {
 //let temp2 = [];
 //for (i=0;i<20;i++) temp2[i]=mix[i];
 //console.log(temp2);
+				//
 				break;					// Packet found. Stop scanning the packet buffer. 
 			}
 		}
