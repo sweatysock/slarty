@@ -131,16 +131,9 @@ socketIO.on('d', function (data) {
 				while (packetBuf.length) {		// Scan the packet buffer for the packet with this sequence
 					let p = packetBuf.shift();	// Remove the oldest packet from the buffer
 					if (p.sequence == s) {		// We have found the right sequence number
-						let a = p.audio;	// Fill mix with my inverted level-corrected audio
-console.log("chan 0 audio before subtracting");
-let temp = [];
-for (i=0;i<20;i++) temp[i]=c0audio[i];
-console.log(temp);
-						for (let i=0; i < a.length; i++) c0audio[i] -= a[i] * venueGain;
-console.log("chan 0 audio after subtracting");
-let temp2 = [];
-for (i=0;i<20;i++) temp2[i]=c0audio[i];
-console.log(temp2);
+						let a = p.audio;	// Get our audio, level-correct and subtract it, and then add
+						for (let i=0; i < a.length; i++) // this * venueGain back in for later subtraction
+							c0audio[i] -= venueGain * (a[i] - coaudio[i] + a[i] * venueGain);
 						break;			// Packet found. Stop scanning the packet buffer. 
 					}
 				}

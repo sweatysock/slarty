@@ -152,7 +152,15 @@ upstreamServer.on('d', function (packet) {
 			let p = packetBuf.shift();			// Remove the oldest packet from the buffer
 			if (p.sequence == s) {				// We have found the right sequence number
 				let a = p.audio;			// Subtract my level-corrected audio from mix
+console.log("upstream mix before subtracting");
+let temp = [];
+for (i=0;i<20;i++) temp[i]=mix[i];
+console.log(temp);
 				for (let i=0; i < a.length; i++) mix[i] = mix[i] - a[i] * venueGain;
+console.log("upstream mix AFTER subtracting");
+let temp2 = [];
+for (i=0;i<20;i++) temp2[i]=mix[i];
+console.log(temp2);
 				break;					// Packet found. Stop scanning the packet buffer. 
 			}
 		}
