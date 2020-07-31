@@ -171,6 +171,7 @@ upstreamServer.on('d', function (packet) {
 			name		: channels[0].name,		// Give packet our channel name
 			audio		: mix,				// The audio is the mix just prepared
 			peak		: 99,				// This is calculated in the client.  99 = intentionally not set.
+			pCount		: channels[0].pCount - 1,	// Packets in mix from upstream minus ours (just removed)
 			timestamp	: 0,				// Channel 0 (venue) audio never returns so no rtt to measure
 			sequence	: venueSequence++,		// Sequence number for tracking quality
 			channel		: 0,				// Upstream is assigned channel 0 everywhere
@@ -420,7 +421,7 @@ function generateMix () {
 	let seqNos = [];						// Array of packet sequence numbers used in the mix (channel is index)
 	let channel0Packet = null;					// The channel 0 (venue) audio packet
 	let groups = [];						// Data collated by group for sending downstream
-	let packetCount = 0;						// Keep count of packets that make the mix
+	let packetCount = 0;						// Keep count of packets that make the mix for monitoring
 	let totalPacketCount = 0;					// Count accumulated packets in mix incl. downstream server mixes
 	channels.forEach( (c, chan) => {				// Review all channels for audio and activity, and build server mix
 		if (c.name != "")					// If channel is active it will have a name
@@ -459,14 +460,14 @@ function generateMix () {
 			}
 		}
 	});
-	// 3. AGC server mix and send upstream if we have an upstream server connected
-	mixMax =  maxValue(mix);					// For monitoring purposes
+	// 3. Build server mix packet and send upstream if we have an upstream server connected
+	mixMax =  maxValue(mix);					// Note peak value
 	if (upstreamConnected == true) { 				// Send mix if connected to an upstream server
 		let now = new Date().getTime();
 		let packet = {						// Build the packet the same as any client packet
 			name		: myServerName,			// Let others know which server this comes from
 			audio		: mix,				// Level controlled mix of all clients here
-			pCount		: totalPacketCount,		// Packets in mix incl downstream mix packets
+			pCount		: totalPacketCount,		// Packets in mix incl any downstream mix packets
 			sequence	: upSequence++,			// Good for data integrity checks
 			timestamp	: now,				// Used for round trip time measurements
 			peak 		: mixMax,			// Saves having to calculate again
@@ -484,7 +485,7 @@ function generateMix () {
 	if (channel0Packet != null) {					// If there is a venue packet add our mix to venue audio
 		let a = channel0Packet.audio;
 		for (let i = 0; i < a.length; i++) a[i] = a[i] + mix[i];
-	} else {							// No venue audio so use our mix as venue audio
+	} else {							// No venue audio so use our mix as mian venue audio
 		channel0Packet = {					// Construct the audio packet
 			name		: "VENUE",			// Give packet main venue name
 			audio		: mix,				// Venue audio is the mix just prepared

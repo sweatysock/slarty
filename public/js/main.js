@@ -151,7 +151,7 @@ console.log("venue size is ",venueSize);
 							for (let i=0; i < a.length; i++) 		// Subtract our audio from venue
 								c0audio[i] = ( c0audio[i] 		// and scale venue audio down by
 									- a[i] ) / venueSize;		// the number of people in venue.
-							packet.channels[0].peak = maxValue(mix);	// Recalculate venue peak audio
+							c0.peak = maxValue(mix);			// Recalculate venue peak audio
 						}
 						break;			// Packet found so stop scanning the packet buffer. 
 					}
