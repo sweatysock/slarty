@@ -125,6 +125,12 @@ socketIO.on('d', function (data) {
 			venueGain = data.channels[0].gain;		// Channel 0's mix has had this gain applied to all its' channels
 			let s = data.channels[0].seqNos[myChannel];	// Channel 0's mix contains our audio. This is its sequence no.
 			let c0audio = data.channels[0].audio;		// Get channel 0 audio so we can subtract our audio from it
+if (data.channels[0].peak > 0) {
+console.log("VENUE audio...");
+let temp = [];
+for (i=0;i<20;i++) temp[i] = c0audio[i];
+console.log(temp);
+}
 			if (s == null)
 				trace("No sequence number for our audio in mix");
 			else {
@@ -137,6 +143,12 @@ socketIO.on('d', function (data) {
 						break;			// Packet found. Stop scanning the packet buffer. 
 					}
 				}
+if (data.channels[0].peak > 0) {
+console.log("venue audio after subtraction and extras...");
+let temp2 = [];
+for (i=0;i<20;i++) temp2[i] = c0audio[i];
+console.log(temp2);
+}
 			}
 		} 
 		// 2. Build a mix of all incoming channels. For individuals this is just channel 0, For groups it is more
@@ -165,6 +177,10 @@ socketIO.on('d', function (data) {
 				trace("Sequence jump Channel ",ch," jump ",(c.sequence - chan.seq));
 			chan.seq = c.sequence;
 		});
+console.log("mix...");
+let temp3 = [];
+for (i=0;i<20;i++) temp3[i] = c0audio[i];
+console.log(temp3);
 		// 3. Upsample the mix, upsample performer audio, mix all together, apply final AGC and send to speaker
 		if (mix.length != 0) {					// If there actually was some audio
 			mix = reSample(mix, SampleRate, soundcardSampleRate, upCache); // Bring mix to HW sampling rate
