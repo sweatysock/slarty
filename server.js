@@ -489,7 +489,7 @@ function generateMix () {
 			name		: "VENUE",			// Give packet main venue name
 			audio		: mix,				// Venue audio is the mix just prepared
 			pCount		: totalPacketCount,		// Packets in mix incl all downstream mix packets
-			peak		: obj.peak,			// Provide peak value to save effort
+			peak		: 99,				// This is calculated in the client.  99 = intentionally not set.
 			timestamp	: 0,				// No need to trace RTT here
 			sequence	: venueSequence++,		// Sequence number for tracking quality
 			channel		: 0,				// Upstream is assigned channel 0 everywhere
