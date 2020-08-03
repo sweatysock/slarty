@@ -129,7 +129,7 @@ socketIO.on('d', function (data) {
 //console.log("packet count is ",c0pCount);
 //if (c0.peak > 0) {
 //console.log("VENUE audio...");
-let tempc0 = [];
+var tempc0 = [];
 for (i=0;i<20;i++) tempc0[i] = c0audio[i];
 //console.log(tempc0);
 //}
@@ -142,7 +142,7 @@ for (i=0;i<20;i++) tempc0[i] = c0audio[i];
 						let a = p.audio;	// Get our audio, level-correct and subtract it from channel 0(venue)
 						if (a.length > 0) {	// if it wasn't a silent audio packet that is!
 //console.log("our audio...");
-let tempMy = [];
+var tempMy = [];
 for (i=0;i<20;i++) tempMy[i] = a[i];
 //console.log(temp4);
 							if (venueSize == 0) venueSize = c0pCount;	// At start set venueSize
@@ -159,7 +159,7 @@ for (i=0;i<20;i++) tempMy[i] = a[i];
 		c0.peak = maxValue(c0audio);				// Venue audio is ready. Get peak audio for display 
 //if (c0.peak > 0) {
 //console.log("venue audio after subtraction and extras...");
-let tempVenue = [];
+var tempVenue = [];
 for (i=0;i<20;i++) tempVenue[i] = c0audio[i];
 //console.log(temp2);
 //}
@@ -193,7 +193,7 @@ for (i=0;i<20;i++) tempVenue[i] = c0audio[i];
 			chan.seq = c.sequence;
 		});
 //console.log("mix...");
-let tempMix = [];
+var tempMix = [];
 for (i=0;i<20;i++) tempMix[i] = mix[i];
 //console.log(temp3);
 		// 3. Upsample the mix, upsample performer audio, mix all together, apply final AGC and send to speaker
