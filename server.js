@@ -175,7 +175,7 @@ upstreamServer.on('d', function (packet) {
 			name		: channels[0].name,		// Give packet our channel name
 			audio		: mix,				// The audio is the mix just prepared
 			peak		: 99,				// This is calculated in the client.  99 = intentionally not set.
-			liveClients	: channel[0].liveClients,	// Clients visible to upstream server = total venue capacity
+			liveClients	: channels[0].liveClients,	// Clients visible to upstream server = total venue capacity
 			timestamp	: 0,				// Channel 0 (venue) audio never returns so no rtt to measure
 			sequence	: venueSequence++,		// Sequence number for tracking quality
 			channel		: 0,				// Upstream is assigned channel 0 everywhere
