@@ -461,6 +461,7 @@ function generateMix () {
 			}
 		}
 	});
+console.log("channels = ",channels.length,"total clients = ",totalLiveClients);
 	// 3. Build server mix packet and send upstream if we have an upstream server connected
 	mixMax =  maxValue(mix);					// Note peak value
 	if (upstreamConnected == true) { 				// Send mix if connected to an upstream server
