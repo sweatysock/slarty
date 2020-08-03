@@ -129,9 +129,9 @@ socketIO.on('d', function (data) {
 //console.log("packet count is ",c0pCount);
 //if (c0.peak > 0) {
 //console.log("VENUE audio...");
-//let temp = [];
-//for (i=0;i<20;i++) temp[i] = c0audio[i];
-//console.log(temp);
+let tempc0 = [];
+for (i=0;i<20;i++) tempc0[i] = c0audio[i];
+//console.log(tempc0);
 //}
 			if (s == null)
 				trace("No sequence number for our audio in mix");
@@ -142,8 +142,8 @@ socketIO.on('d', function (data) {
 						let a = p.audio;	// Get our audio, level-correct and subtract it from channel 0(venue)
 						if (a.length > 0) {	// if it wasn't a silent audio packet that is!
 //console.log("our audio...");
-//let temp4 = [];
-//for (i=0;i<20;i++) temp4[i] = a[i];
+let tempMy = [];
+for (i=0;i<20;i++) tempMy[i] = a[i];
 //console.log(temp4);
 							if (venueSize == 0) venueSize = c0pCount;	// At start set venueSize
 							venueSize = (venueSize + c0pCount)/2;		// Smoothed average of venue size
@@ -159,8 +159,8 @@ socketIO.on('d', function (data) {
 		c0.peak = maxValue(c0audio);				// Venue audio is ready. Get peak audio for display 
 //if (c0.peak > 0) {
 //console.log("venue audio after subtraction and extras...");
-//let temp2 = [];
-//for (i=0;i<20;i++) temp2[i] = c0audio[i];
+let tempVenue = [];
+for (i=0;i<20;i++) tempVenue[i] = c0audio[i];
 //console.log(temp2);
 //}
 		} 
@@ -193,8 +193,8 @@ socketIO.on('d', function (data) {
 			chan.seq = c.sequence;
 		});
 //console.log("mix...");
-//let temp3 = [];
-//for (i=0;i<20;i++) temp3[i] = mix[i];
+let tempMix = [];
+for (i=0;i<20;i++) tempMix[i] = mix[i];
 //console.log(temp3);
 		// 3. Upsample the mix, upsample performer audio, mix all together, apply final AGC and send to speaker
 		if (mix.length != 0) {					// If there actually was some audio
@@ -209,7 +209,15 @@ socketIO.on('d', function (data) {
 					mix[i] += a[i];			// Performer audio goes straight into mix
 			}
 if (maxValue(mix) > 2) {
+console.log("raw c0...");
+console.log(tempc0);
+console.log("My audio for subtracting...");
+console.log(tempMy);
+console.log("Cleaned up Venue..");
+console.log(tempVenue);
 console.log("mix...");
+console.log(tempMix);
+console.log("Final pre AGC mix with perf ...");
 let temp3 = [];
 for (i=0;i<20;i++) temp3[i] = mix[i];
 console.log(temp3);
