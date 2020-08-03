@@ -208,6 +208,12 @@ socketIO.on('d', function (data) {
 				for (let i=0; i < a.length; i++)
 					mix[i] += a[i];			// Performer audio goes straight into mix
 			}
+if (maxValue(mix) > 2) {
+console.log("mix...");
+let temp3 = [];
+for (i=0;i<20;i++) temp3[i] = mix[i];
+console.log(temp3);
+}
 //			endTalkover();					// Try to end mic talkover before setting gain
 			let obj = applyAutoGain(mix, mixOut);		// Trim mix level 
 			mixOut.gain= obj.finalGain;			// Store gain for next loop
