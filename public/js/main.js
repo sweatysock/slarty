@@ -125,7 +125,7 @@ socketIO.on('d', function (data) {
 		if (c0 != null) {					// If there is venue audio (can't take it for granted)
 			let s = c0.seqNos[myChannel];			// Channel 0's mix contains our audio. This is its sequence no.
 			let c0audio = c0.audio;				// Get channel 0 audio so we can subtract our audio from it
-			let c0LiveClients = c0.LiveClients;		// Number of packets in venue mix. = all people in venue in fact
+			let c0LiveClients = c0.liveClients;		// Number of packets in venue mix = all people in venue in fact
 //console.log("packet count is ",c0LiveClients);
 //if (c0.peak > 0) {
 //console.log("VENUE audio...");
