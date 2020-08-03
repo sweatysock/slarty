@@ -133,6 +133,7 @@ upstreamServer.on('channel', function (data) {				// The response to our "Hi" is
 // Venue audio coming down from our upstream server. Channels of audio from upstream plus all our peers.
 upstreamServer.on('d', function (packet) { 
 	if ( liveClients == 0 ) return;					// If no clients no reason to process upstream data
+	let upstreamLiveClients = 1;					// Count of clients from upstream. Start with 1 as we subtract ourselves
 	enterState( upstreamState );					
 	upstreamIn++;						
 	addCommands(packet.commands);					// Store upstream commands for sending downstream
@@ -145,6 +146,7 @@ upstreamServer.on('d', function (packet) {
 	// 2. Subtract our buffered audio from upstream mix
 	let mix = [];
 	if (packet.channels[0] != null) {
+		upstreamLiveClients = packet.channels[0].liveClients;	// Note the number of clients visible form upstream
 		mix = packet.channels[0].audio;				// We are not part of a group so we only get channel 0 (venue) audio
 		let s =packet.channels[0].seqNos[upstreamServerChannel];// Channel 0 comes with list of packet seq nos in mix. Get ours.
 		while (packetBuf.length) {				// Scan our packet buffer for the packet with our sequence
@@ -172,7 +174,7 @@ upstreamServer.on('d', function (packet) {
 			name		: channels[0].name,		// Give packet our channel name
 			audio		: mix,				// The audio is the mix just prepared
 			peak		: 99,				// This is calculated in the client.  99 = intentionally not set.
-			liveClients	: channels[0].liveClients - 1,	// Clients forming part of mix from upstream minus ours (just removed)
+			liveClients	: upstreamLiveClients - 1,	// Clients forming part of mix from upstream minus ours (just removed)
 			timestamp	: 0,				// Channel 0 (venue) audio never returns so no rtt to measure
 			sequence	: venueSequence++,		// Sequence number for tracking quality
 			channel		: 0,				// Upstream is assigned channel 0 everywhere
@@ -445,7 +447,7 @@ function generateMix () {
 			}
 			else {						// Got a packet. Now store it and build server mix
 				packetCount++;				// Count how many packets have made the mix for tracing
-				totalLiveClients += packet.liveClients;	// Add the packets that made up this packet's audio (may be from downstream server)
+				totalLiveClients += packet.liveClients;	// Add clients that are in this audio (may be from downstream server)
 				if (c.group != "individual") {		// Keep packets and live channels for group members (not individuals)
 					groups[c.group].clientPackets.push( packet );
 					groups[c.group].liveChannels[chan] = true;

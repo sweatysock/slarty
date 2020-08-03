@@ -147,7 +147,6 @@ for (i=0;i<20;i++) tempMy[i] = a[i];
 //console.log(temp4);
 							if (venueSize == 0) venueSize = c0LiveClients;	// At start set venueSize
 							venueSize = (venueSize + c0LiveClients)/2;	// Smoothed average of venue size
-console.log("Venue live client count is ",venueSize);
 							for (let i=0; i < a.length; i++) 		// Subtract our audio from venue
 								c0audio[i] = ( c0audio[i] 		// and scale venue audio down by
 									- a[i] ) / venueSize;		// the number of people in venue.
@@ -164,6 +163,7 @@ for (i=0;i<20;i++) tempVenue[i] = c0audio[i];
 //console.log(temp2);
 //}
 		} 
+console.log("Venue live client count is ",venueSize);
 		// 2. Build a mix of all incoming channels. For individuals this is just channel 0, For groups it is more
 		let mix = new Array(PacketSize).fill(0);		// Now we build the mix starting from 0's
 		data.channels.forEach(c => {				// Process all audio channel packets sent from server
