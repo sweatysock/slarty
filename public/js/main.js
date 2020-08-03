@@ -147,7 +147,7 @@ for (i=0;i<20;i++) tempMy[i] = a[i];
 //console.log(temp4);
 							if (venueSize == 0) venueSize = c0pCount;	// At start set venueSize
 							venueSize = (venueSize + c0pCount)/2;		// Smoothed average of venue size
-//console.log("venue size is ",venueSize);
+console.log("venue size is ",venueSize);
 							for (let i=0; i < a.length; i++) 		// Subtract our audio from venue
 								c0audio[i] = ( c0audio[i] 		// and scale venue audio down by
 									- a[i] ) / venueSize;		// the number of people in venue.
@@ -209,6 +209,7 @@ for (i=0;i<20;i++) tempMix[i] = mix[i];
 					mix[i] += a[i];			// Performer audio goes straight into mix
 			}
 if (maxValue(mix) > 2) {
+console.log("channels = ",data.channels.length);
 console.log("raw c0...");
 console.log(tempc0);
 console.log("My audio for subtracting...");
