@@ -125,8 +125,8 @@ socketIO.on('d', function (data) {
 		if (c0 != null) {					// If there is venue audio (can't take it for granted)
 			let s = c0.seqNos[myChannel];			// Channel 0's mix contains our audio. This is its sequence no.
 			let c0audio = c0.audio;				// Get channel 0 audio so we can subtract our audio from it
-			let c0pCount = c0.pCount;			// Number of packets in venue mix. = all people in venue in fact
-//console.log("packet count is ",c0pCount);
+			let c0LiveClients = c0.LiveClients;		// Number of packets in venue mix. = all people in venue in fact
+//console.log("packet count is ",c0LiveClients);
 //if (c0.peak > 0) {
 //console.log("VENUE audio...");
 var tempc0 = [];
@@ -145,8 +145,8 @@ for (i=0;i<20;i++) tempc0[i] = c0audio[i];
 var tempMy = [];
 for (i=0;i<20;i++) tempMy[i] = a[i];
 //console.log(temp4);
-							if (venueSize == 0) venueSize = c0pCount;	// At start set venueSize
-							venueSize = (venueSize + c0pCount)/2;		// Smoothed average of venue size
+							if (venueSize == 0) venueSize = c0LiveClients;	// At start set venueSize
+							venueSize = (venueSize + c0LiveClients)/2;	// Smoothed average of venue size
 console.log("venue size is ",venueSize);
 							for (let i=0; i < a.length; i++) 		// Subtract our audio from venue
 								c0audio[i] = ( c0audio[i] 		// and scale venue audio down by
@@ -752,7 +752,7 @@ function processAudio(e) {						// Main processing loop
 			let packet = {
 				name		: myName,		// Send the name we have chosen 
 				audio		: inAudio,		// Resampled, level-corrected audio
-				pCount		: 1,			// This is audio from a single source
+				liveClients	: 1,			// This is audio from a single client
 				sequence	: packetSequence,	// Usefull for detecting data losses
 				timestamp	: now,			// Used to measure round trip time
 				peak 		: peak,			// Saves others having to calculate again

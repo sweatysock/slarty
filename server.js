@@ -38,6 +38,7 @@ var mixTimer = 0;							// Timer that triggers generateMix() if needed
 var myServerName = process.env.servername; 				// Get servername from heroku config variable, if present
 if (myServerName == undefined)						// This name is used to identify us upstream ony
 	myServerName ="";						// If this is empty it will be set when we connect upstream
+var liveClients = 0;							// Count of the number of clients connected to this server
 var commands = {};							// Commands generated here or from upstream server
 
 function addCommands(newCommands) {
@@ -131,7 +132,7 @@ upstreamServer.on('channel', function (data) {				// The response to our "Hi" is
 
 // Venue audio coming down from our upstream server. Channels of audio from upstream plus all our peers.
 upstreamServer.on('d', function (packet) { 
-	if ( clientsLive == 0 ) return;					// If no clients no reason to process upstream data
+	if ( liveClients == 0 ) return;					// If no clients no reason to process upstream data
 	enterState( upstreamState );					
 	upstreamIn++;						
 	addCommands(packet.commands);					// Store upstream commands for sending downstream
@@ -171,7 +172,7 @@ upstreamServer.on('d', function (packet) {
 			name		: channels[0].name,		// Give packet our channel name
 			audio		: mix,				// The audio is the mix just prepared
 			peak		: 99,				// This is calculated in the client.  99 = intentionally not set.
-			pCount		: channels[0].pCount - 1,	// Packets in mix from upstream minus ours (just removed)
+			liveClients	: channels[0].liveClients - 1,	// Clients forming part of mix from upstream minus ours (just removed)
 			timestamp	: 0,				// Channel 0 (venue) audio never returns so no rtt to measure
 			sequence	: venueSequence++,		// Sequence number for tracking quality
 			channel		: 0,				// Upstream is assigned channel 0 everywhere
@@ -235,7 +236,7 @@ io.sockets.on('connection', function (socket) {
 					c.shortages = 0,
 					c.overflows = 0,
 					c.newBuf = true;
-					clientsLive--;
+					liveClients--;
 				}
 			}
 		}
@@ -267,7 +268,7 @@ io.sockets.on('connection', function (socket) {
 			channels[channel].overflows = 0;
 			channels[channel].newBuf = true;		
 			socket.join(channels[channel].group);		// Add to default group for downstream data
-			clientsLive++;					// For monitoring purposes
+			liveClients++;					// For monitoring purposes
 			console.log("Client assigned channel ",channel);
 		} else
 			console.log("No channels available. Client rejected.");
@@ -422,7 +423,7 @@ function generateMix () {
 	let channel0Packet = null;					// The channel 0 (venue) audio packet
 	let groups = [];						// Data collated by group for sending downstream
 	let packetCount = 0;						// Keep count of packets that make the mix for monitoring
-	let totalPacketCount = 0;					// Count accumulated packets in mix incl. downstream server mixes
+	let totalLiveClients = liveClients;				// Count total clients live here and in downstream servers
 	channels.forEach( (c, chan) => {				// Review all channels for audio and activity, and build server mix
 		if (c.name != "")					// If channel is active it will have a name
 			if (groups[c.group] == null)			// If first member of group the entry will be null
@@ -444,7 +445,7 @@ function generateMix () {
 			}
 			else {						// Got a packet. Now store it and build server mix
 				packetCount++;				// Count how many packets have made the mix for tracing
-				totalPacketCount += packet.pCount;	// Add the packets that made up this packet's audio (may be from downstream server)
+				totalLiveClients += packet.liveClients;	// Add the packets that made up this packet's audio (may be from downstream server)
 				if (c.group != "individual") {		// Keep packets and live channels for group members (not individuals)
 					groups[c.group].clientPackets.push( packet );
 					groups[c.group].liveChannels[chan] = true;
@@ -467,7 +468,7 @@ function generateMix () {
 		let packet = {						// Build the packet the same as any client packet
 			name		: myServerName,			// Let others know which server this comes from
 			audio		: mix,				// Level controlled mix of all clients here
-			pCount		: totalPacketCount,		// Packets in mix incl any downstream mix packets
+			liveClients	: totalLiveClients,		// Clients adding to mix incl. any downstream mix packets
 			sequence	: upSequence++,			// Good for data integrity checks
 			timestamp	: now,				// Used for round trip time measurements
 			peak 		: mixMax,			// Saves having to calculate again
@@ -485,11 +486,11 @@ function generateMix () {
 	if (channel0Packet != null) {					// If there is a venue packet add our mix to venue audio
 		let a = channel0Packet.audio;
 		for (let i = 0; i < a.length; i++) a[i] = a[i] + mix[i];
-	} else {							// No venue audio so use our mix as mian venue audio
+	} else {							// No venue audio so use our mix as main venue audio
 		channel0Packet = {					// Construct the audio packet
 			name		: "VENUE",			// Give packet main venue name
 			audio		: mix,				// Venue audio is the mix just prepared
-			pCount		: totalPacketCount,		// Packets in mix incl all downstream mix packets
+			liveClients	: totalLiveClients,		// Clients adding to mix incl. any downstream mix packets
 			peak		: 99,				// This is calculated in the client.  99 = intentionally not set.
 			timestamp	: 0,				// No need to trace RTT here
 			sequence	: venueSequence++,		// Sequence number for tracking quality
@@ -565,7 +566,6 @@ var upstreamOut = 0;
 var overflows = 0;
 var shortages = 0;
 var rtt = 0;
-var clientsLive = 0;
 var forcedMixes = 0;
 var packetClassifier = [];
 packetClassifier.fill(0,0,30);
@@ -581,7 +581,7 @@ function printReport() {
 	enterState( idleState );					// Update timers in case we are inactive
 //	console.log(myServerName," Activity Report");
 //	console.log("Idle = ", idleState.total, " upstream = ", upstreamState.total, " downstream = ", downstreamState.total, " genMix = ", genMixState.total);
-//	console.log("Clients = ",clientsLive,"  Upstream In =",upstreamIn,"Upstream Out = ",upstreamOut,"Upstream Shortages = ",channels[0].shortages," Upstream overflows = ",channels[0].overflows,"In = ",packetsIn," Out = ",packetsOut," overflows = ",overflows," shortages = ",shortages," forced mixes = ",forcedMixes," mixMax = ",mixMax," upstreamMax = ",upstreamMax," rtt = ",rtt);
+//	console.log("Clients = ",liveClients,"  Upstream In =",upstreamIn,"Upstream Out = ",upstreamOut,"Upstream Shortages = ",channels[0].shortages," Upstream overflows = ",channels[0].overflows,"In = ",packetsIn," Out = ",packetsOut," overflows = ",overflows," shortages = ",shortages," forced mixes = ",forcedMixes," mixMax = ",mixMax," upstreamMax = ",upstreamMax," rtt = ",rtt);
 	let cbs = [];
 	for (let c in channels) {
 		let t = channels[c].packets.length;
@@ -596,7 +596,7 @@ function printReport() {
 		"upstream":	upstreamState.total,
 		"downstream":	downstreamState.total,
 		"genMix":	genMixState.total,
-		"clients":	clientsLive,
+		"clients":	liveClients,
 		"in":		packetsIn,
 		"out":		packetsOut,
 		"upIn":		upstreamIn,
