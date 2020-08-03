@@ -506,8 +506,8 @@ console.log("channels = ",channels.length,"total clients = ",totalLiveClients);
 	if (channel0Packet != null) {					// If there is a venue packet add our mix to venue audio
 		let a = channel0Packet.audio;
 		for (let i = 0; i < a.length; i++) a[i] = a[i] + mix[i];
+		channel0Packet.seqNos = seqNos;				// Add to channel 0 packet the list of seqNos that were used
 	} 
-	channel0Packet.seqNos = seqNos;					// Add to channel 0 packet the list of seqNos that were used
 	// 5. Send packets to all clients group by group, adding performer, channel 0 (venue) and group audio, plus group live channels and commands
 	for (group in groups) {
 		let g = groups[group];
