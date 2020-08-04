@@ -123,7 +123,6 @@ socketIO.on('d', function (data) {
 		// 1. Channel 0 venue mix from server includes our audio sent a few mS ago. Subtract it using seq no. and gain to stop echo
 		let c0 = data.channels[0];				// Shorthand for channel 0 venue input
 		if (c0 != null) {					// If there is venue audio (can't take it for granted)
-			let s = c0.seqNos[myChannel];			// Channel 0's mix contains our audio. This is its sequence no.
 			let c0audio = c0.audio;				// Get channel 0 audio so we can subtract our audio from it
 			let c0LiveClients = c0.liveClients;		// Number of packets in venue mix = all people in venue in fact
 //console.log("packet count is ",c0LiveClients);
@@ -133,6 +132,7 @@ var tempc0 = [];
 for (i=0;i<20;i++) tempc0[i] = c0audio[i];
 //console.log(tempc0);
 //}
+			let s = c0.seqNos[myChannel];			// Channel 0's mix contains our audio. This is its sequence no.
 			if (s == null)
 				trace("No sequence number for our audio in mix");
 			else {

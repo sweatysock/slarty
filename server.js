@@ -145,29 +145,21 @@ upstreamServer.on('d', function (packet) {
 	}
 	// 2. Subtract our buffered audio from upstream mix
 	let mix = [];
-	if (packet.channels[0] != null) {
+	if (packet.channels[0] != null) {				// Check there is venue audio. It is not guaranteed in performer mode.
 		let p0 = packet.channels[0];				// Shorthand
 		channels[0].liveClients = p0.liveClients;		// Save the number of clients connected upstream in channel 0
 		mix = p0.audio;						// We are not part of a group so we only get channel 0 (venue) audio
 		let s = p0.seqNos[upstreamServerChannel];		// Channel 0 comes with list of packet seq nos in mix. Get ours.
-		while (packetBuf.length) {				// Scan our packet buffer for the packet with our sequence
-			let p = packetBuf.shift();			// Remove the oldest packet from the buffer
-			if (p.sequence == s) {				// We have found the right sequence number
-				let a = p.audio;			// Subtract my level-corrected audio from mix
-//console.log("upstream mix before subtracting");
-//let temp = [];
-//for (i=0;i<20;i++) temp[i]=mix[i];
-//console.log(temp);
-				for (let i=0; i < a.length; i++) mix[i] = mix[i] - a[i];
-//console.log("upstream mix AFTER subtracting");
-//let temp2 = [];
-//for (i=0;i<20;i++) temp2[i]=mix[i];
-//console.log(temp2);
-				//
-				break;					// Packet found. Stop scanning the packet buffer. 
+		if (s != null)						// If our channel has a sequence number in the mix
+			while (packetBuf.length) {			// Scan our packet buffer for the packet with our sequence
+				let p = packetBuf.shift();		// Remove the oldest packet from the buffer
+				if (p.sequence == s) {			// We have found the right sequence number
+					let a = p.audio;		// Subtract my level-corrected audio from mix
+					for (let i=0; i < a.length; i++) mix[i] = mix[i] - a[i];
+					break;				// Packet found. Stop scanning the packet buffer. 
+				}
 			}
-		}
-	} else console.log("upstream server has sent empty audio downstream!");
+	} 
 	// 3. Build a channel 0 packet 
 	if (mix.length != 0) {						// If there actually was some audio
 		mix = midBoostFilter(mix);				// Filter upstream audio to made it distant
@@ -500,6 +492,7 @@ console.log("total clients = ",totalLiveClients);
 			channel0Packet = {				// Construct the audio packet
 				name		: "VENUE",		// Give packet main venue name
 				audio		: mix,			// Use our mix as the venue audio
+				seqNos		: seqNos,		// Packet sequence numbers in the mix
 				liveClients	: channels[0].liveClients,	// This is a temporary lack ofaudio. Keep upstream value
 				peak		: 99,			// This is calculated in the client.  99 = intentionally not set.
 				timestamp	: 0,			// No need to trace RTT here
@@ -513,6 +506,7 @@ console.log("total clients = ",totalLiveClients);
 		channel0Packet = {					// Construct the audio packet
 			name		: "VENUE",			// Give packet main venue name
 			audio		: mix,				// Use our mix as the venue audio
+			seqNos		: seqNos,			// Packet sequence numbers in the mix
 			liveClients	: totalLiveClients,		// Clients visible downstream of this server
 			peak		: 99,				// This is calculated in the client.  99 = intentionally not set.
 			timestamp	: 0,				// No need to trace RTT here
