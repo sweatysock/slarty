@@ -174,8 +174,8 @@ console.log(packet);
 			sampleRate	: SampleRate,			// Send sample rate to help processing
 			group		: "",				// No group for venue channel
 		}
-//console.log("Built channel 0 packet...");
-//console.log(p);
+console.log("Built channel 0 packet...");
+console.log(p);
 		// 4. Store the packet in the channel 0 buffer
 		channels[0].packets.push(p); 				// Store upstream packet in channel 0
 		if (channels[0].packets.length > maxBufferSize) {	// Clip buffer if overflowing
@@ -543,7 +543,7 @@ console.log("NO upstream ... building packet for channel 0");
 			liveChannels	: liveChannels,			// Include server info about live clients and their queues
 			commands	: commands,			// Send commands downstream to reach all client endpoints
 		});
-if (group == "") { console.log("Empty group name... review channels and groups...");console.log(channels);}
+//if (group == "") { console.log("Empty group name... review channels and groups...");console.log(channels);}
 	}
 	// 5. Clean up, trace, monitor, and set timer for next marshalling point limit
 	packetsOut++;							// Sent data so log it and set time limit for next send
