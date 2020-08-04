@@ -468,7 +468,7 @@ function generateMix () {
 			}
 		}
 	});
-console.log("channels = ",channels.length,"total clients = ",totalLiveClients);
+console.log("total clients = ",totalLiveClients);
 	// 3. Build server mix packet and send upstream if we have an upstream server connected. If not build channel 0 packet
 	mixMax =  maxValue(mix);					// Note peak value
 	if (upstreamConnected == true) { 				// Send mix if connected to an upstream server
@@ -521,6 +521,8 @@ console.log("channels = ",channels.length,"total clients = ",totalLiveClients);
 			liveChannels	: liveChannels,			// Include server info about live clients and their queues
 			commands	: commands,			// Send commands downstream to reach all client endpoints
 		});
+console.log("sent to ",group);
+console.log(clientPackets);
 	}
 	// 6. Clean up, trace, monitor, and set timer for next marshalling point limit
 	packetsOut++;							// Sent data so log it and set time limit for next send
