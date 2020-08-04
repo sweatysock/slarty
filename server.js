@@ -305,6 +305,7 @@ io.sockets.on('connection', function (socket) {
 	});
 
 	socket.on('u', function (packet) { 				// Audio coming up from one of our downstream clients
+console.log("packet in");
 		enterState( downstreamState );
 		let channel = channels[packet.channel];			// This client sends their channel to save server effort
 		channel.name = packet.name;				// Update name of channel in case it has changed
@@ -338,6 +339,7 @@ io.sockets.on('connection', function (socket) {
 					channel.overflows++;		// Log overflows per channel
 					overflows++;			// and also globally for monitoring
 				}
+console.log("packet queue = ", channel.packets.length);
 				if (channel.packets.length >= channel.mixTriggerLevel) {
 					channel.newBuf = false;		// Buffer has filled enough. Channel can enter the mix
 					enterState( genMixState );
@@ -414,7 +416,7 @@ function enoughAudio() {						// Is there enough audio to build a mix before tim
 // The main working function where audio marshalling, venue mixing and sending up and downstream happens
 // Six steps: 1. Prep performer audio 2. Build mix and colate group data 3. Send mix upstream + 3.1. Build venue mix 4. Send to all groups of clients & 5. Clean up & set timers
 function generateMix () { 
-//console.log("GEN MIX");
+console.log("GEN MIX");
 	// 1. Get perf packet if performing and enough perf audio buffered to start streaming
 	let p = {live:perf.live, chan:perf.chan, packet:null};		// Send downstream by default a perf object with no packet
 	if ((perf.streaming) && (perf.packets.length > 0))		// Pull a performer packet from its queue if any
@@ -427,6 +429,7 @@ function generateMix () {
 	let packetCount = 0;						// Keep count of packets that make the mix for monitoring
 	let totalLiveClients = liveClients;				// Count total clients live here and in downstream servers
 	channels.forEach( (c, chan) => {				// Review all channels for audio and activity, and build server mix
+console.log("processing channel ",chan);
 		if (chan != 0) totalLiveClients += c.liveClients;	// Sum all downstream clients
 		if (c.name != "")					// If channel is active it will have a name
 			if (groups[c.group] == null)			// If first member of group the entry will be null
@@ -449,6 +452,7 @@ function generateMix () {
 			else {						// Got a packet. Now store it and build server mix
 				packetCount++;				// Count how many packets have made the mix for tracing
 				if (packet.channel != 0) {		// Build mix for upstream server 
+console.log("mixing channel with ",packet.audio.length," bytes");
 					for (let i = 0; i < packet.audio.length; ++i) mix[i] = (mix[i] + packet.audio[i]);	
 					seqNos[packet.channel] 		// Store the seq number of the packet just added to the mix
 						= packet.sequence;	// so that it can be subtracted downstream to remove echo
@@ -471,6 +475,7 @@ function generateMix () {
 	mixMax =  maxValue(mix);					// Note peak value
 	if (mixMax == 0) mix = [];					// If no audio send empty mix to save bandwidth
 	if (upstreamConnected == true) { 				// Send mix if connected to an upstream server
+console.log("upstream connected... building packet");
 		let now = new Date().getTime();
 		let packet = {						// Build the packet the same as any client packet
 			name		: myServerName,			// Let others know which server this comes from
@@ -509,6 +514,7 @@ function generateMix () {
 			}
 		}
 	} else {							// No upstream server so we must be the venue server
+console.log("NO upstream ... building packet for channel 0");
 		channel0Packet = {					// Construct the audio packet
 			name		: "VENUE",			// Give packet main venue name
 			audio		: mix,				// Use our mix as the venue audio
@@ -535,7 +541,7 @@ function generateMix () {
 			liveChannels	: liveChannels,			// Include server info about live clients and their queues
 			commands	: commands,			// Send commands downstream to reach all client endpoints
 		});
-//console.log("sent to ",group,"group");
+console.log("sent to ",group,"group");
 //console.log(clientPackets);
 	}
 	// 5. Clean up, trace, monitor, and set timer for next marshalling point limit
