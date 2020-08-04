@@ -39,7 +39,7 @@ var mixTimer = 0;							// Timer that triggers generateMix() if needed
 var myServerName = process.env.servername; 				// Get servername from heroku config variable, if present
 if (myServerName == undefined)						// This name is used to identify us upstream ony
 	myServerName ="";						// If this is empty it will be set when we connect upstream
-var liveClients = 0;							// Count of the number of clients connected to this server
+var connectedClients = 0;						// Count of the number of clients connected to this server
 var commands = {};							// Commands generated here or from upstream server
 
 function addCommands(newCommands) {
@@ -134,7 +134,7 @@ upstreamServer.on('channel', function (data) {				// The response to our "Hi" is
 // Venue audio coming down from our upstream server. Channels of audio from upstream plus all our peers.
 upstreamServer.on('d', function (packet) { 
 //console.log("DOWNSTREAM");
-	if ( liveClients == 0 ) return;					// If no clients no reason to process upstream data
+	if ( connectedClients == 0 ) return;				// If no clients no reason to process upstream data
 	enterState( upstreamState );					
 	upstreamIn++;						
 	addCommands(packet.commands);					// Store upstream commands for sending downstream
@@ -145,7 +145,7 @@ upstreamServer.on('d', function (packet) {
 		perf.streaming = true;					// performer is now streaming from here
 	}
 	// 2. Subtract our buffered audio from upstream mix
-	let mix = [];
+	let mix = new Array(PacketSize).fill(0);			// Start with empty packet of audio
 	if (packet.channels[0] != null) {				// Check there is venue audio. It is not guaranteed in performer mode.
 		let p0 = packet.channels[0];				// Shorthand
 		channels[0].liveClients = p0.liveClients;		// Save the number of clients connected upstream in channel 0
@@ -156,7 +156,7 @@ upstreamServer.on('d', function (packet) {
 				let p = packetBuf.shift();		// Remove the oldest packet from the buffer
 				if (p.sequence == s) {			// We have found the right sequence number
 					let a = p.audio;		// Subtract my level-corrected audio from mix
-					for (let i=0; i < a.length; i++) mix[i] = mix[i] - a[i];
+					for (let i=0; i < mix.length; i++) mix[i] = mix[i] - a[i];
 					break;				// Packet found. Stop scanning the packet buffer. 
 				}
 			}
@@ -234,7 +234,7 @@ io.sockets.on('connection', function (socket) {
 					c.shortages = 0,
 					c.overflows = 0,
 					c.newBuf = true;
-					liveClients--;
+					connectedClients--;
 				}
 			}
 		}
@@ -267,7 +267,7 @@ io.sockets.on('connection', function (socket) {
 			channels[channel].overflows = 0;
 			channels[channel].newBuf = true;		
 			socket.join(channels[channel].group);		// Add to default group for downstream data
-			liveClients++;					// For monitoring purposes
+			connectedClients++;					// For monitoring purposes
 			console.log("Client assigned channel ",channel);
 		} else
 			console.log("No channels available. Client rejected.");
@@ -427,7 +427,7 @@ console.log("GEN MIX");
 	let channel0Packet = null;					// The channel 0 (venue) audio packet
 	let groups = [];						// Data collated by group for sending downstream
 	let packetCount = 0;						// Keep count of packets that make the mix for monitoring
-	let totalLiveClients = liveClients;				// Count total clients live here and in downstream servers
+	let totalLiveClients = 0;					// Count total clients live downstream of this server
 	channels.forEach( (c, chan) => {				// Review all channels for audio and activity, and build server mix
 		if (chan != 0) totalLiveClients += c.liveClients;	// Sum all downstream clients
 		if (c.name != "")					// If channel is active it will have a name
@@ -541,21 +541,18 @@ console.log("NO upstream ... building packet for channel 0");
 			liveChannels	: liveChannels,			// Include server info about live clients and their queues
 			commands	: commands,			// Send commands downstream to reach all client endpoints
 		});
-console.log("sent to ",group,"group");
-//console.log(clientPackets);
+if (group == "") { console.log("Empty group name... review channels and groups...");console.log(channels);}
 	}
 	// 5. Clean up, trace, monitor, and set timer for next marshalling point limit
 	packetsOut++;							// Sent data so log it and set time limit for next send
 	packetClassifier[packetCount] = packetClassifier[packetCount] + 1;
 	if ((!perf.live) && (packetCount == 0)) {		 		// If not performing and no client packets in mix
 		nextMixTimeLimit = 0;					// stop forcing mix as there is no data to force
-console.log("CANCELLING FOrCe MIX");
 	}
 	if ((!perf.live) || (perf.streaming)) {				// If no live performance or perf is streaming then clock samples
 		let now = new Date().getTime();
 		if (nextMixTimeLimit == 0) {
 			nextMixTimeLimit = now;				// If this is the first send event then start at now
-console.log("Setting next time limit to NOW");
 		}
 		nextMixTimeLimit = nextMixTimeLimit + (PacketSize * 1000)/SampleRate;
 		// MARK Should remove old timeout before creating new one right???
@@ -615,7 +612,7 @@ function printReport() {
 	enterState( idleState );					// Update timers in case we are inactive
 //	console.log(myServerName," Activity Report");
 //	console.log("Idle = ", idleState.total, " upstream = ", upstreamState.total, " downstream = ", downstreamState.total, " genMix = ", genMixState.total);
-//	console.log("Clients = ",liveClients,"  Upstream In =",upstreamIn,"Upstream Out = ",upstreamOut,"Upstream Shortages = ",channels[0].shortages," Upstream overflows = ",channels[0].overflows,"In = ",packetsIn," Out = ",packetsOut," overflows = ",overflows," shortages = ",shortages," forced mixes = ",forcedMixes," mixMax = ",mixMax," upstreamMax = ",upstreamMax," rtt = ",rtt);
+//	console.log("Clients = ",connectedClients,"  Upstream In =",upstreamIn,"Upstream Out = ",upstreamOut,"Upstream Shortages = ",channels[0].shortages," Upstream overflows = ",channels[0].overflows,"In = ",packetsIn," Out = ",packetsOut," overflows = ",overflows," shortages = ",shortages," forced mixes = ",forcedMixes," mixMax = ",mixMax," upstreamMax = ",upstreamMax," rtt = ",rtt);
 	let cbs = [];
 	for (let c in channels) {
 		let t = channels[c].packets.length;
@@ -630,7 +627,7 @@ function printReport() {
 		"upstream":	upstreamState.total,
 		"downstream":	downstreamState.total,
 		"genMix":	genMixState.total,
-		"clients":	liveClients,
+		"clients":	connectedClients,
 		"in":		packetsIn,
 		"out":		packetsOut,
 		"upIn":		upstreamIn,
