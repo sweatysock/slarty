@@ -173,8 +173,8 @@ upstreamServer.on('d', function (packet) {
 			sampleRate	: SampleRate,			// Send sample rate to help processing
 			group		: "",				// No group for venue channel
 		}
-console.log("Built channel 0 packet...");
-console.log(p);
+//console.log("Built channel 0 packet...");
+//console.log(p);
 		// 4. Store the packet in the channel 0 buffer
 		channels[0].packets.push(p); 				// Store upstream packet in channel 0
 		if (channels[0].packets.length > maxBufferSize) {	// Clip buffer if overflowing
@@ -458,15 +458,15 @@ function generateMix () {
 									// MARK ADD URL for downstream servers needed for heckler control
 									// MARK ADD peak level for each for audio visualization
 					}
-if (c.group =="") {
-console.log("empty group name in one of these channels...");
-console.log(channels);
-}
+//if (c.group =="") {
+//console.log("empty group name in one of these channels...");
+//console.log(channels);
+//}
 				} else channel0Packet = packet;		// keep the packet for channel 0 (venue) for adding later
 			}
 		}
 	});
-console.log("total clients = ",totalLiveClients);
+//console.log("total clients = ",totalLiveClients);
 	// 3. Build server mix packet and send upstream if we have an upstream server connected. 
 	mixMax =  maxValue(mix);					// Note peak value
 	if (mixMax == 0) mix = [];					// If no audio send empty mix to save bandwidth
@@ -535,8 +535,8 @@ console.log("total clients = ",totalLiveClients);
 			liveChannels	: liveChannels,			// Include server info about live clients and their queues
 			commands	: commands,			// Send commands downstream to reach all client endpoints
 		});
-console.log("sent to ",group,"group");
-console.log(clientPackets);
+//console.log("sent to ",group,"group");
+//console.log(clientPackets);
 	}
 	// 5. Clean up, trace, monitor, and set timer for next marshalling point limit
 	packetsOut++;							// Sent data so log it and set time limit for next send
