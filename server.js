@@ -429,7 +429,6 @@ console.log("GEN MIX");
 	let packetCount = 0;						// Keep count of packets that make the mix for monitoring
 	let totalLiveClients = liveClients;				// Count total clients live here and in downstream servers
 	channels.forEach( (c, chan) => {				// Review all channels for audio and activity, and build server mix
-console.log("processing channel ",chan);
 		if (chan != 0) totalLiveClients += c.liveClients;	// Sum all downstream clients
 		if (c.name != "")					// If channel is active it will have a name
 			if (groups[c.group] == null)			// If first member of group the entry will be null
@@ -438,6 +437,7 @@ console.log("processing channel ",chan);
 					liveChannels:[],		// and a liveChannels list too
 				};
 		if (c.newBuf == false) {				// Only process channels that are non-new
+console.log("processing channel ",chan);
 			let packet;
 			if (c.recording) {				// If recording then read the packet 
 				packet = c.packets[c.playhead];		// at the playhead position
@@ -547,12 +547,16 @@ console.log("sent to ",group,"group");
 	// 5. Clean up, trace, monitor, and set timer for next marshalling point limit
 	packetsOut++;							// Sent data so log it and set time limit for next send
 	packetClassifier[packetCount] = packetClassifier[packetCount] + 1;
-	if ((!perf.live) && (packetCount == 0))		 		// If not performing and no client packets in mix
+	if ((!perf.live) && (packetCount == 0)) {		 		// If not performing and no client packets in mix
 		nextMixTimeLimit = 0;					// stop forcing mix as there is no data to force
+console.log("CANCELLING FOrCe MIX");
+	}
 	if ((!perf.live) || (perf.streaming)) {				// If no live performance or perf is streaming then clock samples
 		let now = new Date().getTime();
-		if (nextMixTimeLimit == 0) 
+		if (nextMixTimeLimit == 0) {
 			nextMixTimeLimit = now;				// If this is the first send event then start at now
+console.log("Setting next time limit to NOW");
+		}
 		nextMixTimeLimit = nextMixTimeLimit + (PacketSize * 1000)/SampleRate;
 		// MARK Should remove old timeout before creating new one right???
 		clearTimeout(mixTimer);
