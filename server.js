@@ -133,7 +133,8 @@ upstreamServer.on('channel', function (data) {				// The response to our "Hi" is
 
 // Venue audio coming down from our upstream server. Channels of audio from upstream plus all our peers.
 upstreamServer.on('d', function (packet) { 
-//console.log("DOWNSTREAM");
+console.log("DOWNSTREAM");
+console.log(packet);
 	if ( connectedClients == 0 ) return;				// If no clients no reason to process upstream data
 	enterState( upstreamState );					
 	upstreamIn++;						
@@ -305,7 +306,7 @@ io.sockets.on('connection', function (socket) {
 	});
 
 	socket.on('u', function (packet) { 				// Audio coming up from one of our downstream clients
-console.log("packet in");
+//console.log("packet in");
 		enterState( downstreamState );
 		let channel = channels[packet.channel];			// This client sends their channel to save server effort
 		channel.name = packet.name;				// Update name of channel in case it has changed
@@ -491,6 +492,7 @@ console.log("upstream connected... building packet");
 			// MARK send liveChannels upstream
 		};
 		upstreamServer.emit("u",packet); 			// Send the packet upstream
+console.log(packet);
 		packetBuf.push(packet);					// Add sent packet to LILO buffer for echo cancelling 
 		upstreamOut++;
 	// 3.1. Now that mix has gone upstream complete venue audio for downstream by adding our mix to channel 0 if it exists
@@ -504,7 +506,7 @@ console.log("upstream connected... building packet");
 				name		: "VENUE",		// Give packet main venue name
 				audio		: mix,			// Use our mix as the venue audio
 				seqNos		: seqNos,		// Packet sequence numbers in the mix
-				liveClients	: channels[0].liveClients,	// This is a temporary lack ofaudio. Keep upstream value
+				liveClients	: channels[0].liveClients,	// Just is a temporary lack of audio. Use upstream value
 				peak		: 99,			// This is calculated in the client.  99 = intentionally not set.
 				timestamp	: 0,			// No need to trace RTT here
 				sequence	: venueSequence++,	// Sequence number for tracking quality
@@ -555,7 +557,6 @@ if (group == "") { console.log("Empty group name... review channels and groups..
 			nextMixTimeLimit = now;				// If this is the first send event then start at now
 		}
 		nextMixTimeLimit = nextMixTimeLimit + (PacketSize * 1000)/SampleRate;
-		// MARK Should remove old timeout before creating new one right???
 		clearTimeout(mixTimer);
 		mixTimer = setTimeout( forceMix, (nextMixTimeLimit - now) );	
 	} else {nextMixTimeLimit = 0;					// If live performer stop mix forcing
