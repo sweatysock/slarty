@@ -157,7 +157,8 @@ console.log(packet);
 				let p = packetBuf.shift();		// Remove the oldest packet from the buffer
 				if (p.sequence == s) {			// We have found the right sequence number
 					let a = p.audio;		// Subtract my level-corrected audio from mix
-					for (let i=0; i < mix.length; i++) mix[i] = mix[i] - a[i];
+					if (a != [])			// As long as my audio wasn't an empty array that is
+						for (let i=0; i < mix.length; i++) mix[i] = mix[i] - a[i];
 					break;				// Packet found. Stop scanning the packet buffer. 
 				}
 			}
