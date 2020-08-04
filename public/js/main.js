@@ -163,7 +163,8 @@ for (i=0;i<20;i++) tempVenue[i] = c0audio[i];
 //console.log(temp2);
 //}
 		} 
-console.log("Venue live client count is ",venueSize);
+console.log("Venue live client count is ",venueSize," channels are...");
+console.log(data.channels);
 		// 2. Build a mix of all incoming channels. For individuals this is just channel 0, For groups it is more
 		let mix = new Array(PacketSize).fill(0);		// Now we build the mix starting from 0's
 		data.channels.forEach(c => {				// Process all audio channel packets sent from server
