@@ -394,6 +394,7 @@ function forceMix() {							// The timer has triggered a mix
 		}
 	}
 	forcedMixes++;							// Either no performer, or enough perf buffered already
+console.log("FORCE MIX");
 	generateMix();							// We need to push out a mix
 }
 
@@ -505,7 +506,7 @@ console.log("total clients = ",totalLiveClients);
 	// 4. Now that mix has gone upstream complete venue audio by adding our mix to channel 0
 	if (channel0Packet != null) {					// If there is a venue packet add our mix to venue audio
 		let a = channel0Packet.audio;
-		for (let i = 0; i < a.length; i++) a[i] = a[i] + mix[i];
+		for (let i = 0; i < mix.length; i++) a[i] = a[i] + mix[i];
 		channel0Packet.seqNos = seqNos;				// Add to channel 0 packet the list of seqNos that were used
 	} 
 	// 5. Send packets to all clients group by group, adding performer, channel 0 (venue) and group audio, plus group live channels and commands
