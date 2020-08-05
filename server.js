@@ -158,7 +158,7 @@ console.log(packet.channels[0].audio);
 				if (p.sequence == s) {			// We have found the right sequence number
 					let a = p.audio;		// Subtract my level-corrected audio from mix
 console.log(a);
-					if (a != [])			// As long as my audio wasn't an empty array that is
+					if (a.length > 0)		// As long as my audio wasn't an empty array that is
 						for (let i=0; i < mix.length; i++) mix[i] = mix[i] - a[i];
 					break;				// Packet found. Stop scanning the packet buffer. 
 				}
