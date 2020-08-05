@@ -134,7 +134,7 @@ upstreamServer.on('channel', function (data) {				// The response to our "Hi" is
 // Venue audio coming down from our upstream server. Channels of audio from upstream plus all our peers.
 upstreamServer.on('d', function (packet) { 
 console.log("DOWNSTREAM");
-console.log(packet);
+console.log(packet.channels[0].audio);
 	if ( connectedClients == 0 ) return;				// If no clients no reason to process upstream data
 	enterState( upstreamState );					
 	upstreamIn++;						
