@@ -133,8 +133,8 @@ upstreamServer.on('channel', function (data) {				// The response to our "Hi" is
 
 // Venue audio coming down from our upstream server. Channels of audio from upstream plus all our peers.
 upstreamServer.on('d', function (packet) { 
-console.log("DOWNSTREAM");
-console.log(packet.channels[0].audio);
+//console.log("DOWNSTREAM");
+//console.log(packet.channels[0].audio);
 	if ( connectedClients == 0 ) return;				// If no clients no reason to process upstream data
 	enterState( upstreamState );					
 	upstreamIn++;						
@@ -157,7 +157,7 @@ console.log(packet.channels[0].audio);
 				let p = packetBuf.shift();		// Remove the oldest packet from the buffer
 				if (p.sequence == s) {			// We have found the right sequence number
 					let a = p.audio;		// Subtract my level-corrected audio from mix
-console.log(a);
+//console.log(a);
 					if (a.length > 0)		// As long as my audio wasn't an empty array that is
 						for (let i=0; i < mix.length; i++) mix[i] = mix[i] - a[i];
 					break;				// Packet found. Stop scanning the packet buffer. 
@@ -176,8 +176,8 @@ console.log(a);
 			sampleRate	: SampleRate,			// Send sample rate to help processing
 			group		: "",				// No group for venue channel
 		}
-console.log("Built channel 0 packet...");
-console.log(p);
+//console.log("Built channel 0 packet...");
+//console.log(p);
 		// 4. Store the packet in the channel 0 buffer
 		channels[0].packets.push(p); 				// Store upstream packet in channel 0
 		if (channels[0].packets.length > maxBufferSize) {	// Clip buffer if overflowing
@@ -500,9 +500,14 @@ console.log(packet);
 	// 3.1. Now that mix has gone upstream complete venue audio for downstream by adding our mix to channel 0 if it exists
 		if (channel0Packet != null) {				// If we have venue audio from upstream
 			let a = channel0Packet.audio;			// Get the venue audio from upstream
+console.log("Mixing mix just sent upstream with this channel 0 audio taken from it's buffer:");
+console.log(a);
 			let len = ((a.length > 0) ? a.length : mix.length);	// Either or both can have empty audio. Choose longest one.
+console.log("length used for combining mix and channel 0 audio is ",len);
 			for (let i = 0; i < len; i++) a[i] = a[i] + mix[i];	// Mix venue and our audio into downstream channel 0 output
 			channel0Packet.seqNos = seqNos;				// Add to channel 0 packet the list of seqNos that were used
+console.log("channel 0 packet for sending downstream has this audio:");
+console.log(channel0Packet.audio);
 		} else {						// Temporarily no venue audio has reached us so geenrate a packet 
 			channel0Packet = {				// Construct the audio packet
 				name		: "VENUE",		// Give packet main venue name
