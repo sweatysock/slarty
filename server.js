@@ -478,7 +478,7 @@ console.log("mixing channel with ",packet.audio.length," bytes");
 	mixMax =  maxValue(mix);					// Note peak value
 	if (mixMax == 0) mix = [];					// If no audio send empty mix to save bandwidth
 	if (upstreamConnected == true) { 				// Send mix if connected to an upstream server
-console.log("upstream connected... building packet");
+//console.log("upstream connected... building packet");
 		let now = new Date().getTime();
 		let packet = {						// Build the packet the same as any client packet
 			name		: myServerName,			// Let others know which server this comes from
@@ -494,18 +494,19 @@ console.log("upstream connected... building packet");
 			// MARK send liveChannels upstream
 		};
 		upstreamServer.emit("u",packet); 			// Send the packet upstream
-console.log(packet);
+//console.log(packet);
 		packetBuf.push(packet);					// Add sent packet to LILO buffer for echo cancelling 
 		upstreamOut++;
 	// 3.1. Now that mix has gone upstream complete venue audio for downstream by adding our mix to channel 0 if it exists
 		if (channel0Packet != null) {				// If we have venue audio from upstream
 			let a = channel0Packet.audio;			// Get the venue audio from upstream
-console.log("Mixing mix just sent upstream with this channel 0 audio taken from it's buffer:");
-console.log(a);
-			let len = ((a.length > 0) ? a.length : mix.length);	// Either or both can have empty audio. Choose longest one.
-console.log("length used for combining mix and channel 0 audio is ",len);
-			for (let i = 0; i < len; i++) a[i] = a[i] + mix[i];	// Mix venue and our audio into downstream channel 0 output
-			channel0Packet.seqNos = seqNos;				// Add to channel 0 packet the list of seqNos that were used
+//console.log("Mixing mix just sent upstream with this channel 0 audio taken from it's buffer:");
+//console.log(a);
+			if (mix.length > 0) {				// If there's a mix ddd it to downstream channel 0 output
+				if (a.length > 0) {for (let i = 0; i < a.length; i++) a[i] = a[i] + mix[i]}	
+				else a = mix;				// if channel 0 is empty just use our mix directly
+			}						// But if our mix is empty jeave channel 0 as it is
+			channel0Packet.seqNos = seqNos;			// Add to channel 0 packet the list of seqNos that were used
 console.log("channel 0 packet for sending downstream has this audio:");
 console.log(channel0Packet.audio);
 		} else {						// Temporarily no venue audio has reached us so geenrate a packet 
@@ -539,6 +540,7 @@ console.log("NO upstream ... building packet for channel 0");
 	} 
 	// 4. Send packets to all clients group by group, adding performer, channel 0 (venue) and group audio, plus group live channels and commands
 	for (group in groups) {
+console.log("Sending to group ",group);
 		let g = groups[group];
 		let clientPackets = g.clientPackets;			// Get group specific packets to send to all group members
 		clientPackets.push( channel0Packet );			// Add channel 0 (venue audio) to the packets for every group
