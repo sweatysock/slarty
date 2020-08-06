@@ -34,7 +34,7 @@ var packetBuf = [];							// Buffer of packets sent, subtracted from venue mix l
 var venueSequence = 0;							// Sequence counter for venue sound going downstream
 var upSequence = 0;							// Sequence counter for sending upstream
 // Mix generation is done as fast as data comes in, but should keep up a rhythmn even if downstream audio isn't sufficient....
-var nextMixTimeLimit = 0;						// The time the next mix must be sent is here:
+var nextMixTimeLimit = 0;						// The time the next mix must be sent 
 var mixTimer = 0;							// Timer that triggers generateMix() if needed
 var myServerName = process.env.servername; 				// Get servername from heroku config variable, if present
 if (myServerName == undefined)						// This name is used to identify us upstream ony
@@ -399,7 +399,7 @@ console.log("FORCE MIX");
 function enoughAudio() {						// Is there enough audio to build a mix before timeout?
 	if (perf.live) return false;					// If there is a performer they drive the mix clock so return false
 	let now = new Date().getTime();
-	if (now > nextMixTimeLimit) return true;			// If timer has failed to trigger generate the mix now
+	if (now > nextMixTimeLimit) return true;			// If timer has failed to trigger just generate the mix now
 	let allFull = true; 
 	let fullCount = 0;		
 	channels.forEach( c => {
@@ -419,6 +419,7 @@ function enoughAudio() {						// Is there enough audio to build a mix before tim
 // The main working function where audio marshalling, venue mixing and sending up and downstream happens
 // Six steps: 1. Prep performer audio 2. Build mix and colate group data 3. Send mix upstream + 3.1. Build venue mix 4. Send to all groups of clients & 5. Clean up & set timers
 function generateMix () { 
+console.log("GEN MIX");
 	// 1. Get perf packet if performing and enough perf audio buffered to start streaming
 	let p = {live:perf.live, chan:perf.chan, packet:null};		// Send downstream by default a perf object with no packet
 	if ((perf.streaming) && (perf.packets.length > 0))		// Pull a performer packet from its queue if any
@@ -539,22 +540,31 @@ console.log("Sending to group ",group);
 		});
 //if (group == "") { console.log("Empty group name... review channels and groups...");console.log(channels);}
 	}
-	// 5. Clean up, trace, monitor, and set timer for next marshalling point limit
+	// 5. Trace, monitor and set timer for next marshalling point limit
 	packetsOut++;							// Sent data so log it and set time limit for next send
 	packetClassifier[packetCount] = packetClassifier[packetCount] + 1;
-	if ((!perf.live) && (packetCount == 0)) {		 		// If not performing and no client packets in mix
-		nextMixTimeLimit = 0;					// stop forcing mix as there is no data to force
+	clearTimeout(mixTimer);						// Mix generated. Clear forceMix timer if it is still pending
+	if ( 	((perf.live) && (perf.streaming)) ||			// If we are in performer mode and streaming fully set timer
+		((!perf.live) && (packetCount > 0)) ) {			// Also set it if we not in performer mode but have data buffered
+		let now = new Date().getTime();				// Get time as this was when latest mix was sent out
+		if (nextMixTimeLimit == 0) nextMixTimeLimit = now;	// If this is the first send event then start at now
+		nextMixTimeLimit += (PacketSize * 1000)/SampleRate;	// Next mix will be needed PacketSize samples in the future
+		mixTimer = setTimeout(forceMix,(nextMixTimeLimit-now));	// Set forceMix timer for when next mix will be needed
 	}
-	if ((!perf.live) || (perf.streaming)) {				// If no live performance or perf is streaming then clock samples
-		let now = new Date().getTime();
-		if (nextMixTimeLimit == 0) {
-			nextMixTimeLimit = now;				// If this is the first send event then start at now
-		}
-		nextMixTimeLimit = nextMixTimeLimit + (PacketSize * 1000)/SampleRate;
-		clearTimeout(mixTimer);
-		mixTimer = setTimeout( forceMix, (nextMixTimeLimit - now) );	
-	} else {nextMixTimeLimit = 0;					// If live performer stop mix forcing
-	}
+	else nextMixTimeLimit = 0;
+//	if ((!perf.live) && (packetCount == 0)) {		 		// If not performing and no client packets in mix
+//		nextMixTimeLimit = 0;					// stop forcing mix as there is no data to force
+//	}
+//	if ((!perf.live) || (perf.streaming)) {				// If no live performance or perf is streaming then clock samples
+//		let now = new Date().getTime();
+//		if (nextMixTimeLimit == 0) {
+//			nextMixTimeLimit = now;				// If this is the first send event then start at now
+//		}
+//		nextMixTimeLimit = nextMixTimeLimit + (PacketSize * 1000)/SampleRate;
+//		clearTimeout(mixTimer);
+//		mixTimer = setTimeout( forceMix, (nextMixTimeLimit - now) );	
+//	} else {nextMixTimeLimit = 0;					// If live performer stop mix forcing
+//	}
 }
 
 
