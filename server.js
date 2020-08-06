@@ -538,33 +538,19 @@ console.log("Sending to group ",group);
 			liveChannels	: liveChannels,			// Include server info about live clients and their queues
 			commands	: commands,			// Send commands downstream to reach all client endpoints
 		});
-//if (group == "") { console.log("Empty group name... review channels and groups...");console.log(channels);}
 	}
 	// 5. Trace, monitor and set timer for next marshalling point limit
 	packetsOut++;							// Sent data so log it and set time limit for next send
 	packetClassifier[packetCount] = packetClassifier[packetCount] + 1;
 	clearTimeout(mixTimer);						// Mix generated. Clear forceMix timer if it is still pending
-	if ( 	((perf.live) && (perf.streaming)) ||			// If we are in performer mode and streaming fully set timer
-		((!perf.live) && (packetCount > 0)) ) {			// Also set it if we not in performer mode but have data buffered
+	if ( 	((perf.live) && (perf.streaming)) ||			// If we are in performer mode and streaming fully, or if we
+		((!perf.live) && (packetCount > 0)) ) {			// are not in performer mode but haven't run out of data set timer
 		let now = new Date().getTime();				// Get time as this was when latest mix was sent out
 		if (nextMixTimeLimit == 0) nextMixTimeLimit = now;	// If this is the first send event then start at now
 		nextMixTimeLimit += (PacketSize * 1000)/SampleRate;	// Next mix will be needed PacketSize samples in the future
 		mixTimer = setTimeout(forceMix,(nextMixTimeLimit-now));	// Set forceMix timer for when next mix will be needed
 	}
-	else nextMixTimeLimit = 0;
-//	if ((!perf.live) && (packetCount == 0)) {		 		// If not performing and no client packets in mix
-//		nextMixTimeLimit = 0;					// stop forcing mix as there is no data to force
-//	}
-//	if ((!perf.live) || (perf.streaming)) {				// If no live performance or perf is streaming then clock samples
-//		let now = new Date().getTime();
-//		if (nextMixTimeLimit == 0) {
-//			nextMixTimeLimit = now;				// If this is the first send event then start at now
-//		}
-//		nextMixTimeLimit = nextMixTimeLimit + (PacketSize * 1000)/SampleRate;
-//		clearTimeout(mixTimer);
-//		mixTimer = setTimeout( forceMix, (nextMixTimeLimit - now) );	
-//	} else {nextMixTimeLimit = 0;					// If live performer stop mix forcing
-//	}
+	else nextMixTimeLimit = 0;					// No timer needed. Reset next mix target time
 }
 
 
