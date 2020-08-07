@@ -19,7 +19,7 @@ var maxBuffSize = 20000;						// Max audio buffer chunks for playback.
 var micBuffer = [];							// Buffer mic audio before sending
 var myChannel = -1;							// The server assigns us an audio channel
 var myName = "";							// Name assigned to my audio channel
-var myGroup = "noGroup";						// Group user belongs to. Default is no group.
+var myGroup = "slarty";						// Group user belongs to. Default is no group.
 const NumberOfChannels = 20;						// Max number of channels in this server
 var channels = [];							// Each channel's data & buffer held here
 for (let i=0; i < NumberOfChannels; i++) {				// Create all the channels pre-initialized
@@ -160,7 +160,6 @@ for (i=0;i<20;i++) tempMy[i] = a[i];
 //console.log("venue audio after subtraction and extras...");
 var tempVenue = [];
 for (i=0;i<20;i++) tempVenue[i] = c0audio[i];
-//console.log(temp2);
 //}
 		} 
 console.log("Venue live client count is ",venueSize," channels are...");
@@ -193,10 +192,8 @@ console.log(data.channels);
 				trace("Sequence jump Channel ",ch," jump ",(c.sequence - chan.seq));
 			chan.seq = c.sequence;
 		});
-//console.log("mix...");
 var tempMix = [];
 for (i=0;i<20;i++) tempMix[i] = mix[i];
-//console.log(temp3);
 		// 3. Upsample the mix, upsample performer audio, mix all together, apply final AGC and send to speaker
 		if (mix.length != 0) {					// If there actually was some audio
 			mix = reSample(mix, SampleRate, soundcardSampleRate, upCache); // Bring mix to HW sampling rate
@@ -209,7 +206,7 @@ for (i=0;i<20;i++) tempMix[i] = mix[i];
 				for (let i=0; i < a.length; i++)
 					mix[i] += a[i];			// Performer audio goes straight into mix
 			}
-if (maxValue(mix) > 2) {
+if (maxValue(mix) > 0.3) {
 console.log("channels = ",data.channels.length);
 console.log("raw c0...");
 console.log(tempc0);
