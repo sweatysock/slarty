@@ -115,6 +115,7 @@ socketIO.on('perf', function (data) {					// Performer status notification
 
 // Data coming down from upstream server: Group mix plus separate member audios
 socketIO.on('d', function (data) { 
+console.log(data);
 	enterState( dataInState );					// This is one of our key tasks
 	packetsIn++;							// For monitoring and statistics
 	serverLiveChannels = data.liveChannels;				// Server live channels are for UI updating
