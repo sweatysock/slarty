@@ -115,7 +115,7 @@ socketIO.on('perf', function (data) {					// Performer status notification
 
 // Data coming down from upstream server: Group mix plus separate member audios
 socketIO.on('d', function (data) { 
-console.log(data);
+//console.log(data);
 	enterState( dataInState );					// This is one of our key tasks
 	packetsIn++;							// For monitoring and statistics
 	serverLiveChannels = data.liveChannels;				// Server live channels are for UI updating
@@ -124,14 +124,15 @@ console.log(data);
 		// 1. Channel 0 venue mix from server includes our audio sent a few mS ago. Subtract it using seq no. and gain to stop echo
 		let c0;							
 		data.channels.forEach(c => {if (c.channel==0) c0=c});	// Find the venue channel
+console.log(c0);
 		if (c0 != null) {					// If there is venue audio (can't take it for granted)
 			let c0audio = c0.audio;				// Get channel 0 audio so we can subtract our audio from it
 			let c0LiveClients = c0.liveClients;		// Number of packets in venue mix = all people in venue in fact
 //console.log("packet count is ",c0LiveClients);
 //if (c0.peak > 0) {
 //console.log("VENUE audio...");
-var tempc0 = [];
-for (i=0;i<20;i++) tempc0[i] = c0audio[i];
+//var tempc0 = [];
+//for (i=0;i<20;i++) tempc0[i] = c0audio[i];
 //console.log(tempc0);
 //}
 			let s = c0.seqNos[myChannel];			// Channel 0's mix contains our audio. This is its sequence no.
@@ -144,8 +145,8 @@ for (i=0;i<20;i++) tempc0[i] = c0audio[i];
 						let a = p.audio;	// Get our audio, level-correct and subtract it from channel 0(venue)
 						if (a.length > 0) {	// if it wasn't a silent audio packet that is!
 //console.log("our audio...");
-var tempMy = [];
-for (i=0;i<20;i++) tempMy[i] = a[i];
+//var tempMy = [];
+//for (i=0;i<20;i++) tempMy[i] = a[i];
 //console.log(temp4);
 							if (venueSize == 0) venueSize = c0LiveClients;	// At start set venueSize
 							venueSize = (venueSize + c0LiveClients)/2;	// Smoothed average of venue size
@@ -160,12 +161,12 @@ for (i=0;i<20;i++) tempMy[i] = a[i];
 		c0.peak = maxValue(c0audio);				// Venue audio is ready. Get peak audio for display 
 //if (c0.peak > 0) {
 //console.log("venue audio after subtraction and extras...");
-var tempVenue = [];
-for (i=0;i<20;i++) tempVenue[i] = c0audio[i];
+//var tempVenue = [];
+//for (i=0;i<20;i++) tempVenue[i] = c0audio[i];
 //}
 		} else console.log("No venue audio from server");
 console.log("Venue live client count is ",venueSize," channels are...");
-console.log(data.channels);
+//console.log(data.channels);
 		// 2. Build a mix of all incoming channels. For individuals this is just channel 0, For groups it is more
 		let mix = new Array(PacketSize).fill(0);		// Now we build the mix starting from 0's
 		data.channels.forEach(c => {				// Process all audio channel packets sent from server
@@ -194,8 +195,8 @@ console.log(data.channels);
 				trace("Sequence jump Channel ",ch," jump ",(c.sequence - chan.seq));
 			chan.seq = c.sequence;
 		});
-var tempMix = [];
-for (i=0;i<20;i++) tempMix[i] = mix[i];
+//var tempMix = [];
+//for (i=0;i<20;i++) tempMix[i] = mix[i];
 		// 3. Upsample the mix, upsample performer audio, mix all together, apply final AGC and send to speaker
 		if (mix.length != 0) {					// If there actually was some audio
 			mix = reSample(mix, SampleRate, soundcardSampleRate, upCache); // Bring mix to HW sampling rate
@@ -208,21 +209,21 @@ for (i=0;i<20;i++) tempMix[i] = mix[i];
 				for (let i=0; i < a.length; i++)
 					mix[i] += a[i];			// Performer audio goes straight into mix
 			}
-if (maxValue(mix) > 0.3) {
-console.log("channels = ",data.channels.length);
-console.log("raw c0...");
-console.log(tempc0);
-console.log("My audio for subtracting...");
-console.log(tempMy);
-console.log("Cleaned up Venue..");
-console.log(tempVenue);
-console.log("mix...");
-console.log(tempMix);
-console.log("Final pre AGC mix with perf ...");
-let temp3 = [];
-for (i=0;i<20;i++) temp3[i] = mix[i];
-console.log(temp3);
-}
+//if (maxValue(mix) > 0.3) {
+//console.log("channels = ",data.channels.length);
+//console.log("raw c0...");
+//console.log(tempc0);
+//console.log("My audio for subtracting...");
+//console.log(tempMy);
+//console.log("Cleaned up Venue..");
+//console.log(tempVenue);
+//console.log("mix...");
+//console.log(tempMix);
+//console.log("Final pre AGC mix with perf ...");
+//let temp3 = [];
+//for (i=0;i<20;i++) temp3[i] = mix[i];
+//console.log(temp3);
+//}
 //			endTalkover();					// Try to end mic talkover before setting gain
 			let obj = applyAutoGain(mix, mixOut);		// Trim mix level 
 			mixOut.gain= obj.finalGain;			// Store gain for next loop

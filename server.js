@@ -133,8 +133,6 @@ upstreamServer.on('channel', function (data) {				// The response to our "Hi" is
 
 // Venue audio coming down from our upstream server. Channels of audio from upstream plus all our peers.
 upstreamServer.on('d', function (packet) { 
-//console.log("DOWNSTREAM");
-//console.log(packet.channels[0].audio);
 	if ( connectedClients == 0 ) return;				// If no clients no reason to process upstream data
 	enterState( upstreamState );					
 	upstreamIn++;						
@@ -157,7 +155,6 @@ upstreamServer.on('d', function (packet) {
 				let p = packetBuf.shift();		// Remove the oldest packet from the buffer
 				if (p.sequence == s) {			// We have found the right sequence number
 					let a = p.audio;		// Subtract my level-corrected audio from mix
-//console.log(a);
 					if (a.length > 0)		// As long as my audio wasn't an empty array that is
 						for (let i=0; i < mix.length; i++) mix[i] = mix[i] - a[i];
 					break;				// Packet found. Stop scanning the packet buffer. 
@@ -176,8 +173,6 @@ upstreamServer.on('d', function (packet) {
 			sampleRate	: SampleRate,			// Send sample rate to help processing
 			group		: "noGroup",			// No group for venue channel
 		}
-//console.log("Built channel 0 packet...");
-//console.log(p);
 		// 4. Store the packet in the channel 0 buffer
 		channels[0].packets.push(p); 				// Store upstream packet in channel 0
 		if (channels[0].packets.length > maxBufferSize) {	// Clip buffer if overflowing
@@ -308,7 +303,6 @@ io.sockets.on('connection', function (socket) {
 	});
 
 	socket.on('u', function (packet) { 				// Audio coming up from one of our downstream clients
-//console.log("packet in");
 		enterState( downstreamState );
 		let channel = channels[packet.channel];			// This client sends their channel to save server effort
 		channel.name = packet.name;				// Update name of channel in case it has changed
@@ -342,7 +336,6 @@ io.sockets.on('connection', function (socket) {
 					channel.overflows++;		// Log overflows per channel
 					overflows++;			// and also globally for monitoring
 				}
-console.log("packet queue = ", channel.packets.length);
 				if (channel.packets.length >= channel.mixTriggerLevel) {
 					channel.newBuf = false;		// Buffer has filled enough. Channel can enter the mix
 					enterState( genMixState );
@@ -392,7 +385,6 @@ function forceMix() {							// The timer has triggered a mix
 		}
 	}
 	forcedMixes++;							// Either no performer, or enough perf buffered already
-console.log("FORCE MIX");
 	generateMix();							// We need to push out a mix
 }
 
@@ -419,7 +411,6 @@ function enoughAudio() {						// Is there enough audio to build a mix before tim
 // The main working function where audio marshalling, venue mixing and sending up and downstream happens
 // Six steps: 1. Prep performer audio 2. Build mix and colate group data 3. Send mix upstream + 3.1. Build venue mix 4. Send to all groups of clients & 5. Clean up & set timers
 function generateMix () { 
-console.log("GEN MIX");
 	// 1. Get perf packet if performing and enough perf audio buffered to start streaming
 	let p = {live:perf.live, chan:perf.chan, packet:null};		// Send downstream by default a perf object with no packet
 	if ((perf.streaming) && (perf.packets.length > 0))		// Pull a performer packet from its queue if any
@@ -526,7 +517,6 @@ console.log("GEN MIX");
 	} 
 	// 4. Send packets to all clients group by group, adding performer, channel 0 (venue) and group audio, plus group live channels and commands
 	for (group in groups) {
-console.log("Sending to group ",group);
 		let g = groups[group];
 		let clientPackets = g.clientPackets;			// Get group specific packets to send to all group members
 		clientPackets.push( channel0Packet );			// Add channel 0 (venue audio) to the packets for every group
