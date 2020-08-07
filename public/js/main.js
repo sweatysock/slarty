@@ -122,7 +122,8 @@ console.log(data);
 	processCommands(data.commands);					// Process commands from server
 	if (micAccessAllowed) {						// Need access to audio before outputting
 		// 1. Channel 0 venue mix from server includes our audio sent a few mS ago. Subtract it using seq no. and gain to stop echo
-		let c0 = data.channels[0];				// Shorthand for channel 0 venue input
+		let c0;							
+		data.channels.forEach(c => {if (c.channel==0) c0=c});	// Find the venue channel
 		if (c0 != null) {					// If there is venue audio (can't take it for granted)
 			let c0audio = c0.audio;				// Get channel 0 audio so we can subtract our audio from it
 			let c0LiveClients = c0.liveClients;		// Number of packets in venue mix = all people in venue in fact
@@ -162,7 +163,7 @@ for (i=0;i<20;i++) tempMy[i] = a[i];
 var tempVenue = [];
 for (i=0;i<20;i++) tempVenue[i] = c0audio[i];
 //}
-		} 
+		} else console.log("No venue audio from server");
 console.log("Venue live client count is ",venueSize," channels are...");
 console.log(data.channels);
 		// 2. Build a mix of all incoming channels. For individuals this is just channel 0, For groups it is more
