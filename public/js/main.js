@@ -61,7 +61,7 @@ var micIn = {								// and for microphone input
 };
 var recording = false;							// Used for testing purposes
 var serverMuted = false;
-var venueSize = 0;							// Number of people in the venue. Used for adjusting venue audio.
+var venueSize = 1;							// Number of people in the venue. Used for adjusting venue audio.
 
 function processCommands(newCommands) {					// Apply commands sent from upstream servers
 	if (newCommands.mute != undefined) serverMuted = newCommands.mute; else serverMuted = false;
@@ -126,15 +126,9 @@ socketIO.on('d', function (data) {
 		data.channels.forEach(c => {if (c.channel==0) c0=c});	// Find the venue channel
 		if (c0 != null) {					// If there is venue audio (can't take it for granted)
 			let c0audio = c0.audio;				// Get channel 0 audio so we can subtract our audio from it
-			let c0LiveClients = c0.liveClients;		// Number of packets in venue mix = all people in venue in fact
-//console.log("packet count is ",c0LiveClients);
-//if (c0.peak > 0) {
-//console.log("VENUE audio...");
-//var tempc0 = [];
-//for (i=0;i<20;i++) tempc0[i] = c0audio[i];
-//console.log(tempc0);
-//}
 			let s = c0.seqNos[myChannel];			// Channel 0's mix contains our audio. This is its sequence no.
+			let c0LiveClients = c0.liveClients;		// The server sends us the current audience count for level setting
+			venueSize = (venueSize + c0LiveClients)/2;	// Smoothed average of client count for smooth volume changes
 			if (s == null)
 				trace("No sequence number for our audio in mix");
 			else {
@@ -147,8 +141,6 @@ socketIO.on('d', function (data) {
 //var tempMy = [];
 //for (i=0;i<20;i++) tempMy[i] = a[i];
 //console.log(temp4);
-							if (venueSize == 0) venueSize = c0LiveClients;	// At start set venueSize
-							venueSize = (venueSize + c0LiveClients)/2;	// Smoothed average of venue size
 							for (let i=0; i < a.length; i++) 		// Subtract our audio from venue
 								c0audio[i] = ( c0audio[i] 		// and scale venue audio down by
 									- a[i] ) / venueSize;		// the number of people in venue.
