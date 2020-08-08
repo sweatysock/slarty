@@ -196,7 +196,7 @@ upstreamServer.on('d', function (packet) {
 upstreamServer.on('disconnect', function () {
 	channels[0].packets = [];
 	channels[0].name = "";
-	channels[0].liveChannels = 0;
+	channels[0].liveClients = 0;
 	channels[0].group = "noGroup";
 	channels[0].socketID = undefined;
 	channels[0].shortages = 0,
@@ -226,7 +226,7 @@ io.sockets.on('connection', function (socket) {
 				if (!c.recording) {			// If recording the channel remains unchanged
 					c.packets = [];			// so that audio can continue to be generated
 					c.name = "";
-					c.liveChannels = 0;
+					c.liveClients = 0;
 					c.group = "noGroup";
 					c.socketID = undefined;
 					c.shortages = 0,
@@ -415,16 +415,16 @@ function generateMix () {
 	let p = {live:perf.live, chan:perf.chan, packet:null};		// Send downstream by default a perf object with no packet
 	if ((perf.streaming) && (perf.packets.length > 0))		// Pull a performer packet from its queue if any
 		p.packet = perf.packets.shift();			// add to copy of perf to replace the null packet
-	// 2. Generate mix with all channels except 0 (upstream venue track) ready for sending upstream
-	let mix = new Array(PacketSize).fill(0);			// Mix of this server's audio to send upstream and also add to venue
+	// 2. Process all channels building group info. objects and generating a mix of all channels except 0 (upstream venue track) to send upstream
+	let mix = new Array(PacketSize).fill(0);			// Mix of this server's audio to send upstream and also to add to venue track
 	let seqNos = [];						// Array of packet sequence numbers used in the mix (channel is index)
 	let channel0Packet = null;					// The channel 0 (venue) audio packet
 	let groups = [];						// Data collated by group for sending downstream
 	let packetCount = 0;						// Keep count of packets that make the mix for monitoring
 	let totalLiveClients = 0;					// Count total clients live downstream of this server
 	channels.forEach( (c, chan) => {				// Review all channels for audio and activity, and build server mix
-		if (chan != 0) totalLiveClients += c.liveClients;	// Sum all downstream clients
-		if (c.name != "") {					// If channel is active it will have a name
+		if (c.name != "") {					// Looking for active channels meaning they have a name
+			if (chan != 0) totalLiveClients +=c.liveClients;// Sum all downstream clients under our active channels
 			if (groups[c.group] == null)			// If first member of group the entry will be null
 				groups[c.group] = {			// Create object
 					clientPackets:[],		// with a buffer of clientPackets for all members
