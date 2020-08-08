@@ -413,13 +413,10 @@ function createMicUI(obj) {						// UI for mic input channel
 	obj.displayID = name;
 }
 
-// Keeping this handy for now...
-//			<img style="position:absolute;left:5%; top:10%;width:40%; padding-bottom:10%;" src="images/talkOn.png" id="'+name+'talkOn" onclick="recButton(event)">  \
-
 function removeChannelUI(obj) {
 	trace2("Removing channel ",obj.name);
 	let chan = document.getElementById(obj.displayID);
-	chan.remove();							// Remove from UI
+	if (chan != null) chan.remove();				// Remove from UI
 	obj.displayID	= undefined;					// Reset all variables except channel #
 	obj.name 	= "";						
 	obj.gain	= 1;					
