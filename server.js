@@ -424,12 +424,18 @@ function generateMix () {
 	let totalLiveClients = 0;					// Count total clients live downstream of this server
 	channels.forEach( (c, chan) => {				// Review all channels for audio and activity, and build server mix
 		if (chan != 0) totalLiveClients += c.liveClients;	// Sum all downstream clients
-		if (c.name != "")					// If channel is active it will have a name
+		if (c.name != "") {					// If channel is active it will have a name
 			if (groups[c.group] == null)			// If first member of group the entry will be null
 				groups[c.group] = {			// Create object
 					clientPackets:[],		// with a buffer of clientPackets for all members
 					liveChannels:[],		// and a liveChannels list too
 				};
+			if (c.group != "noGroup") {			// Store live channel number if part of a group
+				groups[c.group].liveChannels[chan] = true;	// Used to display correct channels in client
+									// MARK ADD URL for downstream servers needed for heckler control
+									// MARK ADD peak level for each for audio visualization
+			}
+		}
 		if (c.newBuf == false) {				// Only process channels that are non-new
 			let packet;
 			if (c.recording) {				// If recording then read the packet 
@@ -448,11 +454,8 @@ function generateMix () {
 					for (let i = 0; i < packet.audio.length; ++i) mix[i] = (mix[i] + packet.audio[i]);	
 					seqNos[packet.channel] 		// Store the seq number of the packet just added to the mix
 						= packet.sequence;	// so that it can be subtracted downstream to remove echo
-					if (c.group != "noGroup") {	// Store packet and live channel number if part of a group
-						groups[c.group].clientPackets.push( packet );	// Used for client controlled mixing
-						groups[c.group].liveChannels[chan] = true;	// Used to display correct channels in client
-									// MARK ADD URL for downstream servers needed for heckler control
-									// MARK ADD peak level for each for audio visualization
+					if (c.group != "noGroup") {	// Store packet if part of a group. Used for client controlled mixing
+						groups[c.group].clientPackets.push( packet );	
 					}
 				} else channel0Packet = packet;		// keep the packet for channel 0 (venue) for adding later
 			}

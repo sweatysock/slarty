@@ -124,7 +124,6 @@ socketIO.on('d', function (data) {
 		// 1. Channel 0 venue mix from server includes our audio sent a few mS ago. Subtract it using seq no. and gain to stop echo
 		let c0;							
 		data.channels.forEach(c => {if (c.channel==0) c0=c});	// Find the venue channel
-console.log(c0);
 		if (c0 != null) {					// If there is venue audio (can't take it for granted)
 			let c0audio = c0.audio;				// Get channel 0 audio so we can subtract our audio from it
 			let c0LiveClients = c0.liveClients;		// Number of packets in venue mix = all people in venue in fact
