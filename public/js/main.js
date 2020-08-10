@@ -19,7 +19,7 @@ var maxBuffSize = 20000;						// Max audio buffer chunks for playback.
 var micBuffer = [];							// Buffer mic audio before sending
 var myChannel = -1;							// The server assigns us an audio channel
 var myName = "";							// Name assigned to my audio channel
-var myGroup = "slarty";						// Group user belongs to. Default is no group.
+var myGroup = "noGroup";						// Group user belongs to. Default is no group.
 const NumberOfChannels = 20;						// Max number of channels in this server
 var channels = [];							// Each channel's data & buffer held here
 for (let i=0; i < NumberOfChannels; i++) {				// Create all the channels pre-initialized
@@ -174,8 +174,6 @@ socketIO.on('d', function (data) {
 				trace("Sequence jump Channel ",ch," jump ",(c.sequence - chan.seq));
 			chan.seq = c.sequence;
 		});
-//var tempMix = [];
-//for (i=0;i<20;i++) tempMix[i] = mix[i];
 		// 3. Upsample the mix, upsample performer audio, mix all together, apply final AGC and send to speaker
 		if (mix.length != 0) {					// If there actually was some audio
 			mix = reSample(mix, SampleRate, soundcardSampleRate, upCache); // Bring mix to HW sampling rate
