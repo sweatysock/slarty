@@ -598,7 +598,7 @@ function fadeDown(audio) {						// Fade sample linearly over length
 		audio[i] = audio[i] * ((audio.length - i)/audio.length);
 }
 
-var talkoverLevel = 0.01;						// Ceiling for mix when mic is active, 0 = half duplex
+var talkoverLevel = 1;						// Ceiling for mix when mic is active, 0 = half duplex
 if (navigator.userAgent.toLowerCase().indexOf('firefox') > -1) 		// If we are on Firefox echo cancelling is good 
 	talkoverLevel = 1;
 var talkoverLag = 50;							// mS that talkover endures after mic goes quiet
