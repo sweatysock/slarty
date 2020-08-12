@@ -135,11 +135,11 @@ socketIO.on('d', function (data) {
 					let p = packetBuf.shift();	// Remove the oldest packet from the buffer
 					if (p.sequence == s) {		// We have found the right sequence number
 						let a = p.audio;	// Get our audio, level-correct and subtract it from channel 0(venue)
-						if (a.length > 0) {	// if it wasn't a silent audio packet that is!
-							for (let i=0; i < a.length; i++) 		// Subtract our audio from venue
-								c0audio[i] = ( c0audio[i] 		// and scale venue audio down by
-									- a[i] ) / venueSize;		// the number of people in venue.
-						}
+//						if (a.length > 0) {	// if it wasn't a silent audio packet that is!
+//							for (let i=0; i < a.length; i++) 		// Subtract our audio from venue
+//								c0audio[i] = ( c0audio[i] 		// and scale venue audio down by
+//									- a[i] ) / venueSize;		// the number of people in venue.
+//						}
 						break;			// Packet found so stop scanning the packet buffer. 
 					}
 				}
@@ -598,7 +598,7 @@ function fadeDown(audio) {						// Fade sample linearly over length
 		audio[i] = audio[i] * ((audio.length - i)/audio.length);
 }
 
-var talkoverLevel = 1;						// Ceiling for mix when mic is active, 0 = half duplex
+var talkoverLevel = 0.01;						// Ceiling for mix when mic is active, 0 = half duplex
 if (navigator.userAgent.toLowerCase().indexOf('firefox') > -1) 		// If we are on Firefox echo cancelling is good 
 	talkoverLevel = 1;
 var talkoverLag = 50;							// mS that talkover endures after mic goes quiet
