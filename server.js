@@ -318,8 +318,8 @@ io.sockets.on('connection', function (socket) {
 			if (packet.sampleRate == PerfSampleRate) {	// Sample rate needs to be correct for performer channel
 				perf.packets.push(packet);		// Store performer audio/video packet
 				if ((!perf.streaming) && (perf.packets.length > 5)) {
-					nextMixTimeLimit = 0;		// Reset the mix timer so that it doesn't empty the buffer right away
 					perf.streaming = true;		// If not streaming but enough now buffered, performer is go!
+					nextMixTimeLimit = 0;		// Reset the mix timer so that it doesn't empty the buffer right away
 				}
 				if (perf.streaming) {			// If performer is go we will generate a mix
 					enterState( genMixState );
@@ -411,6 +411,7 @@ function enoughAudio() {						// Is there enough audio to build a mix before tim
 // The main working function where audio marshalling, venue mixing and sending up and downstream happens
 // Six steps: 1. Prep performer audio 2. Build mix and colate group data 3. Send mix upstream + 3.1. Build venue mix 4. Send to all groups of clients & 5. Clean up & set timers
 function generateMix () { 
+console.log("gen mix");
 	// 1. Get perf packet if performing and enough perf audio buffered to start streaming
 	let p = {live:perf.live, chan:perf.chan, packet:null};		// Send downstream by default a perf object with no packet
 	if ((perf.streaming) && (perf.packets.length > 0))		// Pull a performer packet from its queue if any
@@ -490,6 +491,7 @@ function generateMix () {
 				else a = mix;				// if channel 0 is empty just use our mix directly
 			}						// But if our mix is empty jeave channel 0 as it is
 			channel0Packet.seqNos = seqNos;			// Add to channel 0 packet the list of seqNos that were used
+console.log("chan 0 packet has out mix added");
 		} else {						// Temporarily no venue audio has reached us so geenrate a packet 
 			channel0Packet = {				// Construct the audio packet
 				name		: "VENUE",		// Give packet main venue name
@@ -503,6 +505,7 @@ function generateMix () {
 				sampleRate	: SampleRate,		// Send sample rate to help processing
 				group		: "noGroup",		// No group for venue channel
 			}
+console.log("temporarily no chan 0 packet ... built it with our mix");
 		}
 	} else {							// No upstream server so we must be the venue server
 		channel0Packet = {					// Construct the audio packet
@@ -517,6 +520,7 @@ function generateMix () {
 			sampleRate	: SampleRate,			// Send sample rate to help processing
 			group		: "noGroup",			// No group for venue channel
 		}
+console.log("no upstream... built chan 0 myself");
 	} 
 	// 4. Send packets to all clients group by group, adding performer, channel 0 (venue) and group audio, plus group live channels and commands
 	for (group in groups) {

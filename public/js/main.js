@@ -125,6 +125,7 @@ socketIO.on('d', function (data) {
 		data.channels.forEach(c => {if (c.channel==0) c0=c});	// Find the venue channel
 		if (c0 != null) {					// If there is venue audio (can't take it for granted)
 			let c0audio = c0.audio;				// Get channel 0 audio so we can subtract our audio from it
+if (c0audio == undefined) trace("C0 UNDEFINED");
 			let s = c0.seqNos[myChannel];			// Channel 0's mix contains our audio. This is its sequence no.
 			let c0LiveClients = c0.liveClients;		// The server sends us the current audience count for level setting
 			venueSize = (venueSize + c0LiveClients)/2;	// Smoothed average of client count for smooth volume changes
@@ -137,10 +138,8 @@ socketIO.on('d', function (data) {
 						let a = p.audio;	// Get our audio, level-correct and subtract it from channel 0(venue)
 						if (a.length > 0) {	// if it wasn't a silent audio packet that is!
 							for (let i=0; i < a.length; i++) { 		// Subtract our audio from venue
-let c=c0audio[i];
 								c0audio[i] = ( c0audio[i] 		// and scale venue audio down by
 									- a[i] ) / venueSize;		// the number of people in venue.
-if (isNaN(c0audio[i])) trace("Created NaN in subtract a[i]=",a[i],"venueSize=",venueSize," c0audio was=",c);
 							}
 						}
 						break;			// Packet found so stop scanning the packet buffer. 
