@@ -740,8 +740,6 @@ function processAudio(e) {						// Main processing loop
 		shortages++;						// For stats and monitoring
 	}
 	let max = maxValue(outAudio);					// Get peak level of this outgoing audio
-trace(max);
-if (max > traceMax) traceMax = max;
 	thresholdBuffer.unshift( max );					// add to start of dynamic threshold queue
 	micIn.threshold = (maxValue([					// Apply most aggressive threshold near current +/-1
 		thresholdBuffer[echoTest.sampleDelay-2],
@@ -751,6 +749,7 @@ if (max > traceMax) traceMax = max;
 		thresholdBuffer[echoTest.sampleDelay+2]
 	])) * echoTest.factor * mixOut.gain;				// multiply by factor and mixOutGain
 	thresholdBuffer.pop();						// Remove oldest threshold buffer value
+if (outData.length != outAudio.length) trace("Arrays don't match in size");
 	for (let i in outData) 
 		outData[i] = outAudio[i];				// Copy audio to output
 	enterState( idleState );					// We are done. Back to Idling
@@ -1095,7 +1094,6 @@ var shortages = 0;
 var packetSequence = 0;							// Tracing packet ordering
 var rtt = 0;								// Round Trip Time indicates bad network buffering
 var tracecount = 0;
-var traceMax = 0;
 var sendShortages = 0;
 function printReport() {
 	enterState( UIState );						// Measure time spent updating UI even for reporting!
@@ -1103,10 +1101,9 @@ function printReport() {
 	if (!pauseTracing) {
 		trace("Idle = ", idleState.total, " data in = ", dataInState.total, " audio in/out = ", audioInOutState.total," UI work = ",UIState.total);
 		trace("Sent = ",packetsOut," Heard = ",packetsIn," overflows = ",overflows," shortages = ",shortages," RTT = ",rtt.toFixed(1));
-		trace("Threshold delay:",echoTest.delay," micIn.peak:",micIn.peak.toFixed(1)," mixOut.peak:",mixOut.peak.toFixed(1)," SpkrMax:",traceMax.toFixed(1)," speaker buff:",spkrBuffer.length," Max Buff:",maxBuffSize);
+		trace("Threshold delay:",echoTest.delay," micIn.peak:",micIn.peak.toFixed(1)," mixOut.peak:",mixOut.peak.toFixed(1)," speaker buff:",spkrBuffer.length," Max Buff:",maxBuffSize);
 		trace("Levels of output: ",levelCategories);
 	}
-	traceMax = 0;
 //	setNoiseThreshold();						// Set mic noise threshold based on level categories
 	if (performer == true) {
 		document.getElementById("onair").style.visibility = "visible";
