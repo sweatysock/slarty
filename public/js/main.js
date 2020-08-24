@@ -137,9 +137,10 @@ socketIO.on('d', function (data) {
 						let a = p.audio;	// Get our audio, level-correct and subtract it from channel 0(venue)
 						if (a.length > 0) {	// if it wasn't a silent audio packet that is!
 							for (let i=0; i < a.length; i++) { 		// Subtract our audio from venue
+let c=c0audio[i];
 								c0audio[i] = ( c0audio[i] 		// and scale venue audio down by
 									- a[i] ) / venueSize;		// the number of people in venue.
-if (isNaN(c0audio[i])) trace("Created NaN in subtract");
+if (isNaN(c0audio[i])) trace("Created NaN in subtract a[i]=",a[i],"venueSize=",venueSize," c0audio was=",c);
 							}
 						}
 						break;			// Packet found so stop scanning the packet buffer. 
