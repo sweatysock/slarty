@@ -136,9 +136,11 @@ socketIO.on('d', function (data) {
 					if (p.sequence == s) {		// We have found the right sequence number
 						let a = p.audio;	// Get our audio, level-correct and subtract it from channel 0(venue)
 						if (a.length > 0) {	// if it wasn't a silent audio packet that is!
-							for (let i=0; i < a.length; i++) 		// Subtract our audio from venue
+							for (let i=0; i < a.length; i++) { 		// Subtract our audio from venue
 								c0audio[i] = ( c0audio[i] 		// and scale venue audio down by
 									- a[i] ) / venueSize;		// the number of people in venue.
+if (isNaN(c0audio[i])) trace("Created NaN in subtract");
+							}
 						}
 						break;			// Packet found so stop scanning the packet buffer. 
 					}
@@ -669,7 +671,6 @@ function processAudio(e) {						// Main processing loop
 		let micAudio = [];					// Our objective is to fill this with audio
 		let peak = maxValue(inData);				// Get peak of raw mic audio
 		if (!pauseTracing) levelClassifier(peak);		// Classify audio incoming for analysis
-//noiseThreshold = 0;
 		if ((peak > micIn.threshold) &&				// if audio is above dynamic threshold
 			(peak > noiseThreshold)) {			// and noise threshold, open gate
 			if (micIn.gate == 0)
@@ -749,10 +750,8 @@ function processAudio(e) {						// Main processing loop
 		thresholdBuffer[echoTest.sampleDelay+2]
 	])) * echoTest.factor * mixOut.gain;				// multiply by factor and mixOutGain
 	thresholdBuffer.pop();						// Remove oldest threshold buffer value
-	for (let i in outData) {
-		if (outAudio[i] != 0) trace("non-zero outAudio value: ",outAudio[i]);
+	for (let i in outData) 
 		outData[i] = outAudio[i];				// Copy audio to output
-	}
 	enterState( idleState );					// We are done. Back to Idling
 }
 
