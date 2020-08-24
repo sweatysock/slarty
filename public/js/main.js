@@ -740,6 +740,7 @@ function processAudio(e) {						// Main processing loop
 		shortages++;						// For stats and monitoring
 	}
 	let max = maxValue(outAudio);					// Get peak level of this outgoing audio
+trace(max);
 if (max > traceMax) traceMax = max;
 	thresholdBuffer.unshift( max );					// add to start of dynamic threshold queue
 	micIn.threshold = (maxValue([					// Apply most aggressive threshold near current +/-1
