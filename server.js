@@ -472,7 +472,7 @@ function generateMix () {
 			liveClients	: totalLiveClients,		// Clients visible downstream of this server
 			sequence	: upSequence++,			// Good for data integrity checks
 			timestamp	: now,				// Used for round trip time measurements
-			peak 		: mixMax,			// Saves having to calculate again
+			peak 		: 0,				// Calculated in the client
 			channel		: upstreamServerChannel,	// Send assigned channel to help server
 			recording	: false,			// Make sure the upstream server never records
 			sampleRate	: SampleRate,			// Send sample rate to help processing
@@ -496,7 +496,7 @@ function generateMix () {
 				audio		: mix,			// Use our mix as the venue audio
 				seqNos		: seqNos,		// Packet sequence numbers in the mix
 				liveClients	: channels[0].liveClients,	// Just is a temporary lack of audio. Use upstream value
-				peak		: 99,			// This is calculated in the client.  99 = intentionally not set.
+				peak		: 0,			// This is calculated in the client
 				timestamp	: 0,			// No need to trace RTT here
 				sequence	: venueSequence++,	// Sequence number for tracking quality
 				channel		: 0,			// Upstream is assigned channel 0 everywhere
@@ -510,7 +510,7 @@ function generateMix () {
 			audio		: mix,				// Use our mix as the venue audio
 			seqNos		: seqNos,			// Packet sequence numbers in the mix
 			liveClients	: totalLiveClients,		// Clients visible downstream of this server
-			peak		: 99,				// This is calculated in the client.  99 = intentionally not set.
+			peak		: 0,				// This is calculated in the client.
 			timestamp	: 0,				// No need to trace RTT here
 			sequence	: venueSequence++,		// Sequence number for tracking quality
 			channel		: 0,				// Upstream is assigned channel 0 everywhere
