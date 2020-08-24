@@ -123,7 +123,7 @@ socketIO.on('d', function (data) {
 		// 1. Channel 0 venue mix from server includes our audio sent a few mS ago. Subtract it using seq no. and gain to stop echo
 		let c0;							
 		data.channels.forEach(c => {if (c.channel==0) c0=c});	// Find the venue channel
-		if (c0 != null) {					// If there is venue audio (can't take it for granted)
+		if ((c0 != null) && (c0.audio.length > 0)) {		// If there is venue audio (can't take it for granted)
 			let c0audio = c0.audio;				// Get channel 0 audio so we can subtract our audio from it
 			let s = c0.seqNos[myChannel];			// Channel 0's mix contains our audio. This is its sequence no.
 			let c0LiveClients = c0.liveClients;		// The server sends us the current audience count for level setting
@@ -139,14 +139,13 @@ socketIO.on('d', function (data) {
 							for (let i=0; i < a.length; i++) { 		// Subtract our audio from venue
 								c0audio[i] = ( c0audio[i] 		// and scale venue audio down by
 									- a[i] ) / venueSize;		// the number of people in venue.
-if (isNaN(c0audio[i])) trace("Created NaN in subtract a[i]=",a[i],"venueSize=",venueSize," c0audio was=",c);
 							}
 						}
 						break;			// Packet found so stop scanning the packet buffer. 
 					}
 				}
 			}
-		c0.peak = maxValue(c0audio);				// Venue audio is ready. Get peak audio for display 
+			c0.peak = maxValue(c0audio);			// Venue audio is ready. Get peak audio for display 
 		} else console.log("No venue audio from server");
 		// 2. Build a mix of all incoming channels. For individuals this is just channel 0, For groups it is more
 		let mix = new Array(PacketSize).fill(0);		// Now we build the mix starting from 0's

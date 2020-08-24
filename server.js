@@ -485,12 +485,12 @@ function generateMix () {
 	// 3.1. Now that mix has gone upstream complete venue audio for downstream by adding our mix to channel 0 if it exists
 		if (channel0Packet != null) {				// If we have venue audio from upstream
 			let a = channel0Packet.audio;			// Get the venue audio from upstream
-			if (mix.length > 0) {				// If there's a mix ddd it to downstream channel 0 output
+			if (mix.length > 0) {				// If there's a mix add it to downstream channel 0 output
 				if (a.length > 0) {for (let i = 0; i < a.length; i++) a[i] = a[i] + mix[i]}	
 				else a = mix;				// if channel 0 is empty just use our mix directly
 			}						// But if our mix is empty jeave channel 0 as it is
 			channel0Packet.seqNos = seqNos;			// Add to channel 0 packet the list of seqNos that were used
-		} else {						// Temporarily no venue audio has reached us so geenrate a packet 
+		} else {						// Temporarily no venue audio has reached us so generate a packet 
 			channel0Packet = {				// Construct the audio packet
 				name		: "VENUE",		// Give packet main venue name
 				audio		: mix,			// Use our mix as the venue audio
@@ -505,7 +505,7 @@ function generateMix () {
 			}
 		}
 	} else {							// No upstream server so we must be the venue server
-		channel0Packet = {					// Construct the audio packet
+		channel0Packet = {					// Construct the venue (channel 0) audio packet
 			name		: "VENUE",			// Give packet main venue name
 			audio		: mix,				// Use our mix as the venue audio
 			seqNos		: seqNos,			// Packet sequence numbers in the mix
