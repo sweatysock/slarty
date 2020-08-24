@@ -752,6 +752,7 @@ function processAudio(e) {						// Main processing loop
 	for (let i in outData) {
 		if (outAudio[i] != 0) trace("non-zero outAudio value: ",outAudio[i]);
 		outData[i] = outAudio[i];				// Copy audio to output
+	}
 	enterState( idleState );					// We are done. Back to Idling
 }
 
