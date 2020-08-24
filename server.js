@@ -165,7 +165,7 @@ upstreamServer.on('d', function (packet) {
 		let p = {						// Construct the audio packet
 			name		: channels[0].name,		// Give packet our channel name
 			audio		: mix,				// The audio is the mix just prepared
-			peak		: 99,				// This is calculated in the client.  99 = intentionally not set.
+			peak		: 0,				// This is calculated in the client.  
 			liveClients	: channels[0].liveClients,	// Clients visible to upstream server = total venue capacity
 			timestamp	: 0,				// Channel 0 (venue) audio never returns so no rtt to measure
 			sequence	: venueSequence++,		// Sequence number for tracking quality
@@ -585,7 +585,6 @@ var forcedMixes = 0;
 var packetClassifier = [];
 packetClassifier.fill(0,0,30);
 var mixMax = 0;
-var upstreamMax = 0;
 
 var traceCount = 1;
 
@@ -596,7 +595,7 @@ function printReport() {
 	enterState( idleState );					// Update timers in case we are inactive
 //	console.log(myServerName," Activity Report");
 //	console.log("Idle = ", idleState.total, " upstream = ", upstreamState.total, " downstream = ", downstreamState.total, " genMix = ", genMixState.total);
-//	console.log("Clients = ",connectedClients,"  Upstream In =",upstreamIn,"Upstream Out = ",upstreamOut,"Upstream Shortages = ",channels[0].shortages," Upstream overflows = ",channels[0].overflows,"In = ",packetsIn," Out = ",packetsOut," overflows = ",overflows," shortages = ",shortages," forced mixes = ",forcedMixes," mixMax = ",mixMax," upstreamMax = ",upstreamMax," rtt = ",rtt);
+//	console.log("Clients = ",connectedClients,"  Upstream In =",upstreamIn,"Upstream Out = ",upstreamOut,"Upstream Shortages = ",channels[0].shortages," Upstream overflows = ",channels[0].overflows,"In = ",packetsIn," Out = ",packetsOut," overflows = ",overflows," shortages = ",shortages," forced mixes = ",forcedMixes," mixMax = ",mixMax," rtt = ",rtt);
 	let cbs = [];
 	for (let c in channels) {
 		let t = channels[c].packets.length;
@@ -640,7 +639,6 @@ function printReport() {
 	rtt = 0;
 	forcedMixes = 0;
 	mixMax = 99;
-	upstreamMax = 99;
 	if ((upstreamName != "") && (upstreamConnected == false)) {
 		console.log("Connecting to upstream server",upstreamName);
 		connectUpstreamServer(upstreamName);

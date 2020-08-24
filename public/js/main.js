@@ -147,7 +147,6 @@ socketIO.on('d', function (data) {
 			}
 			c0.peak = maxValue(c0audio);			// Venue audio is ready. Get peak audio for display 
 		} else trace("No venue audio from server");
-console.log(data);
 		// 2. Build a mix of all incoming channels. For individuals this is just channel 0, For groups it is more
 		let mix = new Array(PacketSize).fill(0);		// Now we build the mix starting from 0's
 		data.channels.forEach(c => {				// Process all audio channel packets sent from server
