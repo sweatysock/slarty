@@ -135,11 +135,11 @@ socketIO.on('d', function (data) {
 					let p = packetBuf.shift();	// Remove the oldest packet from the buffer
 					if (p.sequence == s) {		// We have found the right sequence number
 						let a = p.audio;	// Get our audio, level-correct and subtract it from channel 0(venue)
-//						if (a.length > 0) {	// if it wasn't a silent audio packet that is!
-//							for (let i=0; i < a.length; i++) 		// Subtract our audio from venue
-//								c0audio[i] = ( c0audio[i] 		// and scale venue audio down by
-//									- a[i] ) / venueSize;		// the number of people in venue.
-//						}
+						if (a.length > 0) {	// if it wasn't a silent audio packet that is!
+							for (let i=0; i < a.length; i++) 		// Subtract our audio from venue
+								c0audio[i] = ( c0audio[i] 		// and scale venue audio down by
+									- a[i] ) / venueSize;		// the number of people in venue.
+						}
 						break;			// Packet found so stop scanning the packet buffer. 
 					}
 				}
