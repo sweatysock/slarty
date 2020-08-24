@@ -750,8 +750,8 @@ if (max > traceMax) traceMax = max;
 		thresholdBuffer[echoTest.sampleDelay+2]
 	])) * echoTest.factor * mixOut.gain;				// multiply by factor and mixOutGain
 	thresholdBuffer.pop();						// Remove oldest threshold buffer value
-	for (let i in outData) 
-		outData[i] = outAudio[i];				// Copy audio to output
+//	for (let i in outData) 
+//		outData[i] = outAudio[i];				// Copy audio to output
 	enterState( idleState );					// We are done. Back to Idling
 }
 
