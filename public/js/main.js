@@ -669,7 +669,7 @@ function processAudio(e) {						// Main processing loop
 		let micAudio = [];					// Our objective is to fill this with audio
 		let peak = maxValue(inData);				// Get peak of raw mic audio
 		if (!pauseTracing) levelClassifier(peak);		// Classify audio incoming for analysis
-noiseThreshold = 0;
+//noiseThreshold = 0;
 		if ((peak > micIn.threshold) &&				// if audio is above dynamic threshold
 			(peak > noiseThreshold)) {			// and noise threshold, open gate
 			if (micIn.gate == 0)
