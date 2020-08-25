@@ -119,7 +119,7 @@ function sendCommands() {
 		mute		: globalMute,
 		gateDelay	: gateDelay,
 		talkoverLevel	: talkoverLevel,
-		tholdFactor	: tholdFactor,
+		perfLevel	: perfLevel,
 		noiseThreshold	: noisethreshold,
 	});
 }
