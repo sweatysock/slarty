@@ -126,18 +126,17 @@ socketIO.on('d', function (data) {
 			let s = c0.seqNos[myChannel];			// Channel 0's mix contains our audio. This is its sequence no.
 			let c0LiveClients = c0.liveClients;		// The server sends us the current audience count for level setting
 			venueSize = (venueSize + c0LiveClients)/2;	// Smoothed average of client count for smooth volume changes
-trace2("Venue size = ",venueSize);
 			if (s == null)
 				trace("No sequence number for our audio in mix");
 			else {
 				while (packetBuf.length) {		// Scan the packet buffer for the packet with this sequence
 					let p = packetBuf.shift();	// Remove the oldest packet from the buffer
 					if (p.sequence == s) {		// We have found the right sequence number
-						let a = p.audio;	// Get our audio, level-correct and subtract it from channel 0(venue)
-						if (a.length > 0) {	// if it wasn't a silent audio packet that is!
-							for (let i=0; i < a.length; i++)  		// Subtract our audio from venue
-								c0audio[i] = ( c0audio[i] 		// and scale venue audio down by
-									- a[i] ) / venueSize;		// the number of people in venue.
+						let a = p.audio;	// Get our audio from the matched packet buffer
+						if (a.length > 0) {	// Subtract our audio from the venue and scale down by venue size
+							for (let i=0; i < a.length; i++) c0audio[i] = ( c0audio[i] - a[i] ) / venueSize;
+						} else { 		// Our audio was silent. Just scale down the venue audio
+							for (let i=0; i < c0audio.length; i++) c0audio[i] = c0audio[i] / venueSize; 	
 						}
 						break;			// Packet found so stop scanning the packet buffer. 
 					}
