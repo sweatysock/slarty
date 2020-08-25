@@ -123,6 +123,7 @@ socketIO.on('d', function (data) {
 		data.channels.forEach(c => {if (c.channel==0) c0=c});	// Find the venue channel
 		if ((c0 != null) && (c0.audio.length > 0)) {		// If there is venue audio (may be silent and therefore = [])
 			let c0audio = c0.audio;				// Get channel 0 audio so we can subtract our audio from it
+			let a = [];					// Temp store for our audio for subtracting (echo cancelling)
 			let s = c0.seqNos[myChannel];			// Channel 0's mix contains our audio. This is its sequence no.
 			let c0LiveClients = c0.liveClients;		// The server sends us the current audience count for level setting
 			venueSize = (venueSize + c0LiveClients)/2;	// Smoothed average of client count for smooth volume changes
@@ -133,17 +134,18 @@ socketIO.on('d', function (data) {
 					let p = packetBuf.shift();	// Remove the oldest packet from the buffer
 					if (p.sequence == s) {		// We have found the right sequence number
 						let a = p.audio;	// Get our audio from the matched packet buffer
-						if (a.length > 0) {	// Subtract our audio from the venue and scale down by venue size
-							for (let i=0; i < a.length; i++) c0audio[i] = ( c0audio[i] - a[i] ) / venueSize;
-						} else { 		// Our audio was silent. Just scale down the venue audio
-							for (let i=0; i < c0audio.length; i++) c0audio[i] = c0audio[i] / venueSize; 	
-						}
 						break;			// Packet found so stop scanning the packet buffer. 
 					}
 				}
 			}
+			if (a.length > 0) {				// Subtract our audio from the venue and scale down by venue size
+				for (let i=0; i < a.length; i++) c0audio[i] = ( c0audio[i] - a[i] ) / venueSize;
+			} else { 					// Our audio was silent. Just scale down the venue audio
+				for (let i=0; i < c0audio.length; i++) c0audio[i] = c0audio[i] / venueSize; 	
+			}
+trace2("c0audio scaled down by ",venueSize);
 			c0.peak = maxValue(c0audio);			// Venue audio is ready. Get peak audio for display 
-		} 
+		} trace("No venue audio from server");
 		// 2. Build a mix of all incoming channels. For individuals this is just channel 0, For groups it is more
 		let mix = new Array(PacketSize).fill(0);		// Now we build the mix starting from 0's
 		data.channels.forEach(c => {				// Process all audio channel packets sent from server
