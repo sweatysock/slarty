@@ -3,7 +3,7 @@ globalMute = false;							// Mute all clients
 gateDelay = 30;								// the delay in mS on all clients for mic gate staying open
 talkoverLevel = 0.01;							// Output level when mic is active and talkover is happening
 perfChannel = 0;							// performer channel on this (venue) server
-tholdFactor = 2;							// how much to boost the mic threshold to stop echo
+perfLevel = 1;								// control performer Mic level directly from console
 noisethreshold = 0.02;							// mic gate threshold to remove background noise
 
 // Network code
@@ -93,11 +93,11 @@ document.addEventListener('DOMContentLoaded', function(event){
 			e.preventDefault();
 		}
 	});
-	let tholdFactorEntry = document.getElementById('tholdFactorEntry');
-	tholdFactorEntry.innerHTML = tholdFactor;
-	tholdFactorEntry.addEventListener("keypress", (e) => {
+	let perfLevelEntry = document.getElementById('perfLevelEntry');
+	perfLevelEntry.innerHTML = perfLevel;
+	perfLevelEntry.addEventListener("keypress", (e) => {
 		if (e.which === 13) {
-			tholdFactor = parseFloat(tholdFactorEntry.innerHTML);
+			perfLevel = parseFloat(perfLevelEntry.innerHTML);
 			sendCommands();
 			e.preventDefault();
 		}
