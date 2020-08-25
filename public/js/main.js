@@ -67,10 +67,8 @@ function processCommands(newCommands) {					// Apply commands sent from upstream
 	if (newCommands.mute != undefined) serverMuted = newCommands.mute; else serverMuted = false;
 	if (newCommands.gateDelay != undefined) gateDelay = newCommands.gateDelay;
 	if (newCommands.venueSize != undefined) venueSize = newCommands.venueSize;
-	if (newCommands.talkoverLag != undefined) talkoverLag = newCommands.talkoverLag;
 	if (newCommands.perfLevel != undefined) if (performer) {micIn.gain = newCommands.perfLevel; micIn.agc = false;}
 	if (newCommands.noiseThreshold != undefined) noiseThreshold = newCommands.noiseThreshold;
-	if (newCommands.outGain != undefined);
 	if (newCommands.displayURL != undefined);
 	if (newCommands.displayText != undefined);
 }
@@ -128,6 +126,7 @@ socketIO.on('d', function (data) {
 			let s = c0.seqNos[myChannel];			// Channel 0's mix contains our audio. This is its sequence no.
 			let c0LiveClients = c0.liveClients;		// The server sends us the current audience count for level setting
 			venueSize = (venueSize + c0LiveClients)/2;	// Smoothed average of client count for smooth volume changes
+trace2("Venue size = ",venueSize);
 			if (s == null)
 				trace("No sequence number for our audio in mix");
 			else {
