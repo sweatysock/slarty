@@ -66,7 +66,7 @@ var venueSize = 1;							// Number of people in the venue. Used for adjusting ve
 function processCommands(newCommands) {					// Apply commands sent from upstream servers
 	if (newCommands.mute != undefined) serverMuted = newCommands.mute; else serverMuted = false;
 	if (newCommands.gateDelay != undefined) gateDelay = newCommands.gateDelay;
-	if (newCommands.talkoverLevel != undefined) talkoverLevel = newCommands.talkoverLevel;
+	if (newCommands.venueSize != undefined) venueSize = newCommands.venueSize;
 	if (newCommands.talkoverLag != undefined) talkoverLag = newCommands.talkoverLag;
 	if (newCommands.perfLevel != undefined) if (performer) {micIn.gain = newCommands.perfLevel; micIn.agc = false;}
 	if (newCommands.noiseThreshold != undefined) noiseThreshold = newCommands.noiseThreshold;

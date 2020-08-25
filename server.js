@@ -46,11 +46,9 @@ function addCommands(newCommands) {
 	if (newCommands == undefined) return;
 	if (newCommands.mute == true) commands.mute = true; else commands.mute = undefined;
 	if (newCommands.gateDelay != undefined) commands.gateDelay = newCommands.gateDelay;
-	if (newCommands.talkoverLevel != undefined) commands.talkoverLevel = newCommands.talkoverLevel;
-	if (newCommands.talkoverLag != undefined) commands.talkoverLag = newCommands.talkoverLag;
+	if (newCommands.venueSize != undefined) commands.venueSize = newCommands.venueSize;
 	if (newCommands.perfLevel != undefined) commands.perfLevel = newCommands.perfLevel;
 	if (newCommands.noiseThreshold != undefined) commands.noiseThreshold = newCommands.noiseThreshold;
-	if (newCommands.outGain != undefined) commands.outGain = newCommands.outGain;
 	if (newCommands.displayURL != undefined) commands.displayURL = newCommands.displayURL;
 	if (newCommands.displayText != undefined) commands.displayText = newCommands.displayText;
 }

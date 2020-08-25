@@ -1,7 +1,7 @@
 // Variables that the supervisor can control ofr all clients and their default values:
 globalMute = false;							// Mute all clients
 gateDelay = 30;								// the delay in mS on all clients for mic gate staying open
-talkoverLevel = 0.01;							// Output level when mic is active and talkover is happening
+venueSize = 1;								// global venue size which impacts the attenuation applied to audience sound
 perfChannel = 0;							// performer channel on this (venue) server
 perfLevel = 1;								// control performer Mic level directly from console
 noisethreshold = 0.02;							// mic gate threshold to remove background noise
@@ -75,11 +75,11 @@ document.addEventListener('DOMContentLoaded', function(event){
 			e.preventDefault();
 		}
 	});
-	let toLevelEntry = document.getElementById('toLevelEntry');
-	toLevelEntry.innerHTML = talkoverLevel;
-	toLevelEntry.addEventListener("keypress", (e) => {
+	let venueSizeEntry = document.getElementById('venueSizeEntry');
+	venueSizeEntry.innerHTML = venueSize;
+	venueSizeEntry.addEventListener("keypress", (e) => {
 		if (e.which === 13) {
-			talkoverLevel = parseFloat(toLevelEntry.innerHTML);
+			venueSize = parseFloat(venueSizeEntry.innerHTML);
 			sendCommands();
 			e.preventDefault();
 		}
@@ -118,7 +118,7 @@ function sendCommands() {
 	{							
 		mute		: globalMute,
 		gateDelay	: gateDelay,
-		talkoverLevel	: talkoverLevel,
+		venueSize	: venueSize,
 		perfLevel	: perfLevel,
 		noiseThreshold	: noisethreshold,
 	});
