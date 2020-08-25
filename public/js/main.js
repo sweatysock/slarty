@@ -133,7 +133,7 @@ socketIO.on('d', function (data) {
 				while (packetBuf.length) {		// Scan the packet buffer for the packet with this sequence
 					let p = packetBuf.shift();	// Remove the oldest packet from the buffer
 					if (p.sequence == s) {		// We have found the right sequence number
-						let a = p.audio;	// Get our audio from the matched packet buffer
+						a = p.audio;		// Get our audio from the matched packet buffer
 						break;			// Packet found so stop scanning the packet buffer. 
 					}
 				}
