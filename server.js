@@ -497,7 +497,7 @@ function generateMix () {
 				seqNos		: seqNos,		// Packet sequence numbers in the mix
 				liveClients	: channels[0].liveClients,	// Just is a temporary lack of audio. Use upstream value
 				peak		: 0,			// This is calculated in the client
-				timestamp	: 0,			// No need to trace RTT here
+				timestamp	: 0,			// No need to trace RTT in downstream venue packets
 				sequence	: venueSequence++,	// Sequence number for tracking quality
 				channel		: 0,			// Upstream is assigned channel 0 everywhere
 				sampleRate	: SampleRate,		// Send sample rate to help processing
@@ -511,7 +511,7 @@ function generateMix () {
 			seqNos		: seqNos,			// Packet sequence numbers in the mix
 			liveClients	: totalLiveClients,		// Clients visible downstream of this server
 			peak		: 0,				// This is calculated in the client.
-			timestamp	: 0,				// No need to trace RTT here
+			timestamp	: 0,				// No need to trace RTT in downstream venue packets
 			sequence	: venueSequence++,		// Sequence number for tracking quality
 			channel		: 0,				// Upstream is assigned channel 0 everywhere
 			sampleRate	: SampleRate,			// Send sample rate to help processing
