@@ -1112,6 +1112,10 @@ function printReport() {
 		document.getElementById("onair").style.visibility = "hidden";
 		micFilter1.frequency.value = HighFilterFreq		// Return mic filter to normal settings
 		micFilter2.frequency.value = LowFilterFreq;
+		if (liveShow)
+			document.getElementById("live").style.visibility = "hidden";
+		else
+			document.getElementById("live").style.visibility = "hidden";
 	}
 	if (liveShow)
 		document.getElementById("ID"+mixOut.channel+"live").style.visibility = "inherit";
