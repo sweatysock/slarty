@@ -1113,7 +1113,7 @@ function printReport() {
 		micFilter1.frequency.value = HighFilterFreq		// Return mic filter to normal settings
 		micFilter2.frequency.value = LowFilterFreq;
 		if (liveShow)
-			document.getElementById("live").style.visibility = "hidden";
+			document.getElementById("live").style.visibility = "visible";
 		else
 			document.getElementById("live").style.visibility = "hidden";
 	}
