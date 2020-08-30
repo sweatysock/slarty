@@ -17,6 +17,7 @@ for (let i=0; i < NumberOfChannels; i++) {				// Create all the channels pre-ini
 		socketID	: undefined,				// socket associated with this channel
 		shortages 	: 0,					// for monitoring
 		overflows 	: 0,					// for monitoring
+		inCount		: 0,					// for monitoring
 		newBuf 		: true,					// New buffers are left to build up to minTriggerLevel
 		maxBufferSize	: maxBufferSize,			// Buffer max size unless recording
 		mixTriggerLevel	: mixTriggerLevel,			// Minimum amount in buffer before forming part of mix
@@ -345,6 +346,7 @@ io.sockets.on('connection', function (socket) {
 			}
 		}
 		packetsIn++;
+		channel.inCount++;
 		enterState( idleState );
 	});
 });
@@ -597,10 +599,13 @@ function printReport() {
 //	console.log("Idle = ", idleState.total, " upstream = ", upstreamState.total, " downstream = ", downstreamState.total, " genMix = ", genMixState.total);
 //	console.log("Clients = ",connectedClients,"  Upstream In =",upstreamIn,"Upstream Out = ",upstreamOut,"Upstream Shortages = ",channels[0].shortages," Upstream overflows = ",channels[0].overflows,"In = ",packetsIn," Out = ",packetsOut," overflows = ",overflows," shortages = ",shortages," forced mixes = ",forcedMixes," mixMax = ",mixMax," rtt = ",rtt);
 	let cbs = [];
+	let cic = [];
 	for (let c in channels) {
 		let t = channels[c].packets.length;
-		if (channels[c].newBuf == true) t = t + "n";
+//		if (channels[c].newBuf == true) t = t + "n";
 		cbs.push(t);
+		cic.push(channels[c].inCount);
+		channels[c].inCount = 0;
 	}
 //	console.log("Client buffer lengths: ",cbs);
 //	console.log(packetClassifier);
@@ -621,6 +626,7 @@ function printReport() {
 		"shortages":	shortages,
 		"forcedMixes":	forcedMixes,
 		"cbs":		cbs,
+		"cic":		cic,
 		"pacClass":	packetClassifier,
 		"upServer":	upstreamName,
 		"perf":		perf.chan,

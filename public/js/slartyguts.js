@@ -30,6 +30,7 @@ socketIO.on('s', function (data) {
 	document.getElementById("shortages").innerHTML = data["shortages"];
 	document.getElementById("forcedMixes").innerHTML = data["forcedMixes"];
 	document.getElementById("cbs").innerHTML = data["cbs"];
+	document.getElementById("cic").innerHTML = data["cic"];
 	document.getElementById("pacClass").innerHTML = data["pacClass"];
 	document.getElementById("upServer").innerHTML = data["upServer"];
 	document.getElementById("upIn").innerHTML = data["upIn"];
