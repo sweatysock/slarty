@@ -224,7 +224,7 @@ io.sockets.on('connection', function (socket) {
 				if (!c.recording) {			// If recording the channel remains unchanged
 					c.packets = [];			// so that audio can continue to be generated
 					c.name = "";
-					c.liveClients = 0;
+					c.liveClients = 1;
 					c.group = "noGroup";
 					c.socketID = undefined;
 					c.shortages = 0,
@@ -434,7 +434,7 @@ function generateMix () {
 									// MARK ADD peak level for each for audio visualization
 			}
 		}
-		if (c.newBuf == false) {				// Only process channels that are non-new
+		if (c.newBuf == false) {				// Build mix from channels that are non-new (buffering completed)
 			let packet;
 			if (c.recording) {				// If recording then read the packet 
 				packet = c.packets[c.playhead];		// at the playhead position

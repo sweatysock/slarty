@@ -146,7 +146,7 @@ trace2("SILENT AUDIO c0audio scaled down by ",venueSize);
 				for (let i=0; i < c0audio.length; i++) c0audio[i] = c0audio[i] / venueSize; 	
 			}
 			c0.peak = maxValue(c0audio);			// Venue audio is ready. Get peak audio for display 
-		} else trace("No venue audio from server");
+		} 
 		// 2. Build a mix of all incoming channels. For individuals this is just channel 0, For groups it is more
 		let mix = new Array(PacketSize).fill(0);		// Now we build the mix starting from 0's
 		data.channels.forEach(c => {				// Process all audio channel packets sent from server
