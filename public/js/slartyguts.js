@@ -35,6 +35,9 @@ socketIO.on('s', function (data) {
 	document.getElementById("upIn").innerHTML = data["upIn"];
 	document.getElementById("upOut").innerHTML = data["upOut"];
 	document.getElementById("perf").innerHTML = "*"+data["perf"]+"*";
+	document.getElementById("perfQ").innerHTML = data["perfQ"];
+	document.getElementById("perfIn").innerHTML = data["perfIn"];
+	document.getElementById("perfStr").innerHTML = data["perfStr"];
 });
 
 socketIO.on('disconnect', function () {

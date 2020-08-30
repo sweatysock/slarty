@@ -29,6 +29,7 @@ var perf = {								// Performer data structure
 	chan	: 0,							// Performer's channel if connected directly here (venue server = no upstream)
 	packets	: [],							// Performer audio/video packet buffer. 
 	streaming:false,						// Flag that indicates the performer buffer is full enough to start streaming
+	inCount	: 0,							// For monitoring
 }
 var packetBuf = [];							// Buffer of packets sent, subtracted from venue mix later
 var venueSequence = 0;							// Sequence counter for venue sound going downstream
@@ -146,20 +147,20 @@ upstreamServer.on('d', function (packet) {
 	if (packet.channels[0] != null) {				// Check there is venue audio. It is not guaranteed in performer mode.
 		let p0 = packet.channels[0];				// Shorthand
 		channels[0].liveClients = p0.liveClients;		// Save the number of clients connected upstream in channel 0
-		mix = p0.audio;						// We are not part of a group so we only get channel 0 (venue) audio
+		mix = p0.audio;						// Start with channel 0 (venue) audio
 		let s = p0.seqNos[upstreamServerChannel];		// Channel 0 comes with list of packet seq nos in mix. Get ours.
 		if (s != null)						// If our channel has a sequence number in the mix
 			while (packetBuf.length) {			// Scan our packet buffer for the packet with our sequence
 				let p = packetBuf.shift();		// Remove the oldest packet from the buffer
 				if (p.sequence == s) {			// We have found the right sequence number
-					let a = p.audio;		// Subtract my level-corrected audio from mix
-					if (a.length > 0)		// As long as my audio wasn't an empty array that is
+					let a = p.audio;		// Subtract our audio from mix
+					if (a.length > 0)		// As long as our audio wasn't an empty array that is
 						for (let i=0; i < mix.length; i++) mix[i] = mix[i] - a[i];
 					break;				// Packet found. Stop scanning the packet buffer. 
 				}
 			}
 	// 3. Build a channel 0 packet 
-		if (mix.length != 0) mix = midBoostFilter(mix);		// Filter upstream audio to made it distant
+		if (mix.length != 0) mix = midBoostFilter(mix);		// Filter upstream audio to make it distant
 		let p = {						// Construct the audio packet
 			name		: channels[0].name,		// Give packet our channel name
 			audio		: mix,				// The audio is the mix just prepared
@@ -314,6 +315,7 @@ io.sockets.on('connection', function (socket) {
 		packet.socketID = socket.id;				// Also store it in the packet to help client skip own audio
 		if (packet.channel == perf.chan) { 			// This is the performer. Note: Channel 0 comes down in 'd' packets
 			if (packet.sampleRate == PerfSampleRate) {	// Sample rate needs to be correct for performer channel
+				perf.inCount++;				// For monitoring
 				perf.packets.push(packet);		// Store performer audio/video packet
 				if ((!perf.streaming) && (perf.packets.length > 5)) {
 					perf.streaming = true;		// If not streaming but enough now buffered, performer is go!
@@ -622,7 +624,11 @@ function printReport() {
 		"pacClass":	packetClassifier,
 		"upServer":	upstreamName,
 		"perf":		perf.chan,
+		"perfQ":	perf.packets.length,
+		"perfIn":	perf.inCount,
+		"perfStr":	perf.streaming,
 	});
+	perf.inCount = 0;
 	channels.forEach(c => {
 		c.shortages = 0;					// Reset channel-level counters
 		c.overflows = 0;
