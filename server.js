@@ -182,6 +182,7 @@ upstreamServer.on('d', function (packet) {
 		}
 		if (channels[0].packets.length >= channels[0].mixTriggerLevel) {
 			channels[0].newBuf = false;			// Buffer has filled enough. Channel can enter the mix
+console.log("CHAN 0 BUFFER FULL");
 		}
 	} else console.log("NO CHANNEL 0 PACKET IN DOWNSTREAM MESSAGE!");
 	// 5. Generate the mix if there is enough audio buffered in all active channels
@@ -394,18 +395,15 @@ function enoughAudio() {						// Is there enough audio to build a mix before tim
 			if (c.packets.length > c.mixTriggerLevel) 	// if there is enough audio buffered
 				fullCount++;				// If so then add to count of full channels
 			else { allFull = false;				// if not then at least one channel isn't ready to be mixed
-console.log("channel ",ch," not full enough");
 			}
 		}
 	}
 	if (perf.live) {						// If we are in performer mode
-console.log("checking perf buffer");
 		if (perf.packets.length > mixTriggerLevel)		// check if the performer buffer has enough too
 			fullCount++;					// If it does then lets go
 		else							// Otherwise lets not mix just yet
 			allFull = false;
 	}
-console.log("enough?.. fullCount=",fullCount," allFull=",allFull);
 	if ((fullCount >0) && (allFull == true)) {			// If there is at least one channel buffered and none short
 		clearTimeout( mixTimer );				// We must be ahead of the timer so cancel it
 		return true;						// and the mix can go ahead
