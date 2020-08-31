@@ -130,9 +130,7 @@ socketIO.on('d', function (data) {
 			audience = c0.liveClients;			// The server sends us the current audience count for level setting
 			if (venueSizeCmd == 0) venueSize = audience;	// If there is no command setting the venue size we use the audience size
 			else venueSize = venueSizeCmd;			// otherwise the command sets the audience size = attenuation level
-			if (s == null)
-				trace("No sequence number for our audio in mix");
-			else {
+			if (s != null) {				// If we are performer our audio won't be in the mix
 				while (packetBuf.length) {		// Scan the packet buffer for the packet with this sequence
 					let p = packetBuf.shift();	// Remove the oldest packet from the buffer
 					if (p.sequence == s) {		// We have found the right sequence number
@@ -142,10 +140,8 @@ socketIO.on('d', function (data) {
 				}
 			}
 			if (a.length > 0) {				// Subtract our audio from the venue and scale down by venue size
-trace2("SUBTRACTING c0audio scaled down by ",venueSize);
 				for (let i=0; i < a.length; i++) c0audio[i] = ( c0audio[i] - a[i] ) / venueSize;
 			} else { 					// Our audio was silent. Just scale down the venue audio
-trace2("SILENT AUDIO c0audio scaled down by ",venueSize);
 				for (let i=0; i < c0audio.length; i++) c0audio[i] = c0audio[i] / venueSize; 	
 			}
 			c0.peak = maxValue(c0audio);			// Venue audio is ready. Get peak audio for display 
@@ -726,7 +722,7 @@ function processAudio(e) {						// Main processing loop
 				group		: myGroup,		// Group name this user belings to
 			};
 			socketIO.emit("u",packet);
-			packetBuf.push(packet);				// Add sent packet to LILO buffer for echo cancelling 
+			if (!performer) packetBuf.push(packet);		// If not performer add packet to buffer for echo cancelling 
 			packetsOut++;					// For stats and monitoring
 			packetSequence++;
 		}
