@@ -315,6 +315,7 @@ io.sockets.on('connection', function (socket) {
 		channel.socketID = socket.id;				// Store socket ID associated with channel
 		packet.socketID = socket.id;				// Also store it in the packet to help client skip own audio
 		if (packet.channel == perf.chan) { 			// This is the performer. Note: Channel 0 comes down in 'd' packets
+if (packet.channel == 0) console.log("CHAN 0 IN u PACKET");
 			if (packet.sampleRate == PerfSampleRate) {	// Sample rate needs to be correct for performer channel
 				perf.inCount++;				// For monitoring
 				perf.packets.push(packet);		// Store performer audio/video packet
@@ -335,6 +336,7 @@ io.sockets.on('connection', function (socket) {
 				}
 				if (channel.packets.length >= channel.mixTriggerLevel) {
 					channel.newBuf = false;		// Buffer has filled enough. Channel can enter the mix
+console.log("channel ",packet.channel," has filled buffer");
 				}
 			}
 		}
