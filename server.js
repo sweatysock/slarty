@@ -139,7 +139,8 @@ upstreamServer.on('d', function (packet) {
 	addCommands(packet.commands);					// Store upstream commands for sending downstream
 	// 1. Gather performer audio and queue it up
 	perf.live = packet.perf.live;					// Performer status is shared by all servers
-	if (perf.live) perf.packets.push(packet.perf.packet);		// If performer is live store the audio/video packet 
+	if (packet.perf.packet != null) 				// If there is performer data buffer it
+		perf.packets.push(packet.perf.packet);	
 	if ((!perf.streaming) && (perf.packets.length > 5)){		// If not streaming but enough perf data buffered
 		perf.streaming = true;					// performer is now streaming from here
 	}
@@ -181,15 +182,11 @@ upstreamServer.on('d', function (packet) {
 		}
 		if (channels[0].packets.length >= channels[0].mixTriggerLevel) {
 			channels[0].newBuf = false;			// Buffer has filled enough. Channel can enter the mix
-			enterState( genMixState );
-			if (enoughAudio()) generateMix();		// If there is enough buffered in all other channels generate mix
 		}
 	} else console.log("NO CHANNEL 0 PACKET IN DOWNSTREAM MESSAGE!");
-	// 5. Generate the mix if we are in performer mode
-	if (perf.streaming) {						// If live performer is streaming no mix will have been genereated yet
-		enterState( genMixState );				// We always generate a mix with performer data however
-		generateMix();						// so call generate mix now
-	}
+	// 5. Generate the mix if there is enough audio buffered in all active channels
+	enterState( genMixState );
+	if (enoughAudio()) generateMix();				// If there is enough buffered in all other channels generate mix
 	enterState( idleState );
 });
 
@@ -318,13 +315,9 @@ io.sockets.on('connection', function (socket) {
 			if (packet.sampleRate == PerfSampleRate) {	// Sample rate needs to be correct for performer channel
 				perf.inCount++;				// For monitoring
 				perf.packets.push(packet);		// Store performer audio/video packet
-				if ((!perf.streaming) && (perf.packets.length > 5)) {
+				if ((!perf.streaming) && (perf.packets.length > mixTriggerLevel)) {
 					perf.streaming = true;		// If not streaming but enough now buffered, performer is go!
-					nextMixTimeLimit = 0;		// Reset the mix timer so that it doesn't empty the buffer right away
-				}
-				if (perf.streaming) {			// If performer is go we will generate a mix
-					enterState( genMixState );
-					generateMix();			
+//					nextMixTimeLimit = 0;		// Reset the mix timer so that it doesn't empty the buffer right away
 				}
 			}
 		} else {						// Normal audio: buffer it, clip it, and mix it 
@@ -339,14 +332,14 @@ io.sockets.on('connection', function (socket) {
 				}
 				if (channel.packets.length >= channel.mixTriggerLevel) {
 					channel.newBuf = false;		// Buffer has filled enough. Channel can enter the mix
-					enterState( genMixState );
-					if (enoughAudio()) 
-						generateMix();		// If there is enough audio in all channels build mix
 				}
 			}
 		}
 		packetsIn++;
 		channel.inCount++;
+		enterState( genMixState );
+		if (enoughAudio()) 
+			generateMix();					// If there is enough audio in all active channels build mix
 		enterState( idleState );
 	});
 });
@@ -381,31 +374,31 @@ function midBoostFilter(audioIn) {					// Filter to boost mids giving distant so
 }
 
 function forceMix() {							// The timer has triggered a mix 
-	if (perf.live) {						// If there is a performer don't force mixes if...
-		if ((!perf.streaming) || (perf.packets.length == 0)){	// they are not streaming yet, or there is no perf data left
-			return;
-		}
-	}
-	forcedMixes++;							// Either no performer, or enough perf buffered already
+	forcedMixes++;							// Note how many times the timer forces a mix for monitoring
 	generateMix();							// We need to push out a mix
 }
 
 function enoughAudio() {						// Is there enough audio to build a mix before timeout?
-	if (perf.live) return false;					// If there is a performer they drive the mix clock so return false
 	let now = new Date().getTime();
 	if (now > nextMixTimeLimit) return true;			// If timer has failed to trigger just generate the mix now
 	let allFull = true; 
 	let fullCount = 0;		
-	channels.forEach( c => {
-		if (c.newBuf == false) {				// Check each non-new channel if it has enough audio
-			if (c.packets.length > c.mixTriggerLevel) fullCount++;
-			else allFull = false;
+	for (let ch=0; ch<channels.length; ch++) {
+		let c = channels[ch];
+		if ((c.newBuf == false) || (perf.chan == ch)) {		// Check non-new and non-performer channels
+			if (c.packets.length > c.mixTriggerLevel) 	// if there is enough audio buffered
+				fullCount++;				// If so then add to count of full channels
+			else allFull = false;				// if not then at least one channel isn't ready to be mixed
 		}
-	});		
-	if ((fullCount >0) && (allFull == true)) {
-		clearTimeout( mixTimer );				// We are ahead of the timer, cancel it
-		return true;						// All non-new buffers are full enough so lets mix!
-	} else return false;
+	}
+	if (perf.packets.length > mixTriggerLevel) 			// Check the performer buffer if it has enough too
+		fullCount++;						// If it does then lets go
+	else								// Otherwise lets not mix just yet
+		allFull = false;
+	if ((fullCount >0) && (allFull == true)) {			// If there is at least one channel buffered and none short
+		clearTimeout( mixTimer );				// We must be ahead of the timer so cancel it
+		return true;						// and the mix can go ahead
+	} else return false;						// otherwise ñets not mix and wait for channels to buffer more
 }
 
 
@@ -538,14 +531,14 @@ function generateMix () {
 	packetsOut++;							// Sent data so log it and set time limit for next send
 	packetClassifier[packetCount] = packetClassifier[packetCount] + 1;
 	clearTimeout(mixTimer);						// Mix generated. Clear forceMix timer if it is still pending
-	if ( 	((perf.live) && (perf.streaming)) ||			// If we are in performer mode and streaming fully, or if we
-		((!perf.live) && (packetCount > 0)) ) {			// are not in performer mode but haven't run out of data set timer
+	if ((p.packet != null) || (packetCount > 0)) {			// if we have sent performer audio or other audio data set timer
 		let now = new Date().getTime();				// Get time as this was when latest mix was sent out
 		if (nextMixTimeLimit == 0) nextMixTimeLimit = now;	// If this is the first send event then start at now
 		nextMixTimeLimit += (PacketSize * 1000)/SampleRate;	// Next mix will be needed PacketSize samples in the future
 		mixTimer = setTimeout(forceMix,(nextMixTimeLimit-now));	// Set forceMix timer for when next mix will be needed
 	}
-	else nextMixTimeLimit = 0;					// No timer needed. Reset next mix target time
+	else nextMixTimeLimit = 0;					// No data sent. No timer needed. Reset next mix target time
+									// Things will start again when new data comes in.
 }
 
 
