@@ -597,6 +597,7 @@ var traceCount = 1;
 const updateTimer = 1000;						// Frequency of updates to the console
 var counterDivider = 0;							// Used to execute operation 10x slower than the reporting loop
 function printReport() {
+console.log("channel 0 status ",channels[0].newBuf);
 	traceCount = 1;
 	enterState( idleState );					// Update timers in case we are inactive
 //	console.log(myServerName," Activity Report");
