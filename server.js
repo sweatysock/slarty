@@ -396,12 +396,15 @@ function enoughAudio() {						// Is there enough audio to build a mix before tim
 	if (now > nextMixTimeLimit) return true;			// If timer has failed to trigger just generate the mix now
 	let allFull = true; 
 	let fullCount = 0;		
-	channels.forEach( c,ch => {
+	for (let ch=1; ch<channels.length; ch++) {
+//	channels.forEach( c,ch => {
+		let c=channels[ch];
 		if ((c.newBuf == false) && (perf.chan != ch)) {		// Check each non-new channel if it has enough audio
 			if (c.packets.length > c.mixTriggerLevel) fullCount++;
 			else allFull = false;
 		}
-	});		
+//	});		
+	}
 	if ((fullCount >0) && (allFull == true)) {
 		clearTimeout( mixTimer );				// We are ahead of the timer, cancel it
 		return true;						// All non-new buffers are full enough so lets mix!
