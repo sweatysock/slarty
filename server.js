@@ -283,6 +283,8 @@ io.sockets.on('connection', function (socket) {
 		if ((perf.live) 				  	// If performer is already set and is connected 
 			&& (channels[perf.chan].socketID != undefined)){	// communicate they are no longer live
 			channels[perf.chan].socket.emit("perf", {live:false});
+			channels[perf.chan].packets = [];		// Reset the channel so that it buffers up again
+			channels[perf.chan].newBuf = true;
 		}
 		perf.chan = data.channel;
 		if ((perf.chan > 0) 					// If we have a valid performer channel that is connected
@@ -317,7 +319,7 @@ io.sockets.on('connection', function (socket) {
 				perf.packets.push(packet);		// Store performer audio/video packet
 				if ((!perf.streaming) && (perf.packets.length > mixTriggerLevel)) {
 					perf.streaming = true;		// If not streaming but enough now buffered, performer is go!
-//					nextMixTimeLimit = 0;		// Reset the mix timer so that it doesn't empty the buffer right away
+					nextMixTimeLimit = 0;		// Reset the mix timer so that it doesn't empty the buffer right away
 				}
 			}
 		} else {						// Normal audio: buffer it, clip it, and mix it 
@@ -380,7 +382,10 @@ function forceMix() {							// The timer has triggered a mix
 
 function enoughAudio() {						// Is there enough audio to build a mix before timeout?
 	let now = new Date().getTime();
-	if (now > nextMixTimeLimit) return true;			// If timer has failed to trigger just generate the mix now
+	if (now > nextMixTimeLimit) {
+		console.log("Timer failed to trigger mix. enoughAudio() caught error");
+		return true;						// If timer has failed to trigger just generate the mix now
+	}
 	let allFull = true; 
 	let fullCount = 0;		
 	for (let ch=0; ch<channels.length; ch++) {
