@@ -1,0 +1,172 @@
+heroku git:remote -a au01
+heroku config:set servername=au01
+heroku config:set upstream=https://au41.herokuapp.com
+git push heroku master
+heroku git:remote -a au02
+heroku config:set servername=au02
+heroku config:set upstream=https://au41.herokuapp.com
+git push heroku master
+heroku git:remote -a au03
+heroku config:set servername=au03
+heroku config:set upstream=https://au41.herokuapp.com
+git push heroku master
+heroku git:remote -a au04
+heroku config:set servername=au04
+heroku config:set upstream=https://au41.herokuapp.com
+git push heroku master
+heroku git:remote -a au05
+heroku config:set servername=au05
+heroku config:set upstream=https://au41.herokuapp.com
+git push heroku master
+heroku git:remote -a au06
+heroku config:set servername=au06
+heroku config:set upstream=https://au41.herokuapp.com
+git push heroku master
+heroku git:remote -a au07
+heroku config:set servername=au07
+heroku config:set upstream=https://au41.herokuapp.com
+git push heroku master
+heroku git:remote -a au08
+heroku config:set servername=au08
+heroku config:set upstream=https://au41.herokuapp.com
+git push heroku master
+heroku git:remote -a au09
+heroku config:set servername=au09
+heroku config:set upstream=https://au41.herokuapp.com
+git push heroku master
+heroku git:remote -a au10
+heroku config:set servername=au10
+heroku config:set upstream=https://au41.herokuapp.com
+git push heroku master
+heroku git:remote -a au11
+heroku config:set servername=au11
+heroku config:set upstream=https://au41.herokuapp.com
+git push heroku master
+heroku git:remote -a au12
+heroku config:set servername=au12
+heroku config:set upstream=https://au41.herokuapp.com
+git push heroku master
+heroku git:remote -a au13
+heroku config:set servername=au13
+heroku config:set upstream=https://au41.herokuapp.com
+git push heroku master
+heroku git:remote -a au14
+heroku config:set servername=au14
+heroku config:set upstream=https://au41.herokuapp.com
+git push heroku master
+heroku git:remote -a au15
+heroku config:set servername=au15
+heroku config:set upstream=https://au41.herokuapp.com
+git push heroku master
+heroku git:remote -a au16
+heroku config:set servername=au16
+heroku config:set upstream=https://au41.herokuapp.com
+git push heroku master
+heroku git:remote -a au17
+heroku config:set servername=au17
+heroku config:set upstream=https://au41.herokuapp.com
+git push heroku master
+heroku git:remote -a au18
+heroku config:set servername=au18
+heroku config:set upstream=https://au41.herokuapp.com
+git push heroku master
+heroku git:remote -a au19
+heroku config:set servername=au19
+heroku config:set upstream=https://au41.herokuapp.com
+git push heroku master
+heroku git:remote -a au20
+heroku config:set servername=au20
+heroku config:set upstream=https://au41.herokuapp.com
+git push heroku master
+heroku git:remote -a au21
+heroku config:set servername=au21
+heroku config:set upstream=https://au42.herokuapp.com
+git push heroku master
+heroku git:remote -a au22
+heroku config:set servername=au22
+heroku config:set upstream=https://au42.herokuapp.com
+git push heroku master
+heroku git:remote -a au23
+heroku config:set servername=au23
+heroku config:set upstream=https://au42.herokuapp.com
+git push heroku master
+heroku git:remote -a au24a
+heroku config:set servername=au24a
+heroku config:set upstream=https://au42.herokuapp.com
+git push heroku master
+heroku git:remote -a au25
+heroku config:set servername=au25
+heroku config:set upstream=https://au42.herokuapp.com
+git push heroku master
+heroku git:remote -a au26
+heroku config:set servername=au26
+heroku config:set upstream=https://au42.herokuapp.com
+git push heroku master
+heroku git:remote -a au27
+heroku config:set servername=au27
+heroku config:set upstream=https://au42.herokuapp.com
+git push heroku master
+heroku git:remote -a au28
+heroku config:set servername=au28
+heroku config:set upstream=https://au42.herokuapp.com
+git push heroku master
+heroku git:remote -a au29
+heroku config:set servername=au29
+heroku config:set upstream=https://au42.herokuapp.com
+git push heroku master
+heroku git:remote -a au30
+heroku config:set servername=au30
+heroku config:set upstream=https://au42.herokuapp.com
+git push heroku master
+heroku git:remote -a au31
+heroku config:set servername=au31
+heroku config:set upstream=https://au42.herokuapp.com
+git push heroku master
+heroku git:remote -a au32
+heroku config:set servername=au01
+heroku config:set upstream=https://au42.herokuapp.com
+git push heroku master
+heroku git:remote -a au33
+heroku config:set servername=au33
+heroku config:set upstream=https://au42.herokuapp.com
+git push heroku master
+heroku git:remote -a au34
+heroku config:set servername=au34
+heroku config:set upstream=https://au42.herokuapp.com
+git push heroku master
+heroku git:remote -a au35
+heroku config:set servername=au35
+heroku config:set upstream=https://au42.herokuapp.com
+git push heroku master
+heroku git:remote -a au36
+heroku config:set servername=au36
+heroku config:set upstream=https://au42.herokuapp.com
+git push heroku master
+heroku git:remote -a au37
+heroku config:set servername=au37
+heroku config:set upstream=https://au42.herokuapp.com
+git push heroku master
+heroku git:remote -a au38
+heroku config:set servername=au38
+heroku config:set upstream=https://au42.herokuapp.com
+git push heroku master
+heroku git:remote -a au39
+heroku config:set servername=au39
+heroku config:set upstream=https://au42.herokuapp.com
+git push heroku master
+heroku git:remote -a au40
+heroku config:set servername=au40
+heroku config:set upstream=https://au42.herokuapp.com
+git push heroku master
+heroku git:remote -a au41
+heroku config:set servername=au41
+heroku config:set upstream=https://au43.herokuapp.com
+git push heroku master
+heroku git:remote -a au42
+heroku config:set servername=au42
+heroku config:set upstream=https://au43.herokuapp.com
+git push heroku master
+heroku git:remote -a au43
+heroku config:set servername=au43
+heroku config:set upstream=""
+git push heroku master

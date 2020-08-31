@@ -62,11 +62,13 @@ var micIn = {								// and for microphone input
 var recording = false;							// Used for testing purposes
 var serverMuted = false;
 var venueSize = 1;							// Number of people in the venue. Used for adjusting venue audio.
+var venueSizeCmd = 0;							// Size of venue sent through command channel from event manager
+var audience = 1;							// Number of clients in this venue as reported to us by server
 
 function processCommands(newCommands) {					// Apply commands sent from upstream servers
 	if (newCommands.mute != undefined) serverMuted = newCommands.mute; else serverMuted = false;
 	if (newCommands.gateDelay != undefined) gateDelay = newCommands.gateDelay;
-	if (newCommands.venueSize != undefined) venueSize = newCommands.venueSize;
+	if (newCommands.venueSize != undefined) venueSizeCmd = newCommands.venueSize;
 	if (newCommands.perfLevel != undefined) if (performer) {micIn.gain = newCommands.perfLevel; micIn.agc = false;}
 	if (newCommands.noiseThreshold != undefined) noiseThreshold = newCommands.noiseThreshold;
 	if (newCommands.displayURL != undefined);
@@ -125,8 +127,9 @@ socketIO.on('d', function (data) {
 			let c0audio = c0.audio;				// Get channel 0 audio so we can subtract our audio from it
 			let a = [];					// Temp store for our audio for subtracting (echo cancelling)
 			let s = c0.seqNos[myChannel];			// Channel 0's mix contains our audio. This is its sequence no.
-			let c0LiveClients = c0.liveClients;		// The server sends us the current audience count for level setting
-			venueSize = (venueSize + c0LiveClients)/2;	// Smoothed average of client count for smooth volume changes
+			audience = c0.liveClients;			// The server sends us the current audience count for level setting
+			if (venueSizeCmd == 0) venueSize = audience;	// If there is no command setting the venue size we use the audience size
+			else venueSize = venueSizeCmd;			// otherwise the command sets the audience size = attenuation level
 			if (s == null)
 				trace("No sequence number for our audio in mix");
 			else {
@@ -1098,8 +1101,8 @@ function printReport() {
 	enterState( UIState );						// Measure time spent updating UI even for reporting!
 	let aud=document.getElementById('audioDiv');
 	if (!pauseTracing) {
-		trace("Idle = ", idleState.total, " data in = ", dataInState.total, " audio in/out = ", audioInOutState.total," UI work = ",UIState.total);
-		trace("Sent = ",packetsOut," Heard = ",packetsIn," overflows = ",overflows," shortages = ",shortages," RTT = ",rtt.toFixed(1));
+		trace("Idle=", idleState.total, " data in=", dataInState.total, " audio in/out=", audioInOutState.total," UI work=",UIState.total);
+		trace("Sent=",packetsOut," Heard=",packetsIn," overflows=",overflows," shortages=",shortages," RTT=",rtt.toFixed(1)," audience=",audience);
 		trace("Threshold delay:",echoTest.delay," micIn.peak:",micIn.peak.toFixed(1)," mixOut.peak:",mixOut.peak.toFixed(1)," speaker buff:",spkrBuffer.length," Max Buff:",maxBuffSize);
 		trace("Levels of output: ",levelCategories);
 	}

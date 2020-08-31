@@ -602,7 +602,6 @@ function printReport() {
 	let cic = [];
 	for (let c in channels) {
 		let t = channels[c].packets.length;
-//		if (channels[c].newBuf == true) t = t + "n";
 		cbs.push(t);
 		cic.push(channels[c].inCount);
 		channels[c].inCount = 0;
