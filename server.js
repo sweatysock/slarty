@@ -396,10 +396,12 @@ function enoughAudio() {						// Is there enough audio to build a mix before tim
 			else allFull = false;				// if not then at least one channel isn't ready to be mixed
 		}
 	}
-	if (perf.packets.length > mixTriggerLevel) 			// Check the performer buffer if it has enough too
-		fullCount++;						// If it does then lets go
-	else								// Otherwise lets not mix just yet
-		allFull = false;
+	if (perf.live) {						// If we are in performer mode
+		if (perf.packets.length > mixTriggerLevel)		// check if the performer buffer has enough too
+			fullCount++;					// If it does then lets go
+		else							// Otherwise lets not mix just yet
+			allFull = false;
+	}
 	if ((fullCount >0) && (allFull == true)) {			// If there is at least one channel buffered and none short
 		clearTimeout( mixTimer );				// We must be ahead of the timer so cancel it
 		return true;						// and the mix can go ahead
