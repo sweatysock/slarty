@@ -381,11 +381,11 @@ function midBoostFilter(audioIn) {					// Filter to boost mids giving distant so
 }
 
 function forceMix() {							// The timer has triggered a mix 
-	if (perf.live) {						// If there is a performer don't force mixes if...
-		if ((!perf.streaming) || (perf.packets.length == 0)){	// they are not streaming yet, or there is no perf data left
-			return;
-		}
-	}
+//	if (perf.live) {						// If there is a performer don't force mixes if...
+//		if ((!perf.streaming) || (perf.packets.length == 0)){	// they are not streaming yet, or there is no perf data left
+//			return;
+//		}
+//	}
 	forcedMixes++;							// Either no performer, or enough perf buffered already
 	generateMix();							// We need to push out a mix
 }
