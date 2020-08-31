@@ -381,6 +381,7 @@ function forceMix() {							// The timer has triggered a mix
 }
 
 function enoughAudio() {						// Is there enough audio to build a mix before timeout?
+console.log("ENOUGH CHECK...");
 	let now = new Date().getTime();
 	if (now > nextMixTimeLimit) {
 		console.log("Timer failed to trigger mix. enoughAudio() caught error");
@@ -397,11 +398,14 @@ function enoughAudio() {						// Is there enough audio to build a mix before tim
 			else allFull = false;				// if not then at least one channel isn't ready to be mixed
 		}
 	}
+console.log("allFull=",allFull," fullCount=",fullCount);
 	if (perf.live) {						// If we are in performer mode
+console.log("perf check");
 		if (perf.packets.length > mixTriggerLevel)		// check if the performer buffer has enough too
 			fullCount++;					// If it does then lets go
 		else							// Otherwise lets not mix just yet
 			allFull = false;
+console.log("aÃlFull=",allFull," fullCount=",fullCount);
 	}
 	if ((fullCount >0) && (allFull == true)) {			// If there is at least one channel buffered and none short
 		clearTimeout( mixTimer );				// We must be ahead of the timer so cancel it
