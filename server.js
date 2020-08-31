@@ -182,7 +182,6 @@ upstreamServer.on('d', function (packet) {
 		}
 		if (channels[0].packets.length >= channels[0].mixTriggerLevel) {
 			channels[0].newBuf = false;			// Buffer has filled enough. Channel can enter the mix
-console.log("CHAN 0 BUFFER FULL");
 		}
 	} else console.log("NO CHANNEL 0 PACKET IN DOWNSTREAM MESSAGE!");
 	// 5. Generate the mix if there is enough audio buffered in all active channels
@@ -315,7 +314,6 @@ io.sockets.on('connection', function (socket) {
 		channel.socketID = socket.id;				// Store socket ID associated with channel
 		packet.socketID = socket.id;				// Also store it in the packet to help client skip own audio
 		if (packet.channel == perf.chan) { 			// This is the performer. Note: Channel 0 comes down in 'd' packets
-if (packet.channel == 0) console.log("CHAN 0 IN u PACKET");
 			if (packet.sampleRate == PerfSampleRate) {	// Sample rate needs to be correct for performer channel
 				perf.inCount++;				// For monitoring
 				perf.packets.push(packet);		// Store performer audio/video packet
@@ -336,7 +334,6 @@ if (packet.channel == 0) console.log("CHAN 0 IN u PACKET");
 				}
 				if (channel.packets.length >= channel.mixTriggerLevel) {
 					channel.newBuf = false;		// Buffer has filled enough. Channel can enter the mix
-console.log("channel ",packet.channel," has filled buffer");
 				}
 			}
 		}
@@ -393,11 +390,11 @@ function enoughAudio() {						// Is there enough audio to build a mix before tim
 	let fullCount = 0;		
 	for (let ch=0; ch<channels.length; ch++) {
 		let c = channels[ch];
-		if ((c.newBuf == false) || (perf.chan == ch)) {		// Check non-new and non-performer channels
+		if ((!c.newBuf) && 					// Only consider buffers that are non-new (have reached trigger level)
+			((perf.chan == 0) || (perf.chan != ch)) {	// Ignore the performer channel (if it is 0 then there is no performer)
 			if (c.packets.length > c.mixTriggerLevel) 	// if there is enough audio buffered
 				fullCount++;				// If so then add to count of full channels
-			else { allFull = false;				// if not then at least one channel isn't ready to be mixed
-			}
+			else allFull = false;				// if not then at least one channel isn't ready to be mixed
 		}
 	}
 	if (perf.live) {						// If we are in performer mode
@@ -597,7 +594,6 @@ var traceCount = 1;
 const updateTimer = 1000;						// Frequency of updates to the console
 var counterDivider = 0;							// Used to execute operation 10x slower than the reporting loop
 function printReport() {
-console.log("channel 0 status ",channels[0].newBuf);
 	traceCount = 1;
 	enterState( idleState );					// Update timers in case we are inactive
 //	console.log(myServerName," Activity Report");
