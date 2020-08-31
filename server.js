@@ -402,6 +402,7 @@ function enoughAudio() {						// Is there enough audio to build a mix before tim
 		else							// Otherwise lets not mix just yet
 			allFull = false;
 	}
+console.log("enough?.. fullCount=",fullCount," allFull=",allFull);
 	if ((fullCount >0) && (allFull == true)) {			// If there is at least one channel buffered and none short
 		clearTimeout( mixTimer );				// We must be ahead of the timer so cancel it
 		return true;						// and the mix can go ahead
