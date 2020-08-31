@@ -391,7 +391,7 @@ function enoughAudio() {						// Is there enough audio to build a mix before tim
 	for (let ch=0; ch<channels.length; ch++) {
 		let c = channels[ch];
 		if ((!c.newBuf) && 					// Only consider buffers that are non-new (have reached trigger level)
-			((perf.chan == 0) || (perf.chan != ch)) {	// Ignore the performer channel (if it is 0 then there is no performer)
+			((perf.chan == 0) || (perf.chan != ch))) {	// Ignore the performer channel (if it is 0 then there is no performer)
 			if (c.packets.length > c.mixTriggerLevel) 	// if there is enough audio buffered
 				fullCount++;				// If so then add to count of full channels
 			else allFull = false;				// if not then at least one channel isn't ready to be mixed
