@@ -391,7 +391,7 @@ function forceMix() {							// The timer has triggered a mix
 }
 
 function enoughAudio() {						// Is there enough audio to build a mix before timeout?
-	if (perf.live) return false;					// If there is a performer they drive the mix clock so return false
+//	if (perf.live) return false;					// If there is a performer they drive the mix clock so return false
 	let now = new Date().getTime();
 	if (now > nextMixTimeLimit) return true;			// If timer has failed to trigger just generate the mix now
 	let allFull = true; 
