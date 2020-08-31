@@ -1098,7 +1098,7 @@ function printReport() {
 	let aud=document.getElementById('audioDiv');
 	if (!pauseTracing) {
 		trace("Idle=", idleState.total, " data in=", dataInState.total, " audio in/out=", audioInOutState.total," UI work=",UIState.total);
-		trace("Sent=",packetsOut," Heard=",packetsIn," overflows=",overflows," shortages=",shortages," RTT=",rtt.toFixed(1)," audience=",audience);
+		trace("Sent=",packetsOut," Heard=",packetsIn," overflows=",overflows," shortages=",shortages," RTT=",rtt.toFixed(1)," audience=",audience," packet buffer=",packetBuf.length);
 		trace("Threshold delay:",echoTest.delay," micIn.peak:",micIn.peak.toFixed(1)," mixOut.peak:",mixOut.peak.toFixed(1)," speaker buff:",spkrBuffer.length," Max Buff:",maxBuffSize);
 		trace("Levels of output: ",levelCategories);
 	}
