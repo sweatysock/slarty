@@ -304,7 +304,7 @@ io.sockets.on('connection', function (socket) {
 	socket.on('u', function (packet) { 				// Audio coming up from one of our downstream clients
 		enterState( downstreamState );
 		let channel = channels[packet.channel];			// This client sends their channel to save server effort
-console.log("In from channel ",channel);
+console.log("In from channel ",packet.channel);
 		channel.name = packet.name;				// Update name of channel in case it has changed
 		channel.liveClients = packet.liveClients;		// Store the number of clients behind this channel
 		if (channel.group != packet.group) {			// If the user has changed their group
