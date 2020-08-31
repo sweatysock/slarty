@@ -393,10 +393,13 @@ function enoughAudio() {						// Is there enough audio to build a mix before tim
 		if ((c.newBuf == false) || (perf.chan == ch)) {		// Check non-new and non-performer channels
 			if (c.packets.length > c.mixTriggerLevel) 	// if there is enough audio buffered
 				fullCount++;				// If so then add to count of full channels
-			else allFull = false;				// if not then at least one channel isn't ready to be mixed
+			else { allFull = false;				// if not then at least one channel isn't ready to be mixed
+console.log("channel ",ch," not full enough");
+			}
 		}
 	}
 	if (perf.live) {						// If we are in performer mode
+console.log("checking perf buffer");
 		if (perf.packets.length > mixTriggerLevel)		// check if the performer buffer has enough too
 			fullCount++;					// If it does then lets go
 		else							// Otherwise lets not mix just yet
