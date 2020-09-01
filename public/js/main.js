@@ -3,7 +3,7 @@
 const SampleRate = 16000; 						// Global sample rate used for all audio
 const HighFilterFreq = SampleRate/2.2;					// Mic filter to remove high frequencies before resampling
 const LowFilterFreq = 200;						// Mic filter to remove low frequencies before resampling
-const PerfSampleRate = 24000; 						// Global sample rate used for all performer audio
+const PerfSampleRate = 32000; 						// Global sample rate used for all performer audio
 const PacketSize = 500;							// Server packet size we must conform to
 const PerfPacketSize = PacketSize*PerfSampleRate/SampleRate;		// Performer packets are larger in order to preserve packet rate
 const MaxRTT = 800;							// Round Trip Times above this will cause a socket reset
