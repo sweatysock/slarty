@@ -549,6 +549,7 @@ function generateMix () {
 		let f = 0;						// Timer period is adjusted subtly by f. 
 		if (perf.streaming) {					// If the performer is live and streaming correctly
 			f = perfMaxBufferSize/2 - perf.packets.length;	// Aim to keep its buffer perfectly in the middle
+			f = f *3;					// Boost the rate of correction to keep closer control
 		}							// to optimize sound quality
 		nextMixTimeLimit += (PacketSize * (1000+f))/SampleRate;	// Next mix will be needed PacketSize samples in the future
 		mixTimer = setTimeout(forceMix,(nextMixTimeLimit-now));	// Set forceMix timer for when next mix will be needed
