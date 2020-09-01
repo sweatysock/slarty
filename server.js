@@ -546,7 +546,11 @@ function generateMix () {
 	if ((p.packet != null) || (packetCount > 0)) {			// if we have sent performer audio or other audio data set timer
 		let now = new Date().getTime();				// Get time as this was when latest mix was sent out
 		if (nextMixTimeLimit == 0) nextMixTimeLimit = now;	// If this is the first send event then start at now
-		nextMixTimeLimit += (PacketSize * 1000)/SampleRate;	// Next mix will be needed PacketSize samples in the future
+		let f = 0;						// Timer period is adjusted subtly by f. 
+		if (perf.streaming) {					// If the performer is live and streaming correctly
+			f = perfMaxBufferSize/2 - perf.packets.length;	// Aim to keep its buffer perfectly in the middle
+		}							// to optimize sound quality
+		nextMixTimeLimit += (PacketSize * (1000+f))/SampleRate;	// Next mix will be needed PacketSize samples in the future
 		mixTimer = setTimeout(forceMix,(nextMixTimeLimit-now));	// Set forceMix timer for when next mix will be needed
 	}
 	else nextMixTimeLimit = 0;					// No data sent. No timer needed. Reset next mix target time
