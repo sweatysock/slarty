@@ -1,6 +1,7 @@
 // Globals and constants
 //
 const maxBufferSize = 10;						// Max number of packets to store per client
+const perfMaxBufferSize = 30;						// Max packets buffered for the performer
 const mixTriggerLevel = 5;						// When all clients have this many packets we create a mix
 const PacketSize = 500;							// Number of samples in the client audio packets
 const SampleRate = 16000; 						// All audio in audence runs at this sample rate. 
@@ -141,6 +142,8 @@ upstreamServer.on('d', function (packet) {
 	perf.live = packet.perf.live;					// Performer status is shared by all servers
 	if (packet.perf.packet != null) 				// If there is performer data buffer it
 		perf.packets.push(packet.perf.packet);	
+	if (perf.packets.length > perfMaxBufferSize)
+		perf.packets.shift();					// Clip the performer buffer removing the oldest packet
 	if ((!perf.streaming) && (perf.packets.length > 5)){		// If not streaming but enough perf data buffered
 		perf.streaming = true;					// performer is now streaming from here
 	}
@@ -317,6 +320,8 @@ io.sockets.on('connection', function (socket) {
 			if (packet.sampleRate == PerfSampleRate) {	// Sample rate needs to be correct for performer channel
 				perf.inCount++;				// For monitoring
 				perf.packets.push(packet);		// Store performer audio/video packet
+				if (perf.packets.length > perfMaxBufferSize)
+					perf.packets.shift();		// Clip the performer buffer removing the oldest packet
 				if ((!perf.streaming) && (perf.packets.length > mixTriggerLevel)) {
 					perf.streaming = true;		// If not streaming but enough now buffered, performer is go!
 					nextMixTimeLimit = 0;		// Reset the mix timer so that it doesn't empty the buffer right away
