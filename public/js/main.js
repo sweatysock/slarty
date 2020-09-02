@@ -123,7 +123,7 @@ socketIO.on('d', function (data) {
 		// 1. Channel 0 venue mix from server includes our audio sent a few mS ago. Subtract it using seq no. and gain to stop echo
 		let c0;							
 		data.channels.forEach(c => {if (c.channel==0) c0=c});	// Find the venue channel
-		if ((c0 != null) && (c0.audio.length > 0)) {		// If there is venue audio (may be silent and therefore = [])
+		if (c0 != null) {					// If there is c0 (venue) data...
 			let c0audio = c0.audio;				// Get channel 0 audio so we can subtract our audio from it
 			let a = [];					// Temp store for our audio for subtracting (echo cancelling)
 			let s = c0.seqNos[myChannel];			// Channel 0's mix contains our audio. This is its sequence no.
@@ -139,12 +139,14 @@ socketIO.on('d', function (data) {
 					}
 				}
 			}
-			if (a.length > 0) {				// Subtract our audio from the venue and scale down by venue size
-				for (let i=0; i < a.length; i++) c0audio[i] = ( c0audio[i] - a[i] ) / venueSize;
-			} else { 					// Our audio was silent. Just scale down the venue audio
-				for (let i=0; i < c0audio.length; i++) c0audio[i] = c0audio[i] / venueSize; 	
-			}
-			c0.peak = maxValue(c0audio);			// Venue audio is ready. Get peak audio for display 
+			if (c0audio.length > 0) {			// Only process audio if there is actually some venue audio
+				if (a.length > 0) {			// Subtract our audio from the venue and scale down by venue size
+					for (let i=0; i < a.length; i++) c0audio[i] = ( c0audio[i] - a[i] ) / venueSize;
+				} else { 				// Our audio was silent. Just scale down the venue audio
+					for (let i=0; i < c0audio.length; i++) c0audio[i] = c0audio[i] / venueSize; 	
+				}
+				c0.peak = maxValue(c0audio);		// Venue audio is ready. Get peak audio for display 
+			} else c0.peak = 0;				// Don't need to be a genius to figure that one out
 		} 
 		// 2. Build a mix of all incoming channels. For individuals this is just channel 0, For groups it is more
 		let mix = new Array(PacketSize).fill(0);		// Now we build the mix starting from 0's
