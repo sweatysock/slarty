@@ -1,6 +1,6 @@
 //Global variables
 //
-const SampleRate = 32000; 						// Global sample rate used for all audio
+const SampleRate = 16000; 						// Global sample rate used for all audio
 const HighFilterFreq = SampleRate/2.2;					// Mic filter to remove high frequencies before resampling
 const LowFilterFreq = 200;						// Mic filter to remove low frequencies before resampling
 const PerfSampleRate = 32000; 						// Global sample rate used for all performer audio
