@@ -1,7 +1,7 @@
 // Globals and constants
 //
-const SampleRate = 8000; 						// All audio in audence runs at this sample rate. 
-const PacketSize = 250;							// Number of samples in the client audio packets
+const SampleRate = 6000; 						// All audio in audence runs at this sample rate. 
+const PacketSize = 500;							// Number of samples in the client audio packets
 const maxBufferSize = 10;						// Max number of packets to store per client
 const perfMaxBufferSize = 30;						// Max packets buffered for the performer
 const mixTriggerLevel = 5;						// When all clients have this many packets we create a mix
