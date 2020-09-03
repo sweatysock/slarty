@@ -425,6 +425,7 @@ function generateMix () {
 	// 2. Process all channels building group info. objects and generating a mix of all channels except 0 (upstream venue track) to send upstream
 	let mix = new Array(PacketSize).fill(0);			// Mix of this server's audio to send upstream and also to add to venue track
 	let seqNos = [];						// Array of packet sequence numbers used in the mix (channel is index)
+	let timestamps = [];						// Array of packet timestamps used in the mix (channel is index)
 	let channel0Packet = null;					// The channel 0 (venue) audio packet
 	let groups = [];						// Data collated by group for sending downstream
 	let packetCount = 0;						// Keep count of packets that make the mix for monitoring
@@ -461,6 +462,8 @@ function generateMix () {
 					for (let i = 0; i < packet.audio.length; ++i) mix[i] = (mix[i] + packet.audio[i]);	
 					seqNos[packet.channel] 		// Store the seq number of the packet just added to the mix
 						= packet.sequence;	// so that it can be subtracted downstream to remove echo
+					timestamps[packet.channel]	// Store the timestamp of the packet just added to the mix
+						= packet.timestamp;	// so that the sending client can measure its rtt
 					if (c.group != "noGroup") {	// Store packet if part of a group. Used for client controlled mixing
 						groups[c.group].clientPackets.push( packet );	
 					}
@@ -502,6 +505,7 @@ function generateMix () {
 				name		: "VENUE",		// Give packet main venue name
 				audio		: mix,			// Use our mix as the venue audio
 				seqNos		: seqNos,		// Packet sequence numbers in the mix
+				timestamps	: timestamps,		// Packet timestamps in mix, so clients can measure their rtt
 				liveClients	: channels[0].liveClients,	// Just is a temporary lack of audio. Use upstream value
 				peak		: 0,			// This is calculated in the client
 				timestamp	: 0,			// No need to trace RTT in downstream venue packets
@@ -516,6 +520,7 @@ function generateMix () {
 			name		: "VENUE",			// Give packet main venue name
 			audio		: mix,				// Use our mix as the venue audio
 			seqNos		: seqNos,			// Packet sequence numbers in the mix
+			timestamps	: timestamps,		// Packet timestamps in mix, so clients can measure their rtt
 			liveClients	: totalLiveClients,		// Clients visible downstream of this server
 			peak		: 0,				// This is calculated in the client.
 			timestamp	: 0,				// No need to trace RTT in downstream venue packets

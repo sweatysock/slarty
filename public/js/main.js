@@ -65,6 +65,9 @@ var serverMuted = false;
 var venueSize = 1;							// Number of people in the venue. Used for adjusting venue audio.
 var venueSizeCmd = 0;							// Size of venue sent through command channel from event manager
 var audience = 1;							// Number of clients in this venue as reported to us by server
+var rtt = 0;								// Round Trip Time used to adjust sample rate to avoid logjamming
+var rtt5 = 0;								// 5 second average rtt
+var rtt15 = 0;								// 15 second average rtt. These need to be similar for stability
 
 function processCommands(newCommands) {					// Apply commands sent from upstream servers
 	if (newCommands.mute != undefined) serverMuted = newCommands.mute; else serverMuted = false;
@@ -123,11 +126,13 @@ socketIO.on('d', function (data) {
 	if (micAccessAllowed) {						// Need access to audio before outputting
 		// 1. Channel 0 venue mix from server includes our audio sent a few mS ago. Subtract it using seq no. and gain to stop echo
 		let c0;							
+		let ts = 0;
 		data.channels.forEach(c => {if (c.channel==0) c0=c});	// Find the venue channel
 		if (c0 != null) {					// If there is c0 (venue) data...
 			let c0audio = c0.audio;				// Get channel 0 audio so we can subtract our audio from it
 			let a = [];					// Temp store for our audio for subtracting (echo cancelling)
 			let s = c0.seqNos[myChannel];			// Channel 0's mix contains our audio. This is its sequence no.
+			ts = c0.timestamps[myChannel];			// Channel 0 also contains timestamps that allow rtt measurement
 			audience = c0.liveClients;			// The server sends us the current audience count for level setting
 			if (venueSizeCmd == 0) venueSize = audience;	// If there is no command setting the venue size we use the audience size
 			else venueSize = venueSizeCmd;			// otherwise the command sets the audience size = attenuation level
@@ -170,13 +175,20 @@ socketIO.on('d', function (data) {
 	  					for (let i=0; i < a.length; i++) mix[i] += a[i] * (g - 1/venueSize);	
 				}
 			} else {					// This is my own data come back
-				let now = new Date().getTime();
-				rtt = (rtt + (now - c.timestamp))/2;	// Measure round trip time using a rolling average
+				ts  = c.timestamp;			// Capture the timestamp;
 			}
 			if (c.sequence != (chan.seq + 1)) 		// Monitor audio transfer quality for all channels
 				trace("Sequence jump Channel ",ch," jump ",(c.sequence - chan.seq));
 			chan.seq = c.sequence;
 		});
+		if (ts > 0) {						// If we have timestamp data calcuate rtt
+			let now = new Date().getTime();
+			rtt = now - ts;					// Measure round trip time using a rolling average
+			if (rtt5 == 0) rtt5 = rtt;
+			else rtt5 = (rtt5 + rtt)/150;
+			if (rtt15 == 0) rtt15 = rtt;
+			else rtt15 = (rtt15 + rtt)/450;
+		}
 		// 3. Upsample the mix, upsample performer audio, mix all together, apply final AGC and send to speaker
 		mix = reSample(mix, SampleRate, soundcardSampleRate, upCache); // Bring mix to HW sampling rate
 		performer = (data.perf.chan == myChannel);		// Update performer flag just in case
@@ -1087,7 +1099,6 @@ var packetsOut = 0;
 var overflows = 0;
 var shortages = 0;
 var packetSequence = 0;							// Tracing packet ordering
-var rtt = 0;								// Round Trip Time indicates bad network buffering
 var tracecount = 0;
 var sendShortages = 0;
 function printReport() {
@@ -1095,9 +1106,9 @@ function printReport() {
 	let aud=document.getElementById('audioDiv');
 	if (!pauseTracing) {
 		trace("Idle=", idleState.total, " data in=", dataInState.total, " audio in/out=", audioInOutState.total," UI work=",UIState.total);
-		trace("Sent=",packetsOut," Heard=",packetsIn," overflows=",overflows," shortages=",shortages," RTT=",rtt.toFixed(1)," audience=",audience," packet buffer=",packetBuf.length);
-		trace("Threshold delay:",echoTest.delay," micIn.peak:",micIn.peak.toFixed(1)," mixOut.peak:",mixOut.peak.toFixed(1)," speaker buff:",spkrBuffer.length," Max Buff:",maxBuffSize);
-		trace("Levels of output: ",levelCategories);
+		trace("Sent=",packetsOut," Heard=",packetsIn," overflows=",overflows," shortages=",shortages," RTT=",rtt.toFixed(1)," RTT5=",rtt5.toFixed(1)," RTT15=",rtt15.toFixed(1)," audience=",audience," packet buffer=",packetBuf.length);
+		trace(" micIn.peak:",micIn.peak.toFixed(1)," mixOut.peak:",mixOut.peak.toFixed(1)," speaker buff:",spkrBuffer.length," Max Buff:",maxBuffSize);
+//		trace("Levels of output: ",levelCategories);
 	}
 //	setNoiseThreshold();						// Set mic noise threshold based on level categories
 	if (performer == true) {
