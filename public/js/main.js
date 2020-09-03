@@ -686,7 +686,7 @@ function processAudio(e) {						// Main processing loop
 		}
 		micBuffer.push(...micAudio);				// Buffer mic audio 
 		if (micBuffer.length > micAudioPacketSize) {		// If enough audio in buffer 
-			let inAudio = micBuffer.splice(0, micAudioPacketSize));		// Get a packet of audio
+			let inAudio = micBuffer.splice(0, micAudioPacketSize);		// Get a packet of audio
 			let sr = (performer ? PerfSampleRate : SampleRate);		// Set sample rate to normal or performer rate
 			let cache = (performer ? downCachePerf : downCache);		// Use the appropriate resample cache
 			inAudio = reSample(inAudio, soundcardSampleRate, sr, cache);	// Sample down
