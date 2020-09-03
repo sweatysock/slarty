@@ -716,6 +716,7 @@ function processAudio(e) {						// Main processing loop
 			let packet = {
 				name		: myName,		// Send the name we have chosen 
 				audio		: inAudio,		// Resampled, level-corrected audio
+				stereo		: inAudio,		// Stereo difference audio
 				liveClients	: 1,			// This is audio from a single client
 				sequence	: packetSequence,	// Usefull for detecting data losses
 				timestamp	: now,			// Used to measure round trip time
