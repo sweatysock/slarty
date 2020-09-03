@@ -184,7 +184,8 @@ socketIO.on('d', function (data) {
 		if ((data.perf.live) && (!performer)) {			// If there is a live performer and it isn't us
 			// MARK Display frame if present
 			let a = data.perf.packet.audio;			// Get the performer audio
-			a = reSample(a, PerfSampleRate, soundcardSampleRate, upCachePerf); // Bring back to HW sampling rate
+			let sr = data.perf.packet.sampleRate;		// Sample rate is on a per packet basis
+			a = reSample(a, sr, soundcardSampleRate, upCachePerf); // Bring back to HW sampling rate
 			for (let i=0; i < a.length; i++)
 				mix[i] += a[i];				// Performer audio goes straight into mix
 		}
