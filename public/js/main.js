@@ -689,8 +689,7 @@ function processAudio(e) {						// Main processing loop
 	
 	enterState( audioInOutState );					// Log time spent here
 
-	var inData = e.inputBuffer.getChannelData(0);			// Audio from the mic
-console.log(inData);
+	var inData = e.inputBuffer.getChannelData(1);			// Audio from the mic
 	var outData = e.outputBuffer.getChannelData(0);			// Audio going to speaker
 
 	if (echoTest.running == true) {					// The echo test takes over all audio
