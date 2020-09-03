@@ -188,6 +188,7 @@ socketIO.on('d', function (data) {
 				let m8 = data.perf.packet.audio.mono8;
 				let m16 = data.perf.packet.audio.mono16;
 				let m32 = data.perf.packet.audio.mono32;
+				m32=null;
 				let sr = 32000;				// Sample rate can vary but it will break this code!
 				if (m8 == null) {			// For some reason there is no audio
 					let a = new Array(250).fill(0);	// Get a small array of zeros
