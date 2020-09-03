@@ -843,7 +843,7 @@ function handleAudio(stream) {						// We have obtained media access
 	micFilter2.frequency.value = LowFilterFreq;
 	micFilter2.Q.value = 1;
 	
-	let splitter = context.createChannelSplitter(2);		// Split signal for echo cancelling
+	let splitter = context.createChannelSplitter(2,2);		// Split signal for echo cancelling
 
 	// Time to connect everything...
 //	liveSource.connect(combiner);					// Mic goes to combiner
@@ -851,9 +851,9 @@ function handleAudio(stream) {						// We have obtained media access
 	liveSource.connect(micFilter1);
 	micFilter1.connect(micFilter2);					// the rest are chained together
 	micFilter2.connect(node);					// micFilter goes to audio processor
-//	node.connect(splitter);						// our processor feeds to a splitter
-//	splitter.connect(context.destination,0);			// other output goes to speaker
-	node.connect(context.destination);
+	node.connect(splitter);						// our processor feeds to a splitter
+	splitter.connect(context.destination,0);			// other output goes to speaker
+//	node.connect(context.destination);
 
 	startEchoTest();
 }
