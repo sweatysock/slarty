@@ -186,18 +186,19 @@ socketIO.on('d', function (data) {
 				let a = [];				// Reconstruct performer audio packet to here
 				let j = 0, k = 0;
 				let m8 = data.perf.packet.audio.mono8;
-				let m16 = data.perf.packet.audio.mono16;
-				let m32 = data.perf.packet.audio.mono32;
-				for (let i=0; i<m8.length; i++) {
-					let s1,s2;
-					s1 = m8[i] + m16[i];
-					s2 = m8[i] - m16[i];
-					a[k] = s1 + m32[j]; k++;
-					a[k] = s1 - m32[j]; j++; k++;
-					a[k] = s2 + m32[j]; k++;
-					a[k] = s2 - m32[j]; j++; k++;
-				}
+//				let m16 = data.perf.packet.audio.mono16;
+//				let m32 = data.perf.packet.audio.mono32;
+//				for (let i=0; i<m8.length; i++) {
+//					let s1,s2;
+//					s1 = m8[i] + m16[i];
+//					s2 = m8[i] - m16[i];
+//					a[k] = s1 + m32[j]; k++;
+//					a[k] = s1 - m32[j]; j++; k++;
+//					a[k] = s2 + m32[j]; k++;
+//					a[k] = s2 - m32[j]; j++; k++;
+//				}
 				let sr = data.perf.packet.sampleRate;	// Sample rate is on a per packet basis
+a=m8;sr=8000;
 				a = reSample(a, sr, soundcardSampleRate, upCachePerf); // Bring back to HW sampling rate
 				for (let i=0; i < a.length; i++)
 					mix[i] += a[i];			// Performer audio goes straight into mix
