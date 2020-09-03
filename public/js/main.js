@@ -689,13 +689,17 @@ function processAudio(e) {						// Main processing loop
 	
 	enterState( audioInOutState );					// Log time spent here
 
-	var inData = e.inputBuffer.getChannelData(1);			// Audio from the mic
-	var outData = e.outputBuffer.getChannelData(0);			// Audio going to speaker
+	var inDataL = e.inputBuffer.getChannelData(0);			// Audio from the left mic
+	var inDataR = e.inputBuffer.getChannelData(1);			// Audio from the right mic
+	var outDataL = e.outputBuffer.getChannelData(0);		// Audio going to the left speaker
+	var outDataR = e.outputBuffer.getChannelData(1);		// Audio going to the right speaker
 
 	if (echoTest.running == true) {					// The echo test takes over all audio
-		let output = runEchoTest(inData);			// Send the mic audio to the tester
-		for (let i in output) 					// and get back audio to reproduce
-			outData[i] = output[i];				// Copy audio to output
+		let output = runEchoTest(inDataL);			// Send the mic audio to the tester
+		for (let i in output) {					// and get back audio to reproduce
+			outDataL[i] = output[i];			// Copy audio to output
+			outDataR[i] = output[i];			// Copy audio to output
+		}
 		enterState( idleState );				// This test stage is done. Back to Idling
 		return;							// Don't do anything else while testing
 	} 
@@ -703,7 +707,7 @@ function processAudio(e) {						// Main processing loop
 	// 1. Get Mic audio, buffer it, and send it to server if enough buffered
 	if (socketConnected) {						// Need connection to send
 		let micAudio = [];					// Our objective is to fill this with audio
-		let peak = maxValue(inData);				// Get peak of raw mic audio
+		let peak = maxValue(inDataL);				// Get peak of raw mic audio
 		if (!pauseTracing) levelClassifier(peak);		// Classify audio incoming for analysis
 		if ((peak > micIn.threshold) &&				// if audio is above dynamic threshold
 			(peak > noiseThreshold)) {			// and noise threshold, open gate
@@ -714,10 +718,10 @@ function processAudio(e) {						// Main processing loop
 		} 
 		if (performer) micIn.gate = 1				// Performer's mic is always open
 		if (micIn.gate > 0) {					// If gate is open prepare the audio for sending
-			micAudio = inData;
+			micAudio = inDataL;
 			micIn.gate--;					// Gate slowly closes
 		} else {						// Gate closed. Fill with silence.
-			micAudio = new Array(inData.length).fill(0);
+			micAudio = new Array(inDataL.length).fill(0);
 		}
 		micBuffer.push(...micAudio);				// Buffer mic audio 
 		if (micBuffer.length > micAudioPacketSize) {		// If enough audio in buffer 
@@ -794,8 +798,10 @@ function processAudio(e) {						// Main processing loop
 		thresholdBuffer[echoTest.sampleDelay+2]
 	])) * echoTest.factor * mixOut.gain;				// multiply by factor and mixOutGain
 	thresholdBuffer.pop();						// Remove oldest threshold buffer value
-	for (let i in outData) 
-		outData[i] = outAudio[i];				// Copy audio to output
+	for (let i in outDataL) { 
+		outDataL[i] = outAudio[i];				// Copy audio to output
+		outDataR[i] = outAudio[i];				// Copy audio to output
+	}
 	enterState( idleState );					// We are done. Back to Idling
 }
 
