@@ -5,7 +5,6 @@ const PacketSize = 500;							// Number of samples in the client audio packets
 const maxBufferSize = 10;						// Max number of packets to store per client
 const perfMaxBufferSize = 30;						// Max packets buffered for the performer
 const mixTriggerLevel = 5;						// When all clients have this many packets we create a mix
-const PerfSampleRate = 32000; 						// Global sample rate used for all performer audio
 const MaxOutputLevel = 1;						// Max output level for INT16, for auto gain control
 const NumberOfChannels = 20;						// Max number of channels in this server
 var channels = [];							// Each channel's data & buffer held here
@@ -317,15 +316,13 @@ io.sockets.on('connection', function (socket) {
 		channel.socketID = socket.id;				// Store socket ID associated with channel
 		packet.socketID = socket.id;				// Also store it in the packet to help client skip own audio
 		if (packet.channel == perf.chan) { 			// This is the performer. Note: Channel 0 comes down in 'd' packets
-			if (packet.sampleRate == PerfSampleRate) {	// Sample rate needs to be correct for performer channel
-				perf.inCount++;				// For monitoring
-				perf.packets.push(packet);		// Store performer audio/video packet
-				if (perf.packets.length > perfMaxBufferSize)
-					perf.packets.shift();		// Clip the performer buffer removing the oldest packet
-				if ((!perf.streaming) && (perf.packets.length > mixTriggerLevel)) {
-					perf.streaming = true;		// If not streaming but enough now buffered, performer is go!
-					nextMixTimeLimit = 0;		// Reset the mix timer so that it doesn't empty the buffer right away
-				}
+			perf.inCount++;					// For monitoring
+			perf.packets.push(packet);			// Store performer audio/video packet
+			if (perf.packets.length > perfMaxBufferSize)
+				perf.packets.shift();			// Clip the performer buffer removing the oldest packet
+			if ((!perf.streaming) && (perf.packets.length > mixTriggerLevel)) {
+				perf.streaming = true;			// If not streaming but enough now buffered, performer is go!
+				nextMixTimeLimit = 0;			// Reset the mix timer so that it doesn't empty the buffer right away
 			}
 		} else {						// Normal audio: buffer it, clip it, and mix it 
 			if (packet.sampleRate == SampleRate) {		// Sample rate needs to be correct for regular channel

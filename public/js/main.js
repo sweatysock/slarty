@@ -181,25 +181,18 @@ socketIO.on('d', function (data) {
 				trace("Sequence jump Channel ",ch," jump ",(c.sequence - chan.seq));
 			chan.seq = c.sequence;
 		});
-		if (ts > 0) {						// If we have timestamp data calcuate rtt
-			let now = new Date().getTime();
-			rtt = now - ts;					// Measure round trip time using a rolling average
-			if (rtt5 == 0) rtt5 = rtt;
-			else rtt5 = (149 * rtt5 + rtt)/150;
-			if (rtt15 == 0) rtt15 = rtt;
-			else rtt15 = (449 * rtt15 + rtt)/450;
-		}
 		// 3. Upsample the mix, upsample performer audio, mix all together, apply final AGC and send to speaker
 		mix = reSample(mix, SampleRate, soundcardSampleRate, upCache); // Bring mix to HW sampling rate
 		performer = (data.perf.chan == myChannel);		// Update performer flag just in case
 		liveShow = data.perf.live;				// Update the live show flag to update display
-		if ((data.perf.live) && (!performer)) {			// If there is a live performer and it isn't us
-			// MARK Display frame if present
-			let a = data.perf.packet.audio;			// Get the performer audio
-			let sr = data.perf.packet.sampleRate;		// Sample rate is on a per packet basis
-			a = reSample(a, sr, soundcardSampleRate, upCachePerf); // Bring back to HW sampling rate
-			for (let i=0; i < a.length; i++)
-				mix[i] += a[i];				// Performer audio goes straight into mix
+		if (data.perf.live) {					// If there is a live performer 
+			if (!performer) {				// If we are not the performer
+				let a = data.perf.packet.audio;		// Get the performer audio
+				let sr = data.perf.packet.sampleRate;	// Sample rate is on a per packet basis
+				a = reSample(a, sr, soundcardSampleRate, upCachePerf); // Bring back to HW sampling rate
+				for (let i=0; i < a.length; i++)
+					mix[i] += a[i];			// Performer audio goes straight into mix
+			} else ts = data.perf.packet.timestamp;		// I am the performer so grab timestamp for the rtt 
 		}
 //		endTalkover();						// Try to end mic talkover before setting gain
 		let obj = applyAutoGain(mix, mixOut);			// Trim mix level 
@@ -209,6 +202,14 @@ socketIO.on('d', function (data) {
 		if (spkrBuffer.length > maxBuffSize) {			// Clip buffer if too full
 			spkrBuffer.splice(0, (spkrBuffer.length-maxBuffSize)); 	
 			overflows++;					// Note for monitoring purposes
+		}
+		if (ts > 0) {						// If we have timestamp data calcuate rtt
+			let now = new Date().getTime();
+			rtt = now - ts;					// Measure round trip time using a rolling average
+			if (rtt5 == 0) rtt5 = rtt;
+			else rtt5 = (149 * rtt5 + rtt)/150;
+			if (rtt15 == 0) rtt15 = rtt;
+			else rtt15 = (449 * rtt15 + rtt)/450;
 		}
 	}
 	enterState( idleState );					// Back to Idling
@@ -1106,7 +1107,7 @@ function printReport() {
 	let aud=document.getElementById('audioDiv');
 	if (!pauseTracing) {
 		trace("Idle=", idleState.total, " data in=", dataInState.total, " audio in/out=", audioInOutState.total," UI work=",UIState.total);
-		trace("Sent=",packetsOut," Heard=",packetsIn," overflows=",overflows," shortages=",shortages," RTT=",rtt.toFixed(1)," RTT5=",rtt5.toFixed(1)," RTT15=",rtt15.toFixed(1)," audience=",audience," packet buffer=",packetBuf.length);
+		trace("Sent=",packetsOut," Heard=",packetsIn," overflows=",overflows," shortages=",shortages," RTT=",rtt.toFixed(1)," RTT5=",rtt5.toFixed(1)," RTT15=",rtt15.toFixed(1)," audience=",audience);
 		trace(" micIn.peak:",micIn.peak.toFixed(1)," mixOut.peak:",mixOut.peak.toFixed(1)," speaker buff:",spkrBuffer.length," Max Buff:",maxBuffSize);
 //		trace("Levels of output: ",levelCategories);
 	}
