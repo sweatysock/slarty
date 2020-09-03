@@ -691,15 +691,12 @@ function processAudio(e) {						// Main processing loop
 
 	var inDataL = e.inputBuffer.getChannelData(0);			// Audio from the left mic
 	var inDataR = e.inputBuffer.getChannelData(1);			// Audio from the right mic
-	var outDataL = e.outputBuffer.getChannelData(0);		// Audio going to the left speaker
-	var outDataR = e.outputBuffer.getChannelData(1);		// Audio going to the right speaker
+	let outData = context.createBuffer(2,chunkSize,soundcardSampleRate);
 
 	if (echoTest.running == true) {					// The echo test takes over all audio
 		let output = runEchoTest(inDataL);			// Send the mic audio to the tester
-		for (let i in output) {					// and get back audio to reproduce
-			outDataL[i] = output[i];			// Copy audio to output
-			outDataR[i] = output[i];			// Copy audio to output
-		}
+		outData.copyToChannel( output, 0 );
+		outData.copyToChannel( output, 1 );
 		enterState( idleState );				// This test stage is done. Back to Idling
 		return;							// Don't do anything else while testing
 	} 
@@ -798,17 +795,17 @@ function processAudio(e) {						// Main processing loop
 		thresholdBuffer[echoTest.sampleDelay+2]
 	])) * echoTest.factor * mixOut.gain;				// multiply by factor and mixOutGain
 	thresholdBuffer.pop();						// Remove oldest threshold buffer value
-	for (let i in outDataL) { 
-		outDataL[i] = outAudio[i];				// Copy audio to output
-//		outDataR[i] = outAudio[i];				// Copy audio to output
-	}
+
+	outData.copyToChannel( outAudio, 0 );
+	outData.copyToChannel( outAudio, 1 );
+	
 	enterState( idleState );					// We are done. Back to Idling
 }
 
 var micFilter1;
 var micFilter2;
+var context;
 function handleAudio(stream) {						// We have obtained media access
-	let context;
 	let AudioContext = window.AudioContext 				// Default
 		|| window.webkitAudioContext 				// Safari and old versions of Chrome
 		|| false; 
