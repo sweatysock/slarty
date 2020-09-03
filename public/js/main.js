@@ -4,14 +4,10 @@ const SampleRate = 16000; 						// Global sample rate used for all audio
 const PacketSize = 500;							// Server packet size we must conform to
 const HighFilterFreq = SampleRate/2.2;					// Mic filter to remove high frequencies before resampling
 const LowFilterFreq = 200;						// Mic filter to remove low frequencies before resampling
-const PerfSampleRate = 32000; 						// Global sample rate used for all performer audio
-const PerfPacketSize = PacketSize*PerfSampleRate/SampleRate;		// Performer packets are larger in order to preserve packet rate
-const MaxRTT = 800;							// Round Trip Times above this will cause a socket reset
+var perfSampleRate = 32000; 						// Target sample rate used for performer audio adjusted for BW
 var chunkSize = 1024;							// Audio chunk size. Fixed by js script processor
 var soundcardSampleRate = null; 					// Get this from context 
 var micAudioPacketSize = 0;						// Calculate this once we have soundcard sample rate
-var resampledChunkSize = 0;						// Once resampled the chunks are this size
-var perfResampledChunkSize = 0;						// Perf mode has a different resampled chunk size
 var socketConnected = false; 						// True when socket is up
 var micAccessAllowed = false; 						// Need to get user permission
 var packetBuf = [];							// Buffer of packets sent, subtracted from venue mix later
@@ -66,8 +62,8 @@ var venueSize = 1;							// Number of people in the venue. Used for adjusting ve
 var venueSizeCmd = 0;							// Size of venue sent through command channel from event manager
 var audience = 1;							// Number of clients in this venue as reported to us by server
 var rtt = 0;								// Round Trip Time used to adjust sample rate to avoid logjamming
-var rtt5 = 0;								// 5 second average rtt
-var rtt15 = 0;								// 15 second average rtt. These need to be similar for stability
+var rtt1 = 0;								// 1 second average rtt
+var rtt5 = 0;								// 5 second average rtt. These need to be similar for stability
 
 function processCommands(newCommands) {					// Apply commands sent from upstream servers
 	if (newCommands.mute != undefined) serverMuted = newCommands.mute; else serverMuted = false;
@@ -108,8 +104,8 @@ socketIO.on('perf', function (data) {					// Performer status notification
 	performer = data.live;
 	if (performer == true) {
 		document.getElementById("onair").style.visibility = "visible";
-		micFilter1.frequency.value = PerfSampleRate/2.2;	// Change mic filter for performance audio
-		micFilter2.frequency.value = 50;
+		micFilter1.frequency.value = perfSampleRate/2.2;	// Change mic filter for performance audio
+		micFilter2.frequency.value = 30;
 	} else {
 		document.getElementById("onair").style.visibility = "hidden";
 		micFilter1.frequency.value = HighFilterFreq		// Return mic filter to normal settings
@@ -206,10 +202,10 @@ socketIO.on('d', function (data) {
 		if (ts > 0) {						// If we have timestamp data calcuate rtt
 			let now = new Date().getTime();
 			rtt = now - ts;					// Measure round trip time using a rolling average
+			if (rtt1 == 0) rtt1 = rtt;
+			else rtt1 = (29 * rtt1 + rtt)/30;
 			if (rtt5 == 0) rtt5 = rtt;
 			else rtt5 = (149 * rtt5 + rtt)/150;
-			if (rtt15 == 0) rtt15 = rtt;
-			else rtt15 = (449 * rtt15 + rtt)/450;
 		}
 	}
 	enterState( idleState );					// Back to Idling
@@ -701,7 +697,7 @@ function processAudio(e) {						// Main processing loop
 		micBuffer.push(...micAudio);				// Buffer mic audio 
 		if (micBuffer.length > micAudioPacketSize) {		// If enough audio in buffer 
 			let inAudio = micBuffer.splice(0, micAudioPacketSize);		// Get a packet of audio
-			let sr = (performer ? PerfSampleRate : SampleRate);		// Set sample rate to normal or performer rate
+			let sr = (performer ? perfSampleRate : SampleRate);		// Set sample rate to normal or performer rate
 			let cache = (performer ? downCachePerf : downCache);		// Use the appropriate resample cache
 			inAudio = reSample(inAudio, soundcardSampleRate, sr, cache);	// Sample down
 			let obj = applyAutoGain(inAudio, micIn);	// Amplify mic with auto limiter
@@ -776,10 +772,6 @@ function handleAudio(stream) {						// We have obtained media access
 	soundcardSampleRate = context.sampleRate;			// Get HW sample rate... varies per platform
 	micAudioPacketSize = Math.round( soundcardSampleRate 		// How much micAudio is needed to fill a Packet
 		/ (SampleRate/PacketSize) );				// at our standard SampleRate (rounding error is an issue?)
-	resampledChunkSize = Math.floor(chunkSize * 			// Calculate size of internal data chunks
-		SampleRate / soundcardSampleRate);			// for internal audence sample rate
-	perfResampledChunkSize = Math.floor(chunkSize *			// Same for performer mode audio too
-		PerfSampleRate / soundcardSampleRate);
 	micAccessAllowed = true;
 	createOutputUI( mixOut );					// Create the output mix channel UI
 	createMicUI( micIn );						// Create the microphone channel UI
@@ -1107,15 +1099,15 @@ function printReport() {
 	let aud=document.getElementById('audioDiv');
 	if (!pauseTracing) {
 		trace("Idle=", idleState.total, " data in=", dataInState.total, " audio in/out=", audioInOutState.total," UI work=",UIState.total);
-		trace("Sent=",packetsOut," Heard=",packetsIn," overflows=",overflows," shortages=",shortages," RTT=",rtt.toFixed(1)," RTT5=",rtt5.toFixed(1)," RTT15=",rtt15.toFixed(1)," audience=",audience);
+		trace("Sent=",packetsOut," Heard=",packetsIn," overflows=",overflows," shortages=",shortages," RTT=",rtt.toFixed(1)," RTT1=",rtt1.toFixed(1)," RTT5=",rtt5.toFixed(1)," audience=",audience);
 		trace(" micIn.peak:",micIn.peak.toFixed(1)," mixOut.peak:",mixOut.peak.toFixed(1)," speaker buff:",spkrBuffer.length," Max Buff:",maxBuffSize);
 //		trace("Levels of output: ",levelCategories);
 	}
 //	setNoiseThreshold();						// Set mic noise threshold based on level categories
 	if (performer == true) {
 		document.getElementById("onair").style.visibility = "visible";
-		micFilter1.frequency.value = PerfSampleRate/2.2;	// Change mic filter for performance audio
-		micFilter2.frequency.value = 50;
+		micFilter1.frequency.value = perfSampleRate/2.2;	// Change mic filter for performance audio
+		micFilter2.frequency.value = 30;
 	} else	{
 		document.getElementById("onair").style.visibility = "hidden";
 		micFilter1.frequency.value = HighFilterFreq		// Return mic filter to normal settings
