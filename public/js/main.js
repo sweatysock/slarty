@@ -799,8 +799,8 @@ function processAudio(e) {						// Main processing loop
 	])) * echoTest.factor * mixOut.gain;				// multiply by factor and mixOutGain
 	thresholdBuffer.pop();						// Remove oldest threshold buffer value
 	for (let i in outDataL) { 
-//		outDataL[i] = outAudio[i];				// Copy audio to output
-		outDataR[i] = outAudio[i];				// Copy audio to output
+		outDataL[i] = outAudio[i];				// Copy audio to output
+//		outDataR[i] = outAudio[i];				// Copy audio to output
 	}
 	enterState( idleState );					// We are done. Back to Idling
 }
