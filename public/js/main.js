@@ -181,10 +181,26 @@ socketIO.on('d', function (data) {
 		mix = reSample(mix, SampleRate, soundcardSampleRate, upCache); // Bring mix to HW sampling rate
 		performer = (data.perf.chan == myChannel);		// Update performer flag just in case
 		liveShow = data.perf.live;				// Update the live show flag to update display
-		if (data.perf.live) {					// If there is a live performer 
-			if (!performer) {				// If we are not the performer
-				let a = data.perf.packet.audio;		// Get the performer audio
+		if (data.perf.live) {					// If there is a live performer process the data
+console.log(data);
+			if (performer) {				// If we are not the performer mix in their audio
+				let a = [];				// Reconstruct performer audio packet to here
+				let j = 0, k = 0;
+				let m8 = data.perf.packet.audio.mono8;
+				let m16 = data.perf.packet.audio.mono16;
+				let m32 = data.perf.packet.audio.mono32;
+				for (let i=0; i<m8.length; i++) {
+					let s1,s2;
+					s1 = m8[i] + m16[i];
+					s2 = m8[i] - m16[i];
+					a[k] = s1 + m32[j]; k++;
+					a[k] = s1 - m32[j]; j++; k++;
+					a[k] = s2 + m32[j]; k++;
+					a[k] = s2 - m32[j]; j++; k++;
+				}
 				let sr = data.perf.packet.sampleRate;	// Sample rate is on a per packet basis
+console.log("RECOVERED AUDIO...");
+console.log(a);
 				a = reSample(a, sr, soundcardSampleRate, upCachePerf); // Bring back to HW sampling rate
 				for (let i=0; i < a.length; i++)
 					mix[i] += a[i];			// Performer audio goes straight into mix
@@ -696,27 +712,44 @@ function processAudio(e) {						// Main processing loop
 		}
 		micBuffer.push(...micAudio);				// Buffer mic audio 
 		if (micBuffer.length > micAudioPacketSize) {		// If enough audio in buffer 
-			let inAudio = micBuffer.splice(0, micAudioPacketSize);		// Get a packet of audio
+			let audio = micBuffer.splice(0, micAudioPacketSize);		// Get a packet of audio
 			let sr = (performer ? perfSampleRate : SampleRate);		// Set sample rate to normal or performer rate
 			let cache = (performer ? downCachePerf : downCache);		// Use the appropriate resample cache
-			inAudio = reSample(inAudio, soundcardSampleRate, sr, cache);	// Sample down
-			let obj = applyAutoGain(inAudio, micIn);	// Amplify mic with auto limiter
+			audio = reSample(audio, soundcardSampleRate, sr, cache);	// Sample down
+			let obj = applyAutoGain(audio, micIn);	// Amplify mic with auto limiter
 			if (obj.peak > micIn.peak) 
 				micIn.peak = obj.peak;			// Note peak for local display
 			peak = obj.peak					// peak for packet to be sent
 			micIn.gain = obj.finalGain;			// Store gain for next loop
 			if ((peak == 0) || (micIn.muted) || 		// Send empty packet if silent, muted
 				(serverMuted && !performer)) { 		// or muted by server and not performer
-				inAudio = [];				// Send empty audio packet
+				audio = [];				// Send empty audio packet
 				peak = 0;
-			} else {
-//				talkover();				// Mic is active so drop mix output
+			} 
+console.log("ORIGINAL AUDIO...");
+console.log(audio);
+			if (performer) {				// performer audio goes as multi-rate sample blocks
+				let mono8 = [], mono16 = [], mono32 = [], stereo8 = [], stereo16 = [], stereo32 = [];
+				let j=0, k=0;
+				for (let i=0; i<audio.length; i+=4) {		
+					let s1,s2,d1,d2,s3,d3;
+					s1 = (audio[i] + audio[i+1])/2;
+					d1 = (audio[i] - audio[i+1])/2;
+					s2 = (audio[i+2] + audio[i+3])/2;
+					d2 = (audio[i+2] - audio[i+3])/2;
+					s3 = (s1 + s2)/2;
+					d3 = (s1 - s2)/2;
+					mono8[j] = s3;
+					mono16[j] = d3; j++
+					mono32[k] = d1; k++;
+					mono32[k] = d2; k++;
+				}
+				audio = {mono8,mono16,mono32,stereo8,stereo16,stereo32};
 			}
 			let now = new Date().getTime();
 			let packet = {
 				name		: myName,		// Send the name we have chosen 
-				audio		: inAudio,		// Resampled, level-corrected audio
-				stereo		: inAudio,		// Stereo difference audio
+				audio		: audio,		// Audio block
 				liveClients	: 1,			// This is audio from a single client
 				sequence	: packetSequence,	// Usefull for detecting data losses
 				timestamp	: now,			// Used to measure round trip time
@@ -726,6 +759,7 @@ function processAudio(e) {						// Main processing loop
 				sampleRate	: sr,			// Send sample rate to help processing
 				group		: myGroup,		// Group name this user belings to
 			};
+console.log(packet);
 			socketIO.emit("u",packet);
 			if (!performer) packetBuf.push(packet);		// If not performer add packet to buffer for echo cancelling 
 			packetsOut++;					// For stats and monitoring
