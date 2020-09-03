@@ -182,7 +182,6 @@ socketIO.on('d', function (data) {
 		performer = (data.perf.chan == myChannel);		// Update performer flag just in case
 		liveShow = data.perf.live;				// Update the live show flag to update display
 		if (data.perf.live) {					// If there is a live performer process the data
-console.log(data);
 			if (performer) {				// If we are not the performer mix in their audio
 				let a = [];				// Reconstruct performer audio packet to here
 				let j = 0, k = 0;
@@ -199,14 +198,11 @@ console.log(data);
 					a[k] = s2 - m32[j]; j++; k++;
 				}
 				let sr = data.perf.packet.sampleRate;	// Sample rate is on a per packet basis
-console.log("RECOVERED AUDIO...");
-console.log(a);
 				a = reSample(a, sr, soundcardSampleRate, upCachePerf); // Bring back to HW sampling rate
 				for (let i=0; i < a.length; i++)
 					mix[i] += a[i];			// Performer audio goes straight into mix
 			} else ts = data.perf.packet.timestamp;		// I am the performer so grab timestamp for the rtt 
 		}
-//		endTalkover();						// Try to end mic talkover before setting gain
 		let obj = applyAutoGain(mix, mixOut);			// Trim mix level 
 		mixOut.gain= obj.finalGain;				// Store gain for next loop
 		if (obj.peak > mixOut.peak) mixOut.peak = obj.peak;	// Note peak for display purposes
@@ -726,8 +722,6 @@ function processAudio(e) {						// Main processing loop
 				audio = [];				// Send empty audio packet
 				peak = 0;
 			} 
-console.log("ORIGINAL AUDIO...");
-console.log(audio);
 			if (performer) {				// performer audio goes as multi-rate sample blocks
 				let mono8 = [], mono16 = [], mono32 = [], stereo8 = [], stereo16 = [], stereo32 = [];
 				let j=0, k=0;
@@ -759,7 +753,6 @@ console.log(audio);
 				sampleRate	: sr,			// Send sample rate to help processing
 				group		: myGroup,		// Group name this user belings to
 			};
-console.log(packet);
 			socketIO.emit("u",packet);
 			if (!performer) packetBuf.push(packet);		// If not performer add packet to buffer for echo cancelling 
 			packetsOut++;					// For stats and monitoring
