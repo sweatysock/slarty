@@ -9,6 +9,7 @@ const PerfPacketSize = PacketSize*PerfSampleRate/SampleRate;		// Performer packe
 const MaxRTT = 800;							// Round Trip Times above this will cause a socket reset
 var chunkSize = 1024;							// Audio chunk size. Fixed by js script processor
 var soundcardSampleRate = null; 					// Get this from context 
+var micAudioPacketSize = 0;						// Calculate this once we have soundcard sample rate
 var resampledChunkSize = 0;						// Once resampled the chunks are this size
 var perfResampledChunkSize = 0;						// Perf mode has a different resampled chunk size
 var socketConnected = false; 						// True when socket is up
@@ -673,29 +674,22 @@ function processAudio(e) {						// Main processing loop
 			(peak > noiseThreshold)) {			// and noise threshold, open gate
 			if (micIn.gate == 0)
 				micIn.gate = gateDelay + 1;		// This signals the gate has just been reopened
-			else						// which means fade up the sample
+			else						// which means fade up the sample (not done anymore)
 				micIn.gate = gateDelay;
 		} 
 		if (performer) micIn.gate = 1				// Performer's mic is always open
-		let sr = (performer ? PerfSampleRate : SampleRate);	// Set sample rate to normal or performer rate
-		let cache = (performer ? downCachePerf : downCache);	// Use the correct resample cache
 		if (micIn.gate > 0) {					// If gate is open prepare the audio for sending
-			micAudio = reSample(inData, soundcardSampleRate, sr, cache);
+			micAudio = inData;
 			micIn.gate--;					// Gate slowly closes
-//			if (micIn.gate == 0)				// Gate is about to close
-//				fadeDown(micAudio);			// Fade sample down to zero for smooth sound
-//			else if (micIn.gate == gateDelay)		// Gate has just been opened so fade up
-//				fadeUp(micAudio);
 		} else {						// Gate closed. Fill with silence.
-			if (performer)					// Fill with 0's relevant amount of samples
-				micAudio = new Array(perfResampledChunkSize).fill(0);
-			else
-				micAudio = new Array(resampledChunkSize).fill(0);
+			micAudio = new Array(inData.length).fill(0);
 		}
 		micBuffer.push(...micAudio);				// Buffer mic audio 
-		let ps = (performer ? PerfPacketSize : PacketSize);	// Packet size depends on performer mode
-		if (micBuffer.length > ps) {				// If enough in buffer to fill a packet
-			let inAudio = micBuffer.splice(0, ps);		// Get a packet of audio (larger if performer)
+		if (micBuffer.length > micAudioPacketSize) {		// If enough audio in buffer 
+			let inAudio = micBuffer.splice(0, micAudioPacketSize));		// Get a packet of audio
+			let sr = (performer ? PerfSampleRate : SampleRate);		// Set sample rate to normal or performer rate
+			let cache = (performer ? downCachePerf : downCache);		// Use the appropriate resample cache
+			inAudio = reSample(inAudio, soundcardSampleRate, sr, cache);	// Sample down
 			let obj = applyAutoGain(inAudio, micIn);	// Amplify mic with auto limiter
 			if (obj.peak > micIn.peak) 
 				micIn.peak = obj.peak;			// Note peak for local display
@@ -766,6 +760,8 @@ function handleAudio(stream) {						// We have obtained media access
 		alert("Sorry, the Web Audio API is not supported by your browser. Consider upgrading or using Google Chrome or Mozilla Firefox");
 	}
 	soundcardSampleRate = context.sampleRate;			// Get HW sample rate... varies per platform
+	micAudioPacketSize = Math.round( soundcardSampleRate 		// How much micAudio is needed to fill a Packet
+		/ (SampleRate/PacketSize) );				// at our standard SampleRate (rounding error is an issue?)
 	resampledChunkSize = Math.floor(chunkSize * 			// Calculate size of internal data chunks
 		SampleRate / soundcardSampleRate);			// for internal audence sample rate
 	perfResampledChunkSize = Math.floor(chunkSize *			// Same for performer mode audio too
