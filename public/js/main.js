@@ -185,9 +185,9 @@ socketIO.on('d', function (data) {
 			let now = new Date().getTime();
 			rtt = now - ts;					// Measure round trip time using a rolling average
 			if (rtt5 == 0) rtt5 = rtt;
-			else rtt5 = (rtt5 + rtt)/150;
+			else rtt5 = (149 * rtt5 + rtt)/150;
 			if (rtt15 == 0) rtt15 = rtt;
-			else rtt15 = (rtt15 + rtt)/450;
+			else rtt15 = (449 * rtt15 + rtt)/450;
 		}
 		// 3. Upsample the mix, upsample performer audio, mix all together, apply final AGC and send to speaker
 		mix = reSample(mix, SampleRate, soundcardSampleRate, upCache); // Bring mix to HW sampling rate
