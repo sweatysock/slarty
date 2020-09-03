@@ -183,12 +183,26 @@ socketIO.on('d', function (data) {
 		liveShow = data.perf.live;				// Update the live show flag to update display
 		if (data.perf.live) {					// If there is a live performer process the data
 			if (!performer) {				// If we are not the performer mix in their audio
-				let a = [];				// Reconstruct performer audio packet to here
+				let a = [];				// Reconstruct performer audio packet into this array
 				let j = 0, k = 0;
 				let m8 = data.perf.packet.audio.mono8;
 				let m16 = data.perf.packet.audio.mono16;
 				let m32 = data.perf.packet.audio.mono32;
-				for (let i=0; i<m8.length; i++) {
+				let sr = 32000;				// Sample rate can vary but it will break this code!
+				if (m8 == null) {			// For some reason there is no audio
+					let a = new Array(250).fill(0);	// Get a small array of zeros
+					sr = 8000;			// Set the sample rate and we're done
+				} else if (m16 == null) {		// Worst case scenario. 8kHz sampling
+					a = m8;
+					sr = 8000; 			
+				} else if (m32 == null) {		// Standard quality audio 16kHz 250 bytes
+					for (let i=0;i<m8.length;i++) {	// Reconstruct the 500 byte packet
+						let s1,s2;
+						a[k] = m8[i] + m16[i];k++;
+						a[k] = m8[i] - m16[i];k++;
+					}
+					sr = 16000; 
+				} else for (let i=0; i<m8.length; i++) {// Best rate. 32kHz. Rebuild the 1k packet
 					let s1,s2;
 					s1 = m8[i] + m16[i];
 					s2 = m8[i] - m16[i];
@@ -197,7 +211,6 @@ socketIO.on('d', function (data) {
 					a[k] = s2 + m32[j]; k++;
 					a[k] = s2 - m32[j]; j++; k++;
 				}
-				let sr = data.perf.packet.sampleRate;	// Sample rate is on a per packet basis
 				a = reSample(a, sr, soundcardSampleRate, upCachePerf); // Bring back to HW sampling rate
 				for (let i=0; i < a.length; i++)
 					mix[i] += a[i];			// Performer audio goes straight into mix
