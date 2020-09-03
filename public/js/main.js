@@ -689,13 +689,16 @@ function processAudio(e) {						// Main processing loop
 	
 	enterState( audioInOutState );					// Log time spent here
 
-	var inData = e.inputBuffer.getChannelData(0);			// Audio from the mic
-	var outData = e.outputBuffer.getChannelData(0);			// Audio going to speaker
+	var inDataL = e.inputBuffer.getChannelData(0);			// Audio from left mic 
+	var inDataR = e.inputBuffer.getChannelData(1);			// Audio from right mic
+	var outDataL = e.outputBuffer.getChannelData(0);		// Audio going to left speaker
+	var outDataR = e.outputBuffer.getChannelData(1);		// Audio going to right speaker
 
 	if (echoTest.running == true) {					// The echo test takes over all audio
-		let output = runEchoTest(inData);			// Send the mic audio to the tester
+		let output = runEchoTest(inDataL);			// Send the mic audio to the tester
 		for (let i in output) 					// and get back audio to reproduce
-			outData[i] = output[i];				// Copy audio to output
+			outDataL[i] = output[i];			// Copy audio to output
+			outDataR[i] = output[i];
 		enterState( idleState );				// This test stage is done. Back to Idling
 		return;							// Don't do anything else while testing
 	} 
@@ -703,7 +706,7 @@ function processAudio(e) {						// Main processing loop
 	// 1. Get Mic audio, buffer it, and send it to server if enough buffered
 	if (socketConnected) {						// Need connection to send
 		let micAudio = [];					// Our objective is to fill this with audio
-		let peak = maxValue(inData);				// Get peak of raw mic audio
+		let peak = maxValue(inDataL);				// Get peak of raw mic audio
 		if (!pauseTracing) levelClassifier(peak);		// Classify audio incoming for analysis
 		if ((peak > micIn.threshold) &&				// if audio is above dynamic threshold
 			(peak > noiseThreshold)) {			// and noise threshold, open gate
@@ -714,10 +717,10 @@ function processAudio(e) {						// Main processing loop
 		} 
 		if (performer) micIn.gate = 1				// Performer's mic is always open
 		if (micIn.gate > 0) {					// If gate is open prepare the audio for sending
-			micAudio = inData;
+			micAudio = inDataL;
 			micIn.gate--;					// Gate slowly closes
 		} else {						// Gate closed. Fill with silence.
-			micAudio = new Array(inData.length).fill(0);
+			micAudio = new Array(inDataL.length).fill(0);
 		}
 		micBuffer.push(...micAudio);				// Buffer mic audio 
 		if (micBuffer.length > micAudioPacketSize) {		// If enough audio in buffer 
@@ -738,9 +741,9 @@ function processAudio(e) {						// Main processing loop
 			if (performer) {				// performer audio goes as multi-rate sample blocks
 				let mono8 = [], mono16 = [], mono32 = [], stereo8 = [], stereo16 = [], stereo32 = [];
 				let j=0, k=0;
-				for (let i=0; i<audio.length; i+=4) {		
-					let s1,s2,d1,d2,s3,d3;
-					s1 = (audio[i] + audio[i+1])/2;
+				for (let i=0; i<audio.length; i+=4) {	// This encoding allows the server to discard blocks
+					let s1,s2,d1,d2,s3,d3;		// and reduce network load, while simply reducing
+					s1 = (audio[i] + audio[i+1])/2;	// high frequency content of performer audio.
 					d1 = (audio[i] - audio[i+1])/2;
 					s2 = (audio[i+2] + audio[i+3])/2;
 					d2 = (audio[i+2] - audio[i+3])/2;
@@ -765,6 +768,7 @@ function processAudio(e) {						// Main processing loop
 				recording	: recording,		// Flag used for recording - test function
 				sampleRate	: sr,			// Send sample rate to help processing
 				group		: myGroup,		// Group name this user belings to
+				rtt		: rtt1,			// Send my rtt measurement for server monitoring
 			};
 			socketIO.emit("u",packet);
 			if (!performer) packetBuf.push(packet);		// If not performer add packet to buffer for echo cancelling 
@@ -794,7 +798,8 @@ function processAudio(e) {						// Main processing loop
 	])) * echoTest.factor * mixOut.gain;				// multiply by factor and mixOutGain
 	thresholdBuffer.pop();						// Remove oldest threshold buffer value
 	for (let i in outData) 
-		outData[i] = outAudio[i];				// Copy audio to output
+		outDataL[i] = outAudio[i];				// Copy audio to output
+		outDataR[i] = outAudio[i];
 	enterState( idleState );					// We are done. Back to Idling
 }
 
@@ -819,13 +824,13 @@ function handleAudio(stream) {						// We have obtained media access
 	let liveSource = context.createMediaStreamSource(stream); 	// Create audio source (mic)
 	let node = undefined;
 	if (!context.createScriptProcessor) {				// Audio processor node
-		node = context.createJavaScriptNode(chunkSize, 1, 1);	// The new way is to use a worklet
+		node = context.createJavaScriptNode(chunkSize, 2, 2);	// The new way is to use a worklet
 	} else {							// but the results are not as good
-		node = context.createScriptProcessor(chunkSize, 1, 1);	// and it doesn't work everywhere
+		node = context.createScriptProcessor(chunkSize, 2, 2);	// and it doesn't work everywhere
 	}
 	node.onaudioprocess = processAudio;				// Link the callback to the node
 
-	let combiner = context.createChannelMerger();			// Combiner node to turn stereo input to mono
+//	let combiner = context.createChannelMerger();			// Combiner node to turn stereo input to mono
 
 	micFilter1 = context.createBiquadFilter();
 	micFilter1.type = 'lowpass';
@@ -839,9 +844,10 @@ function handleAudio(stream) {						// We have obtained media access
 	let splitter = context.createChannelSplitter(2);		// Split signal for echo cancelling
 
 	// Time to connect everything...
-	liveSource.connect(combiner);					// Mic goes to combiner
-	combiner.connect(micFilter1);					// Combiner goes to micFilter1
-	micFilter1.connect(micFilter2);					// the rest are chained togather
+//	liveSource.connect(combiner);					// Mic goes to combiner
+//	combiner.connect(micFilter1);					// Combiner goes to micFilter1
+	liveSource.connect(micFilter1);
+	micFilter1.connect(micFilter2);					// the rest are chained together
 	micFilter2.connect(node);					// micFilter goes to audio processor
 	node.connect(splitter);						// our processor feeds to a splitter
 	splitter.connect(context.destination,0);			// other output goes to speaker
