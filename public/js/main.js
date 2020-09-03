@@ -182,7 +182,7 @@ socketIO.on('d', function (data) {
 		performer = (data.perf.chan == myChannel);		// Update performer flag just in case
 		liveShow = data.perf.live;				// Update the live show flag to update display
 		if (data.perf.live) {					// If there is a live performer process the data
-			if (performer) {				// If we are not the performer mix in their audio
+			if (!performer) {				// If we are not the performer mix in their audio
 				let a = [];				// Reconstruct performer audio packet to here
 				let j = 0, k = 0;
 				let m8 = data.perf.packet.audio.mono8;
