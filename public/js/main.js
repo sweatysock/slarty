@@ -217,6 +217,7 @@ socketIO.on('d', function (data) {
 					mono[k] = s2 + m32[j]; k++;
 					mono[k] = s2 - m32[j]; j++; k++;
 				}					// Mono perf audio ready to upsample
+if (mono.length < 100) console.log(data);
 				mono = reSample(mono, sr, soundcardSampleRate, upCachePerfM);
 				let s8 = data.perf.packet.audio.stereo8;// Now regenerate the stereo difference signal
 				let s16 = data.perf.packet.audio.stereo16;
