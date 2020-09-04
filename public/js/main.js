@@ -188,6 +188,7 @@ socketIO.on('d', function (data) {
 		isStereo = false;					// flag to indicate if we have stereo audio
 		if (data.perf.live) {					// If there is a live performer process the data
 			if (!performer) {				// If we are not the performer mix in performer audio
+console.log(data);
 				let mono = [];				// Reconstruct performer mono audio into this array
 				let stereo = [];			// Reconstruct performer stereo difference signal into here
 				let j = 0, k = 0;
