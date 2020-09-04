@@ -11,9 +11,11 @@ var micAudioPacketSize = 0;						// Calculate this once we have soundcard sample
 var socketConnected = false; 						// True when socket is up
 var micAccessAllowed = false; 						// Need to get user permission
 var packetBuf = [];							// Buffer of packets sent, subtracted from venue mix later
-var spkrBuffer = []; 							// Audio buffer going to speaker
+var spkrBufferL = []; 							// Audio buffer going to speaker (left)
+var spkrBufferR = []; 							// (right)
 var maxBuffSize = 20000;						// Max audio buffer chunks for playback. 
-var micBuffer = [];							// Buffer mic audio before sending
+var micBufferL = [];							// Buffer mic audio before sending
+var micBufferR = [];							
 var myChannel = -1;							// The server assigns us an audio channel
 var myName = "";							// Name assigned to my audio channel
 var myGroup = "noGroup";						// Group user belongs to. Default is no group.
@@ -151,8 +153,9 @@ socketIO.on('d', function (data) {
 			} else c0.peak = 0;				// Don't need to be a genius to figure that one out
 		} 
 		// 2. Build a mix of all incoming channels. For individuals this is just channel 0, For groups it is more
-		let mix = new Array(PacketSize).fill(0);		// Now we build the mix starting from 0's
-		data.channels.forEach(c => {				// Process all audio channel packets sent from server
+		let mixL = new Array(PacketSize).fill(0);		// Now we build the mix starting from 0's
+		let mixR = new Array(PacketSize).fill(0);		// It can be stereo so there's an L and an R channel
+		data.channels.forEach(c => {				// Process all audio channel packets including channel 0
 			let ch = c.channel;				// Channel number the packet belongs to
 			let chan = channels[ch];			// Local data structure for this channel
 			if (c.socketID != socketIO.id) {		// Don't include my audio in mix
@@ -166,64 +169,118 @@ socketIO.on('d', function (data) {
 						? mixOut.gain : chan.gain);	
 					chan.gain = g;			// Channel gain level should reflect gain used here
 					if (ch == 0)			// Mix is different for channel 0 just add with gain
-	  					for (let i=0; i < a.length; i++) mix[i] += a[i] * g;	
+	  					for (let i=0; i < a.length; i++) mixL[i] += a[i] * g;	
 					else				// Add channel*g to mix less audio in venue mix scaled down
-	  					for (let i=0; i < a.length; i++) mix[i] += a[i] * (g - 1/venueSize);	
+	  					for (let i=0; i < a.length; i++) mixL[i] += a[i] * (g - 1/venueSize);	
 				}
 			} else {					// This is my own data come back
 				ts  = c.timestamp;			// Capture the timestamp;
 			}
 			if (c.sequence != (chan.seq + 1)) 		// Monitor audio transfer quality for all channels
 				trace("Sequence jump Channel ",ch," jump ",(c.sequence - chan.seq));
-			chan.seq = c.sequence;
+			chan.seq = c.sequence;				// Store seq number for next time a packet comes in
 		});
-		// 3. Upsample the mix, upsample performer audio, mix all together, apply final AGC and send to speaker
-		mix = reSample(mix, SampleRate, soundcardSampleRate, upCache); // Bring mix to HW sampling rate
+		mixL = reSample(mixL, SampleRate, soundcardSampleRate, upCache); // Bring mix to HW sampling rate
+		mixR = mixL;						// Only mono mix for now
+		// 3. Process performer audio if there is any, and add it to the mix. This could be stereo audio
 		performer = (data.perf.chan == myChannel);		// Update performer flag just in case
 		liveShow = data.perf.live;				// Update the live show flag to update display
+		isStereo = false;					// flag to indicate if we have stereo audio
 		if (data.perf.live) {					// If there is a live performer process the data
-			if (!performer) {				// If we are not the performer mix in their audio
-				let a = [];				// Reconstruct performer audio packet into this array
+			if (!performer) {				// If we are not the performer mix in performer audio
+				let mono = [];				// Reconstruct performer mono audio into this array
+				let stereo = [];			// Reconstruct performer stereo difference signal into here
 				let j = 0, k = 0;
 				let m8 = data.perf.packet.audio.mono8;
 				let m16 = data.perf.packet.audio.mono16;
 				let m32 = data.perf.packet.audio.mono32;
 				let sr = 32000;				// Sample rate can vary but it will break this code!
 				if (m8 == null) {			// For some reason there is no audio
-					let a = new Array(250).fill(0);	// Get a small array of zeros
+					let mono = new Array(250).fill(0);	// so generate silence
 					sr = 8000;			// Set the sample rate and we're done
-				} else if (m16 == null) {		// Worst case scenario. 8kHz sampling
-					a = m8;
+				} else if (m16 == null) {		// There is only 8kHz perf audio coming from server
+					mono = m8;			// so just pass these 250 bytes through
 					sr = 8000; 			
-				} else if (m32 == null) {		// Standard quality audio 16kHz 250 bytes
+				} else if (m32 == null) {		// Standard quality audio 16kHz 500 bytes
 					for (let i=0;i<m8.length;i++) {	// Reconstruct the 500 byte packet
 						let s1,s2;
-						a[k] = m8[i] + m16[i];k++;
-						a[k] = m8[i] - m16[i];k++;
+						mono[k] = m8[i] + m16[i];k++;
+						mono[k] = m8[i] - m16[i];k++;
 					}
 					sr = 16000; 
 				} else for (let i=0; i<m8.length; i++) {// Best rate. 32kHz. Rebuild the 1k packet
 					let s1,s2;
 					s1 = m8[i] + m16[i];
 					s2 = m8[i] - m16[i];
-					a[k] = s1 + m32[j]; k++;
-					a[k] = s1 - m32[j]; j++; k++;
-					a[k] = s2 + m32[j]; k++;
-					a[k] = s2 - m32[j]; j++; k++;
+					mono[k] = s1 + m32[j]; k++;
+					mono[k] = s1 - m32[j]; j++; k++;
+					mono[k] = s2 + m32[j]; k++;
+					mono[k] = s2 - m32[j]; j++; k++;
+				}					// Mono perf audio ready to upsample
+				mono = reSample(mono, sr, soundcardSampleRate, upCachePerfM);
+				let s8 = data.perf.packet.audio.stereo8;// Now regenerate the stereo difference signal
+				let s16 = data.perf.packet.audio.stereo16;
+				let s32 = data.perf.packet.audio.stereo32;
+				if (s8 != null) {			// Is there a stereo signal in the packet?
+					isStereo = true;
+					if (s16 == null) {		// Low quaity stereo signal
+						stereo = s8;
+						sr = 8000;
+					} else if (s32 == null) {	// Mid quality stereo signal
+						for (let i=0;i<s8.length;i++) {	
+							let s1,s2;
+							stereo[k] = s8[i] + s16[i];k++;
+							stereo[k] = s8[i] - s16[i];k++;
+						}
+						sr = 16000; 
+					} else for (let i=0; i<m8.length; i++) {
+						let s1,s2;		// Best stereo signal. Rebuild the 1k packet
+						s1 = s8[i] + s16[i];
+						s2 = s8[i] - s16[i];
+						stereo[k] = s1 + s32[j]; k++;
+						stereo[k] = s1 - s32[j]; j++; k++;
+						stereo[k] = s2 + s32[j]; k++;
+						stereo[k] = s2 - s32[j]; j++; k++;
+					}				// Stereo difference perf audio upsampling now
+					stereo = reSample(stereo, sr, soundcardSampleRate, upCachePerfS);
+					let left = [], right = [];	// Time to reconstruct the original left and right audio
+					for (let i=0; i<mono.length; i++) {
+						left[i] = mono[i] + stereo[i];
+						right[i] = mono[i] - stereo[i];
+					}
+					for (let i=0; i < left.length; i++) {
+						mixL[i] += left[i];	// Mix in stereo performer audio
+						mixR[i] += right[i];	
+					}
+				} else { 				// Just mono performer audio
+					for (let i=0; i < mono.length; i++)
+						mixL[i] += mono[i];	// Mix mono performer audio in
 				}
-				a = reSample(a, sr, soundcardSampleRate, upCachePerf); // Bring back to HW sampling rate
-				for (let i=0; i < a.length; i++)
-					mix[i] += a[i];			// Performer audio goes straight into mix
 			} else ts = data.perf.packet.timestamp;		// I am the performer so grab timestamp for the rtt 
 		}
-		let obj = applyAutoGain(mix, mixOut);			// Trim mix level 
+		// 4. Adjust gain of final mix containing performer and group audio, and send to the speaker buffer
+		var obj;
+		if (isStereo) {
+			let peakL = maxValue(mixL);			// Set gain according to loudest channel
+			let peakR = maxValue(mixR);
+			if (peakL > peakR) {
+				obj = applyAutoGain(mixL, mixOut);	// Left sets the gain
+				applyGain(mixR, obj.finalGain);		// and right follows
+			} else {
+				obj = applyAutoGain(mixR, mixOut);	// Right sets the gain
+				applyGain(mixL, obj.finalGain);		// and left follows
+			}
+		} else obj = applyAutoGain(mixL, mixOut);		// For mono just use left channel
 		mixOut.gain= obj.finalGain;				// Store gain for next loop
 		if (obj.peak > mixOut.peak) mixOut.peak = obj.peak;	// Note peak for display purposes
-		spkrBuffer.push(...mix);				// put it on the speaker buffer
-		if (spkrBuffer.length > maxBuffSize) {			// Clip buffer if too full
-			spkrBuffer.splice(0, (spkrBuffer.length-maxBuffSize)); 	
+		spkrBufferL.push(...mixL);				// put left mix in the left speaker buffer
+		spkrBufferR.push(...mixR);				// and the right in the right
+		if (spkrBufferL.length > maxBuffSize) {			// Clip buffers if too full
+			spkrBufferL.splice(0, (spkrBufferL.length-maxBuffSize)); 	
+			spkrBufferR.splice(0, (spkrBufferR.length-maxBuffSize)); 	
 			overflows++;					// Note for monitoring purposes
 		}
+		// 5. Calculate RTT
 		if (ts > 0) {						// If we have timestamp data calcuate rtt
 			let now = new Date().getTime();
 			rtt = now - ts;					// Measure round trip time using a rolling average
@@ -706,8 +763,9 @@ function processAudio(e) {						// Main processing loop
 
 	// 1. Get Mic audio, buffer it, and send it to server if enough buffered
 	if (socketConnected) {						// Need connection to send
-		let micAudio = [];					// Our objective is to fill this with audio
-		let peak = maxValue(inDataL);				// Get peak of raw mic audio
+		let micAudioL = [];					// Our objective is to fill this with audio
+		let micAudioR = [];					
+		let peak = maxValue(inDataL);				// Get peak of raw mic audio (using left channel for now)
 		if (!pauseTracing) levelClassifier(peak);		// Classify audio incoming for analysis
 		if ((peak > micIn.threshold) &&				// if audio is above dynamic threshold
 			(peak > noiseThreshold)) {			// and noise threshold, open gate
@@ -718,44 +776,35 @@ function processAudio(e) {						// Main processing loop
 		} 
 		if (performer) micIn.gate = 1				// Performer's mic is always open
 		if (micIn.gate > 0) {					// If gate is open prepare the audio for sending
-			micAudio = inDataL;
+			micAudioL = inDataL;
+			micAudioR = inDataR;
 			micIn.gate--;					// Gate slowly closes
 		} else {						// Gate closed. Fill with silence.
-			micAudio = new Array(inDataL.length).fill(0);
+			micAudioL = new Array(inDataL.length).fill(0);
+			micAudioR = new Array(inDataL.length).fill(0);
 		}
-		micBuffer.push(...micAudio);				// Buffer mic audio 
-		if (micBuffer.length > micAudioPacketSize) {		// If enough audio in buffer 
-			let audio = micBuffer.splice(0, micAudioPacketSize);		// Get a packet of audio
-			let sr = (performer ? perfSampleRate : SampleRate);		// Set sample rate to normal or performer rate
-			let cache = (performer ? downCachePerf : downCache);		// Use the appropriate resample cache
-			audio = reSample(audio, soundcardSampleRate, sr, cache);	// Sample down
-			let obj = applyAutoGain(audio, micIn);	// Amplify mic with auto limiter
-			if (obj.peak > micIn.peak) 
-				micIn.peak = obj.peak;			// Note peak for local display
-			peak = obj.peak					// peak for packet to be sent
-			micIn.gain = obj.finalGain;			// Store gain for next loop
-			if ((peak == 0) || (micIn.muted) || 		// Send empty packet if silent, muted
-				(serverMuted && !performer)) { 		// or muted by server and not performer
-				audio = [];				// Send empty audio packet
-				peak = 0;
-			} 
-			if (performer) {				// performer audio goes as multi-rate sample blocks
-				let mono8 = [], mono16 = [], mono32 = [], stereo8 = [], stereo16 = [], stereo32 = [];
-				let j=0, k=0;
-				for (let i=0; i<audio.length; i+=4) {	// This encoding allows the server to discard blocks
-					let s1,s2,d1,d2,s3,d3;		// and reduce network load, while simply reducing
-					s1 = (audio[i] + audio[i+1])/2;	// high frequency content of performer audio.
-					d1 = (audio[i] - audio[i+1])/2;
-					s2 = (audio[i+2] + audio[i+3])/2;
-					d2 = (audio[i+2] - audio[i+3])/2;
-					s3 = (s1 + s2)/2;
-					d3 = (s1 - s2)/2;
-					mono8[j] = s3;
-					mono16[j] = d3; j++
-					mono32[k] = d1; k++;
-					mono32[k] = d2; k++;
-				}
-				audio = {mono8,mono16,mono32,stereo8,stereo16,stereo32};
+		micBufferL.push(...micAudioL);				// Buffer mic audio L
+		micBufferR.push(...micAudioR);				// Buffer mic audio R
+		if (micBufferL.length > micAudioPacketSize) {		// If enough audio in buffer 
+			let audioL = micBufferL.splice(0, micAudioPacketSize);		// Get a packet of audio
+			let audioR = micBufferR.splice(0, micAudioPacketSize);		// for each channel
+			let audio;					// audio array or object for sending
+			let peak = 0;					// Note: no need for perf to set peak
+			let sr = performer ? perfSampleRate : SampleRate;
+			if (performer)					// performer audio needs special prep
+				audio = prepPerfAudio(audioL, audioR);	// may be mono or stereo
+			else {						// Standard audio prep - always mono
+				audio = reSample(audioL, soundcardSampleRate, SampleRate, downCache);	
+				let obj = applyAutoGain(audio, micIn);	// Amplify mic with auto limiter
+				if (obj.peak > micIn.peak) 
+					micIn.peak = obj.peak;		// Note peak for local display
+				peak = obj.peak				// peak for packet to be sent
+				micIn.gain = obj.finalGain;		// Store gain for next loop
+				if ((peak == 0) || (micIn.muted) || 	// Send empty packet if silent, muted
+					(serverMuted)) { 		// or muted by server 
+					audio = [];			// This saves on BW
+					peak = 0;
+				} 
 			}
 			let now = new Date().getTime();
 			let packet = {
@@ -779,17 +828,22 @@ function processAudio(e) {						// Main processing loop
 	}
 
 	// 2. Take audio buffered from server and send it to the speaker
-	let outAudio = [];					
-	if (spkrBuffer.length > chunkSize) {				// There is enough audio buffered
-		outAudio = spkrBuffer.splice(0,chunkSize);		// Get same amount of audio as came in
+	let outAudioL = [], outAudioR = [];					
+	if (spkrBufferL.length > chunkSize) {				// There is enough audio buffered
+		outAudioL = spkrBufferL.splice(0,chunkSize);		// Get same amount of audio as came in
+		outAudioR = spkrBufferR.splice(0,chunkSize);		// for each channel
 	} else {							// Not enough audio.
-		outAudio = spkrBuffer.splice(0,spkrBuffer.length);	// Take all that remains and complete with 0s
-		let zeros = new Array(chunkSize-spkrBuffer.length).fill(0);
-		outAudio.push(...zeros);
+		outAudioL = spkrBufferL.splice(0,spkrBufferL.length);	// Take all that remains and complete with 0s
+		outAudioR = spkrBufferR.splice(0,spkrBufferR.length);	// Take all that remains and complete with 0s
+		let zeros = new Array(chunkSize-spkrBufferL.length).fill(0);
+		outAudioL.push(...zeros);
+		outAudioR.push(...zeros);
 		shortages++;						// For stats and monitoring
 	}
-	let max = maxValue(outAudio);					// Get peak level of this outgoing audio
-	thresholdBuffer.unshift( max );					// add to start of dynamic threshold queue
+	let maxL = maxValue(outAudioL);					// Get peak level of this outgoing audio
+	let maxR = maxValue(outAudioR);					// for each channel. 
+	if (maxL < maxR) maxL = maxR;					// Choose loudest channel
+	thresholdBuffer.unshift( maxL );				// add to start of dynamic threshold queue
 	micIn.threshold = (maxValue([					// Apply most aggressive threshold near current +/-1
 		thresholdBuffer[echoTest.sampleDelay-2],
 		thresholdBuffer[echoTest.sampleDelay-1],
@@ -799,10 +853,70 @@ function processAudio(e) {						// Main processing loop
 	])) * echoTest.factor * mixOut.gain;				// multiply by factor and mixOutGain
 	thresholdBuffer.pop();						// Remove oldest threshold buffer value
 	for (let i in outDataL) { 
-		outDataL[i] = outAudio[i];				// Copy audio to output
-//		outDataR[i] = outAudio[i];				// Copy audio to output
+		outDataL[i] = outAudioL[i];				// Copy left audio to outputL
+		outDataR[i] = outAudioR[i];				// and right audio to outputR
 	}
 	enterState( idleState );					// We are done. Back to Idling
+}
+
+function prepPerfAudio( audioL, audioR ) {				// Performer audio is HQ and possibly stereo
+	let stereo = false;						// Start by detecting is there is stereo audio
+	for (let i=0; i<audioL.length; i++)
+		if (audioL[i] != audioR[i]) stereo = true;
+	audioL = reSample(audioL, soundcardSampleRate, perfSampleRate, downCachePerfL);	
+	if (stereo) 							// If stereo the right channel will need processing
+		audioR = reSample(audioR, soundcardSampleRate, perfSampleRate, downCachePerfR);	
+	let obj;
+	if (stereo) {							// Stereo level setting 
+		let peakL = maxValue(audioL);				// Set gain according to loudest channel
+		let peakR = maxValue(audioR);
+		if (peakL > peakR) {
+			obj = applyAutoGain(audioL, micIn);		// Left sets the gain
+			applyGain(audioR, obj.finalGain);		// and right follows
+		} else {
+			obj = applyAutoGain(audioR, micIn);		// Right sets the gain
+			applyGain(audioL, obj.finalGain);		// and left follows
+		}
+	} else obj = applyAutoGain(audioL, micIn);			// For mono just use left channel
+	if (obj.peak > micIn.peak) 
+		micIn.peak = obj.peak;					// Note peak for local display
+	micIn.gain = obj.finalGain;					// Store gain for next loop
+	let LplusR = [], LminusR = [];					// Build mono and stereo (difference) data
+	if (stereo) for (let i=0; i<audioL.length; i++) {
+		LplusR = audioL[i] + audioR[i];
+		LminusR = audioL[i] - audioR[i];
+	} else LplusR = audioL;						// Just use the left signal if mono
+	let mono8 = [], mono16 = [], mono32 = [], stereo8 = [], stereo16 = [], stereo32 = [];
+	let j=0, k=0;
+	for (let i=0; i<LplusR.length; i+=4) {				// Multiple sample-rate encoding:
+		let s1,s2,d1,d2,s3,d3;					// This encoding allows the server to discard blocks
+		s1 = (LplusR[i] + LplusR[i+1])/2;			// and reduce network load by simply reducing the
+		d1 = (LplusR[i] - LplusR[i+1])/2;			// high frequency content of performer audio
+		s2 = (LplusR[i+2] + LplusR[i+3])/2;
+		d2 = (LplusR[i+2] - LplusR[i+3])/2;
+		s3 = (s1 + s2)/2;
+		d3 = (s1 - s2)/2;
+		mono8[j] = s3;
+		mono16[j] = d3; j++
+		mono32[k] = d1; k++;
+		mono32[k] = d2; k++;
+	}
+	j=0, k=0;
+	if (stereo) for (let i=0; i<LminusR.length; i+=4) {		// Repeat MSRE for stereo difference audio
+		let s1,s2,d1,d2,s3,d3;		
+		s1 = (LminusR[i] + LminusR[i+1])/2;	
+		d1 = (LminusR[i] - LminusR[i+1])/2;
+		s2 = (LminusR[i+2] + LminusR[i+3])/2;
+		d2 = (LminusR[i+2] - LminusR[i+3])/2;
+		s3 = (s1 + s2)/2;
+		d3 = (s1 - s2)/2;
+		stereo8[j] = s3;
+		stereo16[j] = d3; j++
+		stereo32[k] = d1; k++;
+		stereo32[k] = d2; k++;
+	}
+	audio = {mono8,mono16,mono32,stereo8,stereo16,stereo32};	// Return an object for the audio
+	return audio;
 }
 
 var micFilter1;
@@ -832,8 +946,6 @@ function handleAudio(stream) {						// We have obtained media access
 	}
 	node.onaudioprocess = processAudio;				// Link the callback to the node
 
-//	let combiner = context.createChannelMerger();			// Combiner node to turn stereo input to mono
-
 	micFilter1 = context.createBiquadFilter();
 	micFilter1.type = 'lowpass';
 	micFilter1.frequency.value = HighFilterFreq;
@@ -843,17 +955,10 @@ function handleAudio(stream) {						// We have obtained media access
 	micFilter2.frequency.value = LowFilterFreq;
 	micFilter2.Q.value = 1;
 	
-	let splitter = context.createChannelSplitter(2,2);		// Split signal for echo cancelling
-
-	// Time to connect everything...
-//	liveSource.connect(combiner);					// Mic goes to combiner
-//	combiner.connect(micFilter1);					// Combiner goes to micFilter1
-	liveSource.connect(micFilter1);
-	micFilter1.connect(micFilter2);					// the rest are chained together
-	micFilter2.connect(node);					// micFilter goes to audio processor
-	node.connect(splitter);						// our processor feeds to a splitter
-	splitter.connect(context.destination,0);			// other output goes to speaker
-//	node.connect(context.destination);
+	liveSource.connect(micFilter1);					// Mic goes to the lowpass filter
+	micFilter1.connect(micFilter2);					// then to the highpass filter
+	micFilter2.connect(node);					// then to the node where all the work is done
+	node.connect(context.destination);				// and then finally to the speaker
 
 	startEchoTest();
 }
@@ -894,8 +999,10 @@ function initAudio() {							// Set up all audio handling here
 //
 var  downCache = [0.0,0.0];						// Resampling cache for audio from mic
 var  upCache = [0.0,0.0];						// cache for audio mix to speaker
-var  downCachePerf = [0.0,0.0];						// cache for performer audio from mic
-var  upCachePerf = [0.0,0.0];						// cache for performer audio to mix and send to speaker
+var  downCachePerfL = [0.0,0.0];					// cache for performer audio from mic
+var  downCachePerfR = [0.0,0.0];					// can be stereo
+var  upCachePerfM = [0.0,0.0];						// cache for performer audio to mix and send to speaker
+var  upCachePerfS = [0.0,0.0];						// can be stereo
 function reSample( buffer, originalSampleRate, resampledRate, cache) {
 	let resampledBufferLength = Math.floor( buffer.length * resampledRate / originalSampleRate );
 	let resampleRatio = buffer.length / resampledBufferLength;
@@ -1150,7 +1257,7 @@ function printReport() {
 	if (!pauseTracing) {
 		trace("Idle=", idleState.total, " data in=", dataInState.total, " audio in/out=", audioInOutState.total," UI work=",UIState.total);
 		trace("Sent=",packetsOut," Heard=",packetsIn," overflows=",overflows," shortages=",shortages," RTT=",rtt.toFixed(1)," RTT1=",rtt1.toFixed(1)," RTT5=",rtt5.toFixed(1)," audience=",audience);
-		trace(" micIn.peak:",micIn.peak.toFixed(1)," mixOut.peak:",mixOut.peak.toFixed(1)," speaker buff:",spkrBuffer.length," Max Buff:",maxBuffSize);
+		trace(" micIn.peak:",micIn.peak.toFixed(1)," mixOut.peak:",mixOut.peak.toFixed(1)," speaker buff:",spkrBufferL.length," Max Buff:",maxBuffSize);
 //		trace("Levels of output: ",levelCategories);
 	}
 //	setNoiseThreshold();						// Set mic noise threshold based on level categories
