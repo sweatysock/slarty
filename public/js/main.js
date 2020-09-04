@@ -188,7 +188,6 @@ socketIO.on('d', function (data) {
 		isStereo = false;					// flag to indicate if we have stereo audio
 		if (data.perf.live) {					// If there is a live performer process the data
 			if (!performer) {				// If we are not the performer mix in performer audio
-console.log(data);
 				let mono = [];				// Reconstruct performer mono audio into this array
 				let stereo = [];			// Reconstruct performer stereo difference signal into here
 				let j = 0, k = 0;
@@ -882,11 +881,13 @@ function prepPerfAudio( audioL, audioR ) {				// Performer audio is HQ and possi
 	if (obj.peak > micIn.peak) 
 		micIn.peak = obj.peak;					// Note peak for local display
 	micIn.gain = obj.finalGain;					// Store gain for next loop
+console.log(stereo,audioL,audioR);
 	let LplusR = [], LminusR = [];					// Build mono and stereo (difference) data
 	if (stereo) for (let i=0; i<audioL.length; i++) {
 		LplusR = audioL[i] + audioR[i];
 		LminusR = audioL[i] - audioR[i];
 	} else LplusR = audioL;						// Just use the left signal if mono
+console.log(LplusR);
 	let mono8 = [], mono16 = [], mono32 = [], stereo8 = [], stereo16 = [], stereo32 = [];
 	let j=0, k=0;
 	for (let i=0; i<LplusR.length; i+=4) {				// Multiple sample-rate encoding:
@@ -917,6 +918,7 @@ function prepPerfAudio( audioL, audioR ) {				// Performer audio is HQ and possi
 		stereo32[k] = d2; k++;
 	}
 	audio = {mono8,mono16,mono32,stereo8,stereo16,stereo32};	// Return an object for the audio
+console.log(audio);
 	return audio;
 }
 
