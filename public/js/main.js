@@ -122,6 +122,7 @@ socketIO.on('d', function (data) {
 	serverLiveChannels = data.liveChannels;				// Server live channels are for UI updating
 	processCommands(data.commands);					// Process commands from server
 	if (micAccessAllowed) {						// Need access to audio before outputting
+console.log(data);
 		let v = [];						// Our objective is to get the venue audio (if any) in here,
 		let gL = [], gR = [];					// the group stereo audio (if any) in here
 		let pL = [], pR = [];					// and the performer stereo audio (if any) in here. Then mix and send to speaker
@@ -167,6 +168,8 @@ socketIO.on('d', function (data) {
 				v = reSample(v, sr, soundcardSampleRate, vCache); 
 			} else c0.peak = 0;				// Don't need to be a genius to figure that one out if there's no audio!
 		} 
+console.log("venue audio after subtracting is");
+console.log(v);
 		// 2. Build a mix of all group channels. For individuals or empty groups no audio will have been sent
 		let t8 = new Array(PacketSize/2).fill(0);		// Temp arrays for MSRE blocks 
 		let t16 = new Array(PacketSize/2).fill(0);		// so that we only do one MSRE decode at the end
@@ -197,6 +200,8 @@ socketIO.on('d', function (data) {
 				trace("Sequence jump Channel ",ch," jump ",(c.sequence - chan.seq));
 			chan.seq = c.sequence;				// Store seq number for next time a packet comes in
 		});
+console.log("group audio is");
+console.log(gL);
 		if (someAudio) {					// If there is group audio rebuild and upsample it
 			let k = 0;
 			for (let i=0;i<t8.length;i++) {			// Reconstruct group mix gL[] from the MSRE blocks
