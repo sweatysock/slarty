@@ -147,24 +147,37 @@ upstreamServer.on('d', function (packet) {
 		perf.streaming = true;					// performer is now streaming from here
 	}
 	// 2. Subtract our buffered audio from upstream mix
-	let mix = new Array(PacketSize).fill(0);			// Start with empty packet of audio
-	if (packet.channels[0] != null) {				// Check there is venue audio. It is not guaranteed in performer mode.
-		let p0 = packet.channels[0];				// Shorthand
-		channels[0].liveClients = p0.liveClients;		// Save the number of clients connected upstream in channel 0
-		mix = p0.audio;						// Start with channel 0 (venue) audio
+	let c0;							
+	let ts = 0;
+	packet.channels.forEach(c => {if (c.channel==0) c0=c});		// Find the venue channel, channel 0
+	if (c0 != null) {						// Check there is venue audio. It is not guaranteed 
+		let mix = c0.audio;					// Mix is by default the MSRE audio that came from upstream
+		mchannels[0].liveClients = c0.liveClients;		// Save the number of clients connected upstream in channel 0
+		ts = c0.timestamps[upstreamServerChannel];		// Channel 0 also contains timestamps that allow rtt measurement
+		let a8 = [], a16 = [];					// Will point to our audio MSRE blocks if there are any
 		let s = p0.seqNos[upstreamServerChannel];		// Channel 0 comes with list of packet seq nos in mix. Get ours.
-		if (s != null)						// If our channel has a sequence number in the mix
+		if (s != null) {					// If our channel has a sequence number in the mix
+			let a8 = [], a16 = [];				// We are going to look for our buffered packet audio
 			while (packetBuf.length) {			// Scan our packet buffer for the packet with our sequence
 				let p = packetBuf.shift();		// Remove the oldest packet from the buffer
 				if (p.sequence == s) {			// We have found the right sequence number
-					let a = p.audio;		// Subtract our audio from mix
-					if (a.length > 0)		// As long as our audio wasn't an empty array that is
-						for (let i=0; i < mix.length; i++) mix[i] = mix[i] - a[i];
+					a8 = p.audio.mono8;		// Get our MSRE blocks from packet buffer
+					a16 = p.audio.mono16;
 					break;				// Packet found. Stop scanning the packet buffer. 
 				}
 			}
+			let v8 = mix.mono8, v16 = mix.mono16;		// Shortcuts to the channel 0 MSRE venue audio blocks
+			if (v8.length > 0) {				// If there is venue audio it may need processing
+				if (a8.length > 0) 			// Only subtract if our audio is not empty
+					for (let i = 0; i < a8.length; ++i) v8[i] = v8[i] - a8[i];
+				if ((v16.length > 0) && 		// Does venue and our audio have higher quality audio?
+					(a16.length > 0)) 		// If so subtract our high bandwidth audio from venue
+					for (let i = 0; i < a16.length; ++i) v16[i] = v16[i] - a16[i];
+				mix = {mono8: v8, mono16: v16};		// Reconstruct the mix MSRE block with the subtracted audio
+			} 					
+		} 
 	// 3. Build a channel 0 packet 
-		if (mix.length != 0) mix = midBoostFilter(mix);		// Filter upstream audio to make it distant
+//		if (mix.length != 0) mix = midBoostFilter(mix);		// Filter upstream audio to make it distant
 		let p = {						// Construct the audio packet
 			name		: channels[0].name,		// Give packet our channel name
 			audio		: mix,				// The audio is the mix just prepared
@@ -420,7 +433,9 @@ function generateMix () {
 	if ((perf.streaming) && (perf.packets.length > 0))		// Pull a performer packet from its queue if any
 		p.packet = perf.packets.shift();			// add to copy of perf to replace the null packet
 	// 2. Process all channels building group info. objects and generating a mix of all channels except 0 (upstream venue track) to send upstream
-	let mix = new Array(PacketSize).fill(0);			// Mix of this server's audio to send upstream and also to add to venue track
+	let mono8 = new Array(PacketSize/2).fill(0);			// Mix of this server's audio to send upstream and also to add to venue track
+	let mono16 = new Array(PacketSize/2).fill(0);			// It is in MSRE so there are two half-sized arrays to handle
+	let someAudio8 = false, someAudio16 = false;			// Flags to indicate if there is any audio in these categories
 	let seqNos = [];						// Array of packet sequence numbers used in the mix (channel is index)
 	let timestamps = [];						// Array of packet timestamps used in the mix (channel is index)
 	let channel0Packet = null;					// The channel 0 (venue) audio packet
@@ -456,7 +471,14 @@ function generateMix () {
 			else {						// Got a packet. Now store it and build server mix
 				packetCount++;				// Count how many packets have made the mix for tracing
 				if (packet.channel != 0) {		// Build mix of downstream channels so don't include channel 0
-					for (let i = 0; i < packet.audio.length; ++i) mix[i] = (mix[i] + packet.audio[i]);	
+					if (packet.audio.mono8.length > 0) {
+						someAudio8 = true;
+						for (let i = 0; i < packet.audio.mono8.length; ++i) mono8[i] += packet.audio.mono8[i];	
+					}
+					if (packet.audio.mono16.length > 0) {
+						someAudio16 = true;
+						for (let i = 0; i < packet.audio.mono16.length; ++i) mono16[i] += packet.audio.mono16[i];
+					}
 					seqNos[packet.channel] 		// Store the seq number of the packet just added to the mix
 						= packet.sequence;	// so that it can be subtracted downstream to remove echo
 					timestamps[packet.channel]	// Store the timestamp of the packet just added to the mix
@@ -469,8 +491,9 @@ function generateMix () {
 		}
 	});
 	// 3. Build server mix packet and send upstream if we have an upstream server connected. 
-	mixMax =  maxValue(mix);					// Note peak value
-	if (mixMax == 0) mix = [];					// If no audio send empty mix to save bandwidth
+	if (!someAudio8) mono8 = [];					// If no audio send empty mix to save bandwidth
+	if (!someAudio16) mono16 = [];					
+	let mix = {mono8, mono16};					// Build audio block in MSRE format
 	if (upstreamConnected == true) { 				// Send mix if connected to an upstream server
 		let now = new Date().getTime();
 		let packet = {						// Build the packet the same as any client packet
@@ -491,11 +514,19 @@ function generateMix () {
 		upstreamOut++;
 	// 3.1. Now that mix has gone upstream complete venue audio for downstream by adding our mix to channel 0 if it exists
 		if (channel0Packet != null) {				// If we have venue audio from upstream
-			let a = channel0Packet.audio;			// Get the venue audio from upstream
-			if (mix.length > 0) {				// If there's a mix add it to downstream channel 0 output
-				if (a.length > 0) {for (let i = 0; i < a.length; i++) a[i] = a[i] + mix[i]}	
-				else a = mix;				// if channel 0 is empty just use our mix directly
-			}						// But if our mix is empty jeave channel 0 as it is
+			let v8 = channel0Packet.audio.mono8;		// Get the venue audio from upstream
+			let v16 = channel0Packet.audio.mono16;		// in MSRE format
+			let m8 = mix.mono8, a16 = mix.mono16;		// and the mix we have just built too
+			if (m8.length > 0) {				// Only combine venue and mix if there's mix audio
+				if (v8.length > 0) {			// If there is venue audio add mix to venue
+					for (let i = 0; i < v8.length; i++) v8[i] = v8[i] + m8[i];
+				} else v8 = m8;				// else venue is silent so just use mix directly
+			}						
+			if (m16.length > 0) {		 		// If there is mix high band audio 
+				if (v16.length > 0) {			// and venue high band audio then mix them
+					for (let i = 0; i < v16.length; i++) v16[i] = v16[i] + m16[i];
+				} else v16 = m16;			// otherwise just use the mix high band audio
+			}
 			channel0Packet.seqNos = seqNos;			// Add to channel 0 packet the list of seqNos that were used
 		} else {						// Temporarily no venue audio has reached us so generate a packet 
 			channel0Packet = {				// Construct the audio packet
@@ -517,7 +548,7 @@ function generateMix () {
 			name		: "VENUE",			// Give packet main venue name
 			audio		: mix,				// Use our mix as the venue audio
 			seqNos		: seqNos,			// Packet sequence numbers in the mix
-			timestamps	: timestamps,		// Packet timestamps in mix, so clients can measure their rtt
+			timestamps	: timestamps,			// Packet timestamps in mix, so clients can measure their rtt
 			liveClients	: totalLiveClients,		// Clients visible downstream of this server
 			peak		: 0,				// This is calculated in the client.
 			timestamp	: 0,				// No need to trace RTT in downstream venue packets
