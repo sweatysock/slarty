@@ -498,6 +498,7 @@ function generateMix () {
 			}
 		}
 	});
+if (tracecount > 0) {console.log(JSON.stringify(groups));tracecount--}
 	// 3. Build server mix packet and send upstream if we have an upstream server connected. 
 	if (!someAudio8) mono8 = [];					// If no audio send empty mix to save bandwidth
 	if (!someAudio16) mono16 = [];					
@@ -566,7 +567,6 @@ function generateMix () {
 			group		: "noGroup",			// No group for venue channel
 		}
 	} 
-if (tracecount > 0) {console.log(JSON.stringify(groups));tracecount--}
 	// 4. Send packets to all clients group by group, adding performer, channel 0 (venue) and group audio, plus group live channels and commands
 	for (group in groups) {
 		let g = groups[group];
