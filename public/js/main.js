@@ -882,7 +882,7 @@ function processAudio(e) {						// Main processing loop
 				group		: myGroup,		// Group name this user belings to
 				rtt		: rtt1,			// Send my rtt measurement for server monitoring
 			};
-let bytesSent = JSON.stringify(packet).length;
+let bytesSent = JSON.stringify(packet.audio).length;
 console.log("bytes sent = ",bytesSent);
 			socketIO.emit("u",packet);
 			if (!performer) packetBuf.push(packet);		// If not performer add packet to buffer for echo cancelling 
