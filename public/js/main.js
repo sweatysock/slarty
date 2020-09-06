@@ -868,6 +868,7 @@ function processAudio(e) {						// Main processing loop
 				}
 				audio = {mono8,mono16,mono32,stereo8,stereo16,stereo32};	
 			}
+audio.mono16 = [];
 			let now = new Date().getTime();
 			let packet = {
 				name		: myName,		// Send the name we have chosen 
