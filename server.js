@@ -480,6 +480,7 @@ function generateMix () {
 				packetCount++;				// Count how many packets have made the mix for tracing
 				if (packet.channel != 0) {		// Build mix of downstream channels so don't include channel 0
 					if (packet.audio.mono8.length > 0) {
+if (tracecount > 0) {console.log(packet);tracecount--}
 						someAudio8 = true;
 						for (let i = 0; i < packet.audio.mono8.length; ++i) mono8[i] += packet.audio.mono8[i];	
 					}
@@ -639,12 +640,12 @@ var packetClassifier = [];
 packetClassifier.fill(0,0,30);
 var mixMax = 0;
 
-var traceCount = 1;
+var tracecount = 1;
 
 const updateTimer = 1000;						// Frequency of updates to the console
 var counterDivider = 0;							// Used to execute operation 10x slower than the reporting loop
 function printReport() {
-	traceCount = 1;
+	tracecount = 1;
 	enterState( idleState );					// Update timers in case we are inactive
 //	console.log(myServerName," Activity Report");
 //	console.log("Idle = ", idleState.total, " upstream = ", upstreamState.total, " downstream = ", downstreamState.total, " genMix = ", genMixState.total);
