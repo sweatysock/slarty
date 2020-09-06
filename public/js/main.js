@@ -322,7 +322,6 @@ if (false)
 if (false)
 		if (obj.peak > mixOut.peak) mixOut.peak = obj.peak;	// Note peak for display purposes
 		spkrBufferL.push(...mixL);				// put left mix in the left speaker buffer
-console.log("ADDED ",mixL.length," of audio to speaker buf of size ",spkrBufferL.length);
 if (false)
 		if (isStereo)
 			spkrBufferR.push(...mixR);			// and the right in the right if stereo
@@ -902,7 +901,6 @@ function processAudio(e) {						// Main processing loop
 		outAudioR.push(...zeros);
 		shortages++;						// For stats and monitoring
 	}
-console.log("Just removed ",outAudioL.length," of audio from speaker buf of size ",spkrBufferL.length);
 	let maxL = maxValue(outAudioL);					// Get peak level of this outgoing audio
 	let maxR = maxValue(outAudioR);					// for each channel. 
 	if (maxL < maxR) maxL = maxR;					// Choose loudest channel
