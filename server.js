@@ -566,7 +566,7 @@ function generateMix () {
 			group		: "noGroup",			// No group for venue channel
 		}
 	} 
-if (tracecount > 0) {console.log(mix,groups.noGroup.clientPackets);tracecount--}
+if (tracecount > 0) {console.log(mix,JSON.stringify(groups));tracecount--}
 	// 4. Send packets to all clients group by group, adding performer, channel 0 (venue) and group audio, plus group live channels and commands
 	for (group in groups) {
 		let g = groups[group];
