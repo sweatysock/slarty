@@ -4,8 +4,8 @@ const SampleRate = 16000; 						// Global sample rate used for all audio
 const PacketSize = 500;							// Server packet size we must conform to
 const HighFilterFreq = SampleRate/2.2;					// Mic filter to remove high frequencies before resampling
 const LowFilterFreq = 200;						// Mic filter to remove low frequencies before resampling
-var perfSampleRate = 32000; 						// Target sample rate used for performer audio adjusted for BW
-var chunkSize = 1024;							// Audio chunk size. Fixed by js script processor
+const PerfSampleRate = 32000; 						// Target sample rate used for performer audio adjusted for BW
+const ChunkSize = 1024;							// Audio chunk size. Fixed by js script processor
 var soundcardSampleRate = null; 					// Get this from context 
 var micAudioPacketSize = 0;						// Calculate this once we have soundcard sample rate
 var socketConnected = false; 						// True when socket is up
@@ -106,7 +106,7 @@ socketIO.on('perf', function (data) {					// Performer status notification
 	performer = data.live;
 	if (performer == true) {
 		document.getElementById("onair").style.visibility = "visible";
-		micFilter1.frequency.value = perfSampleRate/2.2;	// Change mic filter for performance audio
+		micFilter1.frequency.value = PerfSampleRate/2.2;	// Change mic filter for performance audio
 		micFilter2.frequency.value = 30;
 	} else {
 		document.getElementById("onair").style.visibility = "hidden";
@@ -829,7 +829,7 @@ function processAudio(e) {						// Main processing loop
 			let audioR = micBufferR.splice(0, micAudioPacketSize);		// for each channel
 			let audio;					// audio array or object for sending
 			let peak = 0;					// Note: no need for perf to set peak
-			let sr = performer ? perfSampleRate : SampleRate;
+			let sr = performer ? PerfSampleRate : SampleRate;
 			if (performer)					// performer audio needs special prep
 				audio = prepPerfAudio(audioL, audioR);	// may be mono or stereo
 			else {						// Standard audio prep - always mono
@@ -878,13 +878,13 @@ audio.mono16 = [];
 
 	// 2. Take audio buffered from server and send it to the speaker
 	let outAudioL = [], outAudioR = [];					
-	if (spkrBufferL.length > chunkSize) {				// There is enough audio buffered
-		outAudioL = spkrBufferL.splice(0,chunkSize);		// Get same amount of audio as came in
-		outAudioR = spkrBufferR.splice(0,chunkSize);		// for each channel
+	if (spkrBufferL.length > ChunkSize) {				// There is enough audio buffered
+		outAudioL = spkrBufferL.splice(0,ChunkSize);		// Get same amount of audio as came in
+		outAudioR = spkrBufferR.splice(0,ChunkSize);		// for each channel
 	} else {							// Not enough audio.
 		outAudioL = spkrBufferL.splice(0,spkrBufferL.length);	// Take all that remains and complete with 0s
 		outAudioR = spkrBufferR.splice(0,spkrBufferR.length);	// Take all that remains and complete with 0s
-		let zeros = new Array(chunkSize-spkrBufferL.length).fill(0);
+		let zeros = new Array(ChunkSize-spkrBufferL.length).fill(0);
 		outAudioL.push(...zeros);
 		outAudioR.push(...zeros);
 		shortages++;						// For stats and monitoring
@@ -912,9 +912,9 @@ function prepPerfAudio( audioL, audioR ) {				// Performer audio is HQ and possi
 	let stereo = false;						// Start by detecting is there is stereo audio
 	for (let i=0; i<audioL.length; i++)
 		if (audioL[i] != audioR[i]) stereo = true;
-	audioL = reSample(audioL, soundcardSampleRate, perfSampleRate, downCachePerfL);	
+	audioL = reSample(audioL, soundcardSampleRate, PerfSampleRate, downCachePerfL);	
 	if (stereo) 							// If stereo the right channel will need processing
-		audioR = reSample(audioR, soundcardSampleRate, perfSampleRate, downCachePerfR);	
+		audioR = reSample(audioR, soundcardSampleRate, PerfSampleRate, downCachePerfR);	
 	let obj;
 	if (stereo) {							// Stereo level setting 
 		let peakL = maxValue(audioL);				// Set gain according to loudest channel
@@ -989,9 +989,9 @@ function handleAudio(stream) {						// We have obtained media access
 	let liveSource = context.createMediaStreamSource(stream); 	// Create audio source (mic)
 	let node = undefined;
 	if (!context.createScriptProcessor) {				// Audio processor node
-		node = context.createJavaScriptNode(chunkSize, 2, 2);	// The new way is to use a worklet
+		node = context.createJavaScriptNode(ChunkSize, 2, 2);	// The new way is to use a worklet
 	} else {							// but the results are not as good
-		node = context.createScriptProcessor(chunkSize, 2, 2);	// and it doesn't work everywhere
+		node = context.createScriptProcessor(ChunkSize, 2, 2);	// and it doesn't work everywhere
 	}
 	node.onaudioprocess = processAudio;				// Link the callback to the node
 
@@ -1106,17 +1106,17 @@ var echoTest = {
 
 echoTest.steps.forEach(i => {						// Build test tones
 	if (i>1) {							// Create waves of different frequencies
-		let halfWave = chunkSize/(i*2);
+		let halfWave = ChunkSize/(i*2);
 		let audio = [];
-		for  (let s=0; s < chunkSize; s++) {
+		for  (let s=0; s < ChunkSize; s++) {
 			audio.push(Math.sin(Math.PI * s / halfWave));
 		}
 		echoTest.tones[i] = audio;
 	} else if (i > 0) {						// Create 1411Hz waves at different levels
-		let halfWave = chunkSize/64;
+		let halfWave = ChunkSize/64;
 		let audio = [];
 		let gain = i;
-		for  (let s=0; s < chunkSize; s++) {
+		for  (let s=0; s < ChunkSize; s++) {
 			audio.push(gain * Math.sin(Math.PI * s / halfWave));
 		}
 		echoTest.tones[i] = audio;
@@ -1145,7 +1145,7 @@ function runEchoTest(audio) {						// Test audio system in a series of tests
 			echoTest.samplesNeeded = 10;			// Request 10 audio samples for each test
 		} else {						// else samples need to be buffered
 			echoTest.results[test].push(...audio);
-			outAudio = new Array(chunkSize).fill(0);	// return silence to send to speaker
+			outAudio = new Array(ChunkSize).fill(0);	// return silence to send to speaker
 			echoTest.samplesNeeded--;			// One sample less needed
 			if (echoTest.samplesNeeded == 0)		// If no more samples needed
 				echoTest.currentStep++;			// move to next step
@@ -1313,7 +1313,7 @@ function printReport() {
 //	setNoiseThreshold();						// Set mic noise threshold based on level categories
 	if (performer == true) {
 		document.getElementById("onair").style.visibility = "visible";
-		micFilter1.frequency.value = perfSampleRate/2.2;	// Change mic filter for performance audio
+		micFilter1.frequency.value = PerfSampleRate/2.2;	// Change mic filter for performance audio
 		micFilter2.frequency.value = 30;
 	} else	{
 		document.getElementById("onair").style.visibility = "hidden";
