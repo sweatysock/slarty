@@ -1310,6 +1310,8 @@ var pauseTracing = true;						// Traces are off by default
 //
 var packetsIn = 0;
 var packetsOut = 0;
+var packetsInT = 0;
+var packetsOutT = 0;
 var overflows = 0;
 var shortages = 0;
 var packetSequence = 0;							// Tracing packet ordering
@@ -1318,6 +1320,8 @@ var sendShortages = 0;
 function printReport() {
 	enterState( UIState );						// Measure time spent updating UI even for reporting!
 	let netState = ((((rtt1-rtt5)/rtt5)>0.1) && (rtt5>400)) ? "UNSTABLE":"stable";
+	packetsInT += packetsIn;
+	packetsOutT += packetsOut;
 	if (!pauseTracing) {
 		trace("Idle=", idleState.total, " data in=", dataInState.total, " audio in/out=", audioInOutState.total," UI work=",UIState.total);
 		trace("Sent=",packetsOut," Heard=",packetsIn," overflows=",overflows," shortages=",shortages," RTT=",rtt.toFixed(1)," RTT1=",rtt1.toFixed(1)," RTT5=",rtt5.toFixed(1)," State=",netState," audience=",audience);
