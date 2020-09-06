@@ -1303,10 +1303,10 @@ var tracecount = 0;
 var sendShortages = 0;
 function printReport() {
 	enterState( UIState );						// Measure time spent updating UI even for reporting!
-	let netState = (((rtt1-rtt5)/rtt5)>rtt5*0.1) ? "UNSTABLE":"stable";
+	let netState = (((rtt1-rtt5)/rtt5)>0.1) ? "UNSTABLE":"stable";
 	if (!pauseTracing) {
 		trace("Idle=", idleState.total, " data in=", dataInState.total, " audio in/out=", audioInOutState.total," UI work=",UIState.total);
-		trace("Sent=",packetsOut," Heard=",packetsIn," overflows=",overflows," shortages=",shortages," RTT=",rtt.toFixed(1)," RTT1=",rtt1.toFixed(1)," RTT5=",rtt5.toFixed(1),"State=",netState," audience=",audience);
+		trace("Sent=",packetsOut," Heard=",packetsIn," overflows=",overflows," shortages=",shortages," RTT=",rtt.toFixed(1)," RTT1=",rtt1.toFixed(1)," RTT5=",rtt5.toFixed(1)," State=",netState," audience=",audience);
 		trace(" micIn.peak:",micIn.peak.toFixed(1)," mixOut.peak:",mixOut.peak.toFixed(1)," speaker buff:",spkrBufferL.length," Max Buff:",maxBuffSize);
 //		trace("Levels of output: ",levelCategories);
 	}
