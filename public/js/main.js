@@ -311,8 +311,6 @@ socketIO.on('d', function (data) {
 		mixOut.gain= obj.finalGain;				// Store gain for next loop
 		if (obj.peak > mixOut.peak) mixOut.peak = obj.peak;	// Note peak for display purposes
 		spkrBufferL.push(...mixL);				// put left mix in the left speaker buffer
-if (tracecount > 0) {let t=[];for (let i=0;i<10;i++) t[i]=mixL[i]; console.log("FINAL audio ready:",mixL.length);console.log(t);}
-tracecount--;
 		if (isStereo)
 			spkrBufferR.push(...mixR);			// and the right in the right if stereo
 		else
