@@ -364,7 +364,7 @@ io.sockets.on('connection', function (socket) {
 });
 
 function packetBad(p) {							// Perform basic checks on client packet to stop some hacks
-console.log(p);
+console.log(p.audio.mono16);
 	if (p.audio.mono8 === undefined) return false;
 	if (p.audio.mono16 === undefined) return false;
 	if (p.audio.mono32 === undefined) return false;
