@@ -130,6 +130,7 @@ socketIO.on('d', function (data) {
 		let ts = 0;
 		data.channels.forEach(c => {if (c.channel==0) c0=c});	// Find the venue channel, channel 0
 		if (c0 != null) {					// If there is c0 data find our seq #, subtract it, & correct venue level
+if (tracecount > 0) console.log(c0);
 			channels[0].name = c0.name;			// TEMP FIX
 			channels[0].channel = 0;			// TEMP FIX
 			channels[0].gain = (channels[0].agc ? mixOut.gain : channels[0].gain);		// TEMP FIX
@@ -170,6 +171,7 @@ socketIO.on('d', function (data) {
 				v = reSample(v, sr, soundcardSampleRate, vCache); 
 			} else c0.peak = 0;				// Don't need to be a genius to figure that one out if there's no audio!
 		} 
+if (tracecount > 0) {console.log(v); tracecount--}
 		// 2. Build a mix of all group channels. For individuals or empty groups no audio will have been sent
 		let t8 = new Array(PacketSize/2).fill(0);		// Temp arrays for MSRE blocks 
 		let t16 = new Array(PacketSize/2).fill(0);		// so that we only do one MSRE decode at the end
