@@ -131,6 +131,9 @@ if (tracecount > 0) {console.log(data);tracecount--}
 		let ts = 0;
 		data.channels.forEach(c => {if (c.channel==0) c0=c});	// Find the venue channel, channel 0
 		if (c0 != null) {					// If there is c0 data find our seq #, subtract it, & correct venue level
+			channels[0].name = c0.name;			// TEMP FIX
+			channels[0].channel = 0;			// TEMP FIX
+			channels[0].gain = (channels[0].agc ? mixOut.gain : channels[0].gain);		// TEMP FIX
 			ts = c0.timestamps[myChannel];			// Channel 0 also contains timestamps that allow rtt measurement
 			audience = c0.liveClients;			// The server sends us the current audience count for level setting
 			if (venueSizeCmd == 0) venueSize = audience;	// If there is no command setting the venue size we use the audience size
