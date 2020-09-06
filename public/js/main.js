@@ -321,6 +321,7 @@ if (false)
 		mixOut.gain= obj.finalGain;				// Store gain for next loop
 if (false)
 		if (obj.peak > mixOut.peak) mixOut.peak = obj.peak;	// Note peak for display purposes
+if (false)
 		spkrBufferL.push(...mixL);				// put left mix in the left speaker buffer
 if (false)
 		if (isStereo)
@@ -881,6 +882,8 @@ function processAudio(e) {						// Main processing loop
 				group		: myGroup,		// Group name this user belings to
 				rtt		: rtt1,			// Send my rtt measurement for server monitoring
 			};
+let bytesSent = JSON.stringify(packet).length;
+console.log("bytes sent = ",bytesSent);
 			socketIO.emit("u",packet);
 			if (!performer) packetBuf.push(packet);		// If not performer add packet to buffer for echo cancelling 
 			packetsOut++;					// For stats and monitoring
