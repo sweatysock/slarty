@@ -167,7 +167,7 @@ socketIO.on('d', function (data) {
 					sr = 16000;			// This is at the higher sample rate
 				} else v = v8;				// Only low bandwidth venue audio 
 				c0.peak = maxValue(v);			// Get peak audio for channel 0 level display 
-if (tracecount > 0) {console.log(c0.peak);let t=[];for (let i=0;i<10;i++) t[i]=v[i];console.log(t));
+if (tracecount > 0) {console.log(c0.peak);let t=[];for (let i=0;i<10;i++) t[i]=v[i];console.log(t)};
 				v = reSample(v, sr, soundcardSampleRate, vCache); 
 			} else c0.peak = 0;				// Don't need to be a genius to figure that one out if there's no audio!
 		} 
