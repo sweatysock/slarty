@@ -318,6 +318,10 @@ io.sockets.on('connection', function (socket) {
 
 	socket.on('u', function (packet) { 				// Audio coming up from one of our downstream clients
 		enterState( downstreamState );
+		if (packetBad(packet)) {
+			console.log("Bad client packet");
+			return;
+		}
 		let channel = channels[packet.channel];			// This client sends their channel to save server effort
 		channel.name = packet.name;				// Update name of channel in case it has changed
 		channel.liveClients = packet.liveClients;		// Store the number of clients behind this channel
@@ -338,18 +342,16 @@ io.sockets.on('connection', function (socket) {
 				nextMixTimeLimit = 0;			// Reset the mix timer so that it doesn't empty the buffer right away
 			}
 		} else {						// Normal audio: buffer it, clip it, and mix it 
-			if (packet.sampleRate == SampleRate) {		// Sample rate needs to be correct for regular channel
-				channel.packets.push(packet);		// Add packet to its channel packet buffer
-				channel.recording = packet.recording;	// Recording is used for testing purposes only
-				if ((channel.packets.length > channel.maxBufferSize) &&	
-					(channel.recording == false)) {	// If buffer full and we are not recording this channel
-					channel.packets.shift();	// then remove the oldest packet.
-					channel.overflows++;		// Log overflows per channel
-					overflows++;			// and also globally for monitoring
-				}
-				if (channel.packets.length >= channel.mixTriggerLevel) {
-					channel.newBuf = false;		// Buffer has filled enough. Channel can enter the mix
-				}
+			channel.packets.push(packet);			// Add packet to its channel packet buffer
+			channel.recording = packet.recording;		// Recording is used for testing purposes only
+			if ((channel.packets.length > channel.maxBufferSize) &&	
+				(channel.recording == false)) {		// If buffer full and we are not recording this channel
+				channel.packets.shift();		// then remove the oldest packet.
+				channel.overflows++;			// Log overflows per channel
+				overflows++;				// and also globally for monitoring
+			}
+			if (channel.packets.length >= channel.mixTriggerLevel) {
+				channel.newBuf = false;		// Buffer has filled enough. Channel can enter the mix
 			}
 		}
 		packetsIn++;
@@ -361,6 +363,15 @@ io.sockets.on('connection', function (socket) {
 	});
 });
 
+function packetBad(p) {							// Perform basic checks on client packet to stop some hacks
+	if (p.audio.mono8 == undefined) return false;
+	if (p.audio.mono16 == undefined) return false;
+	if (p.audio.mono32 == undefined) return false;
+	if (p.audio.stereo8 == undefined) return false;
+	if (p.audio.stereo16 == undefined) return false;
+	if (p.audio.stereo32 == undefined) return false;
+	return true;
+}
 
 // Audio management, marshalling and manipulation code
 //
