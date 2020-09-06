@@ -219,6 +219,7 @@ socketIO.on('d', function (data) {
 		// 3. Process performer audio if there is any, and add it to the mix. This could be stereo audio
 		performer = (data.perf.chan == myChannel);		// Update performer flag just in case
 		liveShow = data.perf.live;				// Update the live show flag to update display
+if (liveShow) {console.log("LIVE SHOW");console.log(data.perf);}
 		isStereo = false;					// flag to indicate if we have stereo audio
 		if (data.perf.live) {					// If there is a live performer process the data
 			if ((!performer) && (data.perf.packet != null)){// If we are not the performer and there is perf audio
@@ -1303,7 +1304,7 @@ var tracecount = 0;
 var sendShortages = 0;
 function printReport() {
 	enterState( UIState );						// Measure time spent updating UI even for reporting!
-	let netState = (((rtt1-rtt5)/rtt5)>0.1) ? "UNSTABLE":"stable";
+	let netState = ((((rtt1-rtt5)/rtt5)>0.1) && (rtt5>400)) ? "UNSTABLE":"stable";
 	if (!pauseTracing) {
 		trace("Idle=", idleState.total, " data in=", dataInState.total, " audio in/out=", audioInOutState.total," UI work=",UIState.total);
 		trace("Sent=",packetsOut," Heard=",packetsIn," overflows=",overflows," shortages=",shortages," RTT=",rtt.toFixed(1)," RTT1=",rtt1.toFixed(1)," RTT5=",rtt5.toFixed(1)," State=",netState," audience=",audience);
