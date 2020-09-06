@@ -122,6 +122,7 @@ socketIO.on('d', function (data) {
 	serverLiveChannels = data.liveChannels;				// Server live channels are for UI updating
 	processCommands(data.commands);					// Process commands from server
 	if (micAccessAllowed) {						// Need access to audio before outputting
+if (tracecount > 0) {console.log(data);tracecount--}
 		let v = [];						// Our objective is to get the venue audio (if any) in here,
 		let gL = [], gR = [];					// the group stereo audio (if any) in here
 		let pL = [], pR = [];					// and the performer stereo audio (if any) in here. Then mix and send to speaker
