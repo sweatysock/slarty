@@ -364,14 +364,13 @@ io.sockets.on('connection', function (socket) {
 });
 
 function packetBad(p) {							// Perform basic checks on client packet to stop some hacks
-console.log(p.audio.mono16);
-	if (p.audio.mono8 === undefined) return false;
-	if (p.audio.mono16 === undefined) return false;
-	if (p.audio.mono32 === undefined) return false;
-	if (p.audio.stereo8 === undefined) return false;
-	if (p.audio.stereo16 === undefined) return false;
-	if (p.audio.stereo32 === undefined) return false;
-	return true;
+	if (p.audio.mono8 === undefined) return true;
+	if (p.audio.mono16 === undefined) return true;
+	if (p.audio.mono32 === undefined) return true;
+	if (p.audio.stereo8 === undefined) return true;
+	if (p.audio.stereo16 === undefined) return true;
+	if (p.audio.stereo32 === undefined) return true;
+	return false;
 }
 
 // Audio management, marshalling and manipulation code
