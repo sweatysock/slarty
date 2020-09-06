@@ -294,8 +294,6 @@ socketIO.on('d', function (data) {
 				}
 			} else ts = data.perf.packet.timestamp;		// I am the performer so grab timestamp for the rtt 
 		}
-if (tracecount > 0) {let t=[];for (let i=0;i<10;i++) t[i]=mixL[i]; console.log("FINAL audio ready:");console.log(t);}
-tracecount--;
 		// 4. Adjust gain of final mix containing performer and group audio, and send to the speaker buffer
 		var obj;
 		if (isStereo) {
@@ -312,6 +310,8 @@ tracecount--;
 		mixOut.gain= obj.finalGain;				// Store gain for next loop
 		if (obj.peak > mixOut.peak) mixOut.peak = obj.peak;	// Note peak for display purposes
 		spkrBufferL.push(...mixL);				// put left mix in the left speaker buffer
+if (tracecount > 0) {let t=[];for (let i=0;i<10;i++) t[i]=mixL[i]; console.log("FINAL audio ready:",mixL.length);console.log(t);}
+tracecount--;
 		if (isStereo)
 			spkrBufferR.push(...mixR);			// and the right in the right if stereo
 		else
