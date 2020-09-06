@@ -841,8 +841,6 @@ function processAudio(e) {						// Main processing loop
 		if (micBufferL.length > micAudioPacketSize) {		// If enough audio in buffer 
 			let audioL = micBufferL.splice(0, micAudioPacketSize);		// Get a packet of audio
 			let audioR = micBufferR.splice(0, micAudioPacketSize);		// for each channel
-let bGot = JSON.stringify(audioL).length;
-console.log("bytes GOT = ",bGot);
 			let audio;					// audio array or object for sending
 			let peak = 0;					// Note: no need for perf to set peak
 			let sr = performer ? PerfSampleRate : SampleRate;
@@ -870,7 +868,7 @@ console.log("bytes GOT = ",bGot);
 				}
 				audio = {mono8,mono16,mono32,stereo8,stereo16,stereo32};	
 			}
-audio.mono16 = [];
+//audio.mono16 = [];
 			let now = new Date().getTime();
 			let packet = {
 				name		: myName,		// Send the name we have chosen 
@@ -885,8 +883,7 @@ audio.mono16 = [];
 				group		: myGroup,		// Group name this user belings to
 				rtt		: rtt1,			// Send my rtt measurement for server monitoring
 			};
-let bytesSent = JSON.stringify(packet.audio).length;
-console.log("bytes sent = ",bytesSent);
+//let bytesSent = JSON.stringify(packet.audio).length;
 			socketIO.emit("u",packet);
 			if (!performer) packetBuf.push(packet);		// If not performer add packet to buffer for echo cancelling 
 			packetsOut++;					// For stats and monitoring
