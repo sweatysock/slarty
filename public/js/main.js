@@ -134,7 +134,6 @@ socketIO.on('d', function (data) {
 			channels[0].channel = 0;			// TEMP FIX
 			channels[0].gain = (channels[0].agc ? mixOut.gain : channels[0].gain);		// TEMP FIX
 			ts = c0.timestamps[myChannel];			// Channel 0 also contains timestamps that allow rtt measurement
-if (tracecount > 0) {console.log(ts);tracecount--}
 			audience = c0.liveClients;			// The server sends us the current audience count for level setting
 			if (venueSizeCmd == 0) venueSize = audience;	// If there is no command setting the venue size we use the audience size
 			else venueSize = venueSizeCmd;			// otherwise the command sets the audience size = attenuation level
@@ -855,7 +854,6 @@ function processAudio(e) {						// Main processing loop
 				}
 				audio = {mono8,mono16,mono32,stereo8,stereo16,stereo32};	
 			}
-audio.mono8 = [];
 audio.mono16 = [];
 			let now = new Date().getTime();
 			let packet = {
