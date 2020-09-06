@@ -317,6 +317,7 @@ if (false)
 				applyGain(mixL, obj.finalGain);		// and left follows
 			}
 		} else obj = applyAutoGain(mixL, mixOut);		// For mono just use left channel
+if (false)
 		mixOut.gain= obj.finalGain;				// Store gain for next loop
 if (false)
 		if (obj.peak > mixOut.peak) mixOut.peak = obj.peak;	// Note peak for display purposes
