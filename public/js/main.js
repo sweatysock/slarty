@@ -130,7 +130,6 @@ socketIO.on('d', function (data) {
 		let ts = 0;
 		data.channels.forEach(c => {if (c.channel==0) c0=c});	// Find the venue channel, channel 0
 		if (c0 != null) {					// If there is c0 data find our seq #, subtract it, & correct venue level
-//if (tracecount > 0) {let t=[];for (let i=0;i<10;i++) t[i]=c0.audio.mono8[i]; console.log("raw c0 audio incoming:");console.log(t);}
 			channels[0].name = c0.name;			// TEMP FIX
 			channels[0].channel = 0;			// TEMP FIX
 			channels[0].gain = (channels[0].agc ? mixOut.gain : channels[0].gain);		// TEMP FIX
@@ -171,8 +170,6 @@ socketIO.on('d', function (data) {
 				v = reSample(v, sr, soundcardSampleRate, vCache); 
 			} else c0.peak = 0;				// Don't need to be a genius to figure that one out if there's no audio!
 		} 
-//if (tracecount > 0) {let t=[];for (let i=0;i<10;i++) t[i]=c0.audio.mono8[i]; console.log("VENUE audio processed:");console.log(t);}
-//tracecount--;
 		// 2. Build a mix of all group channels. For individuals or empty groups no audio will have been sent
 		let t8 = new Array(PacketSize/2).fill(0);		// Temp arrays for MSRE blocks 
 		let t16 = new Array(PacketSize/2).fill(0);		// so that we only do one MSRE decode at the end
@@ -297,6 +294,8 @@ socketIO.on('d', function (data) {
 				}
 			} else ts = data.perf.packet.timestamp;		// I am the performer so grab timestamp for the rtt 
 		}
+if (tracecount > 0) {let t=[];for (let i=0;i<10;i++) t[i]=c0.audio.mono8[i]; console.log("FINAL audio ready:");console.log(t);}
+tracecount--;
 		// 4. Adjust gain of final mix containing performer and group audio, and send to the speaker buffer
 		var obj;
 		if (isStereo) {
