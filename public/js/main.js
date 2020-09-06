@@ -327,9 +327,8 @@ tracecount--;
 			let now = new Date().getTime();
 			rtt = now - ts;					// Measure round trip time using a rolling average
 			if (rtt1 == 0) rtt1 = rtt;
-			else rtt1 = (29 * rtt1 + rtt)/30;
-			if (rtt5 == 0) rtt5 = rtt;
-			else rtt5 = (149 * rtt5 + rtt)/150;
+			else rtt1 = (9 * rtt1 + rtt)/10;
+			rtt5 = (49 * rtt5 + rtt)/50;
 		}
 	}
 	enterState( idleState );					// Back to Idling
@@ -857,7 +856,6 @@ function processAudio(e) {						// Main processing loop
 				}
 				audio = {mono8,mono16,mono32,stereo8,stereo16,stereo32};	
 			}
-audio.mono16 = [];
 			let now = new Date().getTime();
 			let packet = {
 				name		: myName,		// Send the name we have chosen 
