@@ -221,8 +221,8 @@ socketIO.on('d', function (data) {
 		liveShow = data.perf.live;				// Update the live show flag to update display
 if (liveShow) {console.log("LIVE SHOW");console.log(data.perf);}
 		isStereo = false;					// flag to indicate if we have stereo audio
-		if (data.perf.live) {					// If there is a live performer process the data
-			if ((!performer) && (data.perf.packet != null)){// If we are not the performer and there is perf audio
+		if ((data.perf.live) && (data.perf.packet != null)) {	// If there is a live performer with data, process it...
+			if (!performer) {				// If we are not the performer 
 				let mono = [];				// Reconstruct performer mono audio into this array
 				let stereo = [];			// Reconstruct performer stereo difference signal into here
 				let j = 0, k = 0;
@@ -937,7 +937,7 @@ function prepPerfAudio( audioL, audioR ) {				// Performer audio is HQ and possi
 		LminusR[i] = audioL[i] - audioR[i];
 	} else LplusR = audioL;						// Just use the left signal if mono
 	let mono8 = [], mono16 = [], mono32 = [], stereo8 = [], stereo16 = [], stereo32 = [];
-	let j=0, k=0; trace = 5;
+	let j=0, k=0; 
 	for (let i=0; i<LplusR.length; i+=4) {				// Multiple sample-rate encoding:
 		let s1,s2,d1,d2,s3,d3;					// This encoding allows the server to discard blocks
 		s1 = (LplusR[i] + LplusR[i+1])/2;			// and reduce network load by simply reducing the

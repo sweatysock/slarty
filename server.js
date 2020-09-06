@@ -573,7 +573,6 @@ function generateMix () {
 		clientPackets.push( channel0Packet );			// Add channel 0 (venue audio) to the packets for every group
 		let liveChannels = g.liveChannels;			// Get group specific live channels list for all members too
 		liveChannels[0] = true;					// Add channel 0 to the live channels list for all members
-if (tracecount > 0) {console.log(JSON.stringify(clientPackets));tracecount--}
 		io.sockets.in(group).emit('d', {			// Send to all group members group specific data
 			perf		: p,				// Send performer audio/video packet + other flags
 			channels	: clientPackets,		// All channels in this server plus filtered upstream mix
