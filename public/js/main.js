@@ -841,6 +841,8 @@ function processAudio(e) {						// Main processing loop
 		if (micBufferL.length > micAudioPacketSize) {		// If enough audio in buffer 
 			let audioL = micBufferL.splice(0, micAudioPacketSize);		// Get a packet of audio
 			let audioR = micBufferR.splice(0, micAudioPacketSize);		// for each channel
+let bGot = JSON.stringify(audioL).length;
+console.log("bytes GOT = ",bGot);
 			let audio;					// audio array or object for sending
 			let peak = 0;					// Note: no need for perf to set peak
 			let sr = performer ? PerfSampleRate : SampleRate;
