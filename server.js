@@ -480,6 +480,7 @@ function generateMix () {
 				packetCount++;				// Count how many packets have made the mix for tracing
 				if (packet.channel != 0) {		// Build mix of downstream channels so don't include channel 0
 					if (packet.audio.mono8.length > 0) {
+if (tracecount > 0) {console.log(JSON.stringify(gpacket));tracecount--}
 						someAudio8 = true;
 						for (let i = 0; i < packet.audio.mono8.length; ++i) mono8[i] += packet.audio.mono8[i];	
 					}
@@ -498,7 +499,6 @@ function generateMix () {
 			}
 		}
 	});
-if (tracecount > 0) {console.log(JSON.stringify(groups));tracecount--}
 	// 3. Build server mix packet and send upstream if we have an upstream server connected. 
 	if (!someAudio8) mono8 = [];					// If no audio send empty mix to save bandwidth
 	if (!someAudio16) mono16 = [];					
