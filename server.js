@@ -480,7 +480,7 @@ function generateMix () {
 				packetCount++;				// Count how many packets have made the mix for tracing
 				if (packet.channel != 0) {		// Build mix of downstream channels so don't include channel 0
 					if (packet.audio.mono8.length > 0) {
-if (tracecount > 0) {console.log(JSON.stringify(gpacket));tracecount--}
+if (tracecount > 0) {console.log(JSON.stringify(packet));tracecount--}
 						someAudio8 = true;
 						for (let i = 0; i < packet.audio.mono8.length; ++i) mono8[i] += packet.audio.mono8[i];	
 					}
