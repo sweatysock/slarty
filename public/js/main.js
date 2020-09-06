@@ -208,7 +208,7 @@ socketIO.on('d', function (data) {
 			gR = gL;					// Mono group audio FOR NOW!
 		} 
 		let s = PacketSize * soundcardSampleRate / SampleRate;	// The amount of audio expected per server packet
-		let mixL = new Array(ChunkSize).fill(0), mixR = new Array(ChunkSize).fill(0);
+		let mixL = new Array(s).fill(0), mixR = new Array(s).fill(0);
 		// TEMP COMBINE VENUE AND GROUP INTO MIX HERE
 		if (v.length > 0) {					// If there is venue audio
 			if (gL.length > 0) {				// and group audio, mix together
