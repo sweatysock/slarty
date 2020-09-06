@@ -130,7 +130,6 @@ socketIO.on('d', function (data) {
 		let ts = 0;
 		data.channels.forEach(c => {if (c.channel==0) c0=c});	// Find the venue channel, channel 0
 		if (c0 != null) {					// If there is c0 data find our seq #, subtract it, & correct venue level
-if (tracecount > 0) {console.log(c0);tracecount--}
 			channels[0].name = c0.name;			// TEMP FIX
 			channels[0].channel = 0;			// TEMP FIX
 			channels[0].gain = (channels[0].agc ? mixOut.gain : channels[0].gain);		// TEMP FIX
@@ -209,6 +208,7 @@ if (tracecount > 0) {console.log(c0);tracecount--}
 			gR = gL;					// Mono group audio FOR NOW!
 		} 
 		let s = PacketSize * soundcardSampleRate / SampleRate;	// The amount of audio expected per server packet
+console.log(s,PacketSize, soundcardSampleRate, SampleRate);
 		let mixL = new Array(s).fill(0), mixR = new Array(s).fill(0);
 		// TEMP COMBINE VENUE AND GROUP INTO MIX HERE
 		if (v.length > 0) {					// If there is venue audio
