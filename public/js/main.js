@@ -854,7 +854,7 @@ function processAudio(e) {						// Main processing loop
 				audio = {mono8,mono16,mono32,stereo8,stereo16,stereo32};	
 			}
 if (tracecount > 0) {console.log(audio);tracecount--;} 
-			audio = [];
+			audio = {mono8:[]};
 			let now = new Date().getTime();
 			let packet = {
 				name		: myName,		// Send the name we have chosen 
