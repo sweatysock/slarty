@@ -194,8 +194,6 @@ if (tracecount > 0) {console.log(data);tracecount--}
 					}				// NB: Fader = 0 means actually removing completely audio!
 					if (a.mono16.length > 0) for (let i=0; i < a.mono16.length; i++) t16[i] += a.mono16[i] * (g - 1/venueSize);	
 				}
-			} else {					// This is my own data come back
-				ts  = c.timestamp;			// Capture the timestamp;
 			}
 			if (c.sequence != (chan.seq + 1)) 		// Monitor audio transfer quality for all channels
 				trace("Sequence jump Channel ",ch," jump ",(c.sequence - chan.seq));
