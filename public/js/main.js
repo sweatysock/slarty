@@ -207,7 +207,7 @@ socketIO.on('d', function (data) {
 			gL = reSample(gL, SampleRate, soundcardSampleRate, gCache); 
 			gR = gL;					// Mono group audio FOR NOW!
 		} 
-		let mixL = [], mixR = [];
+		let mixL = new Array(ChunkSize).fill(0), mixR = new Array(ChunkSize).fill(0);
 		// TEMP COMBINE VENUE AND GROUP INTO MIX HERE
 		if (v.length > 0) {					// If there is venue audio
 			if (gL.length > 0) {				// and group audio, mix together
