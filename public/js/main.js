@@ -139,6 +139,7 @@ socketIO.on('d', function (data) {
 			else venueSize = venueSizeCmd;			// otherwise the command sets the audience size = attenuation level
 			let a8 = [], a16 = [];				// Temp store for our audio for subtracting (echo cancelling)
 			let s = c0.seqNos[myChannel];			// If Channel 0's mix contains our audio this will be its sequence no.
+if (false)
 			if (s != null) {				// If we are performer or there are network issues our audio won't be in the mix
 				while (packetBuf.length) {		// Scan the packet buffer for the packet with this sequence
 					let p = packetBuf.shift();	// Remove the oldest packet from the buffer until s is found
@@ -150,6 +151,7 @@ socketIO.on('d', function (data) {
 				}
 			}
 			let v8 = c0.audio.mono8, v16 = c0.audio.mono16;	// Shortcuts to the channel 0 MSRE data blocks
+if (false)
 			if (v8.length > 0) {				// If there is venue audio it will need processing
 				let sr = 8000;				// Minimum sample rate of 8kHz
 				if (a8.length > 0)  			// Only subtract if our audio is not empty
@@ -175,6 +177,7 @@ socketIO.on('d', function (data) {
 		let t8 = new Array(PacketSize/2).fill(0);		// Temp arrays for MSRE blocks 
 		let t16 = new Array(PacketSize/2).fill(0);		// so that we only do one MSRE decode at the end
 		let someAudio = false;					// If no audio this saves us checking
+if (false)
 		data.channels.forEach(c => {				// Process all audio channel packets including channel 0
 			let ch = c.channel;				// Channel number the packet belongs to
 			let chan = channels[ch];			// Local data structure for this channel
@@ -199,6 +202,7 @@ socketIO.on('d', function (data) {
 				trace("Sequence jump Channel ",ch," jump ",(c.sequence - chan.seq));
 			chan.seq = c.sequence;				// Store seq number for next time a packet comes in
 		});
+if (false)
 		if (someAudio) {					// If there is group audio rebuild and upsample it
 			let k = 0;
 			for (let i=0;i<t8.length;i++) {			// Reconstruct group mix gL[] from the MSRE blocks
@@ -211,6 +215,7 @@ socketIO.on('d', function (data) {
 		let s = Math.round(PacketSize * soundcardSampleRate / SampleRate);	// The amount of audio expected per server packet
 		let mixL = new Array(s).fill(0), mixR = new Array(s).fill(0);
 		// TEMP COMBINE VENUE AND GROUP INTO MIX HERE
+if (false)
 		if (v.length > 0) {					// If there is venue audio
 			if (gL.length > 0) {				// and group audio, mix together
 				for (i=0; i<gL.length; i++) mixL = v[i] + gL[i];
@@ -219,7 +224,9 @@ socketIO.on('d', function (data) {
 		// 3. Process performer audio if there is any, and add it to the mix. This could be stereo audio
 		performer = (data.perf.chan == myChannel);		// Update performer flag just in case
 		liveShow = data.perf.live;				// Update the live show flag to update display
+//if (liveShow) {console.log("LIVE SHOW");console.log(data.perf);}
 		isStereo = false;					// flag to indicate if we have stereo audio
+if (false)
 		if ((data.perf.live) && (data.perf.packet != null)) {	// If there is a live performer with data, process it...
 			if (!performer) {				// If we are not the performer 
 				let mono = [];				// Reconstruct performer mono audio into this array
@@ -298,6 +305,7 @@ socketIO.on('d', function (data) {
 		}
 		// 4. Adjust gain of final mix containing performer and group audio, and send to the speaker buffer
 		var obj;
+if (false)
 		if (isStereo) {
 			let peakL = maxValue(mixL);			// Set gain according to loudest channel
 			let peakR = maxValue(mixR);
@@ -309,13 +317,18 @@ socketIO.on('d', function (data) {
 				applyGain(mixL, obj.finalGain);		// and left follows
 			}
 		} else obj = applyAutoGain(mixL, mixOut);		// For mono just use left channel
+if (false)
 		mixOut.gain= obj.finalGain;				// Store gain for next loop
+if (false)
 		if (obj.peak > mixOut.peak) mixOut.peak = obj.peak;	// Note peak for display purposes
+if (false)
 		spkrBufferL.push(...mixL);				// put left mix in the left speaker buffer
+if (false)
 		if (isStereo)
 			spkrBufferR.push(...mixR);			// and the right in the right if stereo
 		else
 			spkrBufferR.push(...mixL);			// otherwise use the left
+if (false)
 		if (spkrBufferL.length > maxBuffSize) {			// Clip buffers if too full
 			spkrBufferL.splice(0, (spkrBufferL.length-maxBuffSize)); 	
 			spkrBufferR.splice(0, (spkrBufferR.length-maxBuffSize)); 	
