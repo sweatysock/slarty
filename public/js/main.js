@@ -871,6 +871,7 @@ function processAudio(e) {						// Main processing loop
 			}
 audio.stereo32=[];
 audio.stereo16=[];
+audio.stereo8=[];
 audio.mono32=[];
 audio.mono16=[];
 			let sr = performer ? PerfSampleRate : SampleRate;
