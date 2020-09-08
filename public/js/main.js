@@ -268,9 +268,9 @@ if (tracecount >0) {let t=[]; for (i=0;i<10;i++) t[i]=mono[i]; console.log("reco
 				let s8 = data.perf.packet.audio.stereo8;// Now regenerate the stereo difference signal
 				let s16 = data.perf.packet.audio.stereo16;
 				let s32 = data.perf.packet.audio.stereo32;
-//if (tracecount >0) {let t=[]; for (i=0;i<10;i++) t[i]=s8[i]; console.log("incoming perf s8 audio=");console.log(t);}
-//if (tracecount >0) {let t=[]; for (i=0;i<10;i++) t[i]=s16[i]; console.log("incoming perf s16 audio=");console.log(t);}
-//if (tracecount >0) {let t=[]; for (i=0;i<10;i++) t[i]=s32[i]; console.log("incoming perf s32 audio=");console.log(t);}
+if (tracecount >0) {let t=[]; for (i=0;i<10;i++) t[i]=s8[i]; console.log("incoming perf s8 audio=");console.log(t);}
+if (tracecount >0) {let t=[]; for (i=0;i<10;i++) t[i]=s16[i]; console.log("incoming perf s16 audio=");console.log(t);}
+if (tracecount >0) {let t=[]; for (i=0;i<10;i++) t[i]=s32[i]; console.log("incoming perf s32 audio=");console.log(t);}
 				bytesRcvd += ((s32.length)?22:0)+((s16.length)?11:0)+((s8.length)?5.5:0);		// For monitoring
 				if (s8.length > 0) {			// Is there a stereo signal in the packet?
 if (tracecount >0) {console.log("STEREO");}
@@ -292,6 +292,7 @@ if (tracecount >0) {console.log("STEREO");}
 						stereo[k] = d + s32[j]; k++;
 						stereo[k] = d - s32[j]; j++; k++;
 					}				// Stereo difference perf audio upsampling now
+if (tracecount >0) {let t=[]; for (i=0;i<10;i++) t[i]=stereo[i]; console.log("PREUPSAMPLE reconstructed stereo diff perf audio=");console.log(t);}
 					stereo = reSample(stereo, sr, soundcardSampleRate, upCachePerfS);
 if (tracecount >0) {let t=[]; for (i=0;i<10;i++) t[i]=stereo[i]; console.log("reconstructed stereo diff perf audio=");console.log(t);}
 					let left = [], right = [];	// Time to reconstruct the original left and right audio
