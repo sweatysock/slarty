@@ -236,7 +236,6 @@ socketIO.on('d', function (data) {
 			let m32 = data.perf.packet.audio.mono32;
 			bytesRcvd += ((m32.length)?22:0)+((m16.length)?11:0)+((m8.length)?5.5:0);		// For monitoring
 			if (!performer) {				// If we are not the performer 
-if (tracecount >0) {let t=[]; for (i=0;i<10;i++) t[i]=m8[i]; console.log("incoming perf audio=");console.log(t);}
 				let mono = [];				// Reconstruct performer mono audio into this array
 				let stereo = [];			// Reconstruct performer stereo difference signal into here
 				let j = 0, k = 0;
@@ -846,6 +845,7 @@ function processAudio(e) {						// Main processing loop
 			let audio;					// audio array or object for sending
 			let peak = 0;					// Note: no need for perf to set peak
 			let sr = performer ? PerfSampleRate : SampleRate;
+if (tracecount >0) {let t=[]; for (i=0;i<10;i++) t[i]=audioL[i]; console.log("raw audio=");console.log(t);}
 			if (performer) {					// performer audio needs special prep
 				audio = prepPerfAudio(audioL, audioR);	// may be mono or stereo
 			} else {						// Standard audio prep - always mono
@@ -870,6 +870,8 @@ function processAudio(e) {						// Main processing loop
 				}
 				audio = {mono8,mono16,mono32,stereo8,stereo16,stereo32};	
 			}
+if (tracecount >0) {let t=[]; for (i=0;i<10;i++) t[i]=audio.mono[i]; console.log("cooked audio=");console.log(t);}
+tracecount--;
 			let now = new Date().getTime();
 			let packet = {
 				name		: myName,		// Send the name we have chosen 
