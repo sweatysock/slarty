@@ -844,7 +844,7 @@ function processAudio(e) {						// Main processing loop
 		if (micBufferL.length > micAudioPacketSize) {		// If enough audio in buffer 
 			let audioL = micBufferL.splice(0, micAudioPacketSize);		// Get a packet of audio
 			let audioR = micBufferR.splice(0, micAudioPacketSize);		// for each channel
-			let audio = {mono8:[]mono16:[]};		// audio array or object for sending
+			let audio = {mono8:[],mono16:[]};		// audio array or object for sending
 			let perf = {};					// special audio block for performers
 			let peak = 0;					// Note: no need for perf to set peak
 			if (performer) {				// performer audio needs special prep
