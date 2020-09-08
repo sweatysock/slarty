@@ -847,7 +847,8 @@ function processAudio(e) {						// Main processing loop
 			let sr = performer ? PerfSampleRate : SampleRate;
 if (tracecount >0) {let t=[]; for (i=0;i<10;i++) t[i]=audioL[i]; console.log("raw audio=");console.log(t);}
 			if (performer) {					// performer audio needs special prep
-				audio = prepPerfAudio(audioL, audioR);	// may be mono or stereo
+//				audio = prepPerfAudio(audioL, audioR);	// may be mono or stereo
+				audio={mono8:[],mono16:[],mono32:[],stereo8:[],stereo16:[],stereo32:[]};
 			} else {						// Standard audio prep - always mono
 				let mono8 = [], mono16 = [], mono32 = [], stereo8 = [], stereo16 = [], stereo32 = [];
 				audio = reSample(audioL, soundcardSampleRate, SampleRate, downCache);	
