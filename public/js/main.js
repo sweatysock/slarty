@@ -1,3 +1,4 @@
+import { stringify } from 'zipson';
 //Global variables
 //
 const SampleRate = 16000; 						// Global sample rate used for all audio
@@ -869,11 +870,12 @@ function processAudio(e) {						// Main processing loop
 				}
 				audio = {mono8,mono16,mono32,stereo8,stereo16,stereo32};	
 			}
+console.log("length of audio block after zipson = ",stringify(audio).length);
 audio.stereo32=[];
 audio.stereo16=[];
-//audio.stereo8=[];
-//audio.mono32=[];
-//audio.mono16=[];
+audio.stereo8=[];
+audio.mono32=[];
+audio.mono16=[];
 			let sr = performer ? PerfSampleRate : SampleRate;
 			let now = new Date().getTime();
 			let packet = {
