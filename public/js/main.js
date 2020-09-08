@@ -292,6 +292,7 @@ if (tracecount >0) {console.log("STEREO");}
 						stereo[k] = d + s32[j]; k++;
 						stereo[k] = d - s32[j]; j++; k++;
 					}				// Stereo difference perf audio upsampling now
+if (tracecount >0) console.log(stereo);
 if (tracecount >0) {let t=[]; for (i=0;i<10;i++) t[i]=stereo[i]; console.log("PREUPSAMPLE reconstructed stereo diff perf audio=");console.log(t);}
 					stereo = reSample(stereo, sr, soundcardSampleRate, upCachePerfS);
 if (tracecount >0) {let t=[]; for (i=0;i<10;i++) t[i]=stereo[i]; console.log("reconstructed stereo diff perf audio=");console.log(t);}
