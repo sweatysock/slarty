@@ -850,6 +850,7 @@ function processAudio(e) {						// Main processing loop
 			if (performer) {				// performer audio needs special prep
 				audio = prepPerfAudio(audioL, audioR);	// may be mono or stereo
 				perf = zipson.stringify(audio);
+				audio = {mono8:[],mono16:[],mono32:[],stereo8:[],stereo16:[],stereo32:[]};
 			} else {					// Standard audio prep - always mono
 				let mono8 = [], mono16 = [], mono32 = [], stereo8 = [], stereo16 = [], stereo32 = [];
 				audio = reSample(audioL, soundcardSampleRate, SampleRate, downCache);	
