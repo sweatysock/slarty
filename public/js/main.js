@@ -990,9 +990,15 @@ if (tracecount >0) {let t=[]; for (i=0;i<10;i++) t[i]=LminusR[i]; console.log("L
 		stereo32[k] = d1; k++;
 		stereo32[k] = d2; k++;
 	}
+	audio = {mono8,mono16,mono32,stereo8,stereo16,stereo32};	// Return an object for the audio
+if (tracecount >0) {let t=[]; for (i=0;i<10;i++) t[i]=mono8[i]; console.log("perf mono8 audio=");console.log(t);}
+if (tracecount >0) {let t=[]; for (i=0;i<10;i++) t[i]=mono16[i]; console.log("perf mono16 audio=");console.log(t);}
+if (tracecount >0) {let t=[]; for (i=0;i<10;i++) t[i]=mono32[i]; console.log("perf mono32 audio=");console.log(t);}
+if (tracecount >0) {let t=[]; for (i=0;i<10;i++) t[i]=stereo8[i]; console.log("perf stereo8 audio=");console.log(t);}
+if (tracecount >0) {let t=[]; for (i=0;i<10;i++) t[i]=stereo16[i]; console.log("perf stereo16 audio=");console.log(t);}
+if (tracecount >0) {let t=[]; for (i=0;i<10;i++) t[i]=stereo32[i]; console.log("perf stereo32 audio=");console.log(t);}
 if (tracecount >0) console.log(audio);
 tracecount--;
-	audio = {mono8,mono16,mono32,stereo8,stereo16,stereo32};	// Return an object for the audio
 	return audio;
 }
 
