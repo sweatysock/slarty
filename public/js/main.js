@@ -263,12 +263,10 @@ if (tracecount >0) {let t=[]; for (i=0;i<10;i++) t[i]=m8[i]; console.log("incomi
 				}					// Mono perf audio ready to upsample
 				mono = reSample(mono, sr, soundcardSampleRate, upCachePerfM);
 if (tracecount >0) {let t=[]; for (i=0;i<10;i++) t[i]=mono[i]; console.log("reconstructed perf audio=");console.log(t);}
-tracecount--;
 				let s8 = data.perf.packet.audio.stereo8;// Now regenerate the stereo difference signal
 				let s16 = data.perf.packet.audio.stereo16;
 				let s32 = data.perf.packet.audio.stereo32;
 				bytesRcvd += ((s32.length)?22:0)+((s16.length)?11:0)+((s8.length)?5.5:0);		// For monitoring
-if (false)
 				if (s8 != null) {			// Is there a stereo signal in the packet?
 					isStereo = true;
 					if (s16 == null) {		// Low quaity stereo signal
@@ -309,6 +307,7 @@ if (false)
 						for (let i=0; i < mono.length; i++) mixL[i] += mono[i];	
 					}
 					mixR = mixL;
+if (tracecount >0) {let t=[]; for (i=0;i<10;i++) t[i]=mixL[i]; console.log("MIX perf audio=");console.log(t);}
 				}
 			} else ts = data.perf.packet.timestamp;		// I am the performer so grab timestamp for the rtt 
 		}
@@ -328,6 +327,8 @@ if (false)
 		mixOut.gain= obj.finalGain;				// Store gain for next loop
 		if (obj.peak > mixOut.peak) mixOut.peak = obj.peak;	// Note peak for display purposes
 		spkrBufferL.push(...mixL);				// put left mix in the left speaker buffer
+if (tracecount >0) {let t=[]; for (i=0;i<10;i++) t[i]=mixL[i]; console.log("OUTPUT audio=");console.log(t);}
+tracecount--;
 		if (isStereo)
 			spkrBufferR.push(...mixR);			// and the right in the right if stereo
 		else
