@@ -1185,7 +1185,7 @@ function runEchoTest(audio) {						// Test audio system in a series of tests
 			let conv = [];					// convolution output
 			for (let p=0; p<(results.length-plen); p++) {	// Run the convolution over results
 				let sum = 0;
-				for (x=0; x<plen; x++) {
+				for (let x=0; x<plen; x++) {
 					sum += results[p+x]*pulse[x];
 				}
 				conv.push(sum);				// push each result to output
@@ -1364,7 +1364,7 @@ function printReport() {
 	if ((packetsOut < lowerLimit) || (packetsOut > upperLimit)) upStatus = "Orange";
 	if (packetsOut < lowerLimit/3) upStatus = "Red";
 	setStatusLED("UpStatus",upStatus);
-	downStatus = "Green";
+	let downStatus = "Green";
 	if ((packetsIn < lowerLimit) || (packetsIn > upperLimit)) downStatus = "Orange";
 	if (packetsIn < lowerLimit/3) downStatus = "Red";
 	setStatusLED("DownStatus",downStatus);
