@@ -881,8 +881,8 @@ function processAudio(e) {						// Main processing loop
 ////console.log(zs);
 //tracecount--;
 //}
-audio.stereo32=[];
-audio.stereo16=[];
+//audio.stereo32=[];
+//audio.stereo16=[];
 //audio.stereo8=[];
 //audio.mono32=[];
 //audio.mono16=[];
@@ -903,7 +903,9 @@ audio.stereo16=[];
 				rtt		: rtt1,			// Send my rtt measurement for server monitoring
 			};
 			socketIO.emit("u",packet);
-			bytesSent += ((audio.stereo32.length)?22:0)+((audio.stereo16.length)?11:0)+((audio.stereo8.length)?5.5:0)
+			let len=JSON.stringify(packet).length;
+			bytesSent += len;
+//			bytesSent += ((audio.stereo32.length)?22:0)+((audio.stereo16.length)?11:0)+((audio.stereo8.length)?5.5:0)
 				+((audio.mono32.length)?22:0)+((audio.mono16.length)?11:0)+((audio.mono8.length)?5.5:0);
 			if (!performer) packetBuf.push(packet);		// If not performer add packet to buffer for echo cancelling 
 			packetsOut++;					// For stats and monitoring
