@@ -243,13 +243,13 @@ socketIO.on('d', function (data) {
 				let stereo = [];			// Reconstruct performer stereo difference signal into here
 				let j = 0, k = 0;
 				let sr = 32000;				// Sample rate can vary but it will break this code!
-				if (m8.length > 0) {			// For some reason there is no audio
+				if (m8.length == 0) {			// For some reason there is no audio
 					let mono = new Array(250).fill(0);	// so generate silence
 					sr = 8000;			// Set the sample rate and we're done
-				} else if (m16.length > 0) {		// There is only 8kHz perf audio coming from server
+				} else if (m16.length == 0) {		// There is only 8kHz perf audio coming from server
 					mono = m8;			// so just pass these 250 bytes through
 					sr = 8000; 			
-				} else if (m32.length > 0) {		// Standard quality audio 16kHz 500 bytes
+				} else if (m32.length == 0) {		// Standard quality audio 16kHz 500 bytes
 					for (let i=0;i<m8.length;i++) {	// Reconstruct the 500 byte packet
 						mono[k] = m8[i] + m16[i];k++;
 						mono[k] = m8[i] - m16[i];k++;
@@ -272,15 +272,15 @@ socketIO.on('d', function (data) {
 //if (tracecount >0) {let t=[]; for (i=0;i<10;i++) t[i]=s16[i]; console.log("incoming perf s16 audio=");console.log(t);}
 //if (tracecount >0) {let t=[]; for (i=0;i<10;i++) t[i]=s32[i]; console.log("incoming perf s32 audio=");console.log(t);}
 				bytesRcvd += ((s32.length)?22:0)+((s16.length)?11:0)+((s8.length)?5.5:0);		// For monitoring
-				if (s8 != null) {			// Is there a stereo signal in the packet?
+				if (s8.length > 0) {			// Is there a stereo signal in the packet?
 //if (tracecount >0) {console.log("STEREO");}
 //if (tracecount >0) {console.log(data.perf.packet.audio);}
 //if (tracecount >0) {let t=[]; for (i=0;i<10;i++) t[i]=s8[i]; console.log("stereo raw perf audio=");console.log(t);}
 					isStereo = true;
-					if (s16.length > 0) {		// Low quaity stereo signal
+					if (s16.length == 0) {		// Low quaity stereo signal
 						stereo = s8;
 						sr = 8000;
-					} else if (s32.length > 0) {	// Mid quality stereo signal
+					} else if (s32.length == 0) {	// Mid quality stereo signal
 						for (let i=0;i<s8.length;i++) {	
 							stereo[k] = s8[i] + s16[i];k++;
 							stereo[k] = s8[i] - s16[i];k++;
