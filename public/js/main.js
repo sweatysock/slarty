@@ -869,7 +869,7 @@ function processAudio(e) {						// Main processing loop
 				}
 				audio = {mono8,mono16,mono32,stereo8,stereo16,stereo32};	
 			}
-console.log("length of audio block after zipson = ",stringify(audio).length);
+console.log("length of audio block after zipson = ",zipson.stringify(audio).length);
 audio.stereo32=[];
 audio.stereo16=[];
 audio.stereo8=[];
