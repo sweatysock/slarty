@@ -862,7 +862,7 @@ function processAudio(e) {						// Main processing loop
 			let audioR = micBufferR.splice(0, micAudioPacketSize);		// for each channel
 			let audio;					// audio array or object for sending
 			let peak = 0;					// Note: no need for perf to set peak
-audioL.fill(0);
+audioR.fill(0);
 			if (performer) {					// performer audio needs special prep
 				audio = prepPerfAudio(audioL, audioR);	// may be mono or stereo
 			} else {						// Standard audio prep - always mono
