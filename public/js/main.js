@@ -139,7 +139,6 @@ socketIO.on('d', function (data) {
 			else venueSize = venueSizeCmd;			// otherwise the command sets the audience size = attenuation level
 			let a8 = [], a16 = [];				// Temp store for our audio for subtracting (echo cancelling)
 			let s = c0.seqNos[myChannel];			// If Channel 0's mix contains our audio this will be its sequence no.
-if (false)
 			if (s != null) {				// If we are performer or there are network issues our audio won't be in the mix
 				while (packetBuf.length) {		// Scan the packet buffer for the packet with this sequence
 					let p = packetBuf.shift();	// Remove the oldest packet from the buffer until s is found
@@ -151,7 +150,7 @@ if (false)
 				}
 			}
 			let v8 = c0.audio.mono8, v16 = c0.audio.mono16;	// Shortcuts to the channel 0 MSRE data blocks
-if (false)
+			bytesRcvd += ((v16.length)?11:0)+((v8.length)?5.5:0);		// For monitoring
 			if (v8.length > 0) {				// If there is venue audio it will need processing
 				let sr = 8000;				// Minimum sample rate of 8kHz
 				if (a8.length > 0)  			// Only subtract if our audio is not empty
@@ -185,7 +184,6 @@ if (false)
 		// Then for each live sample...
 		// Process audio adding samples to each channel using two pointers
 		// Stop feeding delayed audio to delayed channel at end and feed instead to delay cache
-if (false)
 		data.channels.forEach(c => {				// Process all audio channel packets including channel 0
 			let ch = c.channel;				// Channel number the packet belongs to
 			let chan = channels[ch];			// Local data structure for this channel
@@ -194,8 +192,9 @@ if (false)
 				chan.channel = ch;			// Keep channel number too. It helps speed lookups
 				if (chan.peak < c.peak)			// set the peak for this channel's level display
 					chan.peak = c.peak;		// even if muted
+				let a = c.audio;			// Get the audio from the packet
+				bytesRcvd += ((a.mono16.length)?11:0)+((a.monov8.length)?5.5:0);	// For monitoring
 				if (!chan.muted) {			// We skip a muted channel in the mix
-					let a = c.audio;		// Get the audio from the packet
 					let g = (chan.agc 		// Apply gain. If AGC use mix gain, else channel gain
 						? mixOut.gain : chan.gain);	
 					chan.gain = g;			// Channel gain level should reflect gain used here
@@ -210,7 +209,6 @@ if (false)
 				trace("Sequence jump Channel ",ch," jump ",(c.sequence - chan.seq));
 			chan.seq = c.sequence;				// Store seq number for next time a packet comes in
 		});
-if (false)
 		if (someAudio) {					// If there is group audio rebuild and upsample it
 			let k = 0;
 			for (let i=0;i<t8.length;i++) {			// Reconstruct group mix gL[] from the MSRE blocks
@@ -223,7 +221,6 @@ if (false)
 		let s = Math.round(PacketSize * soundcardSampleRate / SampleRate);	// The amount of audio expected per server packet
 		let mixL = new Array(s).fill(0), mixR = new Array(s).fill(0);
 		// TEMP COMBINE VENUE AND GROUP INTO MIX HERE
-if (false)
 		if (v.length > 0) {					// If there is venue audio
 			if (gL.length > 0) {				// and group audio, mix together
 				for (i=0; i<gL.length; i++) mixL = v[i] + gL[i];
@@ -232,17 +229,16 @@ if (false)
 		// 3. Process performer audio if there is any, and add it to the mix. This could be stereo audio
 		performer = (data.perf.chan == myChannel);		// Update performer flag just in case
 		liveShow = data.perf.live;				// Update the live show flag to update display
-//if (liveShow) {console.log("LIVE SHOW");console.log(data.perf);}
 		isStereo = false;					// flag to indicate if we have stereo audio
-if (false)
 		if ((data.perf.live) && (data.perf.packet != null)) {	// If there is a live performer with data, process it...
+			let m8 = data.perf.packet.audio.mono8;
+			let m16 = data.perf.packet.audio.mono16;
+			let m32 = data.perf.packet.audio.mono32;
+			bytesRcvd += ((m32.length)?22:0)+((m16.length)?11:0)+((m8.length)?5.5:0);		// For monitoring
 			if (!performer) {				// If we are not the performer 
 				let mono = [];				// Reconstruct performer mono audio into this array
 				let stereo = [];			// Reconstruct performer stereo difference signal into here
 				let j = 0, k = 0;
-				let m8 = data.perf.packet.audio.mono8;
-				let m16 = data.perf.packet.audio.mono16;
-				let m32 = data.perf.packet.audio.mono32;
 				let sr = 32000;				// Sample rate can vary but it will break this code!
 				if (m8 == null) {			// For some reason there is no audio
 					let mono = new Array(250).fill(0);	// so generate silence
@@ -268,6 +264,7 @@ if (false)
 				let s8 = data.perf.packet.audio.stereo8;// Now regenerate the stereo difference signal
 				let s16 = data.perf.packet.audio.stereo16;
 				let s32 = data.perf.packet.audio.stereo32;
+				bytesRcvd += ((s32.length)?22:0)+((s16.length)?11:0)+((s8.length)?5.5:0);		// For monitoring
 				if (s8 != null) {			// Is there a stereo signal in the packet?
 					isStereo = true;
 					if (s16 == null) {		// Low quaity stereo signal
@@ -313,7 +310,6 @@ if (false)
 		}
 		// 4. Adjust gain of final mix containing performer and group audio, and send to the speaker buffer
 		var obj;
-if (false)
 		if (isStereo) {
 			let peakL = maxValue(mixL);			// Set gain according to loudest channel
 			let peakR = maxValue(mixR);
@@ -325,18 +321,13 @@ if (false)
 				applyGain(mixL, obj.finalGain);		// and left follows
 			}
 		} else obj = applyAutoGain(mixL, mixOut);		// For mono just use left channel
-if (false)
 		mixOut.gain= obj.finalGain;				// Store gain for next loop
-if (false)
 		if (obj.peak > mixOut.peak) mixOut.peak = obj.peak;	// Note peak for display purposes
-if (false)
 		spkrBufferL.push(...mixL);				// put left mix in the left speaker buffer
-if (false)
 		if (isStereo)
 			spkrBufferR.push(...mixR);			// and the right in the right if stereo
 		else
 			spkrBufferR.push(...mixL);			// otherwise use the left
-if (false)
 		if (spkrBufferL.length > maxBuffSize) {			// Clip buffers if too full
 			spkrBufferL.splice(0, (spkrBufferL.length-maxBuffSize)); 	
 			spkrBufferR.splice(0, (spkrBufferR.length-maxBuffSize)); 	
@@ -875,6 +866,8 @@ function processAudio(e) {						// Main processing loop
 					}
 				}
 				audio = {mono8,mono16,mono32,stereo8,stereo16,stereo32};	
+				bytesSent += ((stereo32.length)?22:0)+((stereo16.length)?11:0)+((stereo8.length)?5.5:0)
+					+((mono32.length)?22:0)+((mono16.length)?11:0)+((mono8.length)?5.5:0);
 			}
 			let now = new Date().getTime();
 			let packet = {
@@ -890,7 +883,6 @@ function processAudio(e) {						// Main processing loop
 				group		: myGroup,		// Group name this user belings to
 				rtt		: rtt1,			// Send my rtt measurement for server monitoring
 			};
-//let bytesSent = JSON.stringify(packet.audio).length;
 			socketIO.emit("u",packet);
 			if (!performer) packetBuf.push(packet);		// If not performer add packet to buffer for echo cancelling 
 			packetsOut++;					// For stats and monitoring
@@ -1318,8 +1310,8 @@ var pauseTracing = true;						// Traces are off by default
 //
 var packetsIn = 0;
 var packetsOut = 0;
-var packetsInT = 0;
-var packetsOutT = 0;
+var bytesSent = 0;
+var bytesRcvd = 0;
 var overflows = 0;
 var shortages = 0;
 var packetSequence = 0;							// Tracing packet ordering
@@ -1328,11 +1320,9 @@ var sendShortages = 0;
 function printReport() {
 	enterState( UIState );						// Measure time spent updating UI even for reporting!
 	let netState = ((((rtt1-rtt5)/rtt5)>0.1) && (rtt5>400)) ? "UNSTABLE":"stable";
-	packetsInT += packetsIn;
-	packetsOutT += packetsOut;
 	if (!pauseTracing) {
 		trace("Idle=", idleState.total, " data in=", dataInState.total, " audio in/out=", audioInOutState.total," UI work=",UIState.total);
-		trace("Sent=",packetsOut," Heard=",packetsIn," overflows=",overflows," shortages=",shortages," RTT=",rtt.toFixed(1)," RTT1=",rtt1.toFixed(1)," RTT5=",rtt5.toFixed(1)," State=",netState," audience=",audience);
+		trace("Sent=",packetsOut," Heard=",packetsIn," overflows=",overflows," shortages=",shortages," RTT=",rtt.toFixed(1)," RTT1=",rtt1.toFixed(1)," RTT5=",rtt5.toFixed(1)," State=",netState," audience=",audience," bytes Out=",bytesSent," bytes In=",bytesRcvd);
 		trace(" micIn.peak:",micIn.peak.toFixed(1)," mixOut.peak:",mixOut.peak.toFixed(1)," speaker buff:",spkrBufferL.length," Max Buff:",maxBuffSize);
 //		trace("Levels of output: ",levelCategories);
 	}
@@ -1373,6 +1363,8 @@ function printReport() {
 	if (maxBuffSize > 6000) maxBuffSize -= 20;			// Steadily drop buffer back to size to compensate
 	packetsIn = 0;
 	packetsOut = 0;
+	bytesSent = 0;
+	bytesRcvd = 0;
 	overflows = 0;
 	shortages = 0;
 	rtt = 0;
