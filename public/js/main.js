@@ -871,6 +871,7 @@ function processAudio(e) {						// Main processing loop
 			}
 audio.stereo32=[];
 audio.stereo16=[];
+audio.mono32=[];
 			let sr = performer ? PerfSampleRate : SampleRate;
 			let now = new Date().getTime();
 			let packet = {
