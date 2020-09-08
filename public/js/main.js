@@ -268,7 +268,7 @@ if (tracecount >0) {let t=[]; for (i=0;i<10;i++) t[i]=mono[i]; console.log("reco
 				let s32 = data.perf.packet.audio.stereo32;
 				bytesRcvd += ((s32.length)?22:0)+((s16.length)?11:0)+((s8.length)?5.5:0);		// For monitoring
 				if (s8 != null) {			// Is there a stereo signal in the packet?
-if (tracecount >0) {console.log("STEREO");
+if (tracecount >0) {console.log("STEREO");}
 if (tracecount >0) {let t=[]; for (i=0;i<10;i++) t[i]=s8[i]; console.log("stereo raw perf audio=");console.log(t);}
 					isStereo = true;
 					if (s16 == null) {		// Low quaity stereo signal
@@ -303,7 +303,7 @@ if (tracecount >0) {let t=[]; for (i=0;i<10;i++) t[i]=s8[i]; console.log("stereo
 						}
 					}
 				} else { 				// Just mono performer audio
-if (tracecount >0) {console.log("MONO");
+if (tracecount >0) {console.log("MONO");}
 					if (mixL.length == 0) {		// If no venue or group audio just use perf audio directly
 						mixL = mono; 
 					} else {			// Have to build mono mix
