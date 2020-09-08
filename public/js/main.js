@@ -869,13 +869,13 @@ function processAudio(e) {						// Main processing loop
 				}
 				audio = {mono8,mono16,mono32,stereo8,stereo16,stereo32};	
 			}
-//if (tracecount >0) {
-//console.log("length of audio block with JSON.stringify = ",JSON.stringify(audio).length);
-//let zs=zipson.stringify(audio);
-//console.log("length of audio block after zipson = ",zs.length);
-//console.log(zs);
-//tracecount--;
-//}
+if (tracecount >0) {
+console.log("length of audio block with JSON.stringify = ",JSON.stringify(audio).length);
+let zs=zipson.stringify(audio);
+console.log("length of audio block after zipson = ",JSON.stringify(zs).length);
+console.log(zs);
+tracecount--;
+}
 //audio.stereo32=[];
 //audio.stereo16=[];
 //audio.stereo8=[];
