@@ -875,6 +875,7 @@ let zs=zipson.stringify(audio);
 console.log("length of audio block after zipson = ",JSON.stringify(zs).length);
 zs = zipson.parse(zs);
 console.log("length of audio block after parsing = ",JSON.stringify(zs).length);
+console.log(zs);
 tracecount--;
 }
 //audio.stereo32=[];
