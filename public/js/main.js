@@ -231,10 +231,9 @@ socketIO.on('d', function (data) {
 		liveShow = data.perf.live;				// Update the live show flag to update display
 		let isStereo = false;					// flag to indicate if we have stereo audio
 		if ((data.perf.live) && (data.perf.packet != null)) {	// If there is a live performer with data, process it...
-			let audio = zipson.parse(data.perf.packet.audio);
-			let m8 = audio.mono8;
-			let m16 = audio.mono16;
-			let m32 = audio.mono32;
+			let m8 = data.perf.packet.audio.mono8;
+			let m16 = data.perf.packet.audio.mono16;
+			let m32 = data.perf.packet.audio.mono32;
 			bytesRcvd += ((m32.length)?22:0)+((m16.length)?11:0)+((m8.length)?5.5:0);		// For monitoring
 {
 //			if (!performer) {				// If we are not the performer 
@@ -263,9 +262,9 @@ socketIO.on('d', function (data) {
 					mono[k] = d - m32[j]; j++; k++;
 				}					// Mono perf audio ready to upsample
 				mono = reSample(mono, sr, soundcardSampleRate, upCachePerfM);
-				let s8 = audio.stereo8;// Now regenerate the stereo difference signal
-				let s16 = audio.stereo16;
-				let s32 = audio.stereo32;
+				let s8 = data.perf.packet.audio.stereo8;// Now regenerate the stereo difference signal
+				let s16 = data.perf.packet.audio.stereo16;
+				let s32 = data.perf.packet.audio.stereo32;
 				bytesRcvd += ((s32.length)?22:0)+((s16.length)?11:0)+((s8.length)?5.5:0);		// For monitoring
 				if (s8.length > 0) {			// Is there a stereo signal in the packet?
 					isStereo = true;
@@ -870,15 +869,18 @@ function processAudio(e) {						// Main processing loop
 				}
 				audio = {mono8,mono16,mono32,stereo8,stereo16,stereo32};	
 			}
-if (tracecount >0) {
-console.log("length of audio block with JSON.stringify = ",JSON.stringify(audio).length/1024);
-}
+//if (tracecount >0) {
+//console.log("length of audio block with JSON.stringify = ",JSON.stringify(audio).length);
+//let zs=zipson.stringify(audio);
+//console.log("length of audio block after zipson = ",zs.length);
+//console.log(zs);
+//tracecount--;
+//}
 //audio.stereo32=[];
 //audio.stereo16=[];
 //audio.stereo8=[];
 //audio.mono32=[];
 //audio.mono16=[];
-			audio = zipson.stringify(audio);
 			let sr = performer ? PerfSampleRate : SampleRate;
 			let now = new Date().getTime();
 			let packet = {
@@ -895,15 +897,8 @@ console.log("length of audio block with JSON.stringify = ",JSON.stringify(audio)
 				rtt		: rtt1,			// Send my rtt measurement for server monitoring
 			};
 			socketIO.emit("u",packet);
-			let len=JSON.stringify(audio).length/1024;
-if (tracecount >0) {
-console.log("length of audio block with zipson.stringify = ",len);
-console.log(packet);
-tracecount--;
-}
-			bytesSent += len;
-//			bytesSent += ((audio.stereo32.length)?22:0)+((audio.stereo16.length)?11:0)+((audio.stereo8.length)?5.5:0)
-//				+((audio.mono32.length)?22:0)+((audio.mono16.length)?11:0)+((audio.mono8.length)?5.5:0);
+			bytesSent += ((audio.stereo32.length)?22:0)+((audio.stereo16.length)?11:0)+((audio.stereo8.length)?5.5:0)
+				+((audio.mono32.length)?22:0)+((audio.mono16.length)?11:0)+((audio.mono8.length)?5.5:0);
 			if (!performer) packetBuf.push(packet);		// If not performer add packet to buffer for echo cancelling 
 			packetsOut++;					// For stats and monitoring
 			packetSequence++;
