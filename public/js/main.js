@@ -872,8 +872,8 @@ function processAudio(e) {						// Main processing loop
 					}
 				}
 				audio = {mono8,mono16,mono32,stereo8,stereo16,stereo32};	
-				let a = zipson.stringify(audio);
-				audio = zipson.parse(a);
+				let a = zipson.stringify(audio);		// Compressing and uncompressing
+				audio = zipson.parse(a);			// Saves 65% of bandwidth on its own!
 			}
 //audio.stereo32=[];
 //audio.stereo16=[];
@@ -998,7 +998,7 @@ function prepPerfAudio( audioL, audioR ) {				// Performer audio is HQ and possi
 		stereo32[k] = d1; k++;
 		stereo32[k] = d2; k++;
 	}
-stereo16=[]; stereo32=[]; mono32=[];
+//stereo16=[]; stereo32=[]; mono32=[];
 	let audio = {mono8,mono16,mono32,stereo8,stereo16,stereo32};	// Return an object for the audio
 	return audio;
 }
