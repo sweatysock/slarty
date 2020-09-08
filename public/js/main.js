@@ -870,13 +870,9 @@ function processAudio(e) {						// Main processing loop
 				}
 				audio = {mono8,mono16,mono32,stereo8,stereo16,stereo32};	
 			}
-//if (tracecount >0) {
-//console.log("length of audio block with JSON.stringify = ",JSON.stringify(audio).length);
-//let zs=zipson.stringify(audio);
-//console.log("length of audio block after zipson = ",zs.length);
-//console.log(zs);
-//tracecount--;
-//}
+if (tracecount >0) {
+console.log("length of audio block with JSON.stringify = ",JSON.stringify(audio).length/1024);
+}
 //audio.stereo32=[];
 //audio.stereo16=[];
 //audio.stereo8=[];
@@ -899,7 +895,13 @@ function processAudio(e) {						// Main processing loop
 				rtt		: rtt1,			// Send my rtt measurement for server monitoring
 			};
 			socketIO.emit("u",packet);
-			bytesSent=JSON.stringify(audio).length;
+			let len=JSON.stringify(audio).length/1024;
+if (tracecount >0) {
+console.log("length of audio block with zipson.stringify = ",len);
+console.log(packet);
+tracecount--;
+}
+			bytesSent += len;
 //			bytesSent += ((audio.stereo32.length)?22:0)+((audio.stereo16.length)?11:0)+((audio.stereo8.length)?5.5:0)
 //				+((audio.mono32.length)?22:0)+((audio.mono16.length)?11:0)+((audio.mono8.length)?5.5:0);
 			if (!performer) packetBuf.push(packet);		// If not performer add packet to buffer for echo cancelling 
