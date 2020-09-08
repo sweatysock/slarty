@@ -230,6 +230,7 @@ socketIO.on('d', function (data) {
 		performer = (data.perf.chan == myChannel);		// Update performer flag just in case
 		liveShow = data.perf.live;				// Update the live show flag to update display
 		isStereo = false;					// flag to indicate if we have stereo audio
+console.log(data.perf.live,data.perf.packet);
 		if ((data.perf.live) && (data.perf.packet != null)) {	// If there is a live performer with data, process it...
 			let m8 = data.perf.packet.audio.mono8;
 			let m16 = data.perf.packet.audio.mono16;
