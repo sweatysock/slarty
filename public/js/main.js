@@ -274,7 +274,7 @@ if (tracecount >0) {let t=[]; for (i=0;i<10;i++) t[i]=s32[i]; console.log("incom
 				bytesRcvd += ((s32.length)?22:0)+((s16.length)?11:0)+((s8.length)?5.5:0);		// For monitoring
 				if (s8 != null) {			// Is there a stereo signal in the packet?
 if (tracecount >0) {console.log("STEREO");}
-if (tracecount >0) {console.log(perf.packet.audio);}
+if (tracecount >0) {console.log(data.perf.packet.audio);}
 //if (tracecount >0) {let t=[]; for (i=0;i<10;i++) t[i]=s8[i]; console.log("stereo raw perf audio=");console.log(t);}
 					isStereo = true;
 					if (s16 == null) {		// Low quaity stereo signal
