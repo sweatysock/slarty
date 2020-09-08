@@ -873,7 +873,8 @@ if (tracecount >0) {
 console.log("length of audio block with JSON.stringify = ",JSON.stringify(audio).length);
 let zs=zipson.stringify(audio);
 console.log("length of audio block after zipson = ",JSON.stringify(zs).length);
-console.log(zs);
+zs = zipson.parse(zs);
+console.log("length of audio block after parsing = ",JSON.stringify(zs).length);
 tracecount--;
 }
 //audio.stereo32=[];
