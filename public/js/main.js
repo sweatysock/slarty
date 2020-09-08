@@ -872,6 +872,8 @@ function processAudio(e) {						// Main processing loop
 					}
 				}
 				audio = {mono8,mono16,mono32,stereo8,stereo16,stereo32};	
+//				let a = zipson.stringify(audio);
+//				audio = zipson.parse(a);
 			}
 //audio.stereo32=[];
 //audio.stereo16=[];
