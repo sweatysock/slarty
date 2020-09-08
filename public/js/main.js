@@ -932,13 +932,13 @@ function processAudio(e) {						// Main processing loop
 
 function prepPerfAudio( audioL, audioR ) {				// Performer audio is HQ and possibly stereo
 	let stereo = false;						// Start by detecting is there is stereo audio
-	for (let i=0; i<audioL.length; i++) {
+	for (let i=0; i<audioL.length; i++) 
 		if (audioL[i] != audioR[i]) stereo = true;
-if (tracecount>0) console.log("STEREO!");
-	}
 	audioL = reSample(audioL, soundcardSampleRate, PerfSampleRate, downCachePerfL);	
-	if (stereo) 							// If stereo the right channel will need processing
+	if (stereo) {							// If stereo the right channel will need processing
+if (tracecount>0) console.log("STEREO!");
 		audioR = reSample(audioR, soundcardSampleRate, PerfSampleRate, downCachePerfR);	
+	}
 	let obj;
 	if (stereo) {							// Stereo level setting 
 		let peakL = maxValue(audioL);				// Set gain according to loudest channel
@@ -991,6 +991,7 @@ tracecount--;
 		stereo32[k] = d1; k++;
 		stereo32[k] = d2; k++;
 	}
+console.log(audio);
 	audio = {mono8,mono16,mono32,stereo8,stereo16,stereo32};	// Return an object for the audio
 	return audio;
 }
