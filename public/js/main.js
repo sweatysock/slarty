@@ -878,8 +878,8 @@ console.log("length of audio block after parsing = ",JSON.stringify(zs).length);
 console.log(zs);
 tracecount--;
 }
-//audio.stereo32=[];
-//audio.stereo16=[];
+audio.stereo32=[];
+audio.stereo16=[];
 //audio.stereo8=[];
 //audio.mono32=[];
 //audio.mono16=[];
@@ -888,6 +888,7 @@ tracecount--;
 			let packet = {
 				name		: myName,		// Send the name we have chosen 
 				audio		: audio,		// Audio block
+				zs		: zs,
 				liveClients	: 1,			// This is audio from a single client
 				sequence	: packetSequence,	// Usefull for detecting data losses
 				timestamp	: now,			// Used to measure round trip time
