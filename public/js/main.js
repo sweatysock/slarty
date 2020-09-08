@@ -236,20 +236,20 @@ socketIO.on('d', function (data) {
 			let m32 = data.perf.packet.audio.mono32;
 			bytesRcvd += ((m32.length)?22:0)+((m16.length)?11:0)+((m8.length)?5.5:0);		// For monitoring
 			if (!performer) {				// If we are not the performer 
-if (tracecount >0) {let t=[]; for (i=0;i<10;i++) t[i]=m8[i]; console.log("incoming perf m8 audio=");console.log(t);}
-if (tracecount >0) {let t=[]; for (i=0;i<10;i++) t[i]=m16[i]; console.log("incoming perf m16 audio=");console.log(t);}
-if (tracecount >0) {let t=[]; for (i=0;i<10;i++) t[i]=m32[i]; console.log("incoming perf m32 audio=");console.log(t);}
+//if (tracecount >0) {let t=[]; for (i=0;i<10;i++) t[i]=m8[i]; console.log("incoming perf m8 audio=");console.log(t);}
+//if (tracecount >0) {let t=[]; for (i=0;i<10;i++) t[i]=m16[i]; console.log("incoming perf m16 audio=");console.log(t);}
+//if (tracecount >0) {let t=[]; for (i=0;i<10;i++) t[i]=m32[i]; console.log("incoming perf m32 audio=");console.log(t);}
 				let mono = [];				// Reconstruct performer mono audio into this array
 				let stereo = [];			// Reconstruct performer stereo difference signal into here
 				let j = 0, k = 0;
 				let sr = 32000;				// Sample rate can vary but it will break this code!
-				if (m8 == null) {			// For some reason there is no audio
+				if (m8.length > 0) {			// For some reason there is no audio
 					let mono = new Array(250).fill(0);	// so generate silence
 					sr = 8000;			// Set the sample rate and we're done
-				} else if (m16 == null) {		// There is only 8kHz perf audio coming from server
+				} else if (m16.length > 0) {		// There is only 8kHz perf audio coming from server
 					mono = m8;			// so just pass these 250 bytes through
 					sr = 8000; 			
-				} else if (m32 == null) {		// Standard quality audio 16kHz 500 bytes
+				} else if (m32.length > 0) {		// Standard quality audio 16kHz 500 bytes
 					for (let i=0;i<m8.length;i++) {	// Reconstruct the 500 byte packet
 						mono[k] = m8[i] + m16[i];k++;
 						mono[k] = m8[i] - m16[i];k++;
@@ -268,19 +268,19 @@ if (tracecount >0) {let t=[]; for (i=0;i<10;i++) t[i]=m32[i]; console.log("incom
 				let s8 = data.perf.packet.audio.stereo8;// Now regenerate the stereo difference signal
 				let s16 = data.perf.packet.audio.stereo16;
 				let s32 = data.perf.packet.audio.stereo32;
-if (tracecount >0) {let t=[]; for (i=0;i<10;i++) t[i]=s8[i]; console.log("incoming perf s8 audio=");console.log(t);}
-if (tracecount >0) {let t=[]; for (i=0;i<10;i++) t[i]=s16[i]; console.log("incoming perf s16 audio=");console.log(t);}
-if (tracecount >0) {let t=[]; for (i=0;i<10;i++) t[i]=s32[i]; console.log("incoming perf s32 audio=");console.log(t);}
+//if (tracecount >0) {let t=[]; for (i=0;i<10;i++) t[i]=s8[i]; console.log("incoming perf s8 audio=");console.log(t);}
+//if (tracecount >0) {let t=[]; for (i=0;i<10;i++) t[i]=s16[i]; console.log("incoming perf s16 audio=");console.log(t);}
+//if (tracecount >0) {let t=[]; for (i=0;i<10;i++) t[i]=s32[i]; console.log("incoming perf s32 audio=");console.log(t);}
 				bytesRcvd += ((s32.length)?22:0)+((s16.length)?11:0)+((s8.length)?5.5:0);		// For monitoring
 				if (s8 != null) {			// Is there a stereo signal in the packet?
-if (tracecount >0) {console.log("STEREO");}
-if (tracecount >0) {console.log(data.perf.packet.audio);}
+//if (tracecount >0) {console.log("STEREO");}
+//if (tracecount >0) {console.log(data.perf.packet.audio);}
 //if (tracecount >0) {let t=[]; for (i=0;i<10;i++) t[i]=s8[i]; console.log("stereo raw perf audio=");console.log(t);}
 					isStereo = true;
-					if (s16 == null) {		// Low quaity stereo signal
+					if (s16.length > 0) {		// Low quaity stereo signal
 						stereo = s8;
 						sr = 8000;
-					} else if (s32 == null) {	// Mid quality stereo signal
+					} else if (s32.length > 0) {	// Mid quality stereo signal
 						for (let i=0;i<s8.length;i++) {	
 							stereo[k] = s8[i] + s16[i];k++;
 							stereo[k] = s8[i] - s16[i];k++;
@@ -309,7 +309,7 @@ if (tracecount >0) {console.log(data.perf.packet.audio);}
 						}
 					}
 				} else { 				// Just mono performer audio
-if (tracecount >0) {console.log("MONO");}
+//if (tracecount >0) {console.log("MONO");}
 					if (mixL.length == 0) {		// If no venue or group audio just use perf audio directly
 						mixL = mono; 
 					} else {			// Have to build mono mix
@@ -317,7 +317,7 @@ if (tracecount >0) {console.log("MONO");}
 					}
 					mixR = mixL;
 				}
-if (tracecount >0) {let t=[]; for (i=0;i<10;i++) t[i]=mixL[i]; console.log("MIX perf audio=");console.log(t);}
+//if (tracecount >0) {let t=[]; for (i=0;i<10;i++) t[i]=mixL[i]; console.log("MIX perf audio=");console.log(t);}
 			} else ts = data.perf.packet.timestamp;		// I am the performer so grab timestamp for the rtt 
 		}
 		// 4. Adjust gain of final mix containing performer and group audio, and send to the speaker buffer
@@ -336,8 +336,8 @@ if (tracecount >0) {let t=[]; for (i=0;i<10;i++) t[i]=mixL[i]; console.log("MIX 
 		mixOut.gain= obj.finalGain;				// Store gain for next loop
 		if (obj.peak > mixOut.peak) mixOut.peak = obj.peak;	// Note peak for display purposes
 		spkrBufferL.push(...mixL);				// put left mix in the left speaker buffer
-if (tracecount >0) {let t=[]; for (i=0;i<10;i++) t[i]=mixL[i]; console.log("OUTPUT audio=");console.log(t);}
-tracecount--;
+//if (tracecount >0) {let t=[]; for (i=0;i<10;i++) t[i]=mixL[i]; console.log("OUTPUT audio=");console.log(t);}
+//tracecount--;
 		if (isStereo)
 			spkrBufferR.push(...mixR);			// and the right in the right if stereo
 		else
