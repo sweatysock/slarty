@@ -177,6 +177,14 @@ if (false)
 		let t8 = new Array(PacketSize/2).fill(0);		// Temp arrays for MSRE blocks 
 		let t16 = new Array(PacketSize/2).fill(0);		// so that we only do one MSRE decode at the end
 		let someAudio = false;					// If no audio this saves us checking
+		// Group spacial positioning design:
+		// Get number of channels excluding venue
+		// Need to assign a location to a channel so need to know what channels there are first
+		// With each channel at start if no delay cache in channel create it and put N samples in it
+		// Put delay cache into L or R as appropriate
+		// Then for each live sample...
+		// Process audio adding samples to each channel using two pointers
+		// Stop feeding delayed audio to delayed channel at end and feed instead to delay cache
 if (false)
 		data.channels.forEach(c => {				// Process all audio channel packets including channel 0
 			let ch = c.channel;				// Channel number the packet belongs to
@@ -868,7 +876,6 @@ function processAudio(e) {						// Main processing loop
 				}
 				audio = {mono8,mono16,mono32,stereo8,stereo16,stereo32};	
 			}
-audio.mono16 = [];
 			let now = new Date().getTime();
 			let packet = {
 				name		: myName,		// Send the name we have chosen 
