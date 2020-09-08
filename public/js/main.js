@@ -887,7 +887,7 @@ tracecount--;
 			let now = new Date().getTime();
 			let packet = {
 				name		: myName,		// Send the name we have chosen 
-				audio		: zs,		// Audio block
+				audio		: audio,		// Audio block
 				liveClients	: 1,			// This is audio from a single client
 				sequence	: packetSequence,	// Usefull for detecting data losses
 				timestamp	: now,			// Used to measure round trip time
