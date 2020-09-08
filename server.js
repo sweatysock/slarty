@@ -23,6 +23,7 @@ for (let i=0; i < NumberOfChannels; i++) {				// Create all the channels pre-ini
 		mixTriggerLevel	: mixTriggerLevel,			// Minimum amount in buffer before forming part of mix
 		recording	: false,				// Flags that all audio is to be recorded and looped
 		playHead	: 0,					// Points to where we are reading from the buffer
+		timestamp	: 0,					// The latest timestamp received from the client
 	}
 }
 var perf = {								// Performer data structure
@@ -326,6 +327,7 @@ io.sockets.on('connection', function (socket) {
 		let channel = channels[packet.channel];			// This client sends their channel to save server effort
 		channel.name = packet.name;				// Update name of channel in case it has changed
 		channel.liveClients = packet.liveClients;		// Store the number of clients behind this channel
+		channel.timestamp = packet.timestamp;			// Store this Ãlatest timestamp for the client to measure rtt
 		if (channel.group != packet.group) {			// If the user has changed their group
 			socket.leave(channel.group);			// leave the group they were in
 			channel.group = packet.group;			// update group channel belongs to
@@ -489,8 +491,8 @@ function generateMix () {
 					}
 					seqNos[packet.channel] 		// Store the seq number of the packet just added to the mix
 						= packet.sequence;	// so that it can be subtracted downstream to remove echo
-					timestamps[packet.channel]	// Store the timestamp of the packet just added to the mix
-						= packet.timestamp;	// so that the sending client can measure its rtt
+					timestamps[packet.channel]	// Store the latest timestamp received from the client
+						= c.timestamp;		// so that the sending client can measure its rtt
 					if (c.group != "noGroup") {	// Store packet if part of a group. Used for client controlled mixing
 						groups[c.group].clientPackets.push( packet );	
 					}
