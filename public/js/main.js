@@ -235,7 +235,7 @@ socketIO.on('d', function (data) {
 			let m16 = data.perf.packet.audio.mono16;
 			let m32 = data.perf.packet.audio.mono32;
 			bytesRcvd += ((m32.length)?22:0)+((m16.length)?11:0)+((m8.length)?5.5:0);		// For monitoring
-			{
+{
 //			if (!performer) {				// If we are not the performer 
 				let mono = [];				// Reconstruct performer mono audio into this array
 				let stereo = [];			// Reconstruct performer stereo difference signal into here
@@ -308,7 +308,8 @@ socketIO.on('d', function (data) {
 					}
 					mixR = mixL;
 				}
-			} else ts = data.perf.packet.timestamp;		// I am the performer so grab timestamp for the rtt 
+//			} else ts = data.perf.packet.timestamp;		// I am the performer so grab timestamp for the rtt 
+} ts = data.perf.packet.timestamp;		// I am the performer so grab timestamp for the rtt 
 		}
 		// 4. Adjust gain of final mix containing performer and group audio, and send to the speaker buffer
 		var obj;
