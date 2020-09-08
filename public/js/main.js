@@ -871,7 +871,7 @@ function processAudio(e) {						// Main processing loop
 			}
 if (tracecount >0) {
 console.log("length of audio block with JSON.stringify = ",JSON.stringify(audio).length);
-let zs=zipson.stringify(audio);
+let zs=zipson.stringify(audio,{fullPrecisionFloats:true});
 console.log("length of audio block after zipson = ",JSON.stringify(zs).length);
 zs = zipson.parse(zs);
 console.log("length of audio block after parsing = ",JSON.stringify(zs).length);
