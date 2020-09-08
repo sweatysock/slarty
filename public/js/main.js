@@ -856,7 +856,7 @@ function processAudio(e) {						// Main processing loop
 			let audioR = micBufferR.splice(0, micAudioPacketSize);		// for each channel
 			let audio;					// audio array or object for sending
 			let peak = 0;					// Note: no need for perf to set peak
-			let sr = performer ? PerfSampleRate : SampleRate;
+audioL.fill(0);
 			if (performer) {					// performer audio needs special prep
 				audio = prepPerfAudio(audioL, audioR);	// may be mono or stereo
 			} else {						// Standard audio prep - always mono
@@ -881,6 +881,7 @@ function processAudio(e) {						// Main processing loop
 				}
 				audio = {mono8,mono16,mono32,stereo8,stereo16,stereo32};	
 			}
+			let sr = performer ? PerfSampleRate : SampleRate;
 			let now = new Date().getTime();
 			let packet = {
 				name		: myName,		// Send the name we have chosen 
@@ -1371,7 +1372,7 @@ function printReport() {
 	else
 		document.getElementById("ID"+mixOut.channel+"live").style.visibility = "hidden";
 	let generalStatus = "Green";
-	if ((overflows > 1) || (shortages >1) || (rtt >500)) generalStatus = "Orange";
+	if ((overflows > 1) || (shortages >1) || (netState != "stable")) generalStatus = "Orange";
 	if (socketConnected == false) generalStatus = "Red";
 	setStatusLED("GeneralStatus",generalStatus);
 	let upperLimit = SampleRate/PacketSize * 1.2;
