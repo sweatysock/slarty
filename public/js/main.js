@@ -961,7 +961,6 @@ if (tracecount>0) console.log("STEREO!");
 	} else LplusR = audioL;						// Just use the left signal if mono
 if (tracecount >0) {let t=[]; for (i=0;i<10;i++) t[i]=LplusR[i]; console.log("LplusR audio=");console.log(t);}
 if (tracecount >0) {let t=[]; for (i=0;i<10;i++) t[i]=LminusR[i]; console.log("LminusR audio=");console.log(t);}
-tracecount--;
 	let mono8 = [], mono16 = [], mono32 = [], stereo8 = [], stereo16 = [], stereo32 = [];
 	let j=0, k=0; 
 	for (let i=0; i<LplusR.length; i+=4) {				// Multiple sample-rate encoding:
@@ -991,7 +990,8 @@ tracecount--;
 		stereo32[k] = d1; k++;
 		stereo32[k] = d2; k++;
 	}
-console.log(audio);
+if (tracecount >0) console.log(audio);
+tracecount--;
 	audio = {mono8,mono16,mono32,stereo8,stereo16,stereo32};	// Return an object for the audio
 	return audio;
 }
