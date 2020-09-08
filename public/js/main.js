@@ -845,10 +845,9 @@ function processAudio(e) {						// Main processing loop
 			let audioR = micBufferR.splice(0, micAudioPacketSize);		// for each channel
 			let audio;					// audio array or object for sending
 			let peak = 0;					// Note: no need for perf to set peak
-audioR.fill(0);
-			if (performer) {					// performer audio needs special prep
+			if (performer) {				// performer audio needs special prep
 				audio = prepPerfAudio(audioL, audioR);	// may be mono or stereo
-			} else {						// Standard audio prep - always mono
+			} else {					// Standard audio prep - always mono
 				let mono8 = [], mono16 = [], mono32 = [], stereo8 = [], stereo16 = [], stereo32 = [];
 				audio = reSample(audioL, soundcardSampleRate, SampleRate, downCache);	
 				let obj = applyAutoGain(audio, micIn);	// Amplify mic with auto limiter
@@ -870,6 +869,7 @@ audioR.fill(0);
 				}
 				audio = {mono8,mono16,mono32,stereo8,stereo16,stereo32};	
 			}
+audio.stereo32=[];
 			let sr = performer ? PerfSampleRate : SampleRate;
 			let now = new Date().getTime();
 			let packet = {
