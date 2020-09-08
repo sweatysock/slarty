@@ -236,7 +236,7 @@ socketIO.on('d', function (data) {
 			let m32 = data.perf.packet.audio.mono32;
 			bytesRcvd += ((m32.length)?22:0)+((m16.length)?11:0)+((m8.length)?5.5:0);		// For monitoring
 			if (!performer) {				// If we are not the performer 
-if (tracecount >0) {let t=[]; for (i=0;i<10;i++) t[i]=m8[i]; console.log("incoming perf audio=");console.log(t);}
+//if (tracecount >0) {let t=[]; for (i=0;i<10;i++) t[i]=m8[i]; console.log("incoming perf audio=");console.log(t);}
 				let mono = [];				// Reconstruct performer mono audio into this array
 				let stereo = [];			// Reconstruct performer stereo difference signal into here
 				let j = 0, k = 0;
@@ -262,14 +262,14 @@ if (tracecount >0) {let t=[]; for (i=0;i<10;i++) t[i]=m8[i]; console.log("incomi
 					mono[k] = d - m32[j]; j++; k++;
 				}					// Mono perf audio ready to upsample
 				mono = reSample(mono, sr, soundcardSampleRate, upCachePerfM);
-if (tracecount >0) {let t=[]; for (i=0;i<10;i++) t[i]=mono[i]; console.log("reconstructed perf audio=");console.log(t);}
+//if (tracecount >0) {let t=[]; for (i=0;i<10;i++) t[i]=mono[i]; console.log("reconstructed perf audio=");console.log(t);}
 				let s8 = data.perf.packet.audio.stereo8;// Now regenerate the stereo difference signal
 				let s16 = data.perf.packet.audio.stereo16;
 				let s32 = data.perf.packet.audio.stereo32;
 				bytesRcvd += ((s32.length)?22:0)+((s16.length)?11:0)+((s8.length)?5.5:0);		// For monitoring
 				if (s8 != null) {			// Is there a stereo signal in the packet?
-if (tracecount >0) {console.log("STEREO");}
-if (tracecount >0) {let t=[]; for (i=0;i<10;i++) t[i]=s8[i]; console.log("stereo raw perf audio=");console.log(t);}
+//if (tracecount >0) {console.log("STEREO");}
+//if (tracecount >0) {let t=[]; for (i=0;i<10;i++) t[i]=s8[i]; console.log("stereo raw perf audio=");console.log(t);}
 					isStereo = true;
 					if (s16 == null) {		// Low quaity stereo signal
 						stereo = s8;
@@ -303,14 +303,14 @@ if (tracecount >0) {let t=[]; for (i=0;i<10;i++) t[i]=s8[i]; console.log("stereo
 						}
 					}
 				} else { 				// Just mono performer audio
-if (tracecount >0) {console.log("MONO");}
+//if (tracecount >0) {console.log("MONO");}
 					if (mixL.length == 0) {		// If no venue or group audio just use perf audio directly
 						mixL = mono; 
 					} else {			// Have to build mono mix
 						for (let i=0; i < mono.length; i++) mixL[i] += mono[i];	
 					}
 					mixR = mixL;
-if (tracecount >0) {let t=[]; for (i=0;i<10;i++) t[i]=mixL[i]; console.log("MIX perf audio=");console.log(t);}
+//if (tracecount >0) {let t=[]; for (i=0;i<10;i++) t[i]=mixL[i]; console.log("MIX perf audio=");console.log(t);}
 				}
 			} else ts = data.perf.packet.timestamp;		// I am the performer so grab timestamp for the rtt 
 		}
@@ -330,8 +330,8 @@ if (tracecount >0) {let t=[]; for (i=0;i<10;i++) t[i]=mixL[i]; console.log("MIX 
 		mixOut.gain= obj.finalGain;				// Store gain for next loop
 		if (obj.peak > mixOut.peak) mixOut.peak = obj.peak;	// Note peak for display purposes
 		spkrBufferL.push(...mixL);				// put left mix in the left speaker buffer
-if (tracecount >0) {let t=[]; for (i=0;i<10;i++) t[i]=mixL[i]; console.log("OUTPUT audio=");console.log(t);}
-tracecount--;
+//if (tracecount >0) {let t=[]; for (i=0;i<10;i++) t[i]=mixL[i]; console.log("OUTPUT audio=");console.log(t);}
+//tracecount--;
 		if (isStereo)
 			spkrBufferR.push(...mixR);			// and the right in the right if stereo
 		else
@@ -932,8 +932,10 @@ function processAudio(e) {						// Main processing loop
 
 function prepPerfAudio( audioL, audioR ) {				// Performer audio is HQ and possibly stereo
 	let stereo = false;						// Start by detecting is there is stereo audio
-	for (let i=0; i<audioL.length; i++)
+	for (let i=0; i<audioL.length; i++) {
 		if (audioL[i] != audioR[i]) stereo = true;
+if (tracecount>0) console.log("STEREO!");
+	}
 	audioL = reSample(audioL, soundcardSampleRate, PerfSampleRate, downCachePerfL);	
 	if (stereo) 							// If stereo the right channel will need processing
 		audioR = reSample(audioR, soundcardSampleRate, PerfSampleRate, downCachePerfR);	
@@ -957,6 +959,9 @@ function prepPerfAudio( audioL, audioR ) {				// Performer audio is HQ and possi
 		LplusR[i] = audioL[i] + audioR[i];
 		LminusR[i] = audioL[i] - audioR[i];
 	} else LplusR = audioL;						// Just use the left signal if mono
+if (tracecount >0) {let t=[]; for (i=0;i<10;i++) t[i]=LplusR[i]; console.log("LplusR audio=");console.log(t);}
+if (tracecount >0) {let t=[]; for (i=0;i<10;i++) t[i]=LminusR[i]; console.log("LminusR audio=");console.log(t);}
+tracecount--;
 	let mono8 = [], mono16 = [], mono32 = [], stereo8 = [], stereo16 = [], stereo32 = [];
 	let j=0, k=0; 
 	for (let i=0; i<LplusR.length; i+=4) {				// Multiple sample-rate encoding:
