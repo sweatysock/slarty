@@ -229,7 +229,7 @@ socketIO.on('d', function (data) {
 		// 3. Process performer audio if there is any, and add it to the mix. This could be stereo audio
 		performer = (data.perf.chan == myChannel);		// Update performer flag just in case
 		liveShow = data.perf.live;				// Update the live show flag to update display
-		isStereo = false;					// flag to indicate if we have stereo audio
+		let isStereo = false;					// flag to indicate if we have stereo audio
 		if ((data.perf.live) && (data.perf.packet != null)) {	// If there is a live performer with data, process it...
 			let m8 = data.perf.packet.audio.mono8;
 			let m16 = data.perf.packet.audio.mono16;
