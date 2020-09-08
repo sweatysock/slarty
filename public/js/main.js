@@ -870,7 +870,7 @@ if (tracecount >0) {let t=[]; for (i=0;i<10;i++) t[i]=audioL[i]; console.log("ra
 				}
 				audio = {mono8,mono16,mono32,stereo8,stereo16,stereo32};	
 			}
-if (tracecount >0) {let t=[]; for (i=0;i<10;i++) t[i]=audio.mono[i]; console.log("cooked audio=");console.log(t);}
+if (tracecount >0) {let t=[]; for (i=0;i<10;i++) t[i]=audio.mono8[i]; console.log("cooked audio=");console.log(t);}
 tracecount--;
 			let now = new Date().getTime();
 			let packet = {
