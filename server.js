@@ -440,8 +440,10 @@ function enoughAudio() {						// Is there enough audio to build a mix before tim
 function generateMix () { 
 	// 1. Get perf packet if performing and enough perf audio buffered to start streaming
 	let p = {live:perf.live, chan:perf.chan, packet:null};		// Send downstream by default a perf object with no packet
-	if ((perf.streaming) && (perf.packets.length > 0))		// Pull a performer packet from its queue if any
+	if ((perf.streaming) && (perf.packets.length > 0)) {		// Pull a performer packet from its queue if any
 		p.packet = perf.packets.shift();			// add to copy of perf to replace the null packet
+		p.packet.timestamp = channels[perf.chan].timestamp;	// Update the timestamp to the latest one recieved from the perf client
+	}
 	// 2. Process all channels building group info. objects and generating a mix of all channels except 0 (upstream venue track) to send upstream
 	let mono8 = new Array(PacketSize/2).fill(0);			// Mix of this server's audio to send upstream and also to add to venue track
 	let mono16 = new Array(PacketSize/2).fill(0);			// It is in MSRE so there are two half-sized arrays to handle
