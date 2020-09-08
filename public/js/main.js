@@ -871,7 +871,7 @@ function processAudio(e) {						// Main processing loop
 			}
 if (tracecount >0) {
 console.log("length of audio block with JSON.stringify = ",JSON.stringify(audio).length);
-let zs=zipson.stringify(audio,{fullPrecisionFloats:true});
+let zs=zipson.stringify(audio);
 console.log("length of audio block after zipson = ",JSON.stringify(zs).length);
 zs = zipson.parse(zs);
 console.log("length of audio block after parsing = ",JSON.stringify(zs).length);
@@ -887,7 +887,7 @@ tracecount--;
 			let now = new Date().getTime();
 			let packet = {
 				name		: myName,		// Send the name we have chosen 
-				audio		: audio,		// Audio block
+				audio		: zs,		// Audio block
 				liveClients	: 1,			// This is audio from a single client
 				sequence	: packetSequence,	// Usefull for detecting data losses
 				timestamp	: now,			// Used to measure round trip time
