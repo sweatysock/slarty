@@ -1192,7 +1192,7 @@ function runEchoTest(audio) {						// Test audio system in a series of tests
 			}
 			let max = 0;
 			let edge = 0;
-			for (j=0; j<conv.length; j++)			// Find max = edge of pulse
+			for (let j=0; j<conv.length; j++)			// Find max = edge of pulse
 				if (conv[j] > max) {
 					max = conv[j];
 					edge = j;
