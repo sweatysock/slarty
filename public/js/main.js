@@ -843,9 +843,12 @@ function processAudio(e) {						// Main processing loop
 			let audio;					// audio array or object for sending
 			let peak = 0;					// Note: no need for perf to set peak
 			let sr = performer ? PerfSampleRate : SampleRate;
-			if (performer)					// performer audio needs special prep
+			if (performer) {					// performer audio needs special prep
+if (tracecount >0) {let t=[]; for (i=0;i<10;i++) t[i]=audioL[i]; console.log("raw perf audio=");console.log(t);}
 				audio = prepPerfAudio(audioL, audioR);	// may be mono or stereo
-			else {						// Standard audio prep - always mono
+if (tracecount >0) {let t=[]; for (i=0;i<10;i++) t[i]=audio.mono8[i]; console.log("cooked perf audio=");console.log(t);}
+tracecount--;
+			} else {						// Standard audio prep - always mono
 				let mono8 = [], mono16 = [], mono32 = [], stereo8 = [], stereo16 = [], stereo32 = [];
 				audio = reSample(audioL, soundcardSampleRate, SampleRate, downCache);	
 				let obj = applyAutoGain(audio, micIn);	// Amplify mic with auto limiter
