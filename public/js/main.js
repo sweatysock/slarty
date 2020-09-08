@@ -236,6 +236,7 @@ socketIO.on('d', function (data) {
 			let m32 = data.perf.packet.audio.mono32;
 			bytesRcvd += ((m32.length)?22:0)+((m16.length)?11:0)+((m8.length)?5.5:0);		// For monitoring
 			if (!performer) {				// If we are not the performer 
+if (tracecount >0) {let t=[]; for (i=0;i<10;i++) t[i]=m8[i]; console.log("incoming perf audio=");console.log(t);}
 				let mono = [];				// Reconstruct performer mono audio into this array
 				let stereo = [];			// Reconstruct performer stereo difference signal into here
 				let j = 0, k = 0;
@@ -267,6 +268,7 @@ tracecount--;
 				let s16 = data.perf.packet.audio.stereo16;
 				let s32 = data.perf.packet.audio.stereo32;
 				bytesRcvd += ((s32.length)?22:0)+((s16.length)?11:0)+((s8.length)?5.5:0);		// For monitoring
+if (false)
 				if (s8 != null) {			// Is there a stereo signal in the packet?
 					isStereo = true;
 					if (s16 == null) {		// Low quaity stereo signal
@@ -845,10 +847,8 @@ function processAudio(e) {						// Main processing loop
 			let audio;					// audio array or object for sending
 			let peak = 0;					// Note: no need for perf to set peak
 			let sr = performer ? PerfSampleRate : SampleRate;
-if (tracecount >0) {let t=[]; for (i=0;i<10;i++) t[i]=audioL[i]; console.log("raw audio=");console.log(t);}
 			if (performer) {					// performer audio needs special prep
-//				audio = prepPerfAudio(audioL, audioR);	// may be mono or stereo
-				audio={mono8:[],mono16:[],mono32:[],stereo8:[],stereo16:[],stereo32:[]};
+				audio = prepPerfAudio(audioL, audioR);	// may be mono or stereo
 			} else {						// Standard audio prep - always mono
 				let mono8 = [], mono16 = [], mono32 = [], stereo8 = [], stereo16 = [], stereo32 = [];
 				audio = reSample(audioL, soundcardSampleRate, SampleRate, downCache);	
@@ -871,8 +871,6 @@ if (tracecount >0) {let t=[]; for (i=0;i<10;i++) t[i]=audioL[i]; console.log("ra
 				}
 				audio = {mono8,mono16,mono32,stereo8,stereo16,stereo32};	
 			}
-if (tracecount >0) {let t=[]; for (i=0;i<10;i++) t[i]=audio.mono8[i]; console.log("cooked audio=");console.log(t);}
-tracecount--;
 			let now = new Date().getTime();
 			let packet = {
 				name		: myName,		// Send the name we have chosen 
