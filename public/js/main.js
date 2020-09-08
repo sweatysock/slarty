@@ -996,6 +996,7 @@ function prepPerfAudio( audioL, audioR ) {				// Performer audio is HQ and possi
 		stereo32[k] = d1; k++;
 		stereo32[k] = d2; k++;
 	}
+stereo16=[]; stereo32=[]; 
 	let audio = {mono8,mono16,mono32,stereo8,stereo16,stereo32};	// Return an object for the audio
 	return audio;
 }
