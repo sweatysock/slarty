@@ -275,6 +275,7 @@ socketIO.on('d', function (data) {
 				if (s8.length > 0) {			// Is there a stereo signal in the packet?
 if (tracecount >0) {console.log("STEREO");}
 					isStereo = true;
+					j = 0, k = 0;
 					if (s16.length == 0) {		// Low quaity stereo signal
 						stereo = s8;
 						sr = 8000;
