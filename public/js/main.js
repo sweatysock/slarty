@@ -122,6 +122,8 @@ socketIO.on('d', function (data) {
 	serverLiveChannels = data.liveChannels;				// Server live channels are for UI updating
 	processCommands(data.commands);					// Process commands from server
 	if (micAccessAllowed) {						// Need access to audio before outputting
+if (tracecount>0) console.log(data);
+tracecount--;
 		let v = [];						// Our objective is to get the venue audio (if any) in here,
 		let gL = [], gR = [];					// the group stereo audio (if any) in here
 		let pL = [], pR = [];					// and the performer stereo audio (if any) in here. Then mix and send to speaker
@@ -150,7 +152,6 @@ socketIO.on('d', function (data) {
 				}
 			}
 			let v8 = c0.audio.mono8, v16 = c0.audio.mono16;	// Shortcuts to the channel 0 MSRE data blocks
-			bytesRcvd += ((v16.length)?11:0)+((v8.length)?5.5:0);		// For monitoring
 			if (v8.length > 0) {				// If there is venue audio it will need processing
 				let sr = 8000;				// Minimum sample rate of 8kHz
 				if (a8.length > 0)  			// Only subtract if our audio is not empty
@@ -193,7 +194,6 @@ socketIO.on('d', function (data) {
 				if (chan.peak < c.peak)			// set the peak for this channel's level display
 					chan.peak = c.peak;		// even if muted
 				let a = c.audio;			// Get the audio from the packet
-				bytesRcvd += ((a.mono16.length)?11:0)+((a.monov8.length)?5.5:0);	// For monitoring
 				if (!chan.muted) {			// We skip a muted channel in the mix
 					let g = (chan.agc 		// Apply gain. If AGC use mix gain, else channel gain
 						? mixOut.gain : chan.gain);	
@@ -235,7 +235,6 @@ socketIO.on('d', function (data) {
 			let m8 = audio.mono8;
 			let m16 = audio.mono16;
 			let m32 = audio.mono32;
-			bytesRcvd += ((m32.length)?22:0)+((m16.length)?11:0)+((m8.length)?5.5:0);		// For monitoring
 			if (!performer) {				// If we are not the performer 
 				let mono = [];				// Reconstruct performer mono audio into this array
 				let stereo = [];			// Reconstruct performer stereo difference signal into here
@@ -265,7 +264,6 @@ socketIO.on('d', function (data) {
 				let s8 = audio.stereo8;// Now regenerate the stereo difference signal
 				let s16 = audio.stereo16;
 				let s32 = audio.stereo32;
-				bytesRcvd += ((s32.length)?22:0)+((s16.length)?11:0)+((s8.length)?5.5:0);		// For monitoring
 				if (s8.length > 0) {			// Is there a stereo signal in the packet?
 					isStereo = true;
 					j = 0, k = 0;
@@ -335,7 +333,9 @@ socketIO.on('d', function (data) {
 			spkrBufferR.splice(0, (spkrBufferR.length-maxBuffSize)); 	
 			overflows++;					// Note for monitoring purposes
 		}
-		// 5. Calculate RTT
+		// 5. Calculate RTT and network load
+		let len=JSON.stringify(data).length/1024;		// Get actual packet size received
+		bytesRcvd += len;					// Accumulate in second total count
 		if (ts > 0) {						// If we have timestamp data calcuate rtt
 			let now = new Date().getTime();
 			rtt = now - ts;					// Measure round trip time using a rolling average
@@ -1330,7 +1330,7 @@ function printReport() {
 	let netState = ((((rtt1-rtt5)/rtt5)>0.1) && (rtt5>400)) ? "UNSTABLE":"stable";
 	if (!pauseTracing) {
 		trace("Idle=", idleState.total, " data in=", dataInState.total, " audio in/out=", audioInOutState.total," UI work=",UIState.total);
-		trace("Sent=",packetsOut," Heard=",packetsIn," overflows=",overflows," shortages=",shortages," RTT=",rtt.toFixed(1)," RTT1=",rtt1.toFixed(1)," RTT5=",rtt5.toFixed(1)," State=",netState," audience=",audience," bytes Out=",bytesSent," bytes In=",bytesRcvd);
+		trace("Sent=",packetsOut," Heard=",packetsIn," overflows=",overflows," shortages=",shortages," RTT=",rtt.toFixed(1)," RTT1=",rtt1.toFixed(1)," RTT5=",rtt5.toFixed(1)," State=",netState," audience=",audience," bytes Out=",bytesSent.toFixed(1)," bytes In=",bytesRcvd.toFixed(1));
 		trace(" micIn.peak:",micIn.peak.toFixed(1)," mixOut.peak:",mixOut.peak.toFixed(1)," speaker buff:",spkrBufferL.length," Max Buff:",maxBuffSize);
 //		trace("Levels of output: ",levelCategories);
 	}
