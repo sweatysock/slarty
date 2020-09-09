@@ -236,8 +236,7 @@ socketIO.on('d', function (data) {
 			let m16 = audio.mono16;
 			let m32 = audio.mono32;
 			bytesRcvd += ((m32.length)?22:0)+((m16.length)?11:0)+((m8.length)?5.5:0);		// For monitoring
-{
-//			if (!performer) {				// If we are not the performer 
+			if (!performer) {				// If we are not the performer 
 				let mono = [];				// Reconstruct performer mono audio into this array
 				let stereo = [];			// Reconstruct performer stereo difference signal into here
 				let j = 0, k = 0;
@@ -309,8 +308,7 @@ socketIO.on('d', function (data) {
 					}
 					mixR = mixL;
 				}
-//			} else ts = data.perf.packet.timestamp;		// I am the performer so grab timestamp for the rtt 
-} ts = data.perf.packet.timestamp;		// I am the performer so grab timestamp for the rtt 
+			} else ts = data.perf.packet.timestamp;		// I am the performer so grab timestamp for the rtt 
 		}
 		// 4. Adjust gain of final mix containing performer and group audio, and send to the speaker buffer
 		var obj;
@@ -844,13 +842,12 @@ function processAudio(e) {						// Main processing loop
 		if (micBufferL.length > micAudioPacketSize) {		// If enough audio in buffer 
 			let audioL = micBufferL.splice(0, micAudioPacketSize);		// Get a packet of audio
 			let audioR = micBufferR.splice(0, micAudioPacketSize);		// for each channel
-			let audio = {mono8:[],mono16:[]};		// audio array or object for sending
-			let perf = {};					// special audio block for performers
+			let audio = {mono8:[],mono16:[]};		// default empty audio and perf objects to send
+			let perf = zipson.stringify({mono8:[],mono16:[],mono32:[],stereo8:[],stereo16:[],stereo32:[]});
 			let peak = 0;					// Note: no need for perf to set peak
-			if (performer) {				// performer audio needs special prep
-				audio = prepPerfAudio(audioL, audioR);	// may be mono or stereo
-				perf = zipson.stringify(audio);
-				audio = {mono8:[],mono16:[],mono32:[],stereo8:[],stereo16:[],stereo32:[]};
+			if ((performer) && (!micIn.muted)) {		// If we are the performer and not muted
+				let a = prepPerfAudio(audioL, audioR);	// prepare our audio for HQ stereo 
+				perf = zipson.stringify(a);		// and compress audio fully
 			} else {					// Standard audio prep - always mono
 				let mono8 = [], mono16 = [], mono32 = [], stereo8 = [], stereo16 = [], stereo32 = [];
 				audio = reSample(audioL, soundcardSampleRate, SampleRate, downCache);	
@@ -875,11 +872,6 @@ function processAudio(e) {						// Main processing loop
 				let a = zipson.stringify(audio);		// Compressing and uncompressing
 				audio = zipson.parse(a);			// Saves 65% of bandwidth on its own!
 			}
-//audio.stereo32=[];
-//audio.stereo16=[];
-//audio.stereo8=[];
-//audio.mono32=[];
-//audio.mono16=[];
 			let sr = performer ? PerfSampleRate : SampleRate;
 			let now = new Date().getTime();
 			let packet = {
@@ -899,10 +891,6 @@ function processAudio(e) {						// Main processing loop
 			socketIO.emit("u",packet);
 			let len=JSON.stringify(packet).length/1024;
 			bytesSent += len;
-if (tracecount>0) console.log(packet);
-tracecount--;
-//			bytesSent += ((audio.stereo32.length)?22:0)+((audio.stereo16.length)?11:0)+((audio.stereo8.length)?5.5:0)
-//				+((audio.mono32.length)?22:0)+((audio.mono16.length)?11:0)+((audio.mono8.length)?5.5:0);
 			if (!performer) packetBuf.push(packet);		// If not performer add packet to buffer for echo cancelling 
 			packetsOut++;					// For stats and monitoring
 			packetSequence++;
@@ -998,7 +986,6 @@ function prepPerfAudio( audioL, audioR ) {				// Performer audio is HQ and possi
 		stereo32[k] = d1; k++;
 		stereo32[k] = d2; k++;
 	}
-//stereo16=[]; stereo32=[]; mono32=[];
 	let audio = {mono8,mono16,mono32,stereo8,stereo16,stereo32};	// Return an object for the audio
 	return audio;
 }
