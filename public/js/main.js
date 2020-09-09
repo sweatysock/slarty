@@ -375,7 +375,7 @@ function displayAnimation() { 						// called 100mS to animate audio displays
 	if (micAccessAllowed) {						// Once we have audio we can animate audio UI
 if (tracecount>0) console.log("animating display");
 if (tracecount>0) console.log(mixOut);
-if (tracecount>0) console.log(micOut);
+if (tracecount>0) console.log(micIn);
 		mixOut.peak = mixOut.peak * rate; 			// drop mix peak level a little for smooth drops
 		setLevelDisplay( mixOut );				// Update LED display for mix.peak
 		setSliderPos( mixOut );					// Update slider position for mix gain
