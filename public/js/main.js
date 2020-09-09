@@ -373,6 +373,9 @@ function displayAnimation() { 						// called 100mS to animate audio displays
 	enterState( UIState );						// Measure time spent updating UI
 	const rate = 0.8;						// Speed of peak drop in LED level display
 	if (micAccessAllowed) {						// Once we have audio we can animate audio UI
+if (tracecount>0) console.log("animating display");
+if (tracecount>0) console.log(mixOut);
+if (tracecount>0) console.log(micOut);
 		mixOut.peak = mixOut.peak * rate; 			// drop mix peak level a little for smooth drops
 		setLevelDisplay( mixOut );				// Update LED display for mix.peak
 		setSliderPos( mixOut );					// Update slider position for mix gain
@@ -391,6 +394,8 @@ function displayAnimation() { 						// called 100mS to animate audio displays
 					c.peak = c.peak * rate;		// drop smoothly the max level for the channel
 					setLevelDisplay( c );		// update LED display for channel peak
 					setSliderPos( c );		// update slider position for channel gain
+if (tracecount>0) console.log("updated channel",ch);
+if (tracecount>0) console.log(c);
 				}
 			}
 		}
@@ -398,6 +403,7 @@ function displayAnimation() { 						// called 100mS to animate audio displays
 	if (displayRefresh <= 1000)					// If CPU really struggling stop animating UI completely
 		setTimeout(displayAnimation, displayRefresh);		// Call animated display again. 
 	enterState( idleState );					// Back to Idling
+tracecount--;
 }
 
 function toggleSettings() {						// Hide/show settings = mixing desk
