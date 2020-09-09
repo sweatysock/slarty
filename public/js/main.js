@@ -119,11 +119,11 @@ socketIO.on('perf', function (data) {					// Performer status notification
 socketIO.on('d', function (data) { 
 	enterState( dataInState );					// This is one of our key tasks
 	packetsIn++;							// For monitoring and statistics
+	let len=JSON.stringify(data).length/1024;			// Get actual packet size received before any changes
+	bytesRcvd += len;						// Accumulate in incoming data total count
 	serverLiveChannels = data.liveChannels;				// Server live channels are for UI updating
 	processCommands(data.commands);					// Process commands from server
 	if (micAccessAllowed) {						// Need access to audio before outputting
-if (tracecount>0) console.log(data);
-tracecount--;
 		let v = [];						// Our objective is to get the venue audio (if any) in here,
 		let gL = [], gR = [];					// the group stereo audio (if any) in here
 		let pL = [], pR = [];					// and the performer stereo audio (if any) in here. Then mix and send to speaker
@@ -333,9 +333,7 @@ tracecount--;
 			spkrBufferR.splice(0, (spkrBufferR.length-maxBuffSize)); 	
 			overflows++;					// Note for monitoring purposes
 		}
-		// 5. Calculate RTT and network load
-		let len=JSON.stringify(data).length/1024;		// Get actual packet size received
-		bytesRcvd += len;					// Accumulate in second total count
+		// 5. Calculate RTT 
 		if (ts > 0) {						// If we have timestamp data calcuate rtt
 			let now = new Date().getTime();
 			rtt = now - ts;					// Measure round trip time using a rolling average
