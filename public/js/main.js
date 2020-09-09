@@ -135,6 +135,7 @@ tracecount--;
 			channels[0].name = c0.name;			// TEMP FIX
 			channels[0].channel = 0;			// TEMP FIX
 			channels[0].gain = (channels[0].agc ? mixOut.gain : channels[0].gain);		// TEMP FIX
+console.log(channels[0].name,channels[0].channel,channels[0].gain);
 			ts = c0.timestamps[myChannel];			// Channel 0 also contains timestamps that allow rtt measurement
 			audience = c0.liveClients;			// The server sends us the current audience count for level setting
 			if (venueSizeCmd == 0) venueSize = audience;	// If there is no command setting the venue size we use the audience size
@@ -845,9 +846,11 @@ function processAudio(e) {						// Main processing loop
 			let audio = {mono8:[],mono16:[]};		// default empty audio and perf objects to send
 			let perf = zipson.stringify({mono8:[],mono16:[],mono32:[],stereo8:[],stereo16:[],stereo32:[]});
 			let peak = 0;					// Note: no need for perf to set peak
-			if ((performer) && (!micIn.muted)) {		// If we are the performer and not muted
-				let a = prepPerfAudio(audioL, audioR);	// prepare our audio for HQ stereo 
-				perf = zipson.stringify(a);		// and compress audio fully
+			if (performer) {				// If we are the performer 
+				if (!micIn.muted) {			// & not muted prepare our audio for HQ stereo 
+					let a = prepPerfAudio(audioL, audioR);	
+					perf = zipson.stringify(a);	// and compress audio fully
+				}
 			} else {					// Standard audio prep - always mono
 				let mono8 = [], mono16 = [], mono32 = [], stereo8 = [], stereo16 = [], stereo32 = [];
 				audio = reSample(audioL, soundcardSampleRate, SampleRate, downCache);	
