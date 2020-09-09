@@ -320,7 +320,7 @@ io.sockets.on('connection', function (socket) {
 
 	socket.on('u', function (packet) { 				// Audio coming up from one of our downstream clients
 		enterState( downstreamState );
-		if (packetBad(packet)) {
+		if (clientPacketBad(packet)) {
 			console.log("Bad client packet");
 			return;
 		}
@@ -354,7 +354,7 @@ io.sockets.on('connection', function (socket) {
 				overflows++;				// and also globally for monitoring
 			}
 			if (channel.packets.length >= channel.mixTriggerLevel) {
-				channel.newBuf = false;		// Buffer has filled enough. Channel can enter the mix
+				channel.newBuf = false;			// Buffer has filled enough. Channel can enter the mix
 			}
 		}
 		packetsIn++;
@@ -366,8 +366,15 @@ io.sockets.on('connection', function (socket) {
 	});
 });
 
-function packetBad(p) {							// Perform basic checks on client packet to stop some hacks
+function clientPacketBad(p) {						// Perform basic checks on packets to stop basic hacks
 	if (p.audio.mono8 === undefined) return true;
+	if (p.audio.mono16 === undefined) return true;
+	if (p.audio.name === undefined) return true;
+	if (p.audio.channel === undefined) return true;
+	if (p.audio.liveClients === undefined) return true;
+	if (p.audio.group === undefined) return true;
+	if (p.audio.mono16 === undefined) return true;
+	if (p.audio.mono16 === undefined) return true;
 	if (p.audio.mono16 === undefined) return true;
 	return false;
 }
