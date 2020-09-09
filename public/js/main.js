@@ -287,8 +287,8 @@ socketIO.on('d', function (data) {
 					stereo = reSample(stereo, sr, soundcardSampleRate, upCachePerfS);
 					let left = [], right = [];	// Time to reconstruct the original left and right audio
 					for (let i=0; i<mono.length; i++) {	// Note. Doing this after upsampling because mono
-						left[i] = mono[i] + stereo[i];	// and stereo may not have same sample rate
-						right[i] = mono[i] - stereo[i];
+						left[i] = (mono[i] + stereo[i])/2;	// and stereo may not have same sample rate
+						right[i] = (mono[i] - stereo[i])/2;	// Divide by 2 because output is double input
 					}
 					if (mixL.length == 0) {		// If no venue or group audio just use perf audio directly
 						mixL = left; mixR = right;
@@ -555,6 +555,7 @@ function convertIdToObj(id) {						// Translate HTML DOM IDs to JS data objects
 
 function recButton(e) {
 trace2("rec");
+return;
 	let id = event.target.parentNode.id;
 	let b = document.getElementById(id+"talkOn");
 	b.style.visibility = "hidden";
