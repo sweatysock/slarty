@@ -1079,9 +1079,9 @@ function handleAudio(stream) {						// We have obtained media access
 	splitter.connect(combiner,0,0);					// Recombine L & R
 	splitter.connect(combiner,1,1);
 	combiner.connect(context.destination);				// And send this stereo signal to the output
-	splitter.connect(reverb,2);					// Send centre venue to the stereo reverb
+//	splitter.connect(reverb,2);					// Send centre venue to the stereo reverb
 //	splitter.connect(combiDelayL,2,0);				// Send venue to left delay combiner
-//	splitter.connect(combiDelayR,2,1);				// Send venue to right delay combiner
+	splitter.connect(combiDelayR,2,1);				// Send venue to right delay combiner
 	combiDelayL.connect(delayL);
 	combiDelayR.connect(delayR);
 	delayL.connect(reverb);
