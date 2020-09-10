@@ -1061,7 +1061,7 @@ function handleAudio(stream) {						// We have obtained media access
 	micFilter1.connect(micFilter2);					// then to the highpass filter
 	micFilter2.connect(node);					// then to the node where all the work is done
 	node.connect(context.destination);
-	node.connect(reverb,2,0);
+	node.connect(context.destination,2,0);
 	reverb.connect(context.destination);
 //	combinerL.connect(context.destination,0,0);
 //	combinerR.connect(context.destination,0,0);
