@@ -1063,7 +1063,7 @@ function handleAudio(stream) {						// We have obtained media access
 	node.connect(combinerL);
 	node.connect(combinerR);
 	reverb.connect(context.destination);
-	combinerL.connect(context.destination,0,0);
+	combinerL.connect(context.destination,0,1);
 	combinerR.connect(context.destination,0,1);
 
 	startEchoTest();
