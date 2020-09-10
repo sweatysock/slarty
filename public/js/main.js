@@ -1095,17 +1095,17 @@ function handleAudio(stream) {						// We have obtained media access
 	splitter.connect(combiDelayL,2,1);				// Send venue to left delay combiner
 	delayL.connect(combiDelayL,0,0);				// Send venue to left delay combiner
 	combiDelayL.connect(delay1);
-	delay1.connect(context.destination);
+	delay1.connect(splitterL);
 	splitterL.connect(reverbL,0,0);
-	splitterL.connect(reverbR,1,0);
+	splitterL.connect(reverbR,1,1);
 
 	splitter.connect(delayR,2,0);				// Send venue to left delay combiner
 	splitter.connect(combiDelayR,2,0);				// Send venue to left delay combiner
 	delayR.connect(combiDelayR,0,1);				// Send venue to left delay combiner
 	combiDelayR.connect(delay2);
-	delay2.connect(context.destination);
+	delay2.connect(splitterR);
 	splitterR.connect(reverbL,0,0);
-	splitterR.connect(reverbR,1,0);
+	splitterR.connect(reverbR,1,1);
 
 	reverbL.connect(context.destination);				// and feed the stereo venue with reverb to the output too
 	reverbR.connect(context.destination);				// and feed the stereo venue with reverb to the output too
