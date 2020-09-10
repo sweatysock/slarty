@@ -1069,10 +1069,10 @@ function handleAudio(stream) {						// We have obtained media access
 	let combiner = context.createChannelMerger();
 	let combiDelayL = context.createChannelMerger();
 	let combiDelayR = context.createChannelMerger();
-	let delayL = context.createDelay(5.0);
-	let delayR = context.createDelay(6.0);
-	delayL.delayTime.value = 1.0;
-	delayR.delayTime.value = 2.0;
+	let delayL = context.createDelay();
+	let delayR = context.createDelay();
+	delayL.delayTime.value = 0.01;
+	delayR.delayTime.value = 0.015;
 
 	liveSource.connect(micFilter1);					// Mic goes to the lowpass filter
 	micFilter1.connect(micFilter2);					// then to the highpass filter
@@ -1084,9 +1084,9 @@ function handleAudio(stream) {						// We have obtained media access
 //	splitter.connect(reverb,2);					// Send centre venue to the stereo reverb
 //	splitter.connect(combiDelayL,2,0);				// Send venue to left delay combiner
 	splitter.connect(combiDelayR,2,1);				// Send venue to right delay combiner
-	combiDelayL.connect(delayL);
+//	combiDelayL.connect(delayL);
 	combiDelayR.connect(delayR);
-	delayL.connect(reverb);
+//	delayL.connect(reverb);
 	delayR.connect(reverb);
 	reverb.connect(context.destination);				// and feed the stereo venue with reverb to the output too
 
