@@ -1064,8 +1064,8 @@ function handleAudio(stream) {						// We have obtained media access
 //	node.connect(reverbR,2,0);					// and the right reverb
 //	reverbL.connect(context.destination,0,0);			// Connect the left reverb to the left output
 //	reverbR.connect(context.destination,0,1);			// and the right reverb to the right output
-	node.connect(combinerL,2,1);			
-	node.connect(combinerR,2,1);		
+//	node.connect(combinerL,2,1);			
+//	node.connect(combinerR,2,1);		
 	combinerL.connect(context.destination,0,0);			
 	combinerR.connect(context.destination,0,1);		
 
