@@ -1059,18 +1059,18 @@ function handleAudio(stream) {						// We have obtained media access
 	ir_request.open("GET", filename, true);
 	ir_request.responseType = "arraybuffer";
 	ir_request.onload = function () {
-console.log("Got reverb audio file ",filename);
-console.log(ir_request.response);
 		context.decodeAudioData( ir_request.response, function ( buffer ) {
 			reverb.buffer = buffer;
-console.log("Installed downloaded reverb");
-console.log(buffer);
 		});
 	};
 	ir_request.send();
 
 	let splitter = context.createChannelSplitter();
 	let combiner = context.createChannelMerger();
+	let combiDelayL = context.createChannelMerger();
+	let combiDelayR = context.createChannelMerger();
+	let delayL = context.createDelay(0.01);
+	let delayR = context.createDelay(0.012);
 
 	liveSource.connect(micFilter1);					// Mic goes to the lowpass filter
 	micFilter1.connect(micFilter2);					// then to the highpass filter
@@ -1079,7 +1079,13 @@ console.log(buffer);
 	splitter.connect(combiner,0,0);					// Recombine L & R
 	splitter.connect(combiner,1,1);
 	combiner.connect(context.destination);				// And send this stereo signal to the output
-	splitter.connect(reverb,2);					// Send venue to the stereo reverb
+	splitter.connect(reverb,2);					// Send centre venue to the stereo reverb
+	splitter.connect(combiDelayL,2,0);				// Send venue to left delay combiner
+	splitter.connect(combiDelayR,2,1);				// Send venue to right delay combiner
+	combiDelayL.connect(delayL);
+	combiDelayR.connect(delayR);
+	delayL.connect(context.destination);
+	delayR.connect(context.destination);
 	reverb.connect(context.destination);				// and feed the stereo venue with reverb to the output too
 
 	startEchoTest();
