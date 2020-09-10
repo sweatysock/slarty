@@ -1051,7 +1051,7 @@ function handleAudio(stream) {						// We have obtained media access
 	micFilter2.Q.value = 1;
 	
 	let reverb = context.createConvolver();
-//	let reverbBuf = impulseResponse(1, 2, false);
+	let reverbBuf = impulseResponse(1, 2, false);
 //console.log(reverbBuf);
 console.log("Reverb created");
 
