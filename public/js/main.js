@@ -932,7 +932,7 @@ function processAudio(e) {						// Main processing loop
 		outAudioV.push(...zeros);
 	}
 	for (let i in outDataV) { 
-		outDataL[i] = outAudioV[i];				// Copy venue audio to it's special output
+		outDataV[i] = outAudioV[i];				// Copy venue audio to it's special output
 	}
 	// 2.2 Get highest level output and use it to set the dynamic threshold level to stop audio feedback
 	let maxL = maxValue(outAudioL);					// Get peak level of this outgoing audio
@@ -1054,15 +1054,17 @@ function handleAudio(stream) {						// We have obtained media access
 	let reverbBuf = impulseResponse(1, 2, false);
 	reverb.buffer = reverbBuf;
 
-	let combinerL = context.createChannelMerger();
-	let combinerR = context.createChannelMerger();
+	let splitter = context.createChannelSplitter();
+	let combiner = context.createChannelMerger();
 
 	liveSource.connect(micFilter1);					// Mic goes to the lowpass filter
 	micFilter1.connect(micFilter2);					// then to the highpass filter
 	micFilter2.connect(node);					// then to the node where all the work is done
-	node.connect(context.destination,0,0);
-	node.connect(context.destination,1,0);
-	node.connect(context.destination,2,0);
+	node.connect(splitter);
+	splitter.connect(combiner,0,0);
+	splitter.connect(combiner,1,1);
+	splitter.connect(reverb,2);
+	combiner.connect(context.destination);
 	reverb.connect(context.destination);
 //	combinerL.connect(context.destination,0,0);
 //	combinerR.connect(context.destination,0,0);
