@@ -1052,20 +1052,20 @@ function handleAudio(stream) {						// We have obtained media access
 	
 	let reverb = context.createConvolver();
 	let reverbBuf = impulseResponse(1, 2, false);
-console.log(reverbBuf);
-console.log("Reverb created");
+	reverb.buffer = reverbBuf;
 
 	liveSource.connect(micFilter1);					// Mic goes to the lowpass filter
 	micFilter1.connect(micFilter2);					// then to the highpass filter
 	micFilter2.connect(node);					// then to the node where all the work is done
-	node.connect(context.destination);				// and then finally to the speaker
+	node.connect(reverb);
+	reverb.connect(context.destination);
 
 	startEchoTest();
 }
 
 function impulseResponse( duration, decay, reverse ) {
-	let length = SampleRate * duration;
-	let impulse = context.createBuffer(2, length, SampleRate);
+	let length = soundcardSampleRate * duration;
+	let impulse = context.createBuffer(2, length, soundcardSampleRate);
 	let impulseL = impulse.getChannelData(0);
 	let impulseR = impulse.getChannelData(1);
 
