@@ -1016,8 +1016,8 @@ function prepPerfAudio( audioL, audioR ) {				// Performer audio is HQ and possi
 
 var micFilter1;
 var micFilter2;
+var context;
 function handleAudio(stream) {						// We have obtained media access
-	let context;
 	let AudioContext = window.AudioContext 				// Default
 		|| window.webkitAudioContext 				// Safari and old versions of Chrome
 		|| false; 
@@ -1051,6 +1051,7 @@ function handleAudio(stream) {						// We have obtained media access
 	micFilter2.Q.value = 1;
 	
 	let reverb = context.createConvolver();
+	reverb.buffer = impulseResponse(1, 0.5, false);
 	let combiner = context.createChannelMerger(2);
 
 	liveSource.connect(micFilter1);					// Mic goes to the lowpass filter (both stereo)
@@ -1066,7 +1067,21 @@ function handleAudio(stream) {						// We have obtained media access
 	startEchoTest();
 }
 
+function impulseResponse( duration, decay, reverse ) {
+	    var length = SampleRate * duration;
+	    var impulse = context.createBuffer(2, length, sampleRate);
+	    var impulseL = impulse.getChannelData(0);
+	    var impulseR = impulse.getChannelData(1);
 
+	    if (!decay)
+		        decay = 2.0;
+	    for (var i = 0; i < length; i++){
+		          var n = reverse ? length - i : i;
+		          impulseL[i] = (Math.random() * 2 - 1) * Math.pow(1 - n / length, decay);
+		          impulseR[i] = (Math.random() * 2 - 1) * Math.pow(1 - n / length, decay);
+		        }
+	    return impulse;
+}
 	
 document.addEventListener('DOMContentLoaded', function(event){
 	initAudio();							// Call initAudio() once loaded
