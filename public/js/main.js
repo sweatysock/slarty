@@ -932,7 +932,7 @@ function processAudio(e) {						// Main processing loop
 		outAudioV.push(...zeros);
 	}
 	for (let i in outDataV) { 
-		outDataV[i] = outAudioV[i];				// Copy venue audio to it's special output
+		outDataL[i] = outAudioV[i];				// Copy venue audio to it's special output
 	}
 	// 2.2 Get highest level output and use it to set the dynamic threshold level to stop audio feedback
 	let maxL = maxValue(outAudioL);					// Get peak level of this outgoing audio
