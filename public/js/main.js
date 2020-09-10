@@ -1051,7 +1051,8 @@ function handleAudio(stream) {						// We have obtained media access
 	micFilter2.Q.value = 1;
 	
 	let reverb = context.createConvolver();
-//	reverb.buffer = impulseResponse(1, 0.5, false);
+	reverb.buffer = impulseResponse(1, 2, false);
+console.log(reverb.buffer);
 	let combiner = context.createChannelMerger(2);
 
 	liveSource.connect(micFilter1);					// Mic goes to the lowpass filter (both stereo)
@@ -1068,15 +1069,15 @@ function handleAudio(stream) {						// We have obtained media access
 }
 
 function impulseResponse( duration, decay, reverse ) {
-	    var length = SampleRate * duration;
-	    var impulse = context.createBuffer(2, length, sampleRate);
-	    var impulseL = impulse.getChannelData(0);
-	    var impulseR = impulse.getChannelData(1);
+	    let length = SampleRate * duration;
+	    let impulse = context.createBuffer(2, length, sampleRate);
+	    let impulseL = impulse.getChannelData(0);
+	    let impulseR = impulse.getChannelData(1);
 
 	    if (!decay)
 		        decay = 2.0;
-	    for (var i = 0; i < length; i++){
-		          var n = reverse ? length - i : i;
+	    for (let i = 0; i < length; i++){
+		          let n = reverse ? length - i : i;
 		          impulseL[i] = (Math.random() * 2 - 1) * Math.pow(1 - n / length, decay);
 		          impulseR[i] = (Math.random() * 2 - 1) * Math.pow(1 - n / length, decay);
 		        }
