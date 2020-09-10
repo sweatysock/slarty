@@ -13,6 +13,7 @@ var micAccessAllowed = false; 						// Need to get user permission
 var packetBuf = [];							// Buffer of packets sent, subtracted from venue mix later
 var spkrBufferL = []; 							// Audio buffer going to speaker (left)
 var spkrBufferR = []; 							// (right)
+var venueBuffer = []; 							// Buffer for venue audio
 var maxBuffSize = 20000;						// Max audio buffer chunks for playback. 
 var micBufferL = [];							// Buffer mic audio before sending
 var micBufferR = [];							
@@ -220,12 +221,13 @@ socketIO.on('d', function (data) {
 		} 
 		let s = Math.round(PacketSize * soundcardSampleRate / SampleRate);	// The amount of audio expected per server packet
 		let mixL = new Array(s).fill(0), mixR = new Array(s).fill(0);
-		// TEMP COMBINE VENUE AND GROUP INTO MIX HERE
-		if (v.length > 0) {					// If there is venue audio
-			if (gL.length > 0) {				// and group audio, mix together
-				for (i=0; i<gL.length; i++) mixL = v[i] + gL[i];
-			} else mixL = v;				// only venue audio
-		} else if (gL.length > 0) mixL = gL;			// only group audio
+//		// TEMP COMBINE VENUE AND GROUP INTO MIX HERE
+//		if (v.length > 0) {					// If there is venue audio
+//			if (gL.length > 0) {				// and group audio, mix together
+//				for (i=0; i<gL.length; i++) mixL = v[i] + gL[i];
+//			} else mixL = v;				// only venue audio
+//		} else if (gL.length > 0) mixL = gL;			// only group audio
+		if (gL.length > 0) {mixL = gL; mixR = gR;}		// Put group audio in the mix if any
 		// 3. Process performer audio if there is any, and add it to the mix. This could be stereo audio
 		performer = (data.perf.chan == myChannel);		// Update performer flag just in case
 		liveShow = data.perf.live;				// Update the live show flag to update display
@@ -333,6 +335,10 @@ socketIO.on('d', function (data) {
 			spkrBufferR.splice(0, (spkrBufferR.length-maxBuffSize)); 	
 			overflows++;					// Note for monitoring purposes
 		}
+		if (v.length > 0)					// Add the venue audio to its own buffer
+			venueBuffer.push(...v);				// Add any venue audio to the venue buffer
+		if (venueBuffer.length > maxBuffSize) 			// Clip buffer if too full
+			venueBuffer.splice(0, (venueBuffer.length-maxBuffSize)); 	
 		// 5. Calculate RTT 
 		if (ts > 0) {						// If we have timestamp data calcuate rtt
 			let now = new Date().getTime();
@@ -803,6 +809,7 @@ function processAudio(e) {						// Main processing loop
 	var inDataR = e.inputBuffer.getChannelData(1);			// Audio from the right mic
 	var outDataL = e.outputBuffer.getChannelData(0);		// Audio going to the left speaker
 	var outDataR = e.outputBuffer.getChannelData(1);		// Audio going to the right speaker
+	var outDataV = e.outputBuffer.getChannelData(2);		// Venue audio going to be processed
 
 	if (echoTest.running == true) {					// The echo test takes over all audio
 		let output = runEchoTest(inDataL);			// Send the mic audio to the tester
@@ -911,11 +918,30 @@ function processAudio(e) {						// Main processing loop
 		outAudioR.push(...zeros);
 		shortages++;						// For stats and monitoring
 	}
+	for (let i in outDataL) { 
+		outDataL[i] = outAudioL[i];				// Copy left audio to outputL
+		outDataR[i] = outAudioR[i];				// and right audio to outputR
+	}
+	// 2.1 Take venue audio from buffer and send to special output
+	let outAudioV = [];
+	if (venueBuffer.length > ChunkSize) {				// There is enough audio buffered
+		outAudioV = venueBuffer.splice(0,ChunkSize);		// Get same amount of audio as came in
+	} else {							// Not enough audio.
+		outAudioV = venueBuffer.splice(0,venueBuffer.length);	// Take all that remains and complete with 0s
+		let zeros = new Array(ChunkSize-venueBuffer.length).fill(0);
+		outAudioV.push(...zeros);
+	}
+	for (let i in outDataV) { 
+		outDataL[i] = outAudioV[i];				// Copy venue audio to it's special output
+	}
+	// 2.2 Get highest level output and use it to set the dynamic threshold level to stop audio feedback
 	let maxL = maxValue(outAudioL);					// Get peak level of this outgoing audio
-	let maxR = maxValue(outAudioR);					// for each channel. 
+	let maxR = maxValue(outAudioR);					// for each channel
+	let maxV = maxValue(outAudioV);					// and venue audio
 	if (maxL < maxR) maxL = maxR;					// Choose loudest channel
+	if (maxL < maxV) maxL = maxV;					
 	thresholdBuffer.unshift( maxL );				// add to start of dynamic threshold queue
-	micIn.threshold = (maxValue([					// Apply most aggressive threshold near current +/-1
+	micIn.threshold = (maxValue([					// Apply most aggressive threshold near current +/-2 chunks
 		thresholdBuffer[echoTest.sampleDelay-2],
 		thresholdBuffer[echoTest.sampleDelay-1],
 		thresholdBuffer[echoTest.sampleDelay],	
@@ -923,10 +949,7 @@ function processAudio(e) {						// Main processing loop
 		thresholdBuffer[echoTest.sampleDelay+2]
 	])) * echoTest.factor * mixOut.gain;				// multiply by factor and mixOutGain
 	thresholdBuffer.pop();						// Remove oldest threshold buffer value
-	for (let i in outDataL) { 
-		outDataL[i] = outAudioL[i];				// Copy left audio to outputL
-		outDataR[i] = outAudioR[i];				// and right audio to outputR
-	}
+
 	enterState( idleState );					// We are done. Back to Idling
 }
 
@@ -1012,9 +1035,9 @@ function handleAudio(stream) {						// We have obtained media access
 	let liveSource = context.createMediaStreamSource(stream); 	// Create audio source (mic)
 	let node = undefined;
 	if (!context.createScriptProcessor) {				// Audio processor node
-		node = context.createJavaScriptNode(ChunkSize, 2, 2);	// The new way is to use a worklet
+		node = context.createJavaScriptNode(ChunkSize, 2, 3);	// The new way is to use a worklet
 	} else {							// but the results are not as good
-		node = context.createScriptProcessor(ChunkSize, 2, 2);	// and it doesn't work everywhere
+		node = context.createScriptProcessor(ChunkSize, 2, 3);	// and it doesn't work everywhere
 	}
 	node.onaudioprocess = processAudio;				// Link the callback to the node
 
