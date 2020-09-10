@@ -1059,8 +1059,8 @@ function handleAudio(stream) {						// We have obtained media access
 	liveSource.connect(micFilter1);					// Mic goes to the lowpass filter
 	micFilter1.connect(micFilter2);					// then to the highpass filter
 	micFilter2.connect(node);					// then to the node where all the work is done
-	node.connect(combiner,0,0);
-	node.connect(combiner,1,1);
+	node.connect(reverb);
+	reverb.connect(context.destination);
 	combiner.connect(context.destination);
 
 	startEchoTest();
