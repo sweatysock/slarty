@@ -1050,7 +1050,11 @@ function handleAudio(stream) {						// We have obtained media access
 	micFilter2.frequency.value = LowFilterFreq;
 	micFilter2.Q.value = 1;
 	
-	liveSource.connect(micFilter1);					// Mic goes to the lowpass filter
+	let reverb = context.createConvolver();
+        let reverbBuf = impulseResponse(1, 2, false);
+console.log(reverbBuf);
+
+	liveSource.connect(micFilter1);					/e Mic goes to the lowpass filter
 	micFilter1.connect(micFilter2);					// then to the highpass filter
 	micFilter2.connect(node);					// then to the node where all the work is done
 	node.connect(context.destination);				// and then finally to the speaker
@@ -1058,7 +1062,21 @@ function handleAudio(stream) {						// We have obtained media access
 	startEchoTest();
 }
 
+function impulseResponse( duration, decay, reverse ) {
+	            let length = SampleRate * duration;
+	            let impulse = context.createBuffer(2, length, sampleRate);
+	            let impulseL = impulse.getChannelData(0);
+	            let impulseR = impulse.getChannelData(1);
 
+	            if (!decay)
+		                        decay = 2.0;
+	            for (let i = 0; i < length; i++){
+			                              let n = reverse ? length - i : i;
+			                              impulseL[i] = (Math.random() * 2 - 1) * Math.pow(1 - n / length, decay);
+			                              impulseR[i] = (Math.random() * 2 - 1) * Math.pow(1 - n / length, decay);
+			                            }
+	            return impulse;
+}
 	
 document.addEventListener('DOMContentLoaded', function(event){
 	initAudio();							// Call initAudio() once loaded
