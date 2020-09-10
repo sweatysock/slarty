@@ -1054,20 +1054,30 @@ function handleAudio(stream) {						// We have obtained media access
 	let reverbBuf = impulseResponse(1, 2, false);
 	reverb.buffer = reverbBuf;
 
+	let ir_request = new XMLHttpRequest();
+	ir_request.open("GET", "/public/reverb/auditorium.wav", true);
+	ir_request.responseType = "arraybuffer";
+	ir_request.onload = function () {
+console.log("Got reverb audio file");
+		context.decodeAudioData( ir_request.response, function ( buffer ) {
+			reverb.buffer = buffer;
+console.log("Installed downloaded reverb");
+		});
+	};
+	ir_request.send();
+
 	let splitter = context.createChannelSplitter();
 	let combiner = context.createChannelMerger();
 
 	liveSource.connect(micFilter1);					// Mic goes to the lowpass filter
 	micFilter1.connect(micFilter2);					// then to the highpass filter
 	micFilter2.connect(node);					// then to the node where all the work is done
-	node.connect(splitter);
-	splitter.connect(combiner,0,0);
+	node.connect(splitter);						// The output is L, R and Venue so need to split them
+	splitter.connect(combiner,0,0);					// Recombine L & R
 	splitter.connect(combiner,1,1);
-	splitter.connect(reverb,2);
-	combiner.connect(context.destination);
-	reverb.connect(context.destination);
-//	combinerL.connect(context.destination,0,0);
-//	combinerR.connect(context.destination,0,0);
+	combiner.connect(context.destination);				// And send this stereo signal to the output
+	splitter.connect(reverb,2);					// Send venue to the stereo reverb
+	reverb.connect(context.destination);				// and feed the stereo venue with reverb to the output too
 
 	startEchoTest();
 }
