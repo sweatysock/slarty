@@ -1052,7 +1052,7 @@ function handleAudio(stream) {						// We have obtained media access
 	
 	let reverb = context.createConvolver();
 	let reverbBuf = impulseResponse(1, 2, false);
-//console.log(reverbBuf);
+console.log(reverbBuf);
 console.log("Reverb created");
 
 	liveSource.connect(micFilter1);					// Mic goes to the lowpass filter
@@ -1065,7 +1065,7 @@ console.log("Reverb created");
 
 function impulseResponse( duration, decay, reverse ) {
 	let length = SampleRate * duration;
-	let impulse = context.createBuffer(2, length, sampleRate);
+	let impulse = context.createBuffer(2, length, SampleRate);
 	let impulseL = impulse.getChannelData(0);
 	let impulseR = impulse.getChannelData(1);
 
