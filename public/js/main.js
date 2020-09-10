@@ -1076,7 +1076,7 @@ function handleAudio(stream) {						// We have obtained media access
 	delayL.delayTime.value = 0.0008;
 	delayR.delayTime.value = 0.0008;
 	delay1.delayTime.value = 0.007;
-	delay2.delayTime.value = 0.003;
+	delay2.delayTime.value = 0.00;
 
 	liveSource.connect(micFilter1);					// Mic goes to the lowpass filter
 	micFilter1.connect(micFilter2);					// then to the highpass filter
