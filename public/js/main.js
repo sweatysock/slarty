@@ -1073,8 +1073,8 @@ function handleAudio(stream) {						// We have obtained media access
 	let delayR = context.createDelay();
 	let delay1 = context.createDelay();
 	let delay2 = context.createDelay();
-	delayL.delayTime.value = 0.0007;
-	delayR.delayTime.value = 0.0008;
+	delayL.delayTime.value = 0.0008;
+	delayR.delayTime.value = 0.0007;
 	delay1.delayTime.value = 0.001;
 	delay2.delayTime.value = 0.00;
 
@@ -1101,9 +1101,7 @@ function handleAudio(stream) {						// We have obtained media access
 	combiDelayR.connect(delay2);
 	delay2.connect(context.destination);
 
-//	delayL.connect(reverb);
-//	delayR.connect(reverb);
-//	reverb.connect(context.destination);				// and feed the stereo venue with reverb to the output too
+	reverb.connect(context.destination);				// and feed the stereo venue with reverb to the output too
 
 	startEchoTest();
 }
