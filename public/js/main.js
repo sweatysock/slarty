@@ -1074,7 +1074,7 @@ function handleAudio(stream) {						// We have obtained media access
 	let delay1 = context.createDelay();
 	let delay2 = context.createDelay();
 	delayL.delayTime.value = 0.0008;
-	delayR.delayTime.value = 0.0007;
+	delayR.delayTime.value = 0.0008;
 	delay1.delayTime.value = 0.001;
 	delay2.delayTime.value = 0.00;
 
@@ -1093,13 +1093,13 @@ function handleAudio(stream) {						// We have obtained media access
 	splitter.connect(combiDelayL,2,1);				// Send venue to left delay combiner
 	delayL.connect(combiDelayL,0,0);				// Send venue to left delay combiner
 	combiDelayL.connect(delay1);
-	delay1.connect(context.destination);
+	delay1.connect(reverb);
 
 	splitter.connect(delayR,2,0);				// Send venue to left delay combiner
 	splitter.connect(combiDelayR,2,0);				// Send venue to left delay combiner
 	delayR.connect(combiDelayR,0,1);				// Send venue to left delay combiner
 	combiDelayR.connect(delay2);
-	delay2.connect(context.destination);
+	delay2.connect(reverb);
 
 	reverb.connect(context.destination);				// and feed the stereo venue with reverb to the output too
 
