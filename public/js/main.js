@@ -1050,10 +1050,10 @@ function handleAudio(stream) {						// We have obtained media access
 	micFilter2.frequency.value = LowFilterFreq;
 	micFilter2.Q.value = 1;
 	
-	reverbL = context.createConvolver();
-	reverbR = context.createConvolver();
-	combinerL = context.createChannelMerger(2);
-	combinerR = context.createChannelMerger(2);
+	let reverbL = context.createConvolver();
+	let reverbR = context.createConvolver();
+	let combinerL = context.createChannelMerger(2);
+	let combinerR = context.createChannelMerger(2);
 
 	liveSource.connect(micFilter1);					// Mic goes to the lowpass filter (both stereo)
 	micFilter1.connect(micFilter2);					// then to the highpass filter (stereo)
