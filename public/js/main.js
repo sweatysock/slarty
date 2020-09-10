@@ -1052,6 +1052,8 @@ function handleAudio(stream) {						// We have obtained media access
 	
 	reverbL = context.createConvolver();
 	reverbR = context.createConvolver();
+	combinerL = context.createChannelMerger(2);
+	combinerR = context.createChannelMerger(2);
 
 	liveSource.connect(micFilter1);					// Mic goes to the lowpass filter (both stereo)
 	micFilter1.connect(micFilter2);					// then to the highpass filter (stereo)
@@ -1061,9 +1063,9 @@ function handleAudio(stream) {						// We have obtained media access
 //	node.connect(reverbL,2,0);					// connect the venue output to the left reverb
 //	node.connect(reverbR,2,0);					// and the right reverb
 //	reverbL.connect(context.destination,0,0);			// Connect the left reverb to the left output
-//	reverbR.connect(context.destination,0,1);				// and the right reverb to the right output
-	reverbL.connect(context.destination,0,0);			// Connect the left reverb to the left output
-	reverbR.connect(context.destination,0,1);				// and the right reverb to the right output
+//	reverbR.connect(context.destination,0,1);			// and the right reverb to the right output
+	node.connect(context.destination,2,0);			
+	node.connect(context.destination,2,1);		
 
 	startEchoTest();
 }
