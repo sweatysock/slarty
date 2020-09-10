@@ -1054,7 +1054,7 @@ function handleAudio(stream) {						// We have obtained media access
         let reverbBuf = impulseResponse(1, 2, false);
 console.log(reverbBuf);
 
-	liveSource.connect(micFilter1);					/e Mic goes to the lowpass filter
+	liveSource.connect(micFilter1);					// Mic goes to the lowpass filter
 	micFilter1.connect(micFilter2);					// then to the highpass filter
 	micFilter2.connect(node);					// then to the node where all the work is done
 	node.connect(context.destination);				// and then finally to the speaker
