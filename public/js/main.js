@@ -1055,13 +1055,16 @@ function handleAudio(stream) {						// We have obtained media access
 	reverb.buffer = reverbBuf;
 
 	let ir_request = new XMLHttpRequest();
-	ir_request.open("GET", "reverb/auditorium.wav", true);
+	let filename = "reverb/church.wav";
+	ir_request.open("GET", filename, true);
 	ir_request.responseType = "arraybuffer";
 	ir_request.onload = function () {
-console.log("Got reverb audio file");
+console.log("Got reverb audio file ",filename);
+console.log(ir_request.response);
 		context.decodeAudioData( ir_request.response, function ( buffer ) {
 			reverb.buffer = buffer;
 console.log("Installed downloaded reverb");
+console.log(buffer);
 		});
 	};
 	ir_request.send();
