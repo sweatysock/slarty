@@ -1061,7 +1061,8 @@ function handleAudio(stream) {						// We have obtained media access
 	micFilter2.connect(node);					// then to the node where all the work is done
 	node.connect(combiner);
 	reverb.connect(context.destination);
-	combiner.connect(context.destination);
+	combiner.connect(context.destination,0,0);
+	combiner.connect(context.destination,1,1);
 
 	startEchoTest();
 }
