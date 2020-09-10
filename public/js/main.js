@@ -155,12 +155,12 @@ socketIO.on('d', function (data) {
 			let v8 = c0.audio.mono8, v16 = c0.audio.mono16;	// Shortcuts to the channel 0 MSRE data blocks
 			if (v8.length > 0) {				// If there is venue audio it will need processing
 				let sr = 8000;				// Minimum sample rate of 8kHz
-				if (a8.length > 0)  			// Only subtract if our audio is not empty
-					for (let i = 0; i < a8.length; ++i) v8[i] = (v8[i] - a8[i]) * channels[0].gain / venueSize;
-				if ((v16.length > 0) && 		// Does venue and our audio have higher quality audio?
-					(a16.length > 0)) { 	// If so subtract our high bandwidth audio from venue
-					for (let i = 0; i < a16.length; ++i) v16[i] = (v16[i] - a16[i]) * channels[0].gain / venueSize;
-				} 					// By this stage our audio has been subtracted from venue audio
+//				if (a8.length > 0)  			// Only subtract if our audio is not empty
+//					for (let i = 0; i < a8.length; ++i) v8[i] = (v8[i] - a8[i]) * channels[0].gain / venueSize;
+//				if ((v16.length > 0) && 		// Does venue and our audio have higher quality audio?
+//					(a16.length > 0)) { 	// If so subtract our high bandwidth audio from venue
+//					for (let i = 0; i < a16.length; ++i) v16[i] = (v16[i] - a16[i]) * channels[0].gain / venueSize;
+//				} 					// By this stage our audio has been subtracted from venue audio
 				if (v16.length > 0) {			// If the venue has higher quality audio
 					let k = 0;			// reconstruct the original venue audio in v[]
 					for (let i=0;i<v8.length;i++) {	
@@ -1071,8 +1071,8 @@ function handleAudio(stream) {						// We have obtained media access
 	let combiDelayR = context.createChannelMerger();
 	let delayL = context.createDelay();
 	let delayR = context.createDelay();
-	delayL.delayTime.value = 0.001;
-	delayR.delayTime.value = 0.08;
+	delayL.delayTime.value = 0.0006;
+	delayR.delayTime.value = 0.0005;
 
 	liveSource.connect(micFilter1);					// Mic goes to the lowpass filter
 	micFilter1.connect(micFilter2);					// then to the highpass filter
@@ -1083,14 +1083,14 @@ function handleAudio(stream) {						// We have obtained media access
 	combiner.connect(context.destination);				// And send this stereo signal to the output
 //	splitter.connect(reverb,2);					// Send centre venue to the stereo reverb
 	splitter.connect(combiDelayL,2,0);				// Send venue to left delay combiner
-	splitter.connect(combiDelayL,3,1);				// Send venue to left delay combiner
-	splitter.connect(combiDelayL,3,0);				// Send venue to left delay combiner
-	splitter.connect(combiDelayR,2,1);				// Send venue to right delay combiner
-	combiDelayL.connect(reverb);
-	combiDelayR.connect(delayR);
-	delayL.connect(reverb);
-	delayR.connect(reverb);
-	reverb.connect(context.destination);				// and feed the stereo venue with reverb to the output too
+	splitter.connect(context.destination,2,0);				// Send venue to left delay combiner
+//	splitter.connect(combiDelayR,3,0);				// Send venue to left delay combiner
+//	splitter.connect(combiDelayR,2,1);				// Send venue to right delay combiner
+	combiDelayL.connect(context.destination);
+//	combiDelayR.connect(delayR);
+//	delayL.connect(reverb);
+//	delayR.connect(reverb);
+//	reverb.connect(context.destination);				// and feed the stereo venue with reverb to the output too
 
 	startEchoTest();
 }
