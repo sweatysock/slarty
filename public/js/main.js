@@ -1058,14 +1058,16 @@ function handleAudio(stream) {						// We have obtained media access
 	liveSource.connect(micFilter1);					// Mic goes to the lowpass filter (both stereo)
 	micFilter1.connect(micFilter2);					// then to the highpass filter (stereo)
 	micFilter2.connect(node);					// then to the node where all the work is done (stereo in/out plus venue out)
-	node.connect(context.destination,0,0);				// and then finally to the left speaker
-	node.connect(context.destination,1,1);				// and the right speaker
+	node.connect(combinerL,0,0);
+	node.connect(combinerR,1,0);
 //	node.connect(reverbL,2,0);					// connect the venue output to the left reverb
 //	node.connect(reverbR,2,0);					// and the right reverb
 //	reverbL.connect(context.destination,0,0);			// Connect the left reverb to the left output
 //	reverbR.connect(context.destination,0,1);			// and the right reverb to the right output
-	node.connect(context.destination,2,0);			
-	node.connect(context.destination,2,1);		
+//	node.connect(combinerL,2,1);			
+//	node.connect(combinerR,2,1);		
+	combinerL.connect(context.destination,0,0);			
+	combinerR.connect(context.destination,0,1);		
 
 	startEchoTest();
 }
