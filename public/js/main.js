@@ -1016,8 +1016,8 @@ function prepPerfAudio( audioL, audioR ) {				// Performer audio is HQ and possi
 
 var micFilter1;
 var micFilter2;
+var context;
 function handleAudio(stream) {						// We have obtained media access
-	let context;
 	let AudioContext = window.AudioContext 				// Default
 		|| window.webkitAudioContext 				// Safari and old versions of Chrome
 		|| false; 
