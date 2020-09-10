@@ -1054,12 +1054,12 @@ function handleAudio(stream) {						// We have obtained media access
 	let reverbBuf = impulseResponse(1, 2, false);
 	reverb.buffer = reverbBuf;
 
-	let combiner = context.createChannelMerger(2);
+	let combiner = context.createChannelMerger();
 
 	liveSource.connect(micFilter1);					// Mic goes to the lowpass filter
 	micFilter1.connect(micFilter2);					// then to the highpass filter
 	micFilter2.connect(node);					// then to the node where all the work is done
-	node.connect(reverb);
+	node.connect(combiner);
 	reverb.connect(context.destination);
 	combiner.connect(context.destination);
 
