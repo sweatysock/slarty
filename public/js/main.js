@@ -1087,8 +1087,8 @@ function handleAudio(stream) {						// We have obtained media access
 //	splitter.connect(combiDelayL,2,1);				// Send venue to left delay combiner
 //	delayL.connect(combiDelayL,0,0);				// Send venue to left delay combiner
 	splitter.connect(delayR,2,0);				// Send venue to left delay combiner
-	splitter.connect(combiDelayR,2,1);				// Send venue to left delay combiner
-	delayR.connect(combiDelayR,0,0);				// Send venue to left delay combiner
+	splitter.connect(combiDelayR,2,0);				// Send venue to left delay combiner
+	delayR.connect(combiDelayR,0,1);				// Send venue to left delay combiner
 //	combiDelayL.connect(context.destination);
 	combiDelayR.connect(context.destination);
 //	delayL.connect(reverb);
