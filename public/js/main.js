@@ -1050,9 +1050,8 @@ function handleAudio(stream) {						// We have obtained media access
 	micFilter2.frequency.value = LowFilterFreq;
 	micFilter2.Q.value = 1;
 	
-	let reverb = context.createConvolver();
-	let reverbBuf = impulseResponse(1, 2, false);
-	reverb.buffer = reverbBuf;
+	let reverbL = context.createConvolver();
+	let reverbR = context.createConvolver();
 
 	let ir_request = new XMLHttpRequest();
 	let filename = "reverb/theatre2.wav";
@@ -1060,7 +1059,8 @@ function handleAudio(stream) {						// We have obtained media access
 	ir_request.responseType = "arraybuffer";
 	ir_request.onload = function () {
 		context.decodeAudioData( ir_request.response, function ( buffer ) {
-			reverb.buffer = buffer;
+			reverbL.buffer = buffer;
+			reverbR.buffer = buffer;
 		});
 	};
 	ir_request.send();
@@ -1077,6 +1077,8 @@ function handleAudio(stream) {						// We have obtained media access
 	delayR.delayTime.value = 0.0008;
 	delay1.delayTime.value = 1;
 	delay2.delayTime.value = 0.00;
+	let splitterL = context.createChannelSplitter();
+	let splitterR = context.createChannelSplitter();
 
 	liveSource.connect(micFilter1);					// Mic goes to the lowpass filter
 	micFilter1.connect(micFilter2);					// then to the highpass filter
@@ -1093,15 +1095,20 @@ function handleAudio(stream) {						// We have obtained media access
 	splitter.connect(combiDelayL,2,1);				// Send venue to left delay combiner
 	delayL.connect(combiDelayL,0,0);				// Send venue to left delay combiner
 	combiDelayL.connect(delay1);
-	delay1.connect(reverb);
+	delay1.connect(splitterL);
+	splitterL.connect(reverbL,0,0);
+	splitterL.connect(reverbR,1,0);
 
 	splitter.connect(delayR,2,0);				// Send venue to left delay combiner
 	splitter.connect(combiDelayR,2,0);				// Send venue to left delay combiner
 	delayR.connect(combiDelayR,0,1);				// Send venue to left delay combiner
 	combiDelayR.connect(delay2);
-	delay2.connect(reverb);
+	delay2.connect(splitterR);
+	splitterR.connect(reverbL,0,0);
+	splitterR.connect(reverbR,1,0);
 
-	reverb.connect(context.destination);				// and feed the stereo venue with reverb to the output too
+	reverbL.connect(context.destination);				// and feed the stereo venue with reverb to the output too
+	reverbR.connect(context.destination);				// and feed the stereo venue with reverb to the output too
 
 	startEchoTest();
 }
