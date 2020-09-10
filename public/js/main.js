@@ -1073,7 +1073,7 @@ function handleAudio(stream) {						// We have obtained media access
 	let delayR = context.createDelay();
 	let delay1 = context.createDelay();
 	let delay2 = context.createDelay();
-	delayL.delayTime.value = 0.0008;
+	delayL.delayTime.value = 0.0007;
 	delayR.delayTime.value = 0.0008;
 	delay1.delayTime.value = 0.001;
 	delay2.delayTime.value = 0.00;
