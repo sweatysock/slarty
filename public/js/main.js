@@ -1074,8 +1074,8 @@ function handleAudio(stream) {						// We have obtained media access
 	let delay1 = context.createDelay();
 	let delay2 = context.createDelay();
 	delayL.delayTime.value = 0.0008;
-	delayR.delayTime.value = 0.001;
-	delay1.delayTime.value = 0.007;
+	delayR.delayTime.value = 0.0008;
+	delay1.delayTime.value = 0.002;
 	delay2.delayTime.value = 0.00;
 
 	liveSource.connect(micFilter1);					// Mic goes to the lowpass filter
