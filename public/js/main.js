@@ -1055,7 +1055,7 @@ function handleAudio(stream) {						// We have obtained media access
 	reverb.buffer = reverbBuf;
 
 	let ir_request = new XMLHttpRequest();
-	let filename = "reverb/church.wav";
+	let filename = "reverb/theatre2.wav";
 	ir_request.open("GET", filename, true);
 	ir_request.responseType = "arraybuffer";
 	ir_request.onload = function () {
