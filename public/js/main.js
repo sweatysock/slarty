@@ -1016,8 +1016,8 @@ function prepPerfAudio( audioL, audioR ) {				// Performer audio is HQ and possi
 
 var micFilter1;
 var micFilter2;
-var context;
 function handleAudio(stream) {						// We have obtained media access
+	let context;
 	let AudioContext = window.AudioContext 				// Default
 		|| window.webkitAudioContext 				// Safari and old versions of Chrome
 		|| false; 
@@ -1050,40 +1050,15 @@ function handleAudio(stream) {						// We have obtained media access
 	micFilter2.frequency.value = LowFilterFreq;
 	micFilter2.Q.value = 1;
 	
-	let reverb = context.createConvolver();
-	let reverbBuf = impulseResponse(1, 2, false);
-//	reverb.buffer = impulseResponse(1, 2, false);
-console.log(reverbBuf);
-	let combiner = context.createChannelMerger(2);
-
-	liveSource.connect(micFilter1);					// Mic goes to the lowpass filter (both stereo)
-	micFilter1.connect(micFilter2);					// then to the highpass filter (stereo)
-	micFilter2.connect(node);					// then to the node where all the work is done (stereo in/out plus venue out)
-	node.connect(reverb);
-	reverb.connect(context.destination);			// Connect the left reverb to the left output
-//	node.connect(combinerL,2,1);			
-//	node.connect(combinerR,2,1);		
-//	combinerL.connect(context.destination,0,0);			
-//	combinerR.connect(context.destination,0,1);		
+	liveSource.connect(micFilter1);					// Mic goes to the lowpass filter
+	micFilter1.connect(micFilter2);					// then to the highpass filter
+	micFilter2.connect(node);					// then to the node where all the work is done
+	node.connect(context.destination);				// and then finally to the speaker
 
 	startEchoTest();
 }
 
-function impulseResponse( duration, decay, reverse ) {
-	    let length = SampleRate * duration;
-	    let impulse = context.createBuffer(2, length, sampleRate);
-	    let impulseL = impulse.getChannelData(0);
-	    let impulseR = impulse.getChannelData(1);
 
-	    if (!decay)
-		        decay = 2.0;
-	    for (let i = 0; i < length; i++){
-		          let n = reverse ? length - i : i;
-		          impulseL[i] = (Math.random() * 2 - 1) * Math.pow(1 - n / length, decay);
-		          impulseR[i] = (Math.random() * 2 - 1) * Math.pow(1 - n / length, decay);
-		        }
-	    return impulse;
-}
 	
 document.addEventListener('DOMContentLoaded', function(event){
 	initAudio();							// Call initAudio() once loaded
