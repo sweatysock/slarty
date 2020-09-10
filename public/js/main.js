@@ -1082,10 +1082,12 @@ function handleAudio(stream) {						// We have obtained media access
 	micFilter1.connect(micFilter2);					// then to the highpass filter
 	micFilter2.connect(node);					// then to the node where all the work is done
 	node.connect(splitter);						// The output is L, R and Venue so need to split them
+
 	splitter.connect(combiner,0,0);					// Recombine L & R
 	splitter.connect(combiner,1,1);
 	combiner.connect(context.destination);				// And send this stereo signal to the output
-	splitter.connect(reverb,2);					// Send centre venue to the stereo reverb
+
+	splitter.connect(context.destination,2);					// Send centre venue to the stereo reverb
 	
 	splitter.connect(delayL,2,0);				// Send venue to left delay combiner
 	splitter.connect(combiDelayL,2,1);				// Send venue to left delay combiner
