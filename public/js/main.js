@@ -155,12 +155,12 @@ socketIO.on('d', function (data) {
 			let v8 = c0.audio.mono8, v16 = c0.audio.mono16;	// Shortcuts to the channel 0 MSRE data blocks
 			if (v8.length > 0) {				// If there is venue audio it will need processing
 				let sr = 8000;				// Minimum sample rate of 8kHz
-//				if (a8.length > 0)  			// Only subtract if our audio is not empty
-//					for (let i = 0; i < a8.length; ++i) v8[i] = (v8[i] - a8[i]) * channels[0].gain / venueSize;
-//				if ((v16.length > 0) && 		// Does venue and our audio have higher quality audio?
-//					(a16.length > 0)) { 	// If so subtract our high bandwidth audio from venue
-//					for (let i = 0; i < a16.length; ++i) v16[i] = (v16[i] - a16[i]) * channels[0].gain / venueSize;
-//				} 					// By this stage our audio has been subtracted from venue audio
+				if (a8.length > 0)  			// Only subtract if our audio is not empty
+					for (let i = 0; i < a8.length; ++i) v8[i] = (v8[i] - a8[i]) * channels[0].gain / venueSize;
+				if ((v16.length > 0) && 		// Does venue and our audio have higher quality audio?
+					(a16.length > 0)) { 	// If so subtract our high bandwidth audio from venue
+					for (let i = 0; i < a16.length; ++i) v16[i] = (v16[i] - a16[i]) * channels[0].gain / venueSize;
+				} 					// By this stage our audio has been subtracted from venue audio
 				if (v16.length > 0) {			// If the venue has higher quality audio
 					let k = 0;			// reconstruct the original venue audio in v[]
 					for (let i=0;i<v8.length;i++) {	
@@ -1050,6 +1050,7 @@ function handleAudio(stream) {						// We have obtained media access
 	micFilter2.frequency.value = LowFilterFreq;
 	micFilter2.Q.value = 1;
 	
+	let reverb = context.createConvolver();
 	let reverbL = context.createConvolver();
 	let reverbR = context.createConvolver();
 
@@ -1059,6 +1060,7 @@ function handleAudio(stream) {						// We have obtained media access
 	ir_request.responseType = "arraybuffer";
 	ir_request.onload = function () {
 		context.decodeAudioData( ir_request.response, function ( buffer ) {
+			reverb.buffer = buffer;
 			reverbL.buffer = buffer;
 			reverbR.buffer = buffer;
 		});
@@ -1085,30 +1087,30 @@ function handleAudio(stream) {						// We have obtained media access
 	micFilter2.connect(node);					// then to the node where all the work is done
 	node.connect(splitter);						// The output is L, R and Venue so need to split them
 
-	splitter.connect(combiner,0,0);					// Recombine L & R
+	splitter.connect(combiner,0,0);					// Perf & group stereo audio. Recombine L & R
 	splitter.connect(combiner,1,1);
-	combiner.connect(context.destination);				// And send this stereo signal to the output
+	combiner.connect(context.destination);				// And send this stereo signal direct to the output
 
-//	splitter.connect(context.destination,2);					// Send centre venue to the stereo reverb
+	splitter.connect(reverb,2);					// Send centre venue to the stereo reverb
 	
-	splitter.connect(delayL,2,0);				// Send venue to left delay combiner
-	splitter.connect(combiDelayL,2,1);				// Send venue to left delay combiner
-	delayL.connect(combiDelayL,0,0);				// Send venue to left delay combiner
-	combiDelayL.connect(delay1);
-	delay1.connect(context.destination);
-	splitterL.connect(reverbL,0,0);
-	splitterL.connect(reverbR,1,0);
+	splitter.connect(delayL,2,0);					// Create 2 stereo panned & delayed venue tracks
+	splitter.connect(combiDelayL,2,1);				// by sending direct sound to one channel
+	delayL.connect(combiDelayL,0,0);				// and slightly delayed to the other
+	combiDelayL.connect(delay1);					// Then add a delay that separates this sound
+	delay1.connect(context.destination);				// from the original and send it out dry
+//	splitterL.connect(reverbL,0,0);
+//	splitterL.connect(reverbR,1,0);
 
-	splitter.connect(delayR,2,0);				// Send venue to left delay combiner
-	splitter.connect(combiDelayR,2,0);				// Send venue to left delay combiner
-	delayR.connect(combiDelayR,0,1);				// Send venue to left delay combiner
+	splitter.connect(delayR,2,0);					// Repeat for the second panned venue track
+	splitter.connect(combiDelayR,2,0);
+	delayR.connect(combiDelayR,0,1);
 	combiDelayR.connect(delay2);
 	delay2.connect(context.destination);
-	splitterR.connect(reverbL,0,0);
-	splitterR.connect(reverbR,1,0);
+//	splitterR.connect(reverbL,0,0);
+//	splitterR.connect(reverbR,1,0);
 
-	reverbL.connect(context.destination);				// and feed the stereo venue with reverb to the output too
-	reverbR.connect(context.destination);				// and feed the stereo venue with reverb to the output too
+	reverbL.connect(context.destination);				// and finally feed the venue with reverb to the output 
+	reverbR.connect(context.destination);				// two reverbs to get stereo in and stereo out??
 
 	startEchoTest();
 }
