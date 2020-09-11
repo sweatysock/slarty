@@ -1077,8 +1077,8 @@ function handleAudio(stream) {						// We have obtained media access
 	let delay2 = context.createDelay();
 	delayL.delayTime.value = 0.0008;
 	delayR.delayTime.value = 0.0008;
-	delay1.delayTime.value = 0.009;
-	delay2.delayTime.value = 0.009;
+	delay1.delayTime.value = 0.019;
+	delay2.delayTime.value = 0.029;
 	let splitterL = context.createChannelSplitter();
 	let splitterR = context.createChannelSplitter();
 
