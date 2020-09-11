@@ -42,6 +42,9 @@ var mixTimer = 0;							// Timer that triggers generateMix() if needed
 var myServerName = process.env.servername; 				// Get servername from heroku config variable, if present
 if (myServerName == undefined)						// This name is used to identify us upstream ony
 	myServerName ="";						// If this is empty it will be set when we connect upstream
+var reverbFile = process.env.reverbfile; 				// Get venue reverb file from heroku config variable, if present
+if (reverbFile == undefined)						// This file gives the reverb vibe for the venue audio
+	reverbFile ="";							// If this is empty the room will be dry as a bone
 var connectedClients = 0;						// Count of the number of clients connected to this server
 var commands = {};							// Commands generated here or from upstream server
 
@@ -266,7 +269,10 @@ io.sockets.on('connection', function (socket) {
 				}
 			}
 		}
-		socket.emit('channel', { channel:channel });		// Send channel assignment result to client
+		socket.emit('channel', { 				// Send channel assignment result to client
+			channel:channel, 
+			reverb:reverbFile,				// Also instruct the client to load the venue reverb 
+		});		
 		if (channel != -1) {					// Channel has been successfully assigned
 			// MARK store server URL and active channel info and URLs if provided
 			channels[channel].packets = [];			// Reset channel values

@@ -95,6 +95,7 @@ socketIO.on('channel', function (data) {				// Message assigning us a channel
 		if (id != null) id.innerHTML = micIn.name;		// Update onscreen name if created
 		trace('Channel assigned: ',myChannel);
 		socketConnected = true;					// The socket can be used once we have a channel
+		loadVenueReverb(data.reverb);				// Load the venue reverb file to give ambience
 	} else {
 		trace("Server unable to assign a channel");		// Server is probaby full
 		trace("Try a different server");			// Can't do anything more
@@ -1014,9 +1015,10 @@ function prepPerfAudio( audioL, audioR ) {				// Performer audio is HQ and possi
 	return audio;
 }
 
-var micFilter1;
+var micFilter1;								// Mic filters are adjusted dynamically
 var micFilter2;
 var context;
+var reverb;								// Load reverb buffer once server channel assigned
 function handleAudio(stream) {						// We have obtained media access
 	let AudioContext = window.AudioContext 				// Default
 		|| window.webkitAudioContext 				// Safari and old versions of Chrome
@@ -1032,6 +1034,7 @@ function handleAudio(stream) {						// We have obtained media access
 	micAccessAllowed = true;
 	createOutputUI( mixOut );					// Create the output mix channel UI
 	createMicUI( micIn );						// Create the microphone channel UI
+
 	let liveSource = context.createMediaStreamSource(stream); 	// Create audio source (mic)
 	let node = undefined;
 	if (!context.createScriptProcessor) {				// Audio processor node
@@ -1041,46 +1044,28 @@ function handleAudio(stream) {						// We have obtained media access
 	}
 	node.onaudioprocess = processAudio;				// Link the callback to the node
 
-	micFilter1 = context.createBiquadFilter();
+	micFilter1 = context.createBiquadFilter();			// Input low pass filter to avoid aliasing
 	micFilter1.type = 'lowpass';
 	micFilter1.frequency.value = HighFilterFreq;
 	micFilter1.Q.value = 1;
-	micFilter2 = context.createBiquadFilter();
+	micFilter2 = context.createBiquadFilter();			// Input high pass filter to lighten audience sound
 	micFilter2.type = 'highpass';
 	micFilter2.frequency.value = LowFilterFreq;
 	micFilter2.Q.value = 1;
 	
-	let reverb = context.createConvolver();
-	let reverbL = context.createConvolver();
-	let reverbR = context.createConvolver();
-
-	let ir_request = new XMLHttpRequest();
-	let filename = "reverb/theatre2.wav";
-	ir_request.open("GET", filename, true);
-	ir_request.responseType = "arraybuffer";
-	ir_request.onload = function () {
-		context.decodeAudioData( ir_request.response, function ( buffer ) {
-			reverb.buffer = buffer;
-			reverbL.buffer = buffer;
-			reverbR.buffer = buffer;
-		});
-	};
-	ir_request.send();
-
-	let splitter = context.createChannelSplitter();
-	let combiner = context.createChannelMerger();
-	let combiDelayL = context.createChannelMerger();
-	let combiDelayR = context.createChannelMerger();
-	let delayL = context.createDelay();
-	let delayR = context.createDelay();
-	let delay1 = context.createDelay();
-	let delay2 = context.createDelay();
-	delayL.delayTime.value = 0.0008;
-	delayR.delayTime.value = 0.0008;
-	delay1.delayTime.value = 0.019;
-	delay2.delayTime.value = 0.033;
-	let splitterL = context.createChannelSplitter();
-	let splitterR = context.createChannelSplitter();
+	reverb = context.createConvolver();				// Reverb for venue ambience
+	let splitter = context.createChannelSplitter();			// Need a splitter to separate venue from main audio
+	let combiner = context.createChannelMerger();			// Combiner used to rebuild stereo image
+	let combiDelayL = context.createChannelMerger();		// These combiners are used to rebuild stereo venue
+	let combiDelayR = context.createChannelMerger();		// spacial effects for left and right widening
+	let delayL = context.createDelay();				// Spacial venue effect requires special delays
+	let delayR = context.createDelay();				// for left and right venue
+	let delay1 = context.createDelay();				// Also need specific delays to separate the widened
+	let delay2 = context.createDelay();				// venue audio
+	delayL.delayTime.value = 0.0008;				// Delay that fools us into hearing sound to left
+	delayR.delayTime.value = 0.0008;				// and right
+	delay1.delayTime.value = 0.019;					// Delay to separate first wide venue from centre
+	delay2.delayTime.value = 0.033;					// Delay for second wide venue track
 
 	liveSource.connect(micFilter1);					// Mic goes to the lowpass filter
 	micFilter1.connect(micFilter2);					// then to the highpass filter
@@ -1098,22 +1083,29 @@ function handleAudio(stream) {						// We have obtained media access
 	delayL.connect(combiDelayL,0,0);				// and slightly delayed to the other
 	combiDelayL.connect(delay1);					// Then add a delay that separates this sound
 	delay1.connect(context.destination);				// from the original and send it out dry
-//	splitterL.connect(reverbL,0,0);
-//	splitterL.connect(reverbR,1,0);
 
 	splitter.connect(delayR,2,0);					// Repeat for the second panned venue track
 	splitter.connect(combiDelayR,2,0);
 	delayR.connect(combiDelayR,0,1);
 	combiDelayR.connect(delay2);
 	delay2.connect(context.destination);
-//	splitterR.connect(reverbL,0,0);
-//	splitterR.connect(reverbR,1,0);
 
 	reverb.connect(context.destination);				// and finally feed the centre venue with reverb to the output 
-	reverbL.connect(context.destination);				
-	reverbR.connect(context.destination);			
 
 	startEchoTest();
+}
+
+function loadVenueReverb(filename) {					// Load the venue reverb file to give ambience
+	let ir_request = new XMLHttpRequest();				// Load impulse response to reverb
+//	filename = "reverb/theatre2.wav";				// MARK load filename from environment var
+	ir_request.open("GET", filename, true);
+	ir_request.responseType = "arraybuffer";
+	ir_request.onload = function () {
+		context.decodeAudioData( ir_request.response, function ( buffer ) {
+			reverb.buffer = buffer;
+		});
+	};
+	ir_request.send();
 }
 
 function impulseResponse( duration, decay, reverse ) {
