@@ -376,6 +376,31 @@ function resetConnection() {						// Use this to reset the socket if needed
 //
 var displayRefresh = 100;						// mS between UI updates. MARK change to animation frame
 
+document.addEventListener('DOMContentLoaded', function(event){
+	let groupBtn = document.getElementById('groupBtn');
+	let groupNameEntry = document.getElementById('groupNameEntry');
+	groupBtn.onclick = ( (e) => {
+		groupNameEntry.innerHTML = "";
+		groupNameEntry.style.visibility = "visible";
+		groupNameEntry.style.outline = "none";
+		groupNameEntry.setAttribute("contenteditable", true);
+		groupNameEntry.focus();
+	});
+	groupNameEntry.addEventListener("keydown", (e) => {
+		if (e.which === 13) {
+			if (groupNameEntry.innerHTML=="") {
+				groupNameEntry.setAttribute("contenteditable", false);
+				myGroup = "noGroup";
+			} else if (groupNameEntry.innerHTML.match("^[a-zA-Z][a-zA-Z0-9]+$")) {
+				groupNameEntry.setAttribute("contenteditable", false);
+				myGroup = groupNameEntry.innerHTML;
+			}
+			e.preventDefault();
+console.log(myGroup);
+		}
+	});
+});
+
 function displayAnimation() { 						// called 100mS to animate audio displays
 	enterState( UIState );						// Measure time spent updating UI
 	const rate = 0.8;						// Speed of peak drop in LED level display
@@ -1097,7 +1122,6 @@ function handleAudio(stream) {						// We have obtained media access
 
 function loadVenueReverb(filename) {					// Load the venue reverb file to give ambience
 	let ir_request = new XMLHttpRequest();				// Load impulse response to reverb
-//	filename = "reverb/theatre2.wav";				// MARK load filename from environment var
 	ir_request.open("GET", filename, true);
 	ir_request.responseType = "arraybuffer";
 	ir_request.onload = function () {
