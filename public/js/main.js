@@ -1077,8 +1077,8 @@ function handleAudio(stream) {						// We have obtained media access
 	let delay2 = context.createDelay();
 	delayL.delayTime.value = 0.0008;
 	delayR.delayTime.value = 0.0008;
-	delay1.delayTime.value = 1;
-	delay2.delayTime.value = 0.00;
+	delay1.delayTime.value = 0.007;
+	delay2.delayTime.value = 0.01;
 	let splitterL = context.createChannelSplitter();
 	let splitterR = context.createChannelSplitter();
 
@@ -1109,8 +1109,9 @@ function handleAudio(stream) {						// We have obtained media access
 //	splitterR.connect(reverbL,0,0);
 //	splitterR.connect(reverbR,1,0);
 
-	reverbL.connect(context.destination);				// and finally feed the venue with reverb to the output 
-	reverbR.connect(context.destination);				// two reverbs to get stereo in and stereo out??
+	reverb.connect(context.destination);				// and finally feed the centre venue with reverb to the output 
+	reverbL.connect(context.destination);				
+	reverbR.connect(context.destination);			
 
 	startEchoTest();
 }
