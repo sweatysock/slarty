@@ -641,7 +641,10 @@ function generateMix () {
 	for (group in groups) {
 //console.log("send to group ",group);		
 		let g = groups[group];
-		if (clientPackets[group] === undefined) {clientPackets[group] = [];console.log(JSON.stringify(groups[group]));}
+		if (clientPackets[group] === undefined) {
+			clientPackets[group] = [];
+//console.log(JSON.stringify(groups[group]));
+		}
 		let liveChannels = g.liveChannels;			// Get group specific live channels list for all members too
 //console.log(liveChannels);
 		io.sockets.in(group).emit('d', {			// Send to all group members group specific data
