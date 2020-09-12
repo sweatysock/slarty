@@ -473,7 +473,7 @@ function generateMix () {
 				groups[c.group] = {			// Create object
 					liveChannels:[],		// with a liveChannels list
 				};
-				clientPackets[c.group] = [],		// Create a buffer of clientPackets for all members
+				clientPackets[c.group] = [];		// Create a buffer of clientPackets for all members
 			}
 			if (c.group != "noGroup") {			// Store live channel number if part of a group
 				groups[c.group].liveChannels[chan] = true;	// Used to display correct channels in client
