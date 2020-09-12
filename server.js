@@ -391,6 +391,7 @@ console.log("Adding to group ",channel.group," channel ",packet.channel);
 					g.members[i] = packet.channel;	// assign it to our channel, 
 					g.liveChannels[packet.channel] = i;	// and store our member positon in the live channel list
 console.log(channel.group," now includes channel ",packet.channel," in position ",g.liveChannels[packet.channel]);
+console.log(groups[channel.group]);
 					break;				// No need to look anymore
 				}
 			}
