@@ -214,7 +214,6 @@ if (tracecount > 0) console.log("delay for channel ",ch," at position ",p," is n
 					let g = (chan.agc 		// Apply gain. If AGC use mix gain, else channel gain
 						? mixOut.gain : chan.gain);	
 					chan.gain = g;			// Channel gain level should reflect gain used here
-					let p = serverLiveChannels[ch];	// Get the position in the group for this channel
 					if (a.mono8.length > 0) {	// Only mix if there is audio in channel
 						someAudio = true;	// Flag that there is actually some group audio
 	  					for (let i=0; i < a.mono8.length; i++) t8[i] += a.mono8[i] * (g - 1/venueSize);	
