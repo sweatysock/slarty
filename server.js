@@ -351,6 +351,8 @@ io.sockets.on('connection', function (socket) {
 					g.members[i] = null;		// and remove it from members and liveChannels lists
 					g.liveChannels[packet.channel] = null;
 console.log("group memberlist length is ",g.members.length," group liveChannels list length is ",g.liveChannels.length);
+console.log(g.members);
+console.log(g.liveChannels);
 					break;
 				}
 			}
