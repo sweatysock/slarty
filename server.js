@@ -336,10 +336,31 @@ io.sockets.on('connection', function (socket) {
 		channel.liveClients = packet.liveClients;		// Store the number of clients behind this channel
 		channel.timestamp = packet.timestamp;			// Store this latest timestamp for the client to measure rtt
 		if (channel.group != packet.group) {			// If the user has changed their group
-			socket.leave(channel.group);			// leave the group they were in
-			channel.group = packet.group;			// update group channel belongs to
+			socket.leave(channel.group);			// leave the group they were in at a socket io level
+			let g = groups[channel.group];			// Note the group we are currently in 
+			for (let i=0; i<g.members.length; i++) {	// Scan group member list
+				if (g.members[i] == packet.channel) {	// to find the poition our channel was assigned
+					g.members[i] = null;		// and remove it from members and liveChannels lists
+					g.liveChannels[packet.channel] = null;
+					break;
+				}
+			}
+			channel.group = packet.group;			// update the group this channel now belongs to
 			socket.join(channel.group);			// and join this new group
-			// find free slot in group list
+			g = groups[channel.group];			// Note the group we wish to join
+			if (g == null) {				// If first member of group the entry will be null
+				groups[channel.group] = {		// Create object containing a member position list and live channel list 
+					members:[0,packet.channel],	// This channel is the first member in position 1 (not 0)
+					liveChannels:[],		// This list uses channel number as its index and holds the member number
+				};					// so now set our channel live and put us down as member number 1
+				groups[channel.group].liveChannels[packet.channel] = 1;
+			} else for (let i=0; i<g.members.length; i++) {	// Run through the list of group members
+				if (g.members[i] == null) {		// Find an empty slot,
+					g.members[i] = packet.channel;	// assign it to our channel, 
+					g.liveChannels[packet.channel] = i;	// and store our member positon in the live channel list
+					break;				// No need to look anymore
+				}
+			}
 		}
 		channel.socketID = socket.id;				// Store socket ID associated with channel
 		packet.socketID = socket.id;				// Also store it in the packet to help client skip own audio
@@ -469,15 +490,8 @@ function generateMix () {
 	channels.forEach( (c, chan) => {				// Review all channels for audio and activity, and build server mix
 		if (c.name != "") {					// Looking for active channels meaning they have a name
 			if (chan != 0) totalLiveClients +=c.liveClients;// Sum all downstream clients under our active channels
-			if (groups[c.group] == null) {			// If first member of group the entry will be null
-				groups[c.group] = {			// Create object
-					liveChannels:[],		// with a liveChannels list
-				};
-				clientPackets[c.group] = [];		// Create a buffer of clientPackets for all members
-			}
-			if (c.group != "noGroup") {			// Store live channel number if part of a group
-				groups[c.group].liveChannels[chan] = true;	// Used to display correct channels in client
-			}
+			if (clientPackets[c.group] == null) 		// If this is the first channel we find for a group
+				clientPackets[c.group] = [];		// create an empty client packet buffer
 		}
 		if (c.newBuf == false) {				// Build mix from channels that are non-new (buffering completed)
 			let packet;
@@ -491,26 +505,24 @@ function generateMix () {
 				shortages++;				// and also for global monitoring
 				c.playhead = 0;				// Set buffer play position to the start
 			}
-			else {						// Got a packet. Now store it and build server mix
+			else if (packet.channel != 0) {			// Got data. Build mix of downstream channels. Channel 0 is special
 				packetCount++;				// Count how many packets have made the mix for tracing
-				if (packet.channel != 0) {		// Build mix of downstream channels so don't include channel 0
-					if (packet.audio.mono8.length > 0) {
-						someAudio8 = true;
-						for (let i = 0; i < packet.audio.mono8.length; ++i) mono8[i] += packet.audio.mono8[i];	
-					}
-					if (packet.audio.mono16.length > 0) {
-						someAudio16 = true;
-						for (let i = 0; i < packet.audio.mono16.length; ++i) mono16[i] += packet.audio.mono16[i];
-					}
-					seqNos[packet.channel] 		// Store the seq number of the packet just added to the mix
-						= packet.sequence;	// so that it can be subtracted downstream to remove echo
-					timestamps[packet.channel]	// Store the latest timestamp received from the client
-						= c.timestamp;		// so that the sending client can measure its rtt
-					if (c.group != "noGroup") {	// Store packet if part of a group. Used for client controlled mixing
-						clientPackets[c.group].push( packet );	
-					}
-				} else channel0Packet = packet;		// keep the packet for channel 0 (venue) for adding later
-			}
+				if (packet.audio.mono8.length > 0) {	// Unpack the MSRE packet of audio and add to server mix
+					someAudio8 = true;
+					for (let i = 0; i < packet.audio.mono8.length; ++i) mono8[i] += packet.audio.mono8[i];	
+				}
+				if (packet.audio.mono16.length > 0) {
+					someAudio16 = true;
+					for (let i = 0; i < packet.audio.mono16.length; ++i) mono16[i] += packet.audio.mono16[i];
+				}
+				seqNos[packet.channel] 			// Store the seq number of the packet just added to the mix
+					= packet.sequence;		// so that it can be subtracted downstream to remove echo
+				timestamps[packet.channel]		// Store the latest timestamp received from the client
+					= c.timestamp;			// so that the sending client can measure its rtt
+				if (c.group != "noGroup") {		// Store packet if part of a group. Used for client controlled mixing
+					clientPackets[c.group].push( packet );	
+				}
+			} else channel0Packet = packet;			// Keep the channel 0 packet for venue audio sent separately
 		}
 	});
 	// 3. Build server mix packet and send upstream if we have an upstream server connected. 
@@ -591,7 +603,7 @@ function generateMix () {
 		io.sockets.in(group).emit('d', {			// Send to all group members group specific data
 			perf		: p,				// Send performer audio/video packet + other flags
 			channels	: cp,				// All channels in this server plus filtered upstream mix
-			liveChannels	: liveChannels,			// Include server info about live clients and their queues
+			liveChannels	: liveChannels,			// Include group member live channels with member position info
 			commands	: commands,			// Send commands downstream to reach all client endpoints
 		});
 	}

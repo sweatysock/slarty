@@ -396,7 +396,6 @@ document.addEventListener('DOMContentLoaded', function(event){
 				myGroup = groupNameEntry.innerHTML;
 			}
 			e.preventDefault();
-console.log(myGroup);
 		}
 	});
 });
