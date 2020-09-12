@@ -614,6 +614,7 @@ function generateMix () {
 	for (group in groups) {
 //console.log("send to group ",group);		
 		let g = groups[group];
+		if (clientPackets[group] === undefined) {clientPackets[group] = [];console.log(JSON.stringify(groups[group]));}
 		clientPackets[group].push( channel0Packet );		// Add channel 0 (venue audio) to the packets for every group
 		let liveChannels = g.liveChannels;			// Get group specific live channels list for all members too
 //console.log(liveChannels);
