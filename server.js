@@ -26,6 +26,21 @@ for (let i=0; i < NumberOfChannels; i++) {				// Create all the channels pre-ini
 		timestamp	: 0,					// The latest timestamp received from the client
 	}
 }
+var venue = {								// Venue audio data structure coming down from our upstream server
+	packets 	: [],						// the packet buffer where venue audio is held
+	name		: "Venue",					// name given to the venue channel
+	liveClients	: 0,						// Number of clients connected to the venue in total
+	group		: "",						// Group that channel belongs to. For the venue this is always "noGroup"
+	socketID	: undefined,					// socket associated with this channel
+	shortages 	: 0,						// for monitoring
+	overflows 	: 0,						// for monitoring
+	inCount		: 0,						// for monitoring
+	newBuf 		: true,						// New buffers are left to build up to minTriggerLevel
+	maxBufferSize	: maxBufferSize,				// Buffer max size unless recording
+	mixTriggerLevel	: mixTriggerLevel,				// Minimum amount in buffer before forming part of mix
+	recording	: false,					// Flags that all audio is to be recorded and looped
+	playHead	: 0,						// Points to where we are reading from the buffer
+}
 var perf = {								// Performer data structure
 	live	: false,						// Flag to indicate if we have performer is on air or not
 	chan	: 0,							// Performer's channel if connected directly here (venue server = no upstream)
@@ -126,7 +141,6 @@ upstreamServer.on('channel', function (data) {				// The response to our "Hi" is
 		upstreamServerChannel = data.channel;
 		if (myServerName == "") myServerName = "Channel " + upstreamServerChannel;
 		console.log("Upstream server has assigned us channel ",upstreamServerChannel);
-		channels[0].name = "Venue";
 		upstreamConnected = true;
 	} else {
 		console.log("Upstream server unable to assign a channel");		
@@ -151,16 +165,15 @@ upstreamServer.on('d', function (packet) {
 	if ((!perf.streaming) && (perf.packets.length > 5)){		// If not streaming but enough perf data buffered
 		perf.streaming = true;					// performer is now streaming from here
 	}
-	// 2. Subtract our buffered audio from upstream mix
-	let c0;							
+	// 2. Subtract our buffered audio from venue mix sent from our upstream server
+	let vData = packet.venue;					// Get the venue data from the packet
 	let ts = 0;
-	packet.channels.forEach(c => {if (c.channel==0) c0=c});		// Find the venue channel, channel 0
-	if (c0 != null) {						// Check there is venue audio. It is not guaranteed 
-		let mix = c0.audio;					// Mix is by default the MSRE audio that came from upstream
-		mchannels[0].liveClients = c0.liveClients;		// Save the number of clients connected upstream in channel 0
-		ts = c0.timestamps[upstreamServerChannel];		// Channel 0 also contains timestamps that allow rtt measurement
+	if (vData != null) {						// Check there is venue audio. It is not guaranteed 
+		let mix = vData.audio;					// Mix is by default the MSRE audio that came from upstream
+		venue.liveClients = vData.liveClients;			// Save the number of clients connected upstream in channel 0
+		ts = vData.timestamps[upstreamServerChannel];		// Venue data also contains timestamps that allow rtt measurement
 		let a8 = [], a16 = [];					// Will point to our audio MSRE blocks if there are any
-		let s = p0.seqNos[upstreamServerChannel];		// Channel 0 comes with list of packet seq nos in mix. Get ours.
+		let s = vData.seqNos[upstreamServerChannel];		// Venue data comes with list of packet seq nos in mix. Get ours.
 		if (s != null) {					// If our channel has a sequence number in the mix
 			let a8 = [], a16 = [];				// We are going to look for our buffered packet audio
 			while (packetBuf.length) {			// Scan our packet buffer for the packet with our sequence
@@ -181,30 +194,30 @@ upstreamServer.on('d', function (packet) {
 				mix = {mono8: v8, mono16: v16};		// Reconstruct the mix MSRE block with the subtracted audio
 			} 					
 		} 
-	// 3. Build a channel 0 packet 
+	// 3. Build a venue packet 
 		if (mix.mono8.length != 0) 				// Filter upstream audio to emulate distance
 			mix.mono8 = midBoostFilter(mix.mono8);		// Just filter low sample rate part as it is a high pass filter
 		let p = {						// Construct the audio packet
-			name		: channels[0].name,		// Give packet our channel name
+			name		: venue.name,			// Give packet our channel name
 			audio		: mix,				// The audio is the mix just prepared
 			peak		: 0,				// This is calculated in the client.  
-			liveClients	: channels[0].liveClients,	// Clients visible to upstream server = total venue capacity
-			timestamp	: 0,				// Channel 0 (venue) audio never returns so no rtt to measure
+			liveClients	: venue.liveClients,		// Clients visible to upstream server = total venue capacity
+			timestamp	: 0,				// Venue audio goes down but never returns so no rtt to measure
 			sequence	: venueSequence++,		// Sequence number for tracking quality
-			channel		: 0,				// Upstream is assigned channel 0 everywhere
+			channel		: 0,				// Upstream is assigned channel 0 everywhere MARK
 			sampleRate	: SampleRate,			// Send sample rate to help processing
-			group		: "",				// Channel 0 doesn't go through group processing
+			group		: "",				// Venue data doesn't go through group processing
 		}
-		// 4. Store the packet in the channel 0 buffer
-		channels[0].packets.push(p); 				// Store upstream packet in channel 0
-		if (channels[0].packets.length > maxBufferSize) {	// Clip buffer if overflowing
-			channels[0].packets.shift();
-			channels[0].overflows++;
+		// 4. Store the packet in the venue buffer
+		venue.packets.push(p); 					// Store venue packet in venue buffer
+		if (venue.packets.length > maxBufferSize) {		// Clip buffer if overflowing
+			venue.packets.shift();
+			venue.overflows++;
 		}
-		if (channels[0].packets.length >= channels[0].mixTriggerLevel) {
-			channels[0].newBuf = false;			// Buffer has filled enough. Channel can enter the mix
+		if (venue.packets.length >= venue.mixTriggerLevel) {
+			venue.newBuf = false;				// Buffer has filled enough. Venue stream can enter the mix
 		}
-	} else console.log("NO CHANNEL 0 PACKET IN DOWNSTREAM MESSAGE!");
+	} else console.log("NO VENUE PACKET IN DOWNSTREAM MESSAGE!");
 	// 5. Generate the mix if there is enough audio buffered in all active channels
 	enterState( genMixState );
 	if (enoughAudio()) generateMix();				// If there is enough buffered in all other channels generate mix
@@ -212,14 +225,12 @@ upstreamServer.on('d', function (packet) {
 });
 
 upstreamServer.on('disconnect', function () {
-	channels[0].packets = [];
-	channels[0].name = "";
-	channels[0].liveClients = 0;
-	channels[0].group = "noGroup";
-	channels[0].socketID = undefined;
-	channels[0].shortages = 0,
-	channels[0].overflows = 0,
-	channels[0].newBuf = true;
+	venue.packets = [];
+	venue.liveClients = 0;
+	venue.socketID = undefined;
+	venue.shortages = 0,
+	venue.overflows = 0,
+	venue.newBuf = true;
 	upstreamConnected = false;
 	console.log("Upstream server disconnected.");
 });
@@ -473,7 +484,13 @@ function enoughAudio() {						// Is there enough audio to build a mix before tim
 		}
 	}
 	if (perf.live) {						// If we are in performer mode
-		if (perf.packets.length > mixTriggerLevel)		// check if the performer buffer has enough too
+		if (perf.packets.length > mixTriggerLevel)		// check if the performer buffer has enough 
+			fullCount++;					// If it does then lets go
+		else							// Otherwise lets not mix just yet
+			allFull = false;
+	}
+	if (!venue.newBuf) {						// If the venue has started streaming
+		if (venue.packets.length > mixTriggerLevel)		// check if the venue buffer has enough too
 			fullCount++;					// If it does then lets go
 		else							// Otherwise lets not mix just yet
 			allFull = false;
@@ -495,13 +512,17 @@ function generateMix () {
 		p.packet = perf.packets.shift();			// add to copy of perf to replace the null packet
 		p.packet.timestamp = channels[perf.chan].timestamp;	// Update the timestamp to the latest one recieved from the perf client
 	}
+	// 1.5 Get venue packet if it is streaming
+	let venuePacket = null;						// The channel 0 (venue) audio packet
+	if ((!venue.newBuf) && (venue.packets.length > 0)) {		// If venue is streaming and there is data in its buffer
+		venuePacket = venue.packets.shift();			// extract the oldest element in the buffer
+	}
 	// 2. Process all channels building group info. objects and generating a mix of all channels except 0 (upstream venue track) to send upstream
 	let mono8 = new Array(PacketSize/2).fill(0);			// Mix of this server's audio to send upstream and also to add to venue track
 	let mono16 = new Array(PacketSize/2).fill(0);			// It is in MSRE so there are two half-sized arrays to handle
 	let someAudio8 = false, someAudio16 = false;			// Flags to indicate if there is any audio in these categories
 	let seqNos = [];						// Array of packet sequence numbers used in the mix (channel is index)
 	let timestamps = [];						// Array of packet timestamps used in the mix (channel is index)
-	let channel0Packet = null;					// The channel 0 (venue) audio packet
 	let clientPackets = [];						// Temporary store of all packets to send to all group members
 	let packetCount = 0;						// Keep count of packets that make the mix for monitoring
 	let totalLiveClients = 0;					// Count total clients live downstream of this server
@@ -523,7 +544,7 @@ function generateMix () {
 				shortages++;				// and also for global monitoring
 				c.playhead = 0;				// Set buffer play position to the start
 			}
-			else if (packet.channel != 0) {			// Got data. Build mix of downstream channels. Channel 0 is special
+			else {						// Got data. Build mix of downstream channels. 
 				packetCount++;				// Count how many packets have made the mix for tracing
 				if (packet.audio.mono8.length > 0) {	// Unpack the MSRE packet of audio and add to server mix
 					someAudio8 = true;
@@ -540,7 +561,7 @@ function generateMix () {
 				if (c.group != "noGroup") {		// Store packet if part of a group. Used for client controlled mixing
 					clientPackets[c.group].push( packet );	
 				}
-			} else channel0Packet = packet;			// Keep the channel 0 packet for venue audio sent separately
+			}
 		}
 	});
 	// 3. Build server mix packet and send upstream if we have an upstream server connected. 
@@ -560,15 +581,14 @@ function generateMix () {
 			recording	: false,			// Make sure the upstream server never records
 			sampleRate	: SampleRate,			// Send sample rate to help processing
 			group		: "noGroup",			// Not part of a group in upstream server
-			// MARK send liveChannels upstream
 		};
 		upstreamServer.emit("u",packet); 			// Send the packet upstream
 		packetBuf.push(packet);					// Add sent packet to LILO buffer for echo cancelling 
 		upstreamOut++;
-	// 3.1. Now that mix has gone upstream complete venue audio for downstream by adding our mix to channel 0 if it exists
-		if (channel0Packet != null) {				// If we have venue audio from upstream
-			let v8 = channel0Packet.audio.mono8;		// Get the venue audio from upstream
-			let v16 = channel0Packet.audio.mono16;		// in MSRE format
+	// 3.1. Now that mix has gone upstream complete venue audio for downstream by adding our mix to the venue packet if it exists
+		if (venuePacket != null) {				// If we have venue audio from upstream
+			let v8 = venuePacket.audio.mono8;		// Get the venue audio from upstream
+			let v16 = venuePacket.audio.mono16;		// in MSRE format
 			let m8 = mix.mono8, a16 = mix.mono16;		// and the mix we have just built too
 			if (m8.length > 0) {				// Only combine venue and mix if there's mix audio
 				if (v8.length > 0) {			// If there is venue audio add mix to venue
@@ -580,25 +600,25 @@ function generateMix () {
 					for (let i = 0; i < v16.length; i++) v16[i] = v16[i] + m16[i];
 				} else v16 = m16;			// otherwise just use the mix high band audio
 			}
-			channel0Packet.seqNos = seqNos;			// Add to channel 0 packet the list of seqNos that were used
+			venuePacket.seqNos = seqNos;			// Add to channel 0 packet the list of seqNos that were used
 		} else {						// Temporarily no venue audio has reached us so generate a packet 
-			channel0Packet = {				// Construct the audio packet
-				name		: "VENUE",		// Give packet main venue name
+			venuePacket = {					// Construct the venue packet
+				name		: "VENUE",		// Give packet temp venue name
 				audio		: mix,			// Use our mix as the venue audio
 				seqNos		: seqNos,		// Packet sequence numbers in the mix
 				timestamps	: timestamps,		// Packet timestamps in mix, so clients can measure their rtt
-				liveClients	: channels[0].liveClients,	// Just is a temporary lack of audio. Use upstream value
+				liveClients	: venue.liveClients,	// Just is a temporary lack of audio. Use upstream value
 				peak		: 0,			// This is calculated in the client
 				timestamp	: 0,			// No need to trace RTT in downstream venue packets
 				sequence	: venueSequence++,	// Sequence number for tracking quality
-				channel		: 0,			// Upstream is assigned channel 0 everywhere
+				channel		: 0,			// Upstream is assigned channel 0 everywhere MARK
 				sampleRate	: SampleRate,		// Send sample rate to help processing
-				group		: "noGroup",		// No group for venue channel
+				group		: "",			// Venue data doesn't go through group processing
 			}
 		}
-	} else {							// No upstream server so we must be the venue server
-		channel0Packet = {					// Construct the venue (channel 0) audio packet
-			name		: "VENUE",			// Give packet main venue name
+	} else {							// No upstream server connected so we must be the venue server
+		venuePacket = {						// Construct the venue packet
+			name		: "Venue",			// Give packet main venue name
 			audio		: mix,				// Use our mix as the venue audio
 			seqNos		: seqNos,			// Packet sequence numbers in the mix
 			timestamps	: timestamps,			// Packet timestamps in mix, so clients can measure their rtt
@@ -606,22 +626,22 @@ function generateMix () {
 			peak		: 0,				// This is calculated in the client.
 			timestamp	: 0,				// No need to trace RTT in downstream venue packets
 			sequence	: venueSequence++,		// Sequence number for tracking quality
-			channel		: 0,				// Upstream is assigned channel 0 everywhere
+			channel		: 0,				// Upstream is assigned channel 0 everywhere MARK
 			sampleRate	: SampleRate,			// Send sample rate to help processing
-			group		: "noGroup",			// No group for venue channel
+			group		: "",				// Venue data doesn't go through group processing
 		}
 	} 
-	// 4. Send packets to all clients group by group, adding performer, channel 0 (venue) and group audio, plus group live channels and commands
+	// 4. Send packets to all clients group by group, adding performer, venue and group audio, plus group live channels and commands
 	for (group in groups) {
 //console.log("send to group ",group);		
 		let g = groups[group];
 		if (clientPackets[group] === undefined) {clientPackets[group] = [];console.log(JSON.stringify(groups[group]));}
-		clientPackets[group].push( channel0Packet );		// Add channel 0 (venue audio) to the packets for every group
 		let liveChannels = g.liveChannels;			// Get group specific live channels list for all members too
 //console.log(liveChannels);
 		liveChannels[0] = true;					// Add channel 0 to the live channels list for all members
 		io.sockets.in(group).emit('d', {			// Send to all group members group specific data
 			perf		: p,				// Send performer audio/video packet + other flags
+			venue		: venuePacket,			// Venue audio packet for special processing
 			channels	: clientPackets[group],		// All channels in this group plus filtered upstream venue mix (in channel 0)
 			liveChannels	: liveChannels,			// Include group member live channels with member position info
 			commands	: commands,			// Send commands downstream to reach all client endpoints
@@ -695,7 +715,7 @@ function printReport() {
 	enterState( idleState );					// Update timers in case we are inactive
 //	console.log(myServerName," Activity Report");
 //	console.log("Idle = ", idleState.total, " upstream = ", upstreamState.total, " downstream = ", downstreamState.total, " genMix = ", genMixState.total);
-//	console.log("Clients = ",connectedClients,"  Upstream In =",upstreamIn,"Upstream Out = ",upstreamOut,"Upstream Shortages = ",channels[0].shortages," Upstream overflows = ",channels[0].overflows,"In = ",packetsIn," Out = ",packetsOut," overflows = ",overflows," shortages = ",shortages," forced mixes = ",forcedMixes," mixMax = ",mixMax," rtt = ",rtt);
+//	console.log("Clients = ",connectedClients,"  Upstream In =",upstreamIn,"Upstream Out = ",upstreamOut,"Upstream Shortages = ",venue.shortages," Upstream overflows = ",venue.overflows,"In = ",packetsIn," Out = ",packetsOut," overflows = ",overflows," shortages = ",shortages," forced mixes = ",forcedMixes," mixMax = ",mixMax," rtt = ",rtt);
 	let cbs = [];
 	let cic = [];
 	for (let c in channels) {
@@ -717,8 +737,8 @@ function printReport() {
 		"out":		packetsOut,
 		"upIn":		upstreamIn,
 		"upOut":	upstreamOut,
-		"upShort":	channels[0].shortages,
-		"upOver":	channels[0].overflows,
+		"upShort":	venue.shortages,
+		"upOver":	venue.overflows,
 		"overflows":	overflows,
 		"shortages":	shortages,
 		"forcedMixes":	forcedMixes,

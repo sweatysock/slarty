@@ -59,6 +59,17 @@ var micIn = {								// and for microphone input
 	threshold:0.000,						// Level below which we don't send audio
 	gate	: 1,							// Threshold gate. >0 means open.
 };
+var venue = {								// Similar structure for the venue channel
+	name 	: "Venue",
+	gain	: 0,
+	gainRate: 100,
+	targetGain: 1,
+	ceiling : 1,
+	agc	: true,
+	muted	: false,
+	peak	: 0,
+	channel	: "venue",
+};
 var recording = false;							// Used for testing purposes
 var serverMuted = false;
 var venueSize = 1;							// Number of people in the venue. Used for adjusting venue audio.
@@ -129,20 +140,17 @@ socketIO.on('d', function (data) {
 		let v = [];						// Our objective is to get the venue audio (if any) in here,
 		let gL = [], gR = [];					// the group stereo audio (if any) in here
 		let pL = [], pR = [];					// and the performer stereo audio (if any) in here. Then mix and send to speaker
-		// 1. Process Channel 0 venue mix from server 
-		let c0;							
+		// 1. Process venue mix from server 
 		let ts = 0;
-		data.channels.forEach(c => {if (c.channel==0) c0=c});	// Find the venue channel, channel 0
-		if (c0 != null) {					// If there is c0 data find our seq #, subtract it, & correct venue level
-			channels[0].name = c0.name;			// TEMP FIX
-			channels[0].channel = 0;			// TEMP FIX
-			channels[0].gain = (channels[0].agc ? mixOut.gain : channels[0].gain);		// TEMP FIX
-			ts = c0.timestamps[myChannel];			// Channel 0 also contains timestamps that allow rtt measurement
-			audience = c0.liveClients;			// The server sends us the current audience count for level setting
+		let vData = data.venue;
+		if (vData != null) {					// If there is venue data find our seq #, subtract it, & correct venue level
+			venue.gain = (venue.agc ? mixOut.gain : venue.gain);
+			ts = vData.timestamps[myChannel];		// Venue data also contains timestamps that allow rtt measurement
+			audience = vData.liveClients;			// The server sends us the current audience count for level setting
 			if (venueSizeCmd == 0) venueSize = audience;	// If there is no command setting the venue size we use the audience size
 			else venueSize = venueSizeCmd;			// otherwise the command sets the audience size = attenuation level
 			let a8 = [], a16 = [];				// Temp store for our audio for subtracting (echo cancelling)
-			let s = c0.seqNos[myChannel];			// If Channel 0's mix contains our audio this will be its sequence no.
+			let s = vData.seqNos[myChannel];		// If the venue mix contains our audio this will be its sequence no.
 			if (s != null) {				// If we are performer or there are network issues our audio won't be in the mix
 				while (packetBuf.length) {		// Scan the packet buffer for the packet with this sequence
 					let p = packetBuf.shift();	// Remove the oldest packet from the buffer until s is found
@@ -153,7 +161,7 @@ socketIO.on('d', function (data) {
 					}
 				}
 			}
-			let v8 = c0.audio.mono8, v16 = c0.audio.mono16;	// Shortcuts to the channel 0 MSRE data blocks
+			let v8 = vData.audio.mono8, v16 = vData.audio.mono16;	// Shortcuts to the venue MSRE data blocks
 			if (v8.length > 0) {				// If there is venue audio it will need processing
 				let sr = 8000;				// Minimum sample rate of 8kHz
 				if (a8.length > 0)  			// Only subtract if our audio is not empty
@@ -170,8 +178,8 @@ socketIO.on('d', function (data) {
 					}
 					sr = 16000;			// This is at the higher sample rate
 				} else v = v8;				// Only low bandwidth venue audio 
-				let p = maxValue(v);			// Get peak audio for channel 0 level display 
-				if (p > channels[0].peak) channels[0].peak = p;
+				let p = maxValue(v);			// Get peak audio for venue level display 
+				if (p > venue.peak) venue.peak = p;
 				v = reSample(v, sr, soundcardSampleRate, vCache); 
 			} else c0.peak = 0;				// Don't need to be a genius to figure that one out if there's no audio!
 		} 
@@ -411,7 +419,10 @@ function displayAnimation() { 						// called 100mS to animate audio displays
 		setLevelDisplay( micIn );				// Update LED display for mic.peak
 		setSliderPos( micIn );					// Update slider position for mic gain
 		setThresholdPos( micIn );
-		for (let ch in channels) {				// Update each channel's UI
+		venue.peak = venue.peak * rate; 			// drop venue peak level a little for smooth drops
+		setLevelDisplay( venue );				// Update LED display for venue.peak
+		setSliderPos( venue );					// Update slider position for venue gain
+		for (let ch in channels) {				// Update dynamic channel's UI
 			c = channels[ch];
 			if (c.name != "") {				// A channel needs a name to be active
 				if (serverLiveChannels[ch] == null)	// Channel must have disconnected. 
@@ -1058,6 +1069,7 @@ function handleAudio(stream) {						// We have obtained media access
 	micAccessAllowed = true;
 	createOutputUI( mixOut );					// Create the output mix channel UI
 	createMicUI( micIn );						// Create the microphone channel UI
+	createChannelUI( venue );					// Create the venue channel UI
 
 	let liveSource = context.createMediaStreamSource(stream); 	// Create audio source (mic)
 	let node = undefined;
