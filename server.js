@@ -374,7 +374,7 @@ console.log(g.liveChannels);
 				}
 console.log("Member count is ",memberCount);
 				if (memberCount = 0) groups.splice(index ,1);
-for (grp in groups) console.log(JSON.stringify(grp));
+for (grp in groups) console.log(JSON.stringify(groups[grp]));
 			} else console.log("GROUP WAS NULL BEFORE I COULD LEAVE IT!");
 			channel.group = packet.group;			// update the group this channel now belongs to
 			socket.join(channel.group);			// and join this new group
@@ -403,7 +403,7 @@ console.log(channel.group," now includes channel ",packet.channel," in position 
 				}
 			}
 console.log("GROUP CHANGE PROCESS COMPLETE. Groups are...");
-for (grp in groups) console.log(JSON.stringify(grp));
+for (grp in groups) console.log(JSON.stringify(groups[grp]));
 		}
 		channel.socketID = socket.id;				// Store socket ID associated with channel
 		packet.socketID = socket.id;				// Also store it in the packet to help client skip own audio
