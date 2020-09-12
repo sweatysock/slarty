@@ -364,7 +364,7 @@ console.log("Creating new group ",channel.group," for channel ",packet.channel);
 					liveChannels:[],		// This list uses channel number as its index and holds the member number
 				};					// so now set our channel live and put us down as member number 1
 				groups[channel.group].liveChannels[packet.channel] = 1;
-console.log(channel.group," now includes channel ",packet.channel," in position ",g.liveChannels[packet.channel]);
+console.log(channel.group," now includes channel ",packet.channel," in position ",groups[channel.group].liveChannels[packet.channel]);
 			} else {
 console.log("Adding to group ",channel.group," channel ",packet.channel);
 				for (let i=0; i<g.members.length; i++) {	// Run through the list of group members
