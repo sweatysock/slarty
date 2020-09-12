@@ -13,7 +13,7 @@ for (let i=0; i < NumberOfChannels; i++) {				// Create all the channels pre-ini
 		packets 	: [],					// the packet buffer where all channel audio is held
 		name		: "",					// name given by user or client 
 		liveClients	: 0,					// Number of clients connected to this channel (>1 if a downstream server)
-		group		: "noGroup",				// Group that channel belongs to. Default is no group.
+		group		: "",					// Group that channel belongs to. Starts empty to force joining "noGroup"
 		socketID	: undefined,				// socket associated with this channel
 		shortages 	: 0,					// for monitoring
 		overflows 	: 0,					// for monitoring
@@ -193,7 +193,7 @@ upstreamServer.on('d', function (packet) {
 			sequence	: venueSequence++,		// Sequence number for tracking quality
 			channel		: 0,				// Upstream is assigned channel 0 everywhere
 			sampleRate	: SampleRate,			// Send sample rate to help processing
-			group		: "noGroup",			// No group for venue channel
+			group		: "",				// Channel 0 doesn't go through group processing
 		}
 		// 4. Store the packet in the channel 0 buffer
 		channels[0].packets.push(p); 				// Store upstream packet in channel 0
@@ -242,10 +242,17 @@ io.sockets.on('connection', function (socket) {
 					perf.live = false;
 				}
 				if (!c.recording) {			// If recording the channel remains unchanged
-					c.packets = [];			// so that audio can continue to be generated
+					let g = groups[c.group];	// Get the group this channel belonged to
+					for (let i=0; i<g.members.length; i++) {	// Scan group member list
+					if (g.members[i] == packet.channel) {		// to find our place in the group
+						g.members[i] = null;			// and remove it from members 
+						g.liveChannels[packet.channel] = null;	// and liveChannels lists
+						break;			// Can stop scanning the members list
+					}
+					c.group = "";			// Set to empty to force rejoining default group
+					c.packets = [];			
 					c.name = "";
 					c.liveClients = 1;
-					c.group = "noGroup";
 					c.socketID = undefined;
 					c.shortages = 0,
 					c.overflows = 0,
@@ -275,11 +282,10 @@ io.sockets.on('connection', function (socket) {
 			reverb:reverbFile,				// Also instruct the client to load the venue reverb 
 		});		
 		if (channel != -1) {					// Channel has been successfully assigned
-			// MARK store server URL and active channel info and URLs if provided
 			channels[channel].packets = [];			// Reset channel values
 			channels[channel].name = "";			// This will be set when data comes in
 			channels[channel].liveClients = 0;		// Reset number of clients under this channel
-			channels[channel].group = "noGroup";		// Default group name
+			channels[channel].group = "";			// Empty group name forces joining default group
 			channels[channel].socketID = socket.id;
 			channels[channel].socket = socket;
 			channels[channel].shortages = 0;
@@ -338,7 +344,7 @@ io.sockets.on('connection', function (socket) {
 		if (channel.group != packet.group) {			// If the user has changed their group
 			socket.leave(channel.group);			// leave the group they were in at a socket io level
 			let g = groups[channel.group];			// Note the group we are currently in 
-			if (g != null)					// On server restart clients are already in groups but we lost that info
+			if (g != null)					// At the start no groups exist so none can be left, only joined
 				for (let i=0; i<g.members.length; i++) {// Scan group member list
 				if (g.members[i] == packet.channel) {	// to find the poition our channel was assigned
 					g.members[i] = null;		// and remove it from members and liveChannels lists
