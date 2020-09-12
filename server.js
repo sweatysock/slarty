@@ -371,9 +371,11 @@ console.log(g.liveChannels);
 					}
 					if (g.members[i] != null) memberCount++;// Count how many members are in the group
 				}
-console.log("Member count is ",memberCount);
+console.log("Member count is ",memberCount," for group:");
+console.log(groups[channel.group]);
 				if (memberCount = 0) delete groups[channel.group];
 for (grp in groups) console.log(JSON.stringify(groups[grp]));
+console.log("HAS GROUP BEEN REMOVED?");
 			} else console.log("GROUP WAS NULL BEFORE I COULD LEAVE IT!");
 			channel.group = packet.group;			// update the group this channel now belongs to
 			socket.join(channel.group);			// and join this new group
