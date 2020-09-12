@@ -359,11 +359,13 @@ io.sockets.on('connection', function (socket) {
 console.log("GROUP CHANGE DETECTED. Current group is ");
 console.log(g);
 			let memberCount = 0;				// Scan this group counting members and removing ourselves
+			let index = 0;
 			if (g != null) { 
 				for (let i=0; i<g.members.length; i++) {
 					if (g.members[i] == packet.channel) {	// to find the poition our channel was assigned
 						g.members[i] = null;		// and remove it from members and liveChannels lists
 						g.liveChannels[packet.channel] = null;
+						index = i;
 console.log("group memberlist length is ",g.members.length," group liveChannels list length is ",g.liveChannels.length);
 console.log(g.members);
 console.log(g.liveChannels);
@@ -372,7 +374,7 @@ console.log(g.liveChannels);
 				}
 			} else console.log("GROUP WAS NULL BEFORE I COULD LEAVE IT!");
 console.log("Member count is ",memberCount);
-			if (memberCount = 0) groups[channel.group] = null;
+			if (memberCount = 0) groups.splice(index ,1);
 			channel.group = packet.group;			// update the group this channel now belongs to
 			socket.join(channel.group);			// and join this new group
 			g = groups[channel.group];			// Note the group we wish to join
