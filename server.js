@@ -33,6 +33,7 @@ var perf = {								// Performer data structure
 	streaming:false,						// Flag that indicates the performer buffer is full enough to start streaming
 	inCount	: 0,							// For monitoring
 }
+var groups = [];							// Client group member lists indexed by group name
 var packetBuf = [];							// Buffer of packets sent upstream, subtracted from venue mix later
 var venueSequence = 0;							// Sequence counter for venue sound going downstream
 var upSequence = 0;							// Sequence counter for sending upstream
@@ -462,7 +463,6 @@ function generateMix () {
 	let seqNos = [];						// Array of packet sequence numbers used in the mix (channel is index)
 	let timestamps = [];						// Array of packet timestamps used in the mix (channel is index)
 	let channel0Packet = null;					// The channel 0 (venue) audio packet
-	let groups = [];						// Data collated by group for sending downstream
 	let clientPackets = [];						// Temporary store of all packets to send to all group members
 	let packetCount = 0;						// Keep count of packets that make the mix for monitoring
 	let totalLiveClients = 0;					// Count total clients live downstream of this server
