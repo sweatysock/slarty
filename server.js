@@ -379,6 +379,7 @@ io.sockets.on('connection', function (socket) {
 					}
 				}
 			}
+for (grp in groups) console.log(grp,groups[grp]);
 		}							// Finished handling group changes.
 		channel.socketID = socket.id;				// Store socket ID associated with channel
 		packet.socketID = socket.id;				// Also store it in the packet to help client skip own audio
@@ -623,7 +624,6 @@ function generateMix () {
 	// 4. Send packets to all clients group by group, adding performer, venue and group audio, plus group live channels and commands
 	for (group in groups) {
 		if (group.memberCount == 0) continue;			// Skip empty groups
-console.log("Sending to ",group);
 		let g = groups[group];
 		let liveChannels = g.liveChannels;			// Get group specific live channels list for all members too
 		io.sockets.in(group).emit('d', {			// Send to all group members group specific data
