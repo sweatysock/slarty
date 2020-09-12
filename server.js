@@ -622,8 +622,7 @@ function generateMix () {
 		}
 	} 
 	// 4. Send packets to all clients group by group, adding performer, venue and group audio, plus group live channels and commands
-	for (group in groups) {
-		if (group.memberCount == 0) continue;			// Skip empty groups
+	for (group in groups) if (group.memberCount > 0) {		// Send to all groups with some members
 console.log("Sending to ",group);
 		let g = groups[group];
 		let liveChannels = g.liveChannels;			// Get group specific live channels list for all members too
