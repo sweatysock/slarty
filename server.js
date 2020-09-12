@@ -350,6 +350,7 @@ io.sockets.on('connection', function (socket) {
 			socket.join(channel.group);			// and join this new group
 			g = groups[channel.group];			// Note the group we wish to join
 			if (g == null) {				// If first member of group the entry will be null
+console.log("Creating new group ",channel.group," for channel ",packet.channel);
 				groups[channel.group] = {		// Create object containing a member position list and live channel list 
 					members:[0,packet.channel],	// This channel is the first member in position 1 (not 0)
 					liveChannels:[],		// This list uses channel number as its index and holds the member number
@@ -361,6 +362,7 @@ io.sockets.on('connection', function (socket) {
 					g.liveChannels[packet.channel] = i;	// and store our member positon in the live channel list
 					break;				// No need to look anymore
 				}
+console.log(channel.group," now includes ",packet.channel," in position ",g.liveChannels[packet.channel]);
 			}
 		}
 		channel.socketID = socket.id;				// Store socket ID associated with channel
@@ -596,14 +598,15 @@ function generateMix () {
 	} 
 	// 4. Send packets to all clients group by group, adding performer, channel 0 (venue) and group audio, plus group live channels and commands
 	for (group in groups) {
+console.log("send to group ",group);		
 		let g = groups[group];
-		let cp = clientPackets[group];				// Get group specific packets to send to all group members
-		cp.push( channel0Packet );				// Add channel 0 (venue audio) to the packets for every group
+		clientPackets[group].push( channel0Packet );		// Add channel 0 (venue audio) to the packets for every group
 		let liveChannels = g.liveChannels;			// Get group specific live channels list for all members too
+console.log(liveChannels);
 		liveChannels[0] = true;					// Add channel 0 to the live channels list for all members
 		io.sockets.in(group).emit('d', {			// Send to all group members group specific data
 			perf		: p,				// Send performer audio/video packet + other flags
-			channels	: cp,				// All channels in this server plus filtered upstream mix
+			channels	: clientPackets[group],		// All channels in this group plus filtered upstream venue mix (in channel 0)
 			liveChannels	: liveChannels,			// Include group member live channels with member position info
 			commands	: commands,			// Send commands downstream to reach all client endpoints
 		});
