@@ -389,7 +389,7 @@ console.log(groups[channel.group]);
 console.log("Adding to group ",channel.group," channel ",packet.channel);
 console.log(groups[channel.group]);
 console.log(g.members.length);
-				for (let i=0; i<g.members.length; i++) {// Run through the list of group members
+				for (let i=0; i<g.members.length+1; i++) {// Run through the list of group members
 					if (g.members[i] == null) {		// Find an empty position slot,
 						g.members[i] = packet.channel;	// assign it to our channel, 
 						g.liveChannels[packet.channel] = i;	// and store our member positon in the live channel list
