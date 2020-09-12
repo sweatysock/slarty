@@ -244,10 +244,10 @@ io.sockets.on('connection', function (socket) {
 				if (!c.recording) {			// If recording the channel remains unchanged
 					let g = groups[c.group];	// Get the group this channel belonged to
 					for (let i=0; i<g.members.length; i++) {	// Scan group member list
-						if (g.members[i] == packet.channel) {	// to find our place in the group
+						if (g.members[i] == ch) {		// to find our place in the group
 							g.members[i] = null;		// and remove it from members 
-							g.liveChannels[packet.channel] = null;	// and liveChannels lists
-							break;			// Can stop scanning the members list
+							g.liveChannels[ch] = null;	// and liveChannels lists
+							break;		// Can stop scanning the members list
 						}
 					}
 					c.group = "";			// Set to empty to force rejoining default group
