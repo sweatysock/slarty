@@ -361,21 +361,13 @@ console.log(g);
 			let memberCount = 0;				// Scan this group counting members and removing ourselves
 			let index = 0;
 			if (g != null) { 
-				for (let i=0; i<g.members.length; i++) {
-					if (g.members[i] == packet.channel) {	// to find the poition our channel was assigned
-						g.members[i] = null;		// and remove it from members and liveChannels lists
-						g.liveChannels[packet.channel] = null;
-console.log("group memberlist length is ",g.members.length," group liveChannels list length is ",g.liveChannels.length);
-console.log(g.members);
-console.log(g.liveChannels);
-					}
-					if (g.members[i] != null) memberCount++;// Count how many members are in the group
-				}
-console.log("Member count is ",memberCount," for group:");
-console.log(groups[channel.group]);
-				if (memberCount = 0) delete groups[channel.group];
+console.log("Removing from group ",packet.group);
+				let pos = g.liveChannels[packet.channel];
+				g.members[pos] = null;
+				g.memberCount--;		// One less member of the group
+				g.liveChannels[packet.channel] = null;
 for (grp in groups) console.log(JSON.stringify(groups[grp]));
-console.log("HAS GROUP BEEN REMOVED?");
+console.log("REMOVED?");
 			} else console.log("GROUP WAS NULL BEFORE I COULD LEAVE IT!");
 			channel.group = packet.group;			// update the group this channel now belongs to
 			socket.join(channel.group);			// and join this new group
@@ -384,6 +376,7 @@ console.log("HAS GROUP BEEN REMOVED?");
 console.log("Creating new group ",channel.group," for channel ",packet.channel);
 				groups[channel.group] = {		// Create object containing a member position list and live channel list 
 					members:[packet.channel],	// This channel is the first member in position 0
+					memberCount:1,			// So the member count is obviously 1
 					liveChannels:[],		// This list uses channel number as its index and holds the member number
 				};					// so now set our channel live and indicate we are in position 0
 				groups[channel.group].liveChannels[packet.channel] = 0;
@@ -396,6 +389,7 @@ console.log(g.members.length);
 				for (let i=0; i<g.members.length+1; i++) {// Run through the list of group members
 					if (g.members[i] == null) {		// Find an empty position slot,
 						g.members[i] = packet.channel;	// assign it to our channel, 
+						g.memberCount++;		// reduce the member count for this group
 						g.liveChannels[packet.channel] = i;	// and store our member positon in the live channel list
 console.log(groups[channel.group]);
 console.log(channel.group," now includes channel ",packet.channel," in position ",g.liveChannels[packet.channel]);
