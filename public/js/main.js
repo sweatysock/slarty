@@ -181,7 +181,7 @@ socketIO.on('d', function (data) {
 				let p = maxValue(v);			// Get peak audio for venue level display 
 				if (p > venue.peak) venue.peak = p;
 				v = reSample(v, sr, soundcardSampleRate, vCache); 
-			} else c0.peak = 0;				// Don't need to be a genius to figure that one out if there's no audio!
+			} else venue.peak = 0;				// Don't need to be a genius to figure that one out if there's no audio!
 		} 
 		// 2. Build a mix of all group channels. For individuals or empty groups no audio will have been sent
 		let t8 = new Array(PacketSize/2).fill(0);		// Temp arrays for MSRE blocks 
