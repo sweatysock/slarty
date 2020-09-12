@@ -350,53 +350,36 @@ io.sockets.on('connection', function (socket) {
 		channel.name = packet.name;				// Update name of channel in case it has changed
 		channel.liveClients = packet.liveClients;		// Store the number of clients behind this channel
 		channel.timestamp = packet.timestamp;			// Store this latest timestamp for the client to measure rtt
-		if (channel.group != packet.group) {			// If the user has changed their group
+		if (channel.group != packet.group) {			// If the user has changed their group then...
 			socket.leave(channel.group);			// leave the group they were in at a socket io level
-			let g = groups[channel.group];			// Note the group we are currently in 
-console.log("GROUP CHANGE DETECTED. Current group is ");
-console.log(g);
-			let memberCount = 0;				// Scan this group counting members and removing ourselves
-			let index = 0;
-			if (g != null) { 
-console.log("Removing from group ",packet.group);
-				let pos = g.liveChannels[packet.channel];
-				g.members[pos] = null;
-				g.memberCount--;		// One less member of the group
-				g.liveChannels[packet.channel] = null;
-for (grp in groups) console.log(JSON.stringify(groups[grp]));
-console.log("REMOVED?");
-			} else console.log("GROUP WAS NULL BEFORE I COULD LEAVE IT!");
+			let g = groups[channel.group];			// Note the group they are currently in 
+			if (g != null) { 				// If the group exists (at the start it won't)
+				let pos = g.liveChannels[packet.channel];	// get the position held in the group
+				g.members[pos] = null;			// leave that position vacant for the next one who joins
+				g.memberCount--;			// One less member of the group - count is used to skip empty groups
+				g.liveChannels[packet.channel] = null;	// and indicate that this channel is no longer active in the group
+			} 
 			channel.group = packet.group;			// update the group this channel now belongs to
 			socket.join(channel.group);			// and join this new group
 			g = groups[channel.group];			// Note the group we wish to join
 			if (g == null) {				// If first member of group the entry will be null
-console.log("Creating new group ",channel.group," for channel ",packet.channel);
 				groups[channel.group] = {		// Create object containing a member position list and live channel list 
 					members:[packet.channel],	// This channel is the first member in position 0
 					memberCount:1,			// So the member count is obviously 1
 					liveChannels:[],		// This list uses channel number as its index and holds the member number
 				};					// so now set our channel live and indicate we are in position 0
 				groups[channel.group].liveChannels[packet.channel] = 0;
-console.log(channel.group," now includes channel ",packet.channel," in position ",groups[channel.group].liveChannels[packet.channel]);
-console.log(groups[channel.group]);
-			} else {
-console.log("Adding to group ",channel.group," channel ",packet.channel);
-console.log(groups[channel.group]);
-console.log(g.members.length);
+			} else {					// The group exists already. Need to find a place to sit...
 				for (let i=0; i<g.members.length+1; i++) {// Run through the list of group members
 					if (g.members[i] == null) {		// Find an empty position slot,
 						g.members[i] = packet.channel;	// assign it to our channel, 
-						g.memberCount++;		// reduce the member count for this group
+						g.memberCount++;		// increase the member count for this group
 						g.liveChannels[packet.channel] = i;	// and store our member positon in the live channel list
-console.log(groups[channel.group]);
-console.log(channel.group," now includes channel ",packet.channel," in position ",g.liveChannels[packet.channel]);
 						break;				// No need to look anymore
 					}
 				}
 			}
-console.log("GROUP CHANGE PROCESS COMPLETE. Groups are...");
-for (grp in groups) console.log(JSON.stringify(groups[grp]));
-		}
+		}							// Finished handling group changes.
 		channel.socketID = socket.id;				// Store socket ID associated with channel
 		packet.socketID = socket.id;				// Also store it in the packet to help client skip own audio
 		if (packet.channel == perf.chan) { 			// This is the performer. Note: Channel 0 comes down in 'd' packets
@@ -639,14 +622,10 @@ function generateMix () {
 	} 
 	// 4. Send packets to all clients group by group, adding performer, venue and group audio, plus group live channels and commands
 	for (group in groups) {
-//console.log("send to group ",group);		
+		if (group.memberCount == 0) continue;			// Skip empty groups
+console.log("Sending to ",group);
 		let g = groups[group];
-		if (clientPackets[group] === undefined) {
-			clientPackets[group] = [];
-//console.log(JSON.stringify(groups[group]));
-		}
 		let liveChannels = g.liveChannels;			// Get group specific live channels list for all members too
-//console.log(liveChannels);
 		io.sockets.in(group).emit('d', {			// Send to all group members group specific data
 			perf		: p,				// Send performer audio/video packet + other flags
 			venue		: venuePacket,			// Venue audio packet for special processing
