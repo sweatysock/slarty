@@ -209,7 +209,7 @@ if (tracecount> 0) console.log(serverLiveChannels);
 				if (!chan.muted) {			// We skip a muted channel in the mix
 					let p = serverLiveChannels[ch];	// Get channel's position in the group
 					let d = groupLayout[p];		// Get the delay that corresponds to that position
-					d = (d - (myDelay+1)) % 18;	// Adjust the delay relative to my position
+					d = (d + 18-(myDelay+1)) % 18;	// Adjust the delay relative to my position
 if (tracecount > 0) console.log("delay for channel ",ch," at position ",p," is now ",d,"mS");
 					let g = (chan.agc 		// Apply gain. If AGC use mix gain, else channel gain
 						? mixOut.gain : chan.gain);	
