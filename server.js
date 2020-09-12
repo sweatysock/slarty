@@ -374,7 +374,7 @@ console.log(g.liveChannels);
 			if (g == null) {				// If first member of group the entry will be null
 console.log("Creating new group ",channel.group," for channel ",packet.channel);
 				groups[channel.group] = {		// Create object containing a member position list and live channel list 
-					members:[0,packet.channel],	// This channel is the first member in position 1 (not 0)
+					members:[,packet.channel],	// This channel is the first member in position 1 (not 0)
 					liveChannels:[],		// This list uses channel number as its index and holds the member number
 				};					// so now set our channel live and put us down as member number 1
 				groups[channel.group].liveChannels[packet.channel] = 1;
@@ -638,7 +638,6 @@ function generateMix () {
 		if (clientPackets[group] === undefined) {clientPackets[group] = [];console.log(JSON.stringify(groups[group]));}
 		let liveChannels = g.liveChannels;			// Get group specific live channels list for all members too
 //console.log(liveChannels);
-		liveChannels[0] = true;					// Add channel 0 to the live channels list for all members
 		io.sockets.in(group).emit('d', {			// Send to all group members group specific data
 			perf		: p,				// Send performer audio/video packet + other flags
 			venue		: venuePacket,			// Venue audio packet for special processing
