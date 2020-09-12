@@ -399,6 +399,8 @@ console.log(channel.group," now includes channel ",packet.channel," in position 
 					}
 				}
 			}
+console.log("GROUP CHANGE PROCESS COMPLETE. Groups are...");
+console.log(JSON.stringify(groups));
 		}
 		channel.socketID = socket.id;				// Store socket ID associated with channel
 		packet.socketID = socket.id;				// Also store it in the packet to help client skip own audio
