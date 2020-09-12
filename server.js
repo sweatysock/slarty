@@ -606,11 +606,11 @@ function generateMix () {
 	} 
 	// 4. Send packets to all clients group by group, adding performer, channel 0 (venue) and group audio, plus group live channels and commands
 	for (group in groups) {
-console.log("send to group ",group);		
+//console.log("send to group ",group);		
 		let g = groups[group];
 		clientPackets[group].push( channel0Packet );		// Add channel 0 (venue audio) to the packets for every group
 		let liveChannels = g.liveChannels;			// Get group specific live channels list for all members too
-console.log(liveChannels);
+//console.log(liveChannels);
 		liveChannels[0] = true;					// Add channel 0 to the live channels list for all members
 		io.sockets.in(group).emit('d', {			// Send to all group members group specific data
 			perf		: p,				// Send performer audio/video packet + other flags
