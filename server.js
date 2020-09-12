@@ -365,7 +365,6 @@ console.log(g);
 					if (g.members[i] == packet.channel) {	// to find the poition our channel was assigned
 						g.members[i] = null;		// and remove it from members and liveChannels lists
 						g.liveChannels[packet.channel] = null;
-						index = i;
 console.log("group memberlist length is ",g.members.length," group liveChannels list length is ",g.liveChannels.length);
 console.log(g.members);
 console.log(g.liveChannels);
@@ -373,7 +372,7 @@ console.log(g.liveChannels);
 					if (g.members[i] != null) memberCount++;// Count how many members are in the group
 				}
 console.log("Member count is ",memberCount);
-				if (memberCount = 0) groups.splice(index ,1);
+				if (memberCount = 0) delete groups[channel.group];
 for (grp in groups) console.log(JSON.stringify(groups[grp]));
 			} else console.log("GROUP WAS NULL BEFORE I COULD LEAVE IT!");
 			channel.group = packet.group;			// update the group this channel now belongs to
