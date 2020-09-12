@@ -356,6 +356,8 @@ io.sockets.on('connection', function (socket) {
 		if (channel.group != packet.group) {			// If the user has changed their group
 			socket.leave(channel.group);			// leave the group they were in at a socket io level
 			let g = groups[channel.group];			// Note the group we are currently in 
+console.log("GROUP CHANGE DETECTED. Current group is ");
+console.log(g);
 			let memberCount = 0;				// Scan this group counting members and removing ourselves
 			if (g != null) for (let i=0; i<g.members.length; i++) {
 				if (g.members[i] == packet.channel) {	// to find the poition our channel was assigned
