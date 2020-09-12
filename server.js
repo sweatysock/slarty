@@ -367,6 +367,7 @@ console.log(g.liveChannels);
 				}
 				if (g.members[i] != null) memberCount++;// Count how many members are in the group
 			}
+console.log("Member count is ",memberCount);
 			if (memberCount = 0) groups[channel.group] = null;
 			channel.group = packet.group;			// update the group this channel now belongs to
 			socket.join(channel.group);			// and join this new group
@@ -374,15 +375,15 @@ console.log(g.liveChannels);
 			if (g == null) {				// If first member of group the entry will be null
 console.log("Creating new group ",channel.group," for channel ",packet.channel);
 				groups[channel.group] = {		// Create object containing a member position list and live channel list 
-					members:[,packet.channel],	// This channel is the first member in position 1 (not 0)
+					members:[packet.channel],	// This channel is the first member in position 0
 					liveChannels:[],		// This list uses channel number as its index and holds the member number
-				};					// so now set our channel live and put us down as member number 1
-				groups[channel.group].liveChannels[packet.channel] = 1;
+				};					// so now set our channel live and indicate we are in position 0
+				groups[channel.group].liveChannels[packet.channel] = 0;
 console.log(channel.group," now includes channel ",packet.channel," in position ",groups[channel.group].liveChannels[packet.channel]);
 			} else {
 console.log("Adding to group ",channel.group," channel ",packet.channel);
-				for (let i=0; i<g.members.length; i++) {	// Run through the list of group members
-				if (g.members[i] == null) {		// Find an empty slot,
+				for (let i=0; i<g.members.length; i++) {// Run through the list of group members
+				if (g.members[i] == null) {		// Find an empty position slot,
 					g.members[i] = packet.channel;	// assign it to our channel, 
 					g.liveChannels[packet.channel] = i;	// and store our member positon in the live channel list
 console.log(channel.group," now includes channel ",packet.channel," in position ",g.liveChannels[packet.channel]);
