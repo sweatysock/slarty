@@ -33,7 +33,7 @@ var perf = {								// Performer data structure
 	streaming:false,						// Flag that indicates the performer buffer is full enough to start streaming
 	inCount	: 0,							// For monitoring
 }
-var packetBuf = [];							// Buffer of packets sent, subtracted from venue mix later
+var packetBuf = [];							// Buffer of packets sent upstream, subtracted from venue mix later
 var venueSequence = 0;							// Sequence counter for venue sound going downstream
 var upSequence = 0;							// Sequence counter for sending upstream
 // Mix generation is done as fast as data comes in, but should keep up a rhythmn even if downstream audio isn't sufficient....
@@ -333,11 +333,12 @@ io.sockets.on('connection', function (socket) {
 		let channel = channels[packet.channel];			// This client sends their channel to save server effort
 		channel.name = packet.name;				// Update name of channel in case it has changed
 		channel.liveClients = packet.liveClients;		// Store the number of clients behind this channel
-		channel.timestamp = packet.timestamp;			// Store this Ãlatest timestamp for the client to measure rtt
+		channel.timestamp = packet.timestamp;			// Store this latest timestamp for the client to measure rtt
 		if (channel.group != packet.group) {			// If the user has changed their group
 			socket.leave(channel.group);			// leave the group they were in
 			channel.group = packet.group;			// update group channel belongs to
 			socket.join(channel.group);			// and join this new group
+			// find free slot in group list
 		}
 		channel.socketID = socket.id;				// Store socket ID associated with channel
 		packet.socketID = socket.id;				// Also store it in the packet to help client skip own audio
@@ -462,20 +463,20 @@ function generateMix () {
 	let timestamps = [];						// Array of packet timestamps used in the mix (channel is index)
 	let channel0Packet = null;					// The channel 0 (venue) audio packet
 	let groups = [];						// Data collated by group for sending downstream
+	let clientPackets = [];						// Temporary store of all packets to send to all group members
 	let packetCount = 0;						// Keep count of packets that make the mix for monitoring
 	let totalLiveClients = 0;					// Count total clients live downstream of this server
 	channels.forEach( (c, chan) => {				// Review all channels for audio and activity, and build server mix
 		if (c.name != "") {					// Looking for active channels meaning they have a name
 			if (chan != 0) totalLiveClients +=c.liveClients;// Sum all downstream clients under our active channels
-			if (groups[c.group] == null)			// If first member of group the entry will be null
+			if (groups[c.group] == null) {			// If first member of group the entry will be null
 				groups[c.group] = {			// Create object
-					clientPackets:[],		// with a buffer of clientPackets for all members
-					liveChannels:[],		// and a liveChannels list too
+					liveChannels:[],		// with a liveChannels list
 				};
+				clientPackets[c.group] = [],		// Create a buffer of clientPackets for all members
+			}
 			if (c.group != "noGroup") {			// Store live channel number if part of a group
 				groups[c.group].liveChannels[chan] = true;	// Used to display correct channels in client
-									// MARK ADD URL for downstream servers needed for heckler control
-									// MARK ADD peak level for each for audio visualization
 			}
 		}
 		if (c.newBuf == false) {				// Build mix from channels that are non-new (buffering completed)
@@ -506,7 +507,7 @@ function generateMix () {
 					timestamps[packet.channel]	// Store the latest timestamp received from the client
 						= c.timestamp;		// so that the sending client can measure its rtt
 					if (c.group != "noGroup") {	// Store packet if part of a group. Used for client controlled mixing
-						groups[c.group].clientPackets.push( packet );	
+						clientPackets[c.group].push( packet );	
 					}
 				} else channel0Packet = packet;		// keep the packet for channel 0 (venue) for adding later
 			}
@@ -583,13 +584,13 @@ function generateMix () {
 	// 4. Send packets to all clients group by group, adding performer, channel 0 (venue) and group audio, plus group live channels and commands
 	for (group in groups) {
 		let g = groups[group];
-		let clientPackets = g.clientPackets;			// Get group specific packets to send to all group members
-		clientPackets.push( channel0Packet );			// Add channel 0 (venue audio) to the packets for every group
+		let cp = clientPackets[group];				// Get group specific packets to send to all group members
+		cp.push( channel0Packet );				// Add channel 0 (venue audio) to the packets for every group
 		let liveChannels = g.liveChannels;			// Get group specific live channels list for all members too
 		liveChannels[0] = true;					// Add channel 0 to the live channels list for all members
 		io.sockets.in(group).emit('d', {			// Send to all group members group specific data
 			perf		: p,				// Send performer audio/video packet + other flags
-			channels	: clientPackets,		// All channels in this server plus filtered upstream mix
+			channels	: cp,				// All channels in this server plus filtered upstream mix
 			liveChannels	: liveChannels,			// Include server info about live clients and their queues
 			commands	: commands,			// Send commands downstream to reach all client endpoints
 		});
