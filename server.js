@@ -384,6 +384,7 @@ console.log("Creating new group ",channel.group," for channel ",packet.channel);
 				};					// so now set our channel live and indicate we are in position 0
 				groups[channel.group].liveChannels[packet.channel] = 0;
 console.log(channel.group," now includes channel ",packet.channel," in position ",groups[channel.group].liveChannels[packet.channel]);
+console.log(groups[channel.group]);
 			} else {
 console.log("Adding to group ",channel.group," channel ",packet.channel);
 console.log(groups[channel.group]);
