@@ -350,6 +350,7 @@ io.sockets.on('connection', function (socket) {
 				if (g.members[i] == packet.channel) {	// to find the poition our channel was assigned
 					g.members[i] = null;		// and remove it from members and liveChannels lists
 					g.liveChannels[packet.channel] = null;
+console.log("group memberlist length is ",g.members.length," group liveChannels list length is ",g.liveChannels.length);
 					break;
 				}
 			}
