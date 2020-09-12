@@ -345,17 +345,18 @@ io.sockets.on('connection', function (socket) {
 		if (channel.group != packet.group) {			// If the user has changed their group
 			socket.leave(channel.group);			// leave the group they were in at a socket io level
 			let g = groups[channel.group];			// Note the group we are currently in 
-			if (g != null)					// At the start no groups exist so none can be left, only joined
-				for (let i=0; i<g.members.length; i++) {// Scan group member list
+			let memberCount = 0;				// Scan this group counting members and removing ourselves
+			if (g != null) for (let i=0; i<g.members.length; i++) {
 				if (g.members[i] == packet.channel) {	// to find the poition our channel was assigned
 					g.members[i] = null;		// and remove it from members and liveChannels lists
 					g.liveChannels[packet.channel] = null;
 console.log("group memberlist length is ",g.members.length," group liveChannels list length is ",g.liveChannels.length);
 console.log(g.members);
 console.log(g.liveChannels);
-					break;
 				}
+				if (g.members[i] != null) memberCount++;// Count how many members are in the group
 			}
+			if (memberCount = 0) groups[channel.group] = null;
 			channel.group = packet.group;			// update the group this channel now belongs to
 			socket.join(channel.group);			// and join this new group
 			g = groups[channel.group];			// Note the group we wish to join
