@@ -354,21 +354,24 @@ tracecount--;
 						left[i] = (mono[i] + stereo[i])/2;	// and stereo may not have same sample rate
 						right[i] = (mono[i] - stereo[i])/2;	// Divide by 2 because output is double input
 					}
-					if (mixL.length == 0) {		// If no venue or group audio just use perf audio directly
+					if (mixL.length == 0) {		// If no group audio just use perf audio directly
 						mixL = left; mixR = right;
 					} else {			// Have to build stereo mix
 						for (let i=0; i < left.length; i++) {
-							mixR[i] += right[i];
 							mixL[i] += left[i];	
+							mixR[i] += right[i];
 						}
 					}
 				} else { 				// Just mono performer audio
 					if (mixL.length == 0) {		// If no venue or group audio just use perf audio directly
 						mixL = mono; 
-					} else {			// Have to build mono mix
-						for (let i=0; i < mono.length; i++) mixL[i] += mono[i];	
+						mixR = mono; 
+					} else {			// Have to build stero mix with mono perf and potentially stereo group
+						for (let i=0; i < mono.length; i++) {
+							mixL[i] += left[i];	
+							mixR[i] += right[i];
+						}
 					}
-					mixR = mixL;
 				}
 			} else ts = data.perf.packet.timestamp;		// I am the performer so grab timestamp for the rtt 
 		}
