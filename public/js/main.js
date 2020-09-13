@@ -222,6 +222,7 @@ v = v8;
 					d = (d + 18-(myDelay+1)) % 18;	// Adjust the delay relative to my position
 					d = d - 8;			// Delays are offset by 8MARK
 if (tracecount > 0) console.log("delay for channel ",ch," at position ",p," is now ",d,"mS");
+d=0;
 					let g = (chan.agc 		// Apply gain. If AGC use mix gain, else channel gain
 						? mixOut.gain : chan.gain);	
 					chan.gain = g;			// Channel gain level should reflect gain applied here
