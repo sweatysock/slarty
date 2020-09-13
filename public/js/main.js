@@ -222,6 +222,7 @@ v = v8;
 					let d = groupLayout[p];		// Get the delay (mS) that corresponds to that position
 					d = (d + 18-(myDelay+1)) % 18;	// Adjust the delay relative to my position
 					d = d - 8;			// Delays are offset by 8MARK
+d=1;
 if (tracecount > 0) console.log("delay for channel ",ch," at position ",p," is now ",d,"mS");
 					let g = (chan.agc 		// Apply gain. If AGC use mix gain, else channel gain
 						? mixOut.gain : chan.gain);	
@@ -231,7 +232,6 @@ if (tracecount > 0) console.log("delay for channel ",ch," at position ",p," is n
 						let dl = 0, dr = 0;	// Delay offsets for each channel. Default is no offset
 						if (d < 0) {		// Apply delay to right channel
 							dr = d * -8;	// Invert delay and multiply by 8 samples/mS (for mono8)
-d=1;
 if (tracecount > 0) console.log("delaying ",dr," samples on right channel. Mono8 buffer for this channel is",b8);
 							if (b8 != [])			// If there are samples in the delay buffer
 								R8.splice(0,b8.length,...b8);
