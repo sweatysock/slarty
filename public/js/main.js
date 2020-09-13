@@ -198,11 +198,6 @@ v = v8;
 		let R8 = new Array(PacketSize/2).fill(0);		// Temp arrays for MSRE blocks for right channel
 		let R16 = new Array(PacketSize/2).fill(0);		
 		let someAudio = false;					// If no audio this saves us checking
-		// With each channel at start if no delay cache in channel create it and put N samples in it
-		// Put delay cache into L or R as appropriate
-		// Then for each live sample...
-		// Process audio adding samples to each channel using two pointers
-		// Stop feeding delayed audio to delayed channel at end and feed instead to delay cache
 		let myPosition = serverLiveChannels[myChannel];		// Obtain my position in the group
 		let myDelay = groupLayout[myPosition];			// Find the delay that corresponds to my position
 		data.channels.forEach(c => {				// Process all audio channel packets including channel 0
@@ -239,7 +234,7 @@ if (tracecount > 0) console.log("delay for channel ",ch," at position ",p," is n
 							chan.buffer8 = m8.slice(m8.length-dr,m8.length);	// & copy final samples to delay buffer
 						} else {				// Apply delay to left channel
 							dl = d;		
-							if (b8 != [])			// Same as for right channel
+							if (b8.length != 0)			// Same as for right channel
 								L8.splice(0,b8.length,...b8);
 							chan.buffer8 = m8.slice(m8.length-dl,m8.length);	
 						}			// Now dl and dr contain the correct offsets
@@ -250,12 +245,12 @@ if (tracecount > 0) console.log("delay for channel ",ch," at position ",p," is n
 						let dl = 0, dr = 0;
 						if (d < 0) {		// Apply delay to right channel
 							dr = d * -2;	// Invert delay and multiply by 2 for 16kHz audio
-							if (b16 != [])			// If there are samples in the delay buffer
+							if (b16.length != 0)			// If there are samples in the delay buffer
 								R16.splice(0,b16.length,...b16);
 							chan.buffer16 = m16.slice(m16.length-dr,m16.length);	// & copy final samples to delay buffer
 						} else {		// Apply delay to left channel
 							dl = d * 2;	// Multiply by 2 for 16kHz audio
-							if (b16 != [])			// Same as for right channel
+							if (b16.length != 0)			// Same as for right channel
 								L16.splice(0,b16.length,...b16);
 							chan.buffer16 = m16.slice(m16.length-dl,m16.length);	
 						}			// Now dl and dr contain the correct offsets
