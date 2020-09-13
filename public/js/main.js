@@ -22,6 +22,7 @@ var myName = "";							// Name assigned to my audio channel
 var myGroup = "noGroup";						// Group user belongs to. Default is no group.
 //var groupLayout = [-9,3,-3,6,-6,0,-8,8,-5,5,-2,2,-7,7,-4,4,-1,1];	// Stereo delays to apply for the different positions in a group
 var groupLayout = [17,11,5,14,2,8,0,16,3,13,6,10,1,15,4,12,7,9];	// Delays to apply for the different positions in a group
+var myPos = 1;
 const NumberOfChannels = 20;						// Max number of channels in this server
 var channels = [];							// Each channel's data & buffer held here
 for (let i=0; i < NumberOfChannels; i++) {				// Create all the channels pre-initialized
@@ -219,6 +220,7 @@ v = v8;
 					let b8 = chan.buffer8;		// Channel delay buffers where delayed audio is held
 					let b16 = chan.buffer16;
 					let p = serverLiveChannels[ch];	// Get channel's position in the group
+p = myPos;
 					let d = groupLayout[p];		// Get the delay (in samples @8kHz) for this position
 					d = (d + 18-(myDelay+1)) % 18;	// Adjust the delay relative to my position
 					d = d - 8;			// Delays are offset by 8MARK
@@ -231,16 +233,10 @@ if (tracecount > 0) console.log("delay for channel ",ch," at position ",p," is n
 						let dl = 0, dr = 0;	// Delay offsets for each channel. Default is no offset
 						if (d < 0) {		// Apply delay to right channel
 							dr = d * -1;	// Invert delay 
-if (tracecount > 0) console.log("delay to right channel is ",dr);
 							if (b8.length != 0) {			// If there are samples in the delay buffer
-console.log("b8 is ",b8);
-if (tracecount > 0) {let x=[];for (let i=0;i<b8.length;i++)x[i]=b8[i];console.log("channel buffer is ",x.length," long containing ",x)}
-if (tracecount > 0) {console.log("R8 is ",R8.length," long");}
 								R8.splice(0,b8.length,...b8);
-if (tracecount > 0) {console.log("this has been added to R8 who's length is now",R8.length);}
 							}
 							chan.buffer8 = m8.slice(m8.length-dr,m8.length);	// & copy final samples to delay buffer
-if (tracecount > 0) {let x=[];for (let i=0;i<chan.buffer8.length;i++)x[i]=chan.buffer8[i];console.log("channel buffer is NOW",x.length," long containing ",x)};
 						} else {				// Apply delay to left channel
 							dl = d;		
 							if (b8 != [])			// Same as for right channel
@@ -462,6 +458,23 @@ document.addEventListener('DOMContentLoaded', function(event){
 			} else if (groupNameEntry.innerHTML.match("^[a-zA-Z][a-zA-Z0-9]+$")) {
 				groupNameEntry.setAttribute("contenteditable", false);
 				myGroup = groupNameEntry.innerHTML;
+			}
+			e.preventDefault();
+		}
+	});
+	let posBtn = document.getElementById('posBtn');
+	let groupNameEntry = document.getElementById('posEntry');
+	posBtn.onclick = ( (e) => {
+		posEntry.innerHTML = myPos;
+		posEntry.style.visibility = "visible";
+		posEntry.style.outline = "none";
+		posEntry.setAttribute("contenteditable", true);
+		posEntry.focus();
+	});
+	posEntry.addEventListener("keydown", (e) => {
+		if (e.which === 13) {
+			if (posEntry.innerHTML.match("^[0-9]+$")) {
+				myPos = parseInt(posEntry.innerHTML);
 			}
 			e.preventDefault();
 		}
