@@ -212,18 +212,19 @@ if (tracecount> 0) console.log(serverLiveChannels);
 					let p = serverLiveChannels[ch];	// Get channel's position in the group
 					let d = groupLayout[p];		// Get the delay that corresponds to that position
 					d = (d + 18-(myDelay+1)) % 18;	// Adjust the delay relative to my position
+					d = d - 8;			// Delays are ofset MARK
 if (tracecount > 0) console.log("delay for channel ",ch," at position ",p," is now ",d,"mS");
 					let g = (chan.agc 		// Apply gain. If AGC use mix gain, else channel gain
 						? mixOut.gain : chan.gain);	
 					chan.gain = g;			// Channel gain level should reflect gain used here
 					if (a.mono8.length > 0) {	// Only mix if there is audio in channel
 						someAudio = true;	// Flag that there is actually some group audio
-	  					for (let i=0; i < a.mono8.length; i++) L8[i] += a.mono8[i] * (g - 1/venueSize);	
-	  					for (let i=0; i < a.mono8.length; i++) R8[i] += a.mono8[i] * (g - 1/venueSize);	
-					}				// NB: Fader = 0 means actually removing completely audio!
+	  					for (let i=0; i < a.mono8.length; i++) L8[i] += a.mono8[i] * g;	
+	  					for (let i=0; i < a.mono8.length; i++) R8[i] += a.mono8[i] * g;	
+					}				
 					if (a.mono16.length > 0) {
-						for (let i=0; i < a.mono16.length; i++) L16[i] += a.mono16[i] * (g - 1/venueSize);	
-						for (let i=0; i < a.mono16.length; i++) R16[i] += a.mono16[i] * (g - 1/venueSize);	
+						for (let i=0; i < a.mono16.length; i++) L16[i] += a.mono16[i] * g;
+						for (let i=0; i < a.mono16.length; i++) R16[i] += a.mono16[i] * g;
 					}
 				}
 			}
