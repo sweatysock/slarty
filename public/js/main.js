@@ -463,7 +463,7 @@ document.addEventListener('DOMContentLoaded', function(event){
 		}
 	});
 	let posBtn = document.getElementById('posBtn');
-	let groupNameEntry = document.getElementById('posEntry');
+	let posEntry = document.getElementById('posEntry');
 	posBtn.onclick = ( (e) => {
 		posEntry.innerHTML = myPos;
 		posEntry.style.visibility = "visible";
