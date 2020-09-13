@@ -172,10 +172,10 @@ if (tracecount> 0) console.log(serverLiveChannels);
 			if (v8.length > 0) {				// If there is venue audio it will need processing
 				let sr = 8000;				// Minimum sample rate of 8kHz
 				if (a8.length > 0)  			// Only subtract if our audio is not empty
-					for (let i = 0; i < a8.length; ++i) v8[i] = (v8[i] - a8[i]) * channels[0].gain / venueSize;
+					for (let i = 0; i < a8.length; ++i) v8[i] = (v8[i] - a8[i]) * venue.gain / venueSize;
 				if ((v16.length > 0) && 		// Does venue and our audio have higher quality audio?
 					(a16.length > 0)) { 	// If so subtract our high bandwidth audio from venue
-					for (let i = 0; i < a16.length; ++i) v16[i] = (v16[i] - a16[i]) * channels[0].gain / venueSize;
+					for (let i = 0; i < a16.length; ++i) v16[i] = (v16[i] - a16[i]) * venue.gain / venueSize;
 				} 					// By this stage our audio has been subtracted from venue audio
 				if (v16.length > 0) {			// If the venue has higher quality audio
 					let k = 0;			// reconstruct the original venue audio in v[]
