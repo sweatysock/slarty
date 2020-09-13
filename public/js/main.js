@@ -359,8 +359,8 @@ if (tracecount>0) console.log("perf data incoming");
 					} else {			// Have to build stereo mix with mono perf and potentially stereo group
 						isStereo = true;
 						for (let i=0; i < mono.length; i++) {
-							mixL[i] += left[i];	
-							mixR[i] += right[i];
+							mixL[i] += mono[i];	
+							mixR[i] += mono[i];
 						}
 					}
 				}
