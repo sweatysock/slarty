@@ -20,6 +20,7 @@ var micBufferR = [];
 var myChannel = -1;							// The server assigns us an audio channel
 var myName = "";							// Name assigned to my audio channel
 var myGroup = "noGroup";						// Group user belongs to. Default is no group.
+var groupLayout = [17,11,5,14,2,8,0,16,3,13,6,10,1,15,4,12,7,9];	// Positions in the stereo image for group members
 const NumberOfChannels = 20;						// Max number of channels in this server
 var channels = [];							// Each channel's data & buffer held here
 for (let i=0; i < NumberOfChannels; i++) {				// Create all the channels pre-initialized
@@ -30,7 +31,8 @@ for (let i=0; i < NumberOfChannels; i++) {				// Create all the channels pre-ini
 		muted	: false,					// Local mute
 		peak	: 0,						// Animated peak channel audio level 
 		channel	: i,						// The channel needs to know it's number for UI referencing
-		seq	:0,						// Track channel sequence numbers to monitor quality
+		seq	:0,						// Track channel sequence numbers to monitor qualityA
+		delay	:[],						// A buffer used to delay one of the channels for stereo placement
 	};
 }
 var liveShow = false;							// If there is a live show underway 
@@ -136,7 +138,6 @@ socketIO.on('d', function (data) {
 	bytesRcvd += len;						// Accumulate in incoming data total count
 	serverLiveChannels = data.liveChannels;				// Server live channels are for UI updating
 if (tracecount> 0) console.log(serverLiveChannels);
-tracecount--;
 	processCommands(data.commands);					// Process commands from server
 	if (micAccessAllowed) {						// Need access to audio before outputting
 		let v = [];						// Our objective is to get the venue audio (if any) in here,
@@ -189,14 +190,13 @@ tracecount--;
 		let t8 = new Array(PacketSize/2).fill(0);		// Temp arrays for MSRE blocks 
 		let t16 = new Array(PacketSize/2).fill(0);		// so that we only do one MSRE decode at the end
 		let someAudio = false;					// If no audio this saves us checking
-		// Group spacial positioning design:
-		// Get number of channels excluding venue
-		// Need to assign a location to a channel so need to know what channels there are first
 		// With each channel at start if no delay cache in channel create it and put N samples in it
 		// Put delay cache into L or R as appropriate
 		// Then for each live sample...
 		// Process audio adding samples to each channel using two pointers
 		// Stop feeding delayed audio to delayed channel at end and feed instead to delay cache
+		let myPosition = serverLiveChannels[myChannel];		// Obtain my position in the group
+		let myDelay = groupLayout[myPosition];			// Find the delay that corresponds to my position
 		data.channels.forEach(c => {				// Process all audio channel packets including channel 0
 			let ch = c.channel;				// Channel number the packet belongs to
 			let chan = channels[ch];			// Local data structure for this channel
@@ -207,6 +207,10 @@ tracecount--;
 					chan.peak = c.peak;		// even if muted
 				let a = c.audio;			// Get the audio from the packet
 				if (!chan.muted) {			// We skip a muted channel in the mix
+					let p = serverLiveChannels[ch];	// Get channel's position in the group
+					let d = groupLayout[p];		// Get the delay that corresponds to that position
+					d = (d + 18-(myDelay+1)) % 18;	// Adjust the delay relative to my position
+if (tracecount > 0) console.log("delay for channel ",ch," at position ",p," is now ",d,"mS");
 					let g = (chan.agc 		// Apply gain. If AGC use mix gain, else channel gain
 						? mixOut.gain : chan.gain);	
 					chan.gain = g;			// Channel gain level should reflect gain used here
@@ -221,6 +225,7 @@ tracecount--;
 				trace("Sequence jump Channel ",ch," jump ",(c.sequence - chan.seq));
 			chan.seq = c.sequence;				// Store seq number for next time a packet comes in
 		});
+tracecount--;
 		if (someAudio) {					// If there is group audio rebuild and upsample it
 			let k = 0;
 			for (let i=0;i<t8.length;i++) {			// Reconstruct group mix gL[] from the MSRE blocks
