@@ -187,8 +187,10 @@ if (tracecount> 0) console.log(serverLiveChannels);
 			} else venue.peak = 0;				// Don't need to be a genius to figure that one out if there's no audio!
 		} 
 		// 2. Build a mix of all group channels. For individuals or empty groups no audio will have been sent
-		let t8 = new Array(PacketSize/2).fill(0);		// Temp arrays for MSRE blocks 
-		let t16 = new Array(PacketSize/2).fill(0);		// so that we only do one MSRE decode at the end
+		let L8 = new Array(PacketSize/2).fill(0);		// Temp arrays for MSRE blocks for left channel
+		let L16 = new Array(PacketSize/2).fill(0);		// so that we only do one MSRE decode at the end
+		let R8 = new Array(PacketSize/2).fill(0);		// Temp arrays for MSRE blocks for right channel
+		let R16 = new Array(PacketSize/2).fill(0);		
 		let someAudio = false;					// If no audio this saves us checking
 		// With each channel at start if no delay cache in channel create it and put N samples in it
 		// Put delay cache into L or R as appropriate
@@ -216,9 +218,13 @@ if (tracecount > 0) console.log("delay for channel ",ch," at position ",p," is n
 					chan.gain = g;			// Channel gain level should reflect gain used here
 					if (a.mono8.length > 0) {	// Only mix if there is audio in channel
 						someAudio = true;	// Flag that there is actually some group audio
-	  					for (let i=0; i < a.mono8.length; i++) t8[i] += a.mono8[i] * (g - 1/venueSize);	
+	  					for (let i=0; i < a.mono8.length; i++) L8[i] += a.mono8[i] * (g - 1/venueSize);	
+	  					for (let i=0; i < a.mono8.length; i++) R8[i] += a.mono8[i] * (g - 1/venueSize);	
 					}				// NB: Fader = 0 means actually removing completely audio!
-					if (a.mono16.length > 0) for (let i=0; i < a.mono16.length; i++) t16[i] += a.mono16[i] * (g - 1/venueSize);	
+					if (a.mono16.length > 0) {
+						for (let i=0; i < a.mono16.length; i++) L16[i] += a.mono16[i] * (g - 1/venueSize);	
+						for (let i=0; i < a.mono16.length; i++) R16[i] += a.mono16[i] * (g - 1/venueSize);	
+					}
 				}
 			}
 			if (c.sequence != (chan.seq + 1)) 		// Monitor audio transfer quality for all channels
@@ -228,12 +234,14 @@ if (tracecount > 0) console.log("delay for channel ",ch," at position ",p," is n
 tracecount--;
 		if (someAudio) {					// If there is group audio rebuild and upsample it
 			let k = 0;
-			for (let i=0;i<t8.length;i++) {			// Reconstruct group mix gL[] from the MSRE blocks
-				gL[k] = t8[i] + t16[i];k++;
-				gL[k] = t8[i] - t16[i];k++;
+			for (let i=0;i<L8.length;i++) {			// Reconstruct stereo group mix from the MSRE blocks
+				gL[k] = L8[i] + L16[i];
+				gR[k] = R8[i] + R16[i];k++;
+				gL[k] = L8[i] - L16[i];
+				gR[k] = R8[i] - R16[i];k++;
 			}						// Bring sample rate up to HW sample rate
-			gL = reSample(gL, SampleRate, soundcardSampleRate, gCache); 
-			gR = gL;					// Mono group audio FOR NOW!
+			gL = reSample(gL, SampleRate, soundcardSampleRate, gLCache); 
+			gR = reSample(gR, SampleRate, soundcardSampleRate, gRCache); 
 		} 
 		let s = Math.round(PacketSize * soundcardSampleRate / SampleRate);	// The amount of audio expected per server packet
 		let mixL = new Array(s).fill(0), mixR = new Array(s).fill(0);
@@ -1199,7 +1207,8 @@ function initAudio() {							// Set up all audio handling here
 //
 var  downCache = [0.0,0.0];						// Resampling cache for audio from mic
 var  vCache = [0.0,0.0];						// cache for venue mix to speaker
-var  gCache = [0.0,0.0];						// cache for group mix to speaker
+var  gLCache = [0.0,0.0];						// cache for group left mix to speaker
+var  gRCache = [0.0,0.0];						// cache for group right mix to speaker
 var  downCachePerfL = [0.0,0.0];					// cache for performer audio from mic
 var  downCachePerfR = [0.0,0.0];					// can be stereo
 var  upCachePerfM = [0.0,0.0];						// cache for performer audio to mix and send to speaker
