@@ -33,8 +33,8 @@ for (let i=0; i < NumberOfChannels; i++) {				// Create all the channels pre-ini
 		peak	: 0,						// Animated peak channel audio level 
 		channel	: i,						// The channel needs to know it's number for UI referencing
 		seq	:0,						// Track channel sequence numbers to monitor qualityA
-		delay8	:[],						// A buffer used to delay one of the channels for stereo placement
-		delay16	:[],						// Need one for each sample class
+		buffer8	:[],						// A buffer used to delay one of the channels for stereo placement
+		buffer16:[],						// Need one for each sample class
 	};
 }
 var liveShow = false;							// If there is a live show underway 
@@ -170,20 +170,21 @@ if (tracecount> 0) console.log(serverLiveChannels);
 v8 = new Array(PacketSize/2).fill(0); v16 = new Array(PacketSize/2).fill(0);
 			if (v8.length > 0) {				// If there is venue audio it will need processing
 				let sr = 8000;				// Minimum sample rate of 8kHz
-				if (a8.length > 0)  			// Only subtract if our audio is not empty
-					for (let i = 0; i < a8.length; ++i) v8[i] = (v8[i] - a8[i]) * channels[0].gain / venueSize;
-				if ((v16.length > 0) && 		// Does venue and our audio have higher quality audio?
-					(a16.length > 0)) { 	// If so subtract our high bandwidth audio from venue
-					for (let i = 0; i < a16.length; ++i) v16[i] = (v16[i] - a16[i]) * channels[0].gain / venueSize;
-				} 					// By this stage our audio has been subtracted from venue audio
-				if (v16.length > 0) {			// If the venue has higher quality audio
-					let k = 0;			// reconstruct the original venue audio in v[]
-					for (let i=0;i<v8.length;i++) {	
-						v[k] = v8[i] + v16[i];k++;
-						v[k] = v8[i] - v16[i];k++;
-					}
-					sr = 16000;			// This is at the higher sample rate
-				} else v = v8;				// Only low bandwidth venue audio 
+//				if (a8.length > 0)  			// Only subtract if our audio is not empty
+//					for (let i = 0; i < a8.length; ++i) v8[i] = (v8[i] - a8[i]) * channels[0].gain / venueSize;
+//				if ((v16.length > 0) && 		// Does venue and our audio have higher quality audio?
+//					(a16.length > 0)) { 	// If so subtract our high bandwidth audio from venue
+//					for (let i = 0; i < a16.length; ++i) v16[i] = (v16[i] - a16[i]) * channels[0].gain / venueSize;
+//				} 					// By this stage our audio has been subtracted from venue audio
+//				if (v16.length > 0) {			// If the venue has higher quality audio
+//					let k = 0;			// reconstruct the original venue audio in v[]
+//					for (let i=0;i<v8.length;i++) {	
+//						v[k] = v8[i] + v16[i];k++;
+//						v[k] = v8[i] - v16[i];k++;
+//					}
+//					sr = 16000;			// This is at the higher sample rate
+//				} else v = v8;				// Only low bandwidth venue audio 
+v = v8;
 				let p = maxValue(v);			// Get peak audio for venue level display 
 				if (p > venue.peak) venue.peak = p;
 				v = reSample(v, sr, soundcardSampleRate, vCache); 
@@ -214,6 +215,8 @@ v8 = new Array(PacketSize/2).fill(0); v16 = new Array(PacketSize/2).fill(0);
 				if (!chan.muted) {			// We skip a muted channel in the mix
 					let m8 = a.mono8;
 					let m16 = a.mono8;
+					let b8 = chan.buffer8;		// Channel delay buffers where delayed audio is held
+					let b16 = chan.buffer16;
 					let p = serverLiveChannels[ch];	// Get channel's position in the group
 					let d = groupLayout[p];		// Get the delay (mS) that corresponds to that position
 					d = (d + 18-(myDelay+1)) % 18;	// Adjust the delay relative to my position
@@ -227,14 +230,14 @@ if (tracecount > 0) console.log("delay for channel ",ch," at position ",p," is n
 						let dl = 0, dr = 0;	// Delay offsets for each channel. Default is no offset
 						if (d < 0) {		// Apply delay to right channel
 							dr = d * -8;	// Invert delay and multiply by 8 samples/mS (for mono8)
-							if (delay8 != [])			// If there are samples in the delay buffer
-								R8.push(...delay8);		// Start R8 off with previous buffer samples
-							delay8 = m8.slice(m8.length-dr,dr);	// & copy final samples to delay buffer
+							if (b8 != [])			// If there are samples in the delay buffer
+								R8.push(...b8);		// Start R8 off with previous buffer samples
+							b8 = m8.slice(m8.length-dr,dr);	// & copy final samples to delay buffer
 						} else {		// Apply delay to left channel
 							dl = d * 8;	// Multiply by 8 samples/mS (for mono8)
-							if (delay8 != [])			// Same as for right channel
-								L8.push(...delay8);
-							delay8 = m8.slice(m8.length-dl,dl);	
+							if (b8 != [])			// Same as for right channel
+								L8.push(...b8);
+							b8 = m8.slice(m8.length-dl,dl);	
 						}			// Now dl and dr contain the correct offsets
 	  					for (let i=dl; i < m8.length; i++) L8[i] += m8[i-dl] * g;	
 	  					for (let i=dr; i < m8.length; i++) R8[i] += m8[i-dr] * g;	
@@ -243,14 +246,14 @@ if (tracecount > 0) console.log("delay for channel ",ch," at position ",p," is n
 						let dl = 0, dr = 0;
 						if (d < 0) {		// Apply delay to right channel
 							dr = d * -16;	// Invert delay and multiply by 16 samples/mS (for mono16)
-							if (delay16 != [])			// If there are samples in the delay buffer
-								R16.push(...delay16);		// Start R16 off with previous buffer samples
-							delay16 = m16.slice(m16.length-dr,dr);	// & copy final samples to delay buffer
+							if (b16 != [])			// If there are samples in the delay buffer
+								R16.push(...b16);	// Start R16 off with previous buffer samples
+							b16 = m16.slice(m16.length-dr,dr);	// & copy final samples to delay buffer
 						} else {		// Apply delay to left channel
 							dl = d * 16;	// Multiply by 16 samples/mS (for mono16)
-							if (delay16 != [])			// Same as for right channel
-								L16.push(...delay16);
-							delay16 = m16.slice(m16.length-dl,dl);	
+							if (b16 != [])			// Same as for right channel
+								L16.push(...b16);
+							b16 = m16.slice(m16.length-dl,dl);	
 						}			// Now dl and dr contain the correct offsets
 						for (let i=0; i < m16.length; i++) L16[i] += m16[i-dl] * g;
 						for (let i=0; i < m16.length; i++) R16[i] += m16[i-dr] * g;
