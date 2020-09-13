@@ -243,7 +243,7 @@ if (tracecount > 0) console.log("delaying ",dr," samples on right channel. Mono8
 							b8 = m8.slice(m8.length-dl,dl);	
 						}			// Now dl and dr contain the correct offsets
 	  					for (let i=dl; i < m8.length; i++) L8[i] += m8[i-dl] * g;	
-	  					for (let i=dr; i < m8.length; i++) R8[i] += m8[i-dr] * g;	
+//	  					for (let i=dr; i < m8.length; i++) R8[i] += m8[i-dr] * g;	
 					}				
 					if (m16.length > 0) {
 						let dl = 0, dr = 0;
@@ -261,7 +261,7 @@ if (tracecount > 0) console.log("delaying ",dr," samples on right channel. Mono8
 							b16 = m16.slice(m16.length-dl,dl);	
 						}			// Now dl and dr contain the correct offsets
 						for (let i=dl; i < m16.length; i++) L16[i] += m16[i-dl] * g;
-						for (let i=dr; i < m16.length; i++) R16[i] += m16[i-dr] * g;
+//						for (let i=dr; i < m16.length; i++) R16[i] += m16[i-dr] * g;
 					}
 				}
 			}
