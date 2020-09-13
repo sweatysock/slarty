@@ -231,9 +231,15 @@ if (tracecount > 0) console.log("delay for channel ",ch," at position ",p," is n
 						let dl = 0, dr = 0;	// Delay offsets for each channel. Default is no offset
 						if (d < 0) {		// Apply delay to right channel
 							dr = d * -1;	// Invert delay 
-							if (b8 != [])			// If there are samples in the delay buffer
+if (tracecount > 0) console.log("delay to right channel is ",dr);
+							if (b8 != []) {			// If there are samples in the delay buffer
+if (tracecount > 0) {let x;for (let i=0;i<b8.length;i++)x[i]=b8[i];console.log("channel buffer is ",x.length," long containing ",x)};
+if (tracecount > 0) {console.log("R8 is ",R8.length," long");
 								R8.splice(0,b8.length,...b8);
+if (tracecount > 0) {console.log("this has been added to R8 who's length is now",R8.length);
+							}
 							chan.buffer8 = m8.slice(m8.length-dr,dr);	// & copy final samples to delay buffer
+if (tracecount > 0) {let x;for (let i=0;i<chan.buffer8.length;i++)x[i]=chan.buffer8[i];console.log("channel buffer is NOW",x.length," long containing ",x)};
 						} else {				// Apply delay to left channel
 							dl = d;		
 							if (b8 != [])			// Same as for right channel
