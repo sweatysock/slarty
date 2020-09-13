@@ -169,24 +169,22 @@ if (tracecount> 0) console.log(serverLiveChannels);
 				}
 			}
 			let v8 = vData.audio.mono8, v16 = vData.audio.mono16;	// Shortcuts to the venue MSRE data blocks
-v8 = new Array(PacketSize/2).fill(0); v16 = new Array(PacketSize/2).fill(0);
 			if (v8.length > 0) {				// If there is venue audio it will need processing
 				let sr = 8000;				// Minimum sample rate of 8kHz
-//				if (a8.length > 0)  			// Only subtract if our audio is not empty
-//					for (let i = 0; i < a8.length; ++i) v8[i] = (v8[i] - a8[i]) * channels[0].gain / venueSize;
-//				if ((v16.length > 0) && 		// Does venue and our audio have higher quality audio?
-//					(a16.length > 0)) { 	// If so subtract our high bandwidth audio from venue
-//					for (let i = 0; i < a16.length; ++i) v16[i] = (v16[i] - a16[i]) * channels[0].gain / venueSize;
-//				} 					// By this stage our audio has been subtracted from venue audio
-//				if (v16.length > 0) {			// If the venue has higher quality audio
-//					let k = 0;			// reconstruct the original venue audio in v[]
-//					for (let i=0;i<v8.length;i++) {	
-//						v[k] = v8[i] + v16[i];k++;
-//						v[k] = v8[i] - v16[i];k++;
-//					}
-//					sr = 16000;			// This is at the higher sample rate
-//				} else v = v8;				// Only low bandwidth venue audio 
-v = v8;
+				if (a8.length > 0)  			// Only subtract if our audio is not empty
+					for (let i = 0; i < a8.length; ++i) v8[i] = (v8[i] - a8[i]) * channels[0].gain / venueSize;
+				if ((v16.length > 0) && 		// Does venue and our audio have higher quality audio?
+					(a16.length > 0)) { 	// If so subtract our high bandwidth audio from venue
+					for (let i = 0; i < a16.length; ++i) v16[i] = (v16[i] - a16[i]) * channels[0].gain / venueSize;
+				} 					// By this stage our audio has been subtracted from venue audio
+				if (v16.length > 0) {			// If the venue has higher quality audio
+					let k = 0;			// reconstruct the original venue audio in v[]
+					for (let i=0;i<v8.length;i++) {	
+						v[k] = v8[i] + v16[i];k++;
+						v[k] = v8[i] - v16[i];k++;
+					}
+					sr = 16000;			// This is at the higher sample rate
+				} else v = v8;				// Only low bandwidth venue audio 
 				let p = maxValue(v);			// Get peak audio for venue level display 
 				if (p > venue.peak) venue.peak = p;
 				v = reSample(v, sr, soundcardSampleRate, vCache); 
@@ -215,11 +213,9 @@ v = v8;
 					let b8 = chan.buffer8;		// Channel delay buffers where delayed audio is held
 					let b16 = chan.buffer16;
 					let p = serverLiveChannels[ch];	// Get channel's position in the group
-p = myPos;
 					let d = groupLayout[p];		// Get the delay (in samples @8kHz) for this position
 					d = (d + 18-(myDelay+1)) % 18;	// Adjust the delay relative to my position
 					d = d - 8;			// Delays are offset by 8MARK
-if (tracecount > 0) console.log("delay for channel ",ch," at position ",p," is now ",d," samples");
 					let g = (chan.agc 		// Apply gain. If AGC use mix gain, else channel gain
 						? mixOut.gain : chan.gain);	
 					chan.gain = g;			// Channel gain level should reflect gain applied here
