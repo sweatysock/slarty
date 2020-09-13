@@ -32,7 +32,7 @@ for (let i=0; i < NumberOfChannels; i++) {				// Create all the channels pre-ini
 		muted	: false,					// Local mute
 		peak	: 0,						// Animated peak channel audio level 
 		channel	: i,						// The channel needs to know it's number for UI referencing
-		seq	:0,						// Track channel sequence numbers to monitor qualityA
+		seq	:0,						// Track channel sequence numbers to monitor quality
 		buffer8	:[],						// A buffer used to delay one of the channels for stereo placement
 		buffer16:[],						// Need one for each sample class
 	};
@@ -219,10 +219,9 @@ v = v8;
 					let b8 = chan.buffer8;		// Channel delay buffers where delayed audio is held
 					let b16 = chan.buffer16;
 					let p = serverLiveChannels[ch];	// Get channel's position in the group
-					let d = groupLayout[p];		// Get the delay (mS) that corresponds to that position
+					let d = groupLayout[p];		// Get the delay (in samples @8kHz) for this position
 					d = (d + 18-(myDelay+1)) % 18;	// Adjust the delay relative to my position
 					d = d - 8;			// Delays are offset by 8MARK
-d=-1.5;
 if (tracecount > 0) console.log("delay for channel ",ch," at position ",p," is now ",d,"mS");
 					let g = (chan.agc 		// Apply gain. If AGC use mix gain, else channel gain
 						? mixOut.gain : chan.gain);	
@@ -231,18 +230,16 @@ if (tracecount > 0) console.log("delay for channel ",ch," at position ",p," is n
 						someAudio = true;	// Flag that there is actually some group audio
 						let dl = 0, dr = 0;	// Delay offsets for each channel. Default is no offset
 						if (d < 0) {		// Apply delay to right channel
-							dr = d * -8;	// Invert delay and multiply by 8 samples/mS (for mono8)
+							dr = d * -1;	// Invert delay 
 if (tracecount > 0) console.log("delaying ",dr," samples on right channel. Mono8 buffer for this channel is",b8);
 							if (b8 != [])			// If there are samples in the delay buffer
 								R8.splice(0,b8.length,...b8);
-//								R8.push(...b8);		// Start R8 off with previous buffer samples
-							b8 = m8.slice(m8.length-dr,dr);	// & copy final samples to delay buffer
-						} else {		// Apply delay to left channel
-							dl = d * 8;	// Multiply by 8 samples/mS (for mono8)
+							chan.buffer8 = m8.slice(m8.length-dr,dr);	// & copy final samples to delay buffer
+						} else {				// Apply delay to left channel
+							dl = d;		
 							if (b8 != [])			// Same as for right channel
 								L8.splice(0,b8.length,...b8);
-//								L8.push(...b8);
-							b8 = m8.slice(m8.length-dl,dl);	
+							chan.buffer8 = m8.slice(m8.length-dl,dl);	
 						}			// Now dl and dr contain the correct offsets
 	  					for (let i=dl; i < m8.length; i++) L8[i] += m8[i-dl] * g;	
 	  					for (let i=dr; i < m8.length; i++) R8[i] += m8[i-dr] * g;	
@@ -250,17 +247,15 @@ if (tracecount > 0) console.log("delaying ",dr," samples on right channel. Mono8
 					if (m16.length > 0) {
 						let dl = 0, dr = 0;
 						if (d < 0) {		// Apply delay to right channel
-							dr = d * -16;	// Invert delay and multiply by 16 samples/mS (for mono16)
+							dr = d * -2;	// Invert delay and multiply by 2 for 16kHz audio
 							if (b16 != [])			// If there are samples in the delay buffer
 								R16.splice(0,b16.length,...b16);
-//								R16.push(...b16);	// Start R16 off with previous buffer samples
-							b16 = m16.slice(m16.length-dr,dr);	// & copy final samples to delay buffer
+							chan.buffer16 = m16.slice(m16.length-dr,dr);	// & copy final samples to delay buffer
 						} else {		// Apply delay to left channel
-							dl = d * 16;	// Multiply by 16 samples/mS (for mono16)
+							dl = d * 2;	// Multiply by 2 for 16kHz audio
 							if (b16 != [])			// Same as for right channel
 								L16.splice(0,b16.length,...b16);
-//								L16.push(...b16);
-							b16 = m16.slice(m16.length-dl,dl);	
+							chan.buffer16 = m16.slice(m16.length-dl,dl);	
 						}			// Now dl and dr contain the correct offsets
 						for (let i=dl; i < m16.length; i++) L16[i] += m16[i-dl] * g;
 						for (let i=dr; i < m16.length; i++) R16[i] += m16[i-dr] * g;
