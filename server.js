@@ -254,10 +254,12 @@ io.sockets.on('connection', function (socket) {
 				}
 				if (!c.recording) {			// If recording the channel remains unchanged
 					let g = groups[c.group];	// Remove this channel from its group
-					let pos = g.liveChannels[ch];	// Get member position &
-					g.members[pos] = null;		// leave the position vacant
-					g.memberCount--;		// One less member of the group
-					g.liveChannels[ch] = null;	// & remove channel from group's list of live channels
+					if (g != undefined) {		// if it was in one... a quickly refreshed client won't be
+						let pos = g.liveChannels[ch];	// Get member position &
+						g.members[pos] = null;		// leave the position vacant
+						g.memberCount--;		// One less member of the group
+						g.liveChannels[ch] = null;	// & remove channel from group's list of live channels
+					}
 					c.group = "";			// Set to empty to force rejoining default group
 					c.packets = [];			
 					c.name = "";
