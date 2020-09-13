@@ -145,6 +145,7 @@ if (tracecount> 0) console.log(serverLiveChannels);
 		let v = [];						// Our objective is to get the venue audio (if any) in here,
 		let gL = [], gR = [];					// the group stereo audio (if any) in here
 		let pL = [], pR = [];					// and the performer stereo audio (if any) in here. Then mix and send to speaker
+		let isStereo = false;					// flag to indicate if we have stereo audio
 		// 1. Process venue mix from server 
 		let ts = 0;
 		let vData = data.venue;
@@ -269,7 +270,6 @@ if (tracecount > 0) console.log("delaying ",dr," samples on right channel. Mono8
 				trace("Sequence jump Channel ",ch," jump ",(c.sequence - chan.seq));
 			chan.seq = c.sequence;				// Store seq number for next time a packet comes in
 		});
-tracecount--;
 		if (someAudio) {					// If there is group audio rebuild and upsample it
 			let k = 0;
 			for (let i=0;i<L8.length;i++) {			// Reconstruct stereo group mix from the MSRE blocks
@@ -280,6 +280,7 @@ tracecount--;
 			}						// Bring sample rate up to HW sample rate
 			gL = reSample(gL, SampleRate, soundcardSampleRate, gLCache); 
 			gR = reSample(gR, SampleRate, soundcardSampleRate, gRCache); 
+			isStereo = true;
 		} 
 		let s = Math.round(PacketSize * soundcardSampleRate / SampleRate);	// The amount of audio expected per server packet
 		let mixL = new Array(s).fill(0), mixR = new Array(s).fill(0);
@@ -293,7 +294,6 @@ tracecount--;
 		// 3. Process performer audio if there is any, and add it to the mix. This could be stereo audio
 		performer = (data.perf.chan == myChannel);		// Update performer flag just in case
 		liveShow = data.perf.live;				// Update the live show flag to update display
-		let isStereo = false;					// flag to indicate if we have stereo audio
 		if ((data.perf.live) && (data.perf.packet != null)) {	// If there is a live performer with data, process it...
 			let audio = zipson.parse(data.perf.packet.perfAudio);	// Uncompress performer audio
 			let m8 = audio.mono8;
@@ -363,10 +363,11 @@ tracecount--;
 						}
 					}
 				} else { 				// Just mono performer audio
-					if (mixL.length == 0) {		// If no venue or group audio just use perf audio directly
+					if (mixL.length == 0) {		// If no group audio just use perf audio directly
 						mixL = mono; 
 						mixR = mono; 
-					} else {			// Have to build stero mix with mono perf and potentially stereo group
+					} else {			// Have to build stereo mix with mono perf and potentially stereo group
+						isStereo = true;
 						for (let i=0; i < mono.length; i++) {
 							mixL[i] += left[i];	
 							mixR[i] += right[i];
@@ -404,6 +405,7 @@ tracecount--;
 			venueBuffer.push(...v);				// Add any venue audio to the venue buffer
 		if (venueBuffer.length > maxBuffSize) 			// Clip buffer if too full
 			venueBuffer.splice(0, (venueBuffer.length-maxBuffSize)); 	
+tracecount--;
 		// 5. Calculate RTT 
 		if (ts > 0) {						// If we have timestamp data calcuate rtt
 			let now = new Date().getTime();
