@@ -231,6 +231,7 @@ if (tracecount > 0) console.log("delay for channel ",ch," at position ",p," is n
 						let dl = 0, dr = 0;	// Delay offsets for each channel. Default is no offset
 						if (d < 0) {		// Apply delay to right channel
 							dr = d * -8;	// Invert delay and multiply by 8 samples/mS (for mono8)
+d=1;
 if (tracecount > 0) console.log("delaying ",dr," samples on right channel. Mono8 buffer for this channel is",b8);
 							if (b8 != [])			// If there are samples in the delay buffer
 								R8.splice(0,b8.length,...b8);
