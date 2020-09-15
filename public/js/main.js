@@ -1215,6 +1215,7 @@ console.log(filename," loaded into reverb);
 		});
 	};
 	ir_request.send();
+console.log("Requested to load ",filename);
 }
 
 function impulseResponse( duration, decay, reverse ) {
