@@ -1187,11 +1187,11 @@ function handleAudio(stream) {						// We have obtained media access
 
 	splitter.connect(reverb,2);					// Send centre venue to the stereo reverb
 	
-	splitter.connect(delayL,2,0);					// Create 2 stereo panned & delayed venue tracks
-	splitter.connect(combiDelayL,2,1);				// by sending direct sound to one channel
-	delayL.connect(combiDelayL,0,0);				// and slightly delayed to the other
-	combiDelayL.connect(delay1);					// Then add a delay that separates this sound
-	delay1.connect(context.destination);				// from the original and send it out dry
+//	splitter.connect(delayL,2,0);					// Create 2 stereo panned & delayed venue tracks
+//	splitter.connect(combiDelayL,2,1);				// by sending direct sound to one channel
+//	delayL.connect(combiDelayL,0,0);				// and slightly delayed to the other
+//	combiDelayL.connect(delay1);					// Then add a delay that separates this sound
+//	delay1.connect(context.destination);				// from the original and send it out dry
 
 	splitter.connect(delayR,2,0);					// Repeat for the second panned venue track
 	splitter.connect(combiDelayR,2,0);
