@@ -1171,8 +1171,8 @@ function handleAudio(stream) {						// We have obtained media access
 	let delayR = context.createDelay();				// for left and right venue
 	let delay1 = context.createDelay();				// Also need specific delays to separate the widened
 	let delay2 = context.createDelay();				// venue audio
-	delayL.delayTime.value = 0.0008;				// Delay that fools us into hearing sound to left
-	delayR.delayTime.value = 0.0008;				// and right
+	delayL.delayTime.value = 0.0003;				// Delay that fools us into hearing sound to left
+	delayR.delayTime.value = 0.0003;				// and right
 	delay1.delayTime.value = 0.019;					// Delay to separate first wide venue from centre
 	delay2.delayTime.value = 0.033;					// Delay for second wide venue track
 
@@ -1211,6 +1211,7 @@ function loadVenueReverb(filename) {					// Load the venue reverb file to give a
 	ir_request.onload = function () {
 		context.decodeAudioData( ir_request.response, function ( buffer ) {
 			reverb.buffer = buffer;
+console.log(filename," loaded into reverb);
 		});
 	};
 	ir_request.send();
