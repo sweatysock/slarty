@@ -1193,11 +1193,11 @@ function handleAudio(stream) {						// We have obtained media access
 //	combiDelayL.connect(delay1);					// Then add a delay that separates this sound
 //	delay1.connect(context.destination);				// from the original and send it out dry
 
-	splitter.connect(delayR,2,0);					// Repeat for the second panned venue track
-	splitter.connect(combiDelayR,2,0);
-	delayR.connect(combiDelayR,0,1);
-	combiDelayR.connect(delay2);
-	delay2.connect(context.destination);
+//	splitter.connect(delayR,2,0);					// Repeat for the second panned venue track
+//	splitter.connect(combiDelayR,2,0);
+//	delayR.connect(combiDelayR,0,1);
+//	combiDelayR.connect(delay2);
+//	delay2.connect(context.destination);
 
 	reverb.connect(context.destination);				// and finally feed the centre venue with reverb to the output 
 
