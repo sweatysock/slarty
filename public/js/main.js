@@ -137,10 +137,10 @@ socketIO.on('perf', function (data) {					// Performer status notification
 socketIO.on('d', function (data) { 
 	enterState( dataInState );					// This is one of our key tasks
 	packetsIn++;							// For monitoring and statistics
+if (tracecount > 0) console.log(data);
 	let len=JSON.stringify(data).length/1024;			// Get actual packet size received before any changes
 	bytesRcvd += len;						// Accumulate in incoming data total count
 	serverLiveChannels = data.liveChannels;				// Server live channels are for UI updating
-//let tdl, tdr, sdl, sdr;
 	processCommands(data.commands);					// Process commands from server
 	if (micAccessAllowed) {						// Need access to audio before outputting
 		let v = [];						// Our objective is to get the venue audio (if any) in here,
@@ -161,7 +161,6 @@ socketIO.on('d', function (data) {
 			let ch = c.channel;				// Channel number the packet belongs to
 			let chan = channels[ch];			// Local data structure for this channel
 			if ((c.socketID != socketIO.id) && (ch != 0)) {	// Don't include my audio or channel 0 in the group mix
-//			if ((true) && (ch != 0)) {	// TEST CODE... ALWAYS HEAR MYSELF IN GROUP
 				chan.name = c.name;			// Update local structure's channel name
 				chan.channel = ch;			// Keep channel number too. It helps speed lookups
 				if (chan.peak < c.peak)			// set the peak for this channel's level display
