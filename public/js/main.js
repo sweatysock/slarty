@@ -1211,7 +1211,7 @@ function loadVenueReverb(filename) {					// Load the venue reverb file to give a
 	ir_request.onload = function () {
 		context.decodeAudioData( ir_request.response, function ( buffer ) {
 			reverb.buffer = buffer;
-console.log(filename," loaded into reverb);
+console.log(filename," loaded into reverb");
 		});
 	};
 	ir_request.send();
