@@ -1165,16 +1165,16 @@ function handleAudio(stream) {						// We have obtained media access
 	reverb = context.createConvolver();				// Reverb for venue ambience
 	let splitter = context.createChannelSplitter();			// Need a splitter to separate venue from main audio
 	let combiner = context.createChannelMerger();			// Combiner used to rebuild stereo image
-	let combiDelayL = context.createChannelMerger();		// These combiners are used to rebuild stereo venue
-	let combiDelayR = context.createChannelMerger();		// spacial effects for left and right widening
-	let delayL = context.createDelay();				// Spacial venue effect requires special delays
-	let delayR = context.createDelay();				// for left and right venue
-	let delay1 = context.createDelay();				// Also need specific delays to separate the widened
-	let delay2 = context.createDelay();				// venue audio
-	delayL.delayTime.value = 0.0008;				// Delay that fools us into hearing sound to left
-	delayR.delayTime.value = 0.0008;				// and right
-	delay1.delayTime.value = 0.019;					// Delay to separate first wide venue from centre
-	delay2.delayTime.value = 0.033;					// Delay for second wide venue track
+//	let combiDelayL = context.createChannelMerger();		// These combiners are used to rebuild stereo venue
+//	let combiDelayR = context.createChannelMerger();		// spacial effects for left and right widening
+//	let delayL = context.createDelay();				// Spacial venue effect requires special delays
+//	let delayR = context.createDelay();				// for left and right venue
+//	let delay1 = context.createDelay();				// Also need specific delays to separate the widened
+//	let delay2 = context.createDelay();				// venue audio
+//	delayL.delayTime.value = 0.0008;				// Delay that fools us into hearing sound to left
+//	delayR.delayTime.value = 0.0008;				// and right
+//	delay1.delayTime.value = 0.019;					// Delay to separate first wide venue from centre
+//	delay2.delayTime.value = 0.033;					// Delay for second wide venue track
 
 	liveSource.connect(micFilter1);					// Mic goes to the lowpass filter
 	micFilter1.connect(micFilter2);					// then to the highpass filter
@@ -1187,17 +1187,17 @@ function handleAudio(stream) {						// We have obtained media access
 
 	splitter.connect(reverb,2);					// Send centre venue to the stereo reverb
 	
-	splitter.connect(delayL,2,0);					// Create 2 stereo panned & delayed venue tracks
-	splitter.connect(combiDelayL,2,1);				// by sending direct sound to one channel
-	delayL.connect(combiDelayL,0,0);				// and slightly delayed to the other
-	combiDelayL.connect(delay1);					// Then add a delay that separates this sound
-	delay1.connect(context.destination);				// from the original and send it out dry
+//	splitter.connect(delayL,2,0);					// Create 2 stereo panned & delayed venue tracks
+//	splitter.connect(combiDelayL,2,1);				// by sending direct sound to one channel
+//	delayL.connect(combiDelayL,0,0);				// and slightly delayed to the other
+//	combiDelayL.connect(delay1);					// Then add a delay that separates this sound
+//	delay1.connect(context.destination);				// from the original and send it out dry
 
-	splitter.connect(delayR,2,0);					// Repeat for the second panned venue track
-	splitter.connect(combiDelayR,2,0);
-	delayR.connect(combiDelayR,0,1);
-	combiDelayR.connect(delay2);
-	delay2.connect(context.destination);
+//	splitter.connect(delayR,2,0);					// Repeat for the second panned venue track
+//	splitter.connect(combiDelayR,2,0);
+//	delayR.connect(combiDelayR,0,1);
+//	combiDelayR.connect(delay2);
+//	delay2.connect(context.destination);
 
 	reverb.connect(context.destination);				// and finally feed the centre venue with reverb to the output 
 
