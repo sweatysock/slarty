@@ -1208,11 +1208,15 @@ function loadVenueReverb(filename) {					// Load the venue reverb file to give a
 	let ir_request = new XMLHttpRequest();				// Load impulse response to reverb
 	ir_request.open("GET", filename, true);
 	ir_request.responseType = "arraybuffer";
-	ir_request.onload = function () {
-		context.decodeAudioData( ir_request.response, function ( buffer ) {
-			reverb.buffer = buffer;
+	ir_request.onreadystatechange = function () {
+console.log("Response incoming");
+		if (this.readyState == 4 && this.status == 200) {
+console.log("Response ok");
+			context.decodeAudioData( ir_request.response, function ( buffer ) {
+				reverb.buffer = buffer;
 console.log(filename," loaded into reverb");
-		});
+			});
+		}
 	};
 	ir_request.send();
 console.log("Requested to load ",filename);
