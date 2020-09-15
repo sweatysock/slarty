@@ -140,14 +140,115 @@ socketIO.on('d', function (data) {
 	let len=JSON.stringify(data).length/1024;			// Get actual packet size received before any changes
 	bytesRcvd += len;						// Accumulate in incoming data total count
 	serverLiveChannels = data.liveChannels;				// Server live channels are for UI updating
-if (tracecount> 0) console.log(serverLiveChannels);
+//let tdl, tdr, sdl, sdr;
 	processCommands(data.commands);					// Process commands from server
 	if (micAccessAllowed) {						// Need access to audio before outputting
 		let v = [];						// Our objective is to get the venue audio (if any) in here,
+		let c8 = new Array(PacketSize/2).fill(0);		// Buffer of group audio to be subtracted from the venue audio 
+		let c16 = new Array(PacketSize/2).fill(0);		// in MSRE format
 		let gL = [], gR = [];					// the group stereo audio (if any) in here
 		let pL = [], pR = [];					// and the performer stereo audio (if any) in here. Then mix and send to speaker
 		let isStereo = false;					// flag to indicate if we have stereo audio
-		// 1. Process venue mix from server 
+		// 1. Build a mix of all group channels. For individuals or empty groups no audio will have been sent
+		let L8 = new Array(PacketSize/2).fill(0);		// Temp arrays for MSRE blocks for left channel
+		let L16 = new Array(PacketSize/2).fill(0);		// so that we only do one MSRE decode at the end
+		let R8 = new Array(PacketSize/2).fill(0);		// Temp arrays for MSRE blocks for right channel
+		let R16 = new Array(PacketSize/2).fill(0);		
+		let someAudio = false;					// If no audio this saves us checking
+		let myPosition = serverLiveChannels[myChannel];		// Obtain my position in the group
+		let myDelay = groupLayout[myPosition];			// Find the delay that corresponds to my position
+		data.channels.forEach(c => {				// Process all audio channel packets including channel 0
+			let ch = c.channel;				// Channel number the packet belongs to
+			let chan = channels[ch];			// Local data structure for this channel
+			if ((c.socketID != socketIO.id) && (ch != 0)) {	// Don't include my audio or channel 0 in the group mix
+//			if ((true) && (ch != 0)) {	// TEST CODE... ALWAYS HEAR MYSELF IN GROUP
+				chan.name = c.name;			// Update local structure's channel name
+				chan.channel = ch;			// Keep channel number too. It helps speed lookups
+				if (chan.peak < c.peak)			// set the peak for this channel's level display
+					chan.peak = c.peak;		// even if muted
+				let a = c.audio;			// Get the audio from the packet
+				if (!chan.muted) {			// We skip a muted channel in the mix
+					let m8 = a.mono8;
+					let m16 = a.mono16;
+					let b8 = chan.buffer8;		// Channel delay buffers where delayed audio is held
+					let b16 = chan.buffer16;
+					let p = serverLiveChannels[ch];	// Get channel's position in the group
+					let d = groupLayout[p];		// Get the delay (in samples @8kHz) for this position
+					d = (d + 18-(myDelay+1)) % 18;	// Adjust the delay relative to my position
+					d = d - 8;			// Delays are offset by 8MARK
+					let g = (chan.agc 		// Apply gain. If AGC use mix gain, else channel gain
+						? mixOut.gain : chan.gain);	
+					chan.gain = g;			// Channel gain level should reflect gain applied here
+					if (m8.length > 0) {		// Only mix if there is audio in channel
+						someAudio = true;	// Flag that there is actually some group audio
+						let dl = 0, dr = 0;	// Delay offsets for each channel. Default is no offset
+						if (d < 0) {		// Apply delay to right channel
+							dr = d * -1;	// Invert delay 
+							if (b8.length != 0) 			// Get delayed samples and build stereo mix plus cancelling buffer
+								for (let i=0;i<b8.length;i++) R8[i] += b8[i] *g;
+							for (let i=0; i < m8.length; i++) {L8[i] += m8[i] * g; c8[i] += m8[i];}
+							for (let i=dr; i < m8.length; i++) {R8[i] += m8[i-dr] * g;}
+							chan.buffer8 = m8.slice(m8.length-dr,m8.length);	// store final samples to delay buffer
+						} else {		// Apply delay to left channel
+							dl = d;		
+							if (b8.length != 0)			// Same as for right channel
+								for (let i=0;i<b8.length;i++) L8[i] += b8[i] *g;
+							for (let i=dl; i < m8.length; i++) {L8[i] += m8[i-dl] * g;}
+							for (let i=0; i < m8.length; i++) {R8[i] += m8[i] * g; c8[i] += m8[i];}
+							chan.buffer8 = m8.slice(m8.length-dl,m8.length);	
+						}			// Now dl and dr contain the correct offsets
+	  					for (let i=dl; i < m8.length; i++) {
+							L8[i] += m8[i-dl] * g;	
+							if (dl == 0) c8[i] += m8[i];
+						}
+	  					for (let i=dr; i < m8.length; i++) {
+							R8[i] += m8[i-dr] * g;	
+							if (dr == 0) c8[i] += m8[i];
+						}
+					}				
+					if (m16.length > 0) {
+						let dl = 0, dr = 0;
+						if (d < 0) {		// Apply delay to right channel
+							dr = d * -2;	// Invert delay and multiply by 2 for 16kHz audio
+							if (b16.length != 0)			// Get delayed samples and build stereo mix plus cancelling buffer
+								for (let i=0;i<b16.length;i++) R16[i] += b16[i] *g;
+							for (let i=0; i < m16.length; i++) {L16[i] += m16[i] * g; c16[i] += m16[i];}
+							for (let i=dr; i < m16.length; i++) {R16[i] += m16[i-dr] * g;}
+							chan.buffer16 = m16.slice(m16.length-dr,m16.length);	// store final samples to delay buffer
+						} else {		// Apply delay to left channel
+							dl = d * 2;	// Multiply by 2 for 16kHz audio
+							if (b16.length != 0)			// Same as for right channel
+								for (let i=0;i<b16.length;i++) L16[i] += b16[i] *g;
+							for (let i=dl; i < m16.length; i++) {L16[i] += m16[i-dl] * g;}
+							for (let i=0; i < m16.length; i++) {R16[i] += m16[i] * g; c16[i] += m16[i];}
+							chan.buffer16 = m16.slice(m16.length-dl,m16.length);	
+						}			
+					}
+				}
+			}
+			if (c.sequence != (chan.seq + 1)) 		// Monitor audio transfer quality for all channels
+				trace("Sequence jump Channel ",ch," jump ",(c.sequence - chan.seq));
+			chan.seq = c.sequence;				// Store seq number for next time a packet comes in
+		});
+		if (someAudio) {					// If there is group audio rebuild and upsample it
+			let k = 0;
+			for (let i=0;i<L8.length;i++) {			// Reconstruct stereo group mix from the MSRE blocks
+				gL[k] = L8[i] + L16[i];
+				gR[k] = R8[i] + R16[i];k++;
+				gL[k] = L8[i] - L16[i];
+				gR[k] = R8[i] - R16[i];k++;
+			}						// Bring sample rate up to HW sample rate
+			gL = reSample(gL, SampleRate, soundcardSampleRate, gLCache); 
+			gR = reSample(gR, SampleRate, soundcardSampleRate, gRCache); 
+			isStereo = true;
+		} 
+		let mixL = [], mixR = [];
+		if (gL.length > 0) {mixL = gL; mixR = gR;}		// Put group audio in the mix if any
+		else {							// If no group mix then fill mix with 0's
+			let s = Math.round(PacketSize * soundcardSampleRate / SampleRate);	
+			mixL = new Array(s).fill(0), mixR = new Array(s).fill(0);
+		}
+		// 2. Process venue mix from server 
 		let ts = 0;
 		let vData = data.venue;
 		if (vData != null) {					// If there is venue data find our seq #, subtract it, & correct venue level
@@ -171,13 +272,19 @@ if (tracecount> 0) console.log(serverLiveChannels);
 			let v8 = vData.audio.mono8, v16 = vData.audio.mono16;	// Shortcuts to the venue MSRE data blocks
 			if (v8.length > 0) {				// If there is venue audio it will need processing
 				let sr = 8000;				// Minimum sample rate of 8kHz
-				if (a8.length > 0)  			// Only subtract if our audio is not empty
+				if ((a8.length > 0) && (c8.length > 0))	// If we have audio and group has audio remove both and set venue level
+					for (let i = 0; i < a8.length; ++i) v8[i] = (v8[i] - a8[i] -c8[i]) * venue.gain / venueSize;
+				if ((a8.length > 0) && (c8.length == 0))// If there is only our audio subtract it and set venue level
 					for (let i = 0; i < a8.length; ++i) v8[i] = (v8[i] - a8[i]) * venue.gain / venueSize;
-				if ((v16.length > 0) && 		// Does venue and our audio have higher quality audio?
-					(a16.length > 0)) { 	// If so subtract our high bandwidth audio from venue
-					for (let i = 0; i < a16.length; ++i) v16[i] = (v16[i] - a16[i]) * venue.gain / venueSize;
-				} 					// By this stage our audio has been subtracted from venue audio
-				if (v16.length > 0) {			// If the venue has higher quality audio
+				if ((a8.length == 0) && (c8.length > 0))// If there is only group cancelling audio subtract it and set venue level
+					for (let i = 0; i < c8.length; ++i) v8[i] = (v8[i] - c8[i]) * venue.gain / venueSize;
+				if (v16.length > 0) {			// If the venue has higher quality audio repeat the same process
+					if ((a16.length > 0) && (c16.length > 0))
+						for (let i = 0; i < a16.length; ++i) v16[i] = (v16[i] - a16[i] -c16[i]) * venue.gain / venueSize;
+					if ((a16.length > 0) && (c16.length == 0))
+						for (let i = 0; i < a16.length; ++i) v16[i] = (v16[i] - a16[i]) * venue.gain / venueSize;
+					if ((a16.length == 0) && (c16.length > 0))
+						for (let i = 0; i < c16.length; ++i) v16[i] = (v16[i] - c16[i]) * venue.gain / venueSize;
 					let k = 0;			// reconstruct the original venue audio in v[]
 					for (let i=0;i<v8.length;i++) {	
 						v[k] = v8[i] + v16[i];k++;
@@ -190,101 +297,10 @@ if (tracecount> 0) console.log(serverLiveChannels);
 				v = reSample(v, sr, soundcardSampleRate, vCache); 
 			} else venue.peak = 0;				// Don't need to be a genius to figure that one out if there's no audio!
 		} 
-		// 2. Build a mix of all group channels. For individuals or empty groups no audio will have been sent
-		let L8 = new Array(PacketSize/2).fill(0);		// Temp arrays for MSRE blocks for left channel
-		let L16 = new Array(PacketSize/2).fill(0);		// so that we only do one MSRE decode at the end
-		let R8 = new Array(PacketSize/2).fill(0);		// Temp arrays for MSRE blocks for right channel
-		let R16 = new Array(PacketSize/2).fill(0);		
-		let someAudio = false;					// If no audio this saves us checking
-		let myPosition = serverLiveChannels[myChannel];		// Obtain my position in the group
-		let myDelay = groupLayout[myPosition];			// Find the delay that corresponds to my position
-		data.channels.forEach(c => {				// Process all audio channel packets including channel 0
-			let ch = c.channel;				// Channel number the packet belongs to
-			let chan = channels[ch];			// Local data structure for this channel
-			if ((c.socketID != socketIO.id) && (ch != 0)) {	// Don't include my audio or channel 0 in the group mix
-				chan.name = c.name;			// Update local structure's channel name
-				chan.channel = ch;			// Keep channel number too. It helps speed lookups
-				if (chan.peak < c.peak)			// set the peak for this channel's level display
-					chan.peak = c.peak;		// even if muted
-				let a = c.audio;			// Get the audio from the packet
-				if (!chan.muted) {			// We skip a muted channel in the mix
-					let m8 = a.mono8;
-					let m16 = a.mono16;
-					let b8 = chan.buffer8;		// Channel delay buffers where delayed audio is held
-					let b16 = chan.buffer16;
-					let p = serverLiveChannels[ch];	// Get channel's position in the group
-					let d = groupLayout[p];		// Get the delay (in samples @8kHz) for this position
-					d = (d + 18-(myDelay+1)) % 18;	// Adjust the delay relative to my position
-					d = d - 8;			// Delays are offset by 8MARK
-					let g = (chan.agc 		// Apply gain. If AGC use mix gain, else channel gain
-						? mixOut.gain : chan.gain);	
-					chan.gain = g;			// Channel gain level should reflect gain applied here
-					if (m8.length > 0) {		// Only mix if there is audio in channel
-						someAudio = true;	// Flag that there is actually some group audio
-						let dl = 0, dr = 0;	// Delay offsets for each channel. Default is no offset
-						if (d < 0) {		// Apply delay to right channel
-							dr = d * -1;	// Invert delay 
-							if (b8.length != 0) {			// If there are samples in the delay buffer
-								R8.splice(0,b8.length,...b8);
-							}
-							chan.buffer8 = m8.slice(m8.length-dr,m8.length);	// & copy final samples to delay buffer
-						} else {				// Apply delay to left channel
-							dl = d;		
-							if (b8.length != 0)			// Same as for right channel
-								L8.splice(0,b8.length,...b8);
-							chan.buffer8 = m8.slice(m8.length-dl,m8.length);	
-						}			// Now dl and dr contain the correct offsets
-	  					for (let i=dl; i < m8.length; i++) L8[i] += m8[i-dl] * g;	
-	  					for (let i=dr; i < m8.length; i++) R8[i] += m8[i-dr] * g;	
-					}				
-					if (m16.length > 0) {
-						let dl = 0, dr = 0;
-						if (d < 0) {		// Apply delay to right channel
-							dr = d * -2;	// Invert delay and multiply by 2 for 16kHz audio
-							if (b16.length != 0)			// If there are samples in the delay buffer
-								R16.splice(0,b16.length,...b16);
-							chan.buffer16 = m16.slice(m16.length-dr,m16.length);	// & copy final samples to delay buffer
-						} else {		// Apply delay to left channel
-							dl = d * 2;	// Multiply by 2 for 16kHz audio
-							if (b16.length != 0)			// Same as for right channel
-								L16.splice(0,b16.length,...b16);
-							chan.buffer16 = m16.slice(m16.length-dl,m16.length);	
-						}			// Now dl and dr contain the correct offsets
-						for (let i=dl; i < m16.length; i++) L16[i] += m16[i-dl] * g;
-						for (let i=dr; i < m16.length; i++) R16[i] += m16[i-dr] * g;
-					}
-				}
-			}
-			if (c.sequence != (chan.seq + 1)) 		// Monitor audio transfer quality for all channels
-				trace("Sequence jump Channel ",ch," jump ",(c.sequence - chan.seq));
-			chan.seq = c.sequence;				// Store seq number for next time a packet comes in
-		});
-		if (someAudio) {					// If there is group audio rebuild and upsample it
-			let k = 0;
-			for (let i=0;i<L8.length;i++) {			// Reconstruct stereo group mix from the MSRE blocks
-				gL[k] = L8[i] + L16[i];
-				gR[k] = R8[i] + R16[i];k++;
-				gL[k] = L8[i] - L16[i];
-				gR[k] = R8[i] - R16[i];k++;
-			}						// Bring sample rate up to HW sample rate
-			gL = reSample(gL, SampleRate, soundcardSampleRate, gLCache); 
-			gR = reSample(gR, SampleRate, soundcardSampleRate, gRCache); 
-			isStereo = true;
-		} 
-		let s = Math.round(PacketSize * soundcardSampleRate / SampleRate);	// The amount of audio expected per server packet
-		let mixL = new Array(s).fill(0), mixR = new Array(s).fill(0);
-//		// TEMP COMBINE VENUE AND GROUP INTO MIX HERE
-//		if (v.length > 0) {					// If there is venue audio
-//			if (gL.length > 0) {				// and group audio, mix together
-//				for (i=0; i<gL.length; i++) mixL = v[i] + gL[i];
-//			} else mixL = v;				// only venue audio
-//		} else if (gL.length > 0) mixL = gL;			// only group audio
-		if (gL.length > 0) {mixL = gL; mixR = gR;}		// Put group audio in the mix if any
 		// 3. Process performer audio if there is any, and add it to the mix. This could be stereo audio
 		performer = (data.perf.chan == myChannel);		// Update performer flag just in case
 		liveShow = data.perf.live;				// Update the live show flag to update display
 		if ((data.perf.live) && (data.perf.packet != null)) {	// If there is a live performer with data, process it...
-if (tracecount>0) console.log("perf data incoming");
 			let audio = zipson.parse(data.perf.packet.perfAudio);	// Uncompress performer audio
 			let m8 = audio.mono8;
 			let m16 = audio.mono16;
