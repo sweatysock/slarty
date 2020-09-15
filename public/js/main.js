@@ -182,40 +182,32 @@ socketIO.on('d', function (data) {
 					if (m8.length > 0) {		// Only mix if there is audio in channel
 						someAudio = true;	// Flag that there is actually some group audio
 						let dl = 0, dr = 0;	// Delay offsets for each channel. Default is no offset
-						if (d < 0) {		// Apply delay to right channel
+						if (d < 0) {		// Applying delay to right channel
 							dr = d * -1;	// Invert delay 
 							if (b8.length != 0) 			// Get delayed samples and build stereo mix plus cancelling buffer
 								for (let i=0;i<b8.length;i++) R8[i] += b8[i] *g;
 							for (let i=0; i < m8.length; i++) {L8[i] += m8[i] * g; c8[i] += m8[i];}
 							for (let i=dr; i < m8.length; i++) {R8[i] += m8[i-dr] * g;}
 							chan.buffer8 = m8.slice(m8.length-dr,m8.length);	// store final samples to delay buffer
-						} else {		// Apply delay to left channel
+						} else {		// Applying delay to left channel
 							dl = d;		
 							if (b8.length != 0)			// Same as for right channel
 								for (let i=0;i<b8.length;i++) L8[i] += b8[i] *g;
 							for (let i=dl; i < m8.length; i++) {L8[i] += m8[i-dl] * g;}
 							for (let i=0; i < m8.length; i++) {R8[i] += m8[i] * g; c8[i] += m8[i];}
 							chan.buffer8 = m8.slice(m8.length-dl,m8.length);	
-						}			// Now dl and dr contain the correct offsets
-	  					for (let i=dl; i < m8.length; i++) {
-							L8[i] += m8[i-dl] * g;	
-							if (dl == 0) c8[i] += m8[i];
-						}
-	  					for (let i=dr; i < m8.length; i++) {
-							R8[i] += m8[i-dr] * g;	
-							if (dr == 0) c8[i] += m8[i];
-						}
+						}			
 					}				
 					if (m16.length > 0) {
 						let dl = 0, dr = 0;
-						if (d < 0) {		// Apply delay to right channel
+						if (d < 0) {		// Applying delay to right channel
 							dr = d * -2;	// Invert delay and multiply by 2 for 16kHz audio
 							if (b16.length != 0)			// Get delayed samples and build stereo mix plus cancelling buffer
 								for (let i=0;i<b16.length;i++) R16[i] += b16[i] *g;
 							for (let i=0; i < m16.length; i++) {L16[i] += m16[i] * g; c16[i] += m16[i];}
 							for (let i=dr; i < m16.length; i++) {R16[i] += m16[i-dr] * g;}
 							chan.buffer16 = m16.slice(m16.length-dr,m16.length);	// store final samples to delay buffer
-						} else {		// Apply delay to left channel
+						} else {		// Applying delay to left channel
 							dl = d * 2;	// Multiply by 2 for 16kHz audio
 							if (b16.length != 0)			// Same as for right channel
 								for (let i=0;i<b16.length;i++) L16[i] += b16[i] *g;
