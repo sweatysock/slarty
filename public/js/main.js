@@ -1163,6 +1163,7 @@ function handleAudio(stream) {						// We have obtained media access
 	micFilter2.Q.value = 1;
 	
 	reverb = context.createConvolver();				// Reverb for venue ambience
+	reverb.buffer = impulseResponse(1,2,false);			// Default reverb characteristic... simple exponential decay
 	let splitter = context.createChannelSplitter();			// Need a splitter to separate venue from main audio
 	let combiner = context.createChannelMerger();			// Combiner used to rebuild stereo image
 	let combiDelayL = context.createChannelMerger();		// These combiners are used to rebuild stereo venue
