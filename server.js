@@ -643,6 +643,7 @@ function generateMix () {
 			liveChannels	: [],				// nor other live channels
 			commands	: commands,			// Send commands downstream as normal
 		});
+console.log("Loopback sent to ", perf.chan);
 	} else for (group in groups) {					// Send packets to all active groups
 		if (groups[group].memberCount == 0) continue;		// Skip empty groups
 		let g = groups[group];
