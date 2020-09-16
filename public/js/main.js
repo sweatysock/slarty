@@ -960,14 +960,13 @@ function processAudio(e) {						// Main processing loop
 			let audioL = micBufferL.splice(0, micAudioPacketSize);		// Get a packet of audio
 			let audioR = micBufferR.splice(0, micAudioPacketSize);		// for each channel
 			let audio = {mono8:[],mono16:[]};		// default empty audio and perf objects to send
-			let perf = false;				// Signal to server we believe we are not the performer
+			let perf = zipson.stringify({mono8:[],mono16:[],mono32:[],stereo8:[],stereo16:[],stereo32:[]});
 			let peak = 0;					// Note: no need for perf to set peak
-			if (performer) {				// If we believe we are the performer 
+			if (performer) {				// If we are the performer 
 				if (!micIn.muted) {			// & not muted prepare our audio for HQ stereo 
 					let a = prepPerfAudio(audioL, audioR);	
 					perf = zipson.stringify(a);	// and compress audio fully
-				} else 					// send silent perf audio
-					perf = zipson.stringify({mono8:[],mono16:[],mono32:[],stereo8:[],stereo16:[],stereo32:[]});
+				}
 			} else {					// Standard audio prep - always mono
 				let mono8 = [], mono16 = [], mono32 = [], stereo8 = [], stereo16 = [], stereo32 = [];
 				audio = reSample(audioL, soundcardSampleRate, SampleRate, downCache);	
