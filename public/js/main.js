@@ -252,6 +252,7 @@ if (tracecount > 0) console.log(data);
 			let a8 = [], a16 = [];				// Temp store for our audio for subtracting (echo cancelling)
 			let s = vData.seqNos[myChannel];		// If the venue mix contains our audio this will be its sequence no.
 			if (s != null) {				// If we are performer or there are network issues our audio won't be in the mix
+if (tracecount>0) console.log("Sequence no in venue audio");
 				while (packetBuf.length) {		// Scan the packet buffer for the packet with this sequence
 					let p = packetBuf.shift();	// Remove the oldest packet from the buffer until s is found
 					if (p.sequence == s) {		// We have found the right sequence number
