@@ -671,7 +671,6 @@ function convertIdToObj(id) {						// Translate HTML DOM IDs to JS data objects
 
 function recButton(e) {
 trace2("rec");
-return;
 	let id = event.target.parentNode.id;
 	let b = document.getElementById(id+"talkOn");
 	b.style.visibility = "hidden";
@@ -681,7 +680,6 @@ return;
 
 function muteButton(e) {
 	let id = event.target.parentNode.id;
-trace2("mute ",id);
 	let b = document.getElementById(id+"On");
 	b.style.visibility = "hidden";
 	id = convertIdToObj(id);
@@ -703,17 +701,15 @@ function agcButton(e) {
 	let b = document.getElementById(id+"AGCOn");
 	if (oid.agc) {
 		b.style.visibility = "hidden";
-trace2("agc off");
 	} else {
 		b.style.visibility = "inherit";
-trace2("agc on");
 	}
 	oid.agc = !oid.agc;
 }
 
 function stereoOnOff(e) {
 	let id = event.target.parentNode.id;
-	let b = document.getElementById(id+"On");
+	let b = document.getElementById(id+"stereoOn");
 	if (stereoOn) {
 		b.style.visibility = "hidden";
 		stereoOn = false;
@@ -725,7 +721,7 @@ function stereoOnOff(e) {
 
 function HQOnOff(e) {
 	let id = event.target.parentNode.id;
-	let b = document.getElementById(id+"On");
+	let b = document.getElementById(id+"HQOn");
 	if (HQOn) {
 		b.style.visibility = "hidden";
 		HQOn = false;
