@@ -636,7 +636,7 @@ function generateMix () {
 	} 
 	// 4. Send packets to all clients group by group, adding performer, venue and group audio, plus group live channels and commands
 	if ((loopback) && (channels[perf.chan].socketID != undefined)) {// If we are a loopback server and the performer has a socket ready
-		channels[perf.chan].socketID.emit('d', {		// send the packet directly just to this client
+		io.to(channels[perf.chan].socketID).emit('d', {		// send the packet directly just to this client
 			perf		: p,				// The smae client's performer audio/video packet
 			venue		: venuePacket,			// Venue audio packet. There should be none in this case
 			channels	: [],				// In loopback there will be no other channels
