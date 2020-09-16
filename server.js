@@ -518,14 +518,12 @@ function generateMix () {
 	let packetCount = 0;						// Keep count of packets that make the mix for monitoring
 	let totalLiveClients = 0;					// Count total clients live downstream of this server
 	channels.forEach( (c, chan) => {				// Review all channels for audio and activity, and build server mix
-console.log("checking channel ",chan);
 		if (c.name != "") {					// Looking for active channels meaning they have a name
 			if (chan != 0) totalLiveClients +=c.liveClients;// Sum all downstream clients under our active channels
 			if (clientPackets[c.group] == null) 		// If this is the first channel we find for a group
 				clientPackets[c.group] = [];		// create an empty client packet buffer
 		}
 		if (c.newBuf == false) {				// Build mix from channels that are non-new (buffering completed)
-console.log("channel ",chan," is streaming");
 			let packet;
 			if (c.recording) {				// If recording then read the packet 
 				packet = c.packets[c.playhead];		// at the playhead position
@@ -537,8 +535,7 @@ console.log("channel ",chan," is streaming");
 				shortages++;				// and also for global monitoring
 				c.playhead = 0;				// Set buffer play position to the start
 			}
-			else if (packet.perf == false) {		// Got data and not perfomer. Build mix of downstream channels. 
-console.log("adding packet to mix");
+			else if (packet.perfAudio == false) {		// Got data and not perfomer. Build mix of downstream channels. 
 				packetCount++;				// Count how many packets have made the mix for tracing
 				if (packet.audio.mono8.length > 0) {	// Unpack the MSRE packet of audio and add to server mix
 					someAudio8 = true;
@@ -558,7 +555,6 @@ console.log("adding packet to mix");
 			}
 		}
 	});
-console.log("all channels checked. Now building venue audio");
 	// 3. Build server mix packet and send upstream if we have an upstream server connected. 
 	if (!someAudio8) mono8 = [];					// If no audio send empty mix to save bandwidth
 	if (!someAudio16) mono16 = [];					
@@ -631,7 +627,6 @@ console.log("all channels checked. Now building venue audio");
 		if (groups[group].memberCount == 0) continue;		// Skip empty groups
 		let g = groups[group];
 		let liveChannels = g.liveChannels;			// Get group specific live channels list for all members too
-console.log("sending to ",group);
 		io.sockets.in(group).emit('d', {			// Send to all group members group specific data
 			perf		: p,				// Send performer audio/video packet + other flags
 			venue		: venuePacket,			// Venue audio packet for special processing
