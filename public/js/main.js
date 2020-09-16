@@ -23,6 +23,9 @@ var myGroup = "noGroup";						// Group user belongs to. Default is no group.
 //var groupLayout = [-9,3,-3,6,-6,0,-8,8,-5,5,-2,2,-7,7,-4,4,-1,1];	// Stereo delays to apply for the different positions in a group
 var groupLayout = [17,11,5,14,2,8,0,16,3,13,6,10,1,15,4,12,7,9];	// Delays to apply for the different positions in a group
 var myPos = 1;
+var performer = false;							// Indicates if we are the performer
+var stereoOn = true;							// Default stereo audio setting
+var HQOn = true;							// Default HQ audio setting
 const NumberOfChannels = 20;						// Max number of channels in this server
 var channels = [];							// Each channel's data & buffer held here
 for (let i=0; i < NumberOfChannels; i++) {				// Create all the channels pre-initialized
@@ -119,7 +122,6 @@ socketIO.on('channel', function (data) {				// Message assigning us a channel
 	}
 });
 
-var performer = false;							// Indicates if we are the performer
 socketIO.on('perf', function (data) {					// Performer status notification
 	performer = data.live;
 	if (performer == true) {
@@ -628,12 +630,12 @@ function createMicUI(obj) {						// UI for mic input channel
 			<div style="position:absolute;bottom:8%; left:25%; width:5%; height:0%; background-color:#999999" id="'+name+'Threshold"></div> \
 			<img style="position:absolute;right:5%; top:10%;width:40%; padding-bottom:10%;" src="images/channelOff.png" id="'+name+'Off" onclick="unmuteButton(event)">  \
 			<img style="position:absolute;right:5%; top:10%;width:40%; padding-bottom:10%;" src="images/channelOn.png" id="'+name+'On" onclick="muteButton(event)">  \
-			<img style="position:absolute;left:5%; top:10%;width:40%; padding-bottom:10%;" src="images/talkOff.png" id="'+name+'talkOff" >  \
-			<img style="position:absolute;left:5%; top:10%;width:40%; padding-bottom:10%;" src="images/talkOn.png" id="'+name+'talkOn" onclick="recButton(event)">  \
+			<img style="position:absolute;left:5%; top:10%;width:40%; padding-bottom:10%;" src="images/stereoOff.png" id="'+name+'stereoOff" onclick="stereoOnOff(event)">  \
+			<img style="position:absolute;left:5%; top:10%;width:40%; padding-bottom:10%;" src="images/stereoOn.png" id="'+name+'stereoOn" onclick="stereoOnOff(event)">  \
 			<img style="position:absolute;right:5%; bottom:1%;width:40%; padding-bottom:10%;" src="images/AGCOff.png" id="'+name+'AGCOff" onclick="agcButton(event)">  \
 			<img style="position:absolute;right:5%; bottom:1%;width:40%; padding-bottom:10%;" src="images/AGCOn.png" id="'+name+'AGCOn" onclick="agcButton(event)">  \
-			<img style="position:absolute;left:5%; bottom:1%;width:40%; padding-bottom:10%;" src="images/NROff.png" id="'+name+'NROff" ">  \
-			<img style="position:absolute;left:5%; bottom:1%;width:40%; padding-bottom:10%;" src="images/NROn.png" id="'+name+'NROn" ">  \
+			<img style="position:absolute;left:5%; bottom:1%;width:40%; padding-bottom:10%;" src="images/HQOff.png" id="'+name+'HQOff" onclick="HQOnOff(event)">  \
+			<img style="position:absolute;left:5%; bottom:1%;width:40%; padding-bottom:10%;" src="images/HQOn.png" id="'+name+'HQOn" onclick="HQOnOff(event)">  \
 			<div style="position:absolute;top:1%; left:3%; width:90%; height:10%;color:#AAAAAA" id="'+name+'Name"> \
 				<marquee behavior="slide" direction="left">'+obj.name+'</marquee> \
 			</div> \
@@ -686,6 +688,15 @@ trace2("mute ",id);
 	id.muted = true;
 }
 
+function unmuteButton(e) {
+trace2("unmute");
+	let id = event.target.parentNode.id;
+	let b = document.getElementById(id+"On");
+	b.style.visibility = "inherit";
+	id = convertIdToObj(id);
+	id.muted = false;
+}
+
 function agcButton(e) {
 	let id = event.target.parentNode.id;
 	let oid = convertIdToObj(id);
@@ -700,13 +711,28 @@ trace2("agc on");
 	oid.agc = !oid.agc;
 }
 
-function unmuteButton(e) {
-trace2("unmute");
+function stereoOnOff(e) {
 	let id = event.target.parentNode.id;
 	let b = document.getElementById(id+"On");
-	b.style.visibility = "inherit";
-	id = convertIdToObj(id);
-	id.muted = false;
+	if (stereoOn) {
+		b.style.visibility = "hidden";
+		stereoOn = false;
+	} else {
+		b.style.visibility = "inherit";
+		stereoOn = true;
+	}
+}
+
+function HQOnOff(e) {
+	let id = event.target.parentNode.id;
+	let b = document.getElementById(id+"On");
+	if (HQOn) {
+		b.style.visibility = "hidden";
+		HQOn = false;
+	} else {
+		b.style.visibility = "inherit";
+		HQOn = true;
+	}
 }
 
 var slider = {
@@ -1066,8 +1092,8 @@ function processAudio(e) {						// Main processing loop
 
 function prepPerfAudio( audioL, audioR ) {				// Performer audio is HQ and possibly stereo
 	let stereo = false;						// Start by detecting is there is stereo audio
-	for (let i=0; i<audioL.length; i++) 
-		if (audioL[i] != audioR[i]) stereo = true;
+	if (stereoOn) for (let i=0; i<audioL.length; i++) 		// If user has enabled stereo 
+		if (audioL[i] != audioR[i]) stereo = true;		// check if the signal is actually stereo
 	audioL = reSample(audioL, soundcardSampleRate, PerfSampleRate, downCachePerfL);	
 	if (stereo) {							// If stereo the right channel will need processing
 		audioR = reSample(audioR, soundcardSampleRate, PerfSampleRate, downCachePerfR);	
@@ -1121,8 +1147,7 @@ function prepPerfAudio( audioL, audioR ) {				// Performer audio is HQ and possi
 		stereo32[k] = d1; k++;
 		stereo32[k] = d2; k++;
 	}
-mono32=[];
-stereo32=[];
+	if (!HQOn) { mono32=[]; stereo32=[];}				// If user has switched off HQ drop HQ audio bands
 	let audio = {mono8,mono16,mono32,stereo8,stereo16,stereo32};	// Return an object for the audio
 	return audio;
 }
