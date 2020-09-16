@@ -24,6 +24,7 @@ var myGroup = "noGroup";						// Group user belongs to. Default is no group.
 var groupLayout = [17,11,5,14,2,8,0,16,3,13,6,10,1,15,4,12,7,9];	// Delays to apply for the different positions in a group
 var myPos = 1;
 var performer = false;							// Indicates if we are the performer
+var loopback = false;							// If we connect to a loopback server this will be true
 var stereoOn = true;							// Default stereo audio setting
 var HQOn = true;							// Default HQ audio setting
 const NumberOfChannels = 20;						// Max number of channels in this server
@@ -115,6 +116,7 @@ socketIO.on('channel', function (data) {				// Message assigning us a channel
 		trace('Channel assigned: ',myChannel);
 		socketConnected = true;					// The socket can be used once we have a channel
 		if (data.loopback) {					// We have connected to a lopback server
+			loopback = true;				// Flag we are in loopback mode to enable self-monitoring
 			performer = true;				// Go into performer mode
 			document.getElementById("onair").style.visibility = "visible";
 			micFilter1.frequency.value = PerfSampleRate/2.2;	
@@ -305,7 +307,7 @@ socketIO.on('d', function (data) {
 			let m8 = audio.mono8;
 			let m16 = audio.mono16;
 			let m32 = audio.mono32;
-			if (!performer) {				// If we are not the performer 
+			if ((!performer) || (loopback)) {		// If we are not the performer or we are in loopback play perf audio
 				let mono = [];				// Reconstruct performer mono audio into this array
 				let stereo = [];			// Reconstruct performer stereo difference signal into here
 				let j = 0, k = 0;

@@ -360,6 +360,7 @@ io.sockets.on('connection', function (socket) {
 		packet.socketID = socket.id;				// Also store it in the packet to help client skip own audio
 		if (loopback) {						// Loopback mode means treating everyone like a performer
 			perf.channel = packet.channel;			// Set this channel as the performer for as long as it takes to return their packet
+			perf.live = true;				// In loopback you are always live!
 			perf.packets.push(packet);			// Store performer audio/video packet
 			generateMix();					// There is one performer packet. Send it now.
 			perf.channel = 0;				// Unset the performer channel immediately
