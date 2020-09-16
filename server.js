@@ -636,7 +636,7 @@ function generateMix () {
 	} 
 	// 4. Send packets to all clients group by group, adding performer, venue and group audio, plus group live channels and commands
 	if (loopback) {							// If we are a loopback server send the packet just to the performer
-		channel.socketID.emit('d', {
+		channels[perf.chan].socketID.emit('d', {
 			perf		: p,				// Send performer audio/video packet 
 			venue		: venuePacket,			// Venue audio packet for special processing
 			channels	: [],				// In loopback there will be no other channels
