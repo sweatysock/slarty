@@ -294,7 +294,8 @@ if (tracecount>0) console.log("Sequence no found");
 		// 3. Process performer audio if there is any, and add it to the mix. This could be stereo audio
 		performer = (data.perf.chan == myChannel);		// Update performer flag just in case
 		liveShow = data.perf.live;				// Update the live show flag to update display
-		if ((data.perf.live) && (data.perf.packet != null)) {	// If there is a live performer with data, process it...
+		if ((data.perf.live) && (data.perf.packet != null)	// If there is a live performer with data
+			&& (data.perf.perfAudio != false)) {		// and audio then process it and audio then process it
 			let audio = zipson.parse(data.perf.packet.perfAudio);	// Uncompress performer audio
 			let m8 = audio.mono8;
 			let m16 = audio.mono16;
@@ -1012,7 +1013,6 @@ function processAudio(e) {						// Main processing loop
 			let len=JSON.stringify(packet).length/1024;
 			bytesSent += len;
 			if (!performer) {
-console.log("added seq ",packet.sequence);
 				packetBuf.push(packet);		// If not performer add packet to buffer for echo cancelling 
 			}
 			packetsOut++;					// For stats and monitoring
