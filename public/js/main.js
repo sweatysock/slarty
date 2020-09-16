@@ -1209,7 +1209,7 @@ function handleAudio(stream) {						// We have obtained media access
 }
 
 function loadVenueReverb(filename) {					// Load the venue reverb file to give ambience
-	if (filename == reverbFilename) return;				// Don't load the same file again
+	if (filename == reverbFile) return;				// Don't load the same file again
 	let ir_request = new XMLHttpRequest();				// Load impulse response to reverb
 	ir_request.open("GET", filename, true);
 	ir_request.responseType = "arraybuffer";
@@ -1217,7 +1217,7 @@ function loadVenueReverb(filename) {					// Load the venue reverb file to give a
 		if (this.readyState == 4 && this.status == 200) {
 			context.decodeAudioData( ir_request.response, function ( buffer ) {
 				reverb.buffer = buffer;
-				reverbFilename = filename;		// Note file loaded so we don't reload later
+				reverbFile = filename;			// Note file loaded so we don't reload later
 console.log(filename," loaded into reverb");
 			});
 		}
