@@ -1570,6 +1570,7 @@ function printReport() {
 		trace("Sent=",packetsOut," Heard=",packetsIn," overflows=",overflows," shortages=",shortages," RTT=",rtt.toFixed(1)," RTT1=",rtt1.toFixed(1)," RTT5=",rtt5.toFixed(1)," State=",netState," audience=",audience," bytes Out=",bytesSent.toFixed(1)," bytes In=",bytesRcvd.toFixed(1));
 		trace(" micIn.peak:",micIn.peak.toFixed(1)," mixOut.peak:",mixOut.peak.toFixed(1)," speaker buff:",spkrBufferL.length," Max Buff:",maxBuffSize);
 //		trace("Levels of output: ",levelCategories);
+		trace2("bytes Out=",bytesSent.toFixed(1)," bytes In=",bytesRcvd.toFixed(1));
 	}
 //	setNoiseThreshold();						// Set mic noise threshold based on level categories
 	if (performer == true) {
