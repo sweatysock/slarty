@@ -114,7 +114,13 @@ socketIO.on('channel', function (data) {				// Message assigning us a channel
 		if (id != null) id.innerHTML = micIn.name;		// Update onscreen name if created
 		trace('Channel assigned: ',myChannel);
 		socketConnected = true;					// The socket can be used once we have a channel
-		loadVenueReverb(data.reverb);				// Load the venue reverb file to give ambience
+		if (data.loopback) {					// We have connected to a lopback server
+			performer = true;				// Go into performer mode
+			document.getElementById("onair").style.visibility = "visible";
+			micFilter1.frequency.value = PerfSampleRate/2.2;	
+			micFilter2.frequency.value = 30;
+		} else							// if not in loopback mode
+			loadVenueReverb(data.reverb);			// load the venue reverb file to give ambience
 	} else {
 		trace("Server unable to assign a channel");		// Server is probaby full
 		trace("Try a different server");			// Can't do anything more

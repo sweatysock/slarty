@@ -61,6 +61,9 @@ if (myServerName == undefined)						// This name is used to identify us upstream
 var reverbFile = process.env.reverbfile; 				// Get venue reverb file from heroku config variable, if present
 if (reverbFile == undefined)						// This file gives the reverb vibe for the venue audio
 	reverbFile ="";							// If this is empty the room will be dry as a bone
+var loopback = process.env.loopback; 					// Get flag that tells us to be a loopback server
+if (loopback == undefined) loopback = false;				// If it isn't set we are not a loopback server
+else loopback = true;							// If the variable has been set to any value we are in loopback mode
 var connectedClients = 0;						// Count of the number of clients connected to this server
 var commands = {};							// Commands generated here or from upstream server
 
@@ -291,6 +294,7 @@ io.sockets.on('connection', function (socket) {
 		socket.emit('channel', { 				// Send channel assignment result to client
 			channel:channel, 
 			reverb:reverbFile,				// Also instruct the client to load the venue reverb 
+			loopback:loopback,				// Let the client know if we are a loopback server
 		});		
 		if (channel != -1) {					// Channel has been successfully assigned
 			channels[channel].packets = [];			// Reset channel values
@@ -352,6 +356,15 @@ io.sockets.on('connection', function (socket) {
 		channel.name = packet.name;				// Update name of channel in case it has changed
 		channel.liveClients = packet.liveClients;		// Store the number of clients behind this channel
 		channel.timestamp = packet.timestamp;			// Store this latest timestamp for the client to measure rtt
+		channel.socketID = socket.id;				// Store socket ID associated with channel
+		packet.socketID = socket.id;				// Also store it in the packet to help client skip own audio
+		if (loopback) {						// Loopback mode means treating everyone like a performer
+			perf.channel = packet.channel;			// Set this channel as the performer for as long as it takes to return their packet
+			perf.packets.push(packet);			// Store performer audio/video packet
+			generateMix();					// There is one performer packet. Send it now.
+			perf.channel = 0;				// Unset the performer channel immediately
+			return;						// Nothing more to do for loopback
+		}
 		if (channel.group != packet.group) {			// If the user has changed their group then...
 			socket.leave(channel.group);			// leave the group they were in at a socket io level
 			let g = groups[channel.group];			// Note the group they are currently in 
@@ -382,8 +395,6 @@ io.sockets.on('connection', function (socket) {
 				}
 			}
 		}							// Finished handling group changes.
-		channel.socketID = socket.id;				// Store socket ID associated with channel
-		packet.socketID = socket.id;				// Also store it in the packet to help client skip own audio
 		if (packet.channel == perf.chan) { 			// This is the performer. Note: Channel 0 comes down in 'd' packets
 			perf.inCount++;					// For monitoring
 			perf.packets.push(packet);			// Store performer audio/video packet
@@ -623,7 +634,15 @@ function generateMix () {
 		}
 	} 
 	// 4. Send packets to all clients group by group, adding performer, venue and group audio, plus group live channels and commands
-	for (group in groups) {
+	if (loopback) {							// If we are a loopback server send the packet just to the performer
+		channel.socketID.emit('d', {
+			perf		: p,				// Send performer audio/video packet 
+			venue		: venuePacket,			// Venue audio packet for special processing
+			channels	: [],				// In loopback there will be no other channels
+			liveChannels	: [],				// nor other live channels
+			commands	: commands,			// Send commands downstream as normal
+		});
+	} else for (group in groups) {					// Send packets to all active groups
 		if (groups[group].memberCount == 0) continue;		// Skip empty groups
 		let g = groups[group];
 		let liveChannels = g.liveChannels;			// Get group specific live channels list for all members too
