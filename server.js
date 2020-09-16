@@ -361,6 +361,7 @@ io.sockets.on('connection', function (socket) {
 		if (loopback) {						// Loopback mode means treating everyone like a performer
 			perf.chan = packet.channel;			// Set this channel as the performer for as long as it takes to return their packet
 			perf.live = true;				// In loopback you are always live!
+			perf.streaming = true;				// There is ony one packet going out, but that's ok.
 			perf.packets.push(packet);			// Store performer audio/video packet
 			generateMix();					// There is one performer packet. Send it now.
 			perf.channel = 0;				// Unset the performer channel immediately
@@ -637,13 +638,13 @@ function generateMix () {
 	// 4. Send packets to all clients group by group, adding performer, venue and group audio, plus group live channels and commands
 	if ((loopback) && (channels[perf.chan].socketID != undefined)) {// If we are a loopback server and the performer has a socket ready
 		io.to(channels[perf.chan].socketID).emit('d', {		// send the packet directly just to this client
-			perf		: p,				// The smae client's performer audio/video packet
+			perf		: p,				// The same client's performer audio/video packet
 			venue		: venuePacket,			// Venue audio packet. There should be none in this case
 			channels	: [],				// In loopback there will be no other channels
 			liveChannels	: [],				// nor other live channels
 			commands	: commands,			// Send commands downstream as normal
 		});
-console.log("Loopback sent to ", perf.chan);
+console.log("Loopback sent ", JSON.stringify(p));
 	} else for (group in groups) {					// Send packets to all active groups
 		if (groups[group].memberCount == 0) continue;		// Skip empty groups
 		let g = groups[group];
