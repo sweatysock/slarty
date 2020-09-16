@@ -62,8 +62,8 @@ var reverbFile = process.env.reverbfile; 				// Get venue reverb file from herok
 if (reverbFile == undefined)						// This file gives the reverb vibe for the venue audio
 	reverbFile ="";							// If this is empty the room will be dry as a bone
 var loopback = process.env.loopback; 					// Get flag that tells us to be a loopback server
-if (loopback == undefined) loopback = false;				// If it isn't set we are not a loopback server
-else loopback = true;							// If the variable has been set to any value we are in loopback mode
+if ((loopback != undefined) && (loopback == "true")) loopback = true;	// It needs to be defined and set to "true" to engage this mode
+else loopback = false;							// If the variable has been set to any value we are in loopback mode
 var connectedClients = 0;						// Count of the number of clients connected to this server
 var commands = {};							// Commands generated here or from upstream server
 
