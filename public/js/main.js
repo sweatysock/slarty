@@ -251,12 +251,9 @@ socketIO.on('d', function (data) {
 			let a8 = [], a16 = [];				// Temp store for our audio for subtracting (echo cancelling)
 			let s = vData.seqNos[myChannel];		// If the venue mix contains our audio this will be its sequence no.
 			if (s != null) {				// If we are performer or there are network issues our audio won't be in the mix
-if (tracecount>0) console.log("Sequence no ",s," in venue audio");
 				while (packetBuf.length) {		// Scan the packet buffer for the packet with this sequence
 					let p = packetBuf.shift();	// Remove the oldest packet from the buffer until s is found
-if (tracecount>0) console.log("checking ",p.sequence);
 					if (p.sequence == s) {		// We have found the right sequence number
-if (tracecount>0) console.log("Sequence no found");
 						a8 = p.audio.mono8;	// Get our MSRE blocks from packet buffer
 						a16 = p.audio.mono16;	
 						break;			// Packet found so stop scanning the packet buffer. 
@@ -264,7 +261,7 @@ if (tracecount>0) console.log("Sequence no found");
 				}
 			}
 			let v8 = vData.audio.mono8, v16 = vData.audio.mono16;	// Shortcuts to the venue MSRE data blocks
-			if (v8.length > 0) {				// If there is venue audio it will need processing
+			if ((v8.length > 0) && (!venue.muted)) {	// If there is venue audio & not muted, it will need processing
 				let sr = 8000;				// Minimum sample rate of 8kHz
 				if ((a8.length > 0) && (c8.length > 0))	// If we have audio and group has audio remove both and set venue level
 					for (let i = 0; i < a8.length; ++i) v8[i] = (v8[i] - a8[i] -c8[i]) * venue.gain / venueSize;
@@ -406,7 +403,6 @@ if (tracecount>0) console.log("Sequence no found");
 			venueBuffer.push(...v);				// Add any venue audio to the venue buffer
 		if (venueBuffer.length > maxBuffSize) 			// Clip buffer if too full
 			venueBuffer.splice(0, (venueBuffer.length-maxBuffSize)); 	
-tracecount--;
 		// 5. Calculate RTT 
 		if (ts > 0) {						// If we have timestamp data calcuate rtt
 			let now = new Date().getTime();
@@ -1133,6 +1129,7 @@ var micFilter1;								// Mic filters are adjusted dynamically
 var micFilter2;
 var context;
 var reverb;								// Load reverb buffer once server channel assigned
+var reverbFile = "";							// Name of reverb file loaded. To stop loading same file twice
 function handleAudio(stream) {						// We have obtained media access
 	let AudioContext = window.AudioContext 				// Default
 		|| window.webkitAudioContext 				// Safari and old versions of Chrome
@@ -1212,15 +1209,15 @@ function handleAudio(stream) {						// We have obtained media access
 }
 
 function loadVenueReverb(filename) {					// Load the venue reverb file to give ambience
+	if (filename == reverbFilename) return;				// Don't load the same file again
 	let ir_request = new XMLHttpRequest();				// Load impulse response to reverb
 	ir_request.open("GET", filename, true);
 	ir_request.responseType = "arraybuffer";
 	ir_request.onreadystatechange = function () {
-console.log("Response incoming");
 		if (this.readyState == 4 && this.status == 200) {
-console.log("Response ok");
 			context.decodeAudioData( ir_request.response, function ( buffer ) {
 				reverb.buffer = buffer;
+				reverbFilename = filename;		// Note file loaded so we don't reload later
 console.log(filename," loaded into reverb");
 			});
 		}
