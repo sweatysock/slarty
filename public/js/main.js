@@ -1012,6 +1012,7 @@ function processAudio(e) {						// Main processing loop
 			let len=JSON.stringify(packet).length/1024;
 			bytesSent += len;
 			if (!performer) packetBuf.push(packet);		// If not performer add packet to buffer for echo cancelling 
+if (tracecount>0) console.log(packetBuf);
 			packetsOut++;					// For stats and monitoring
 			packetSequence++;
 		}
