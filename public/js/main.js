@@ -253,6 +253,7 @@ if (tracecount > 0) console.log(data);
 			let s = vData.seqNos[myChannel];		// If the venue mix contains our audio this will be its sequence no.
 			if (s != null) {				// If we are performer or there are network issues our audio won't be in the mix
 if (tracecount>0) console.log("Sequence no in venue audio");
+if (tracecount>0) console.log(packetBuf);
 				while (packetBuf.length) {		// Scan the packet buffer for the packet with this sequence
 					let p = packetBuf.shift();	// Remove the oldest packet from the buffer until s is found
 					if (p.sequence == s) {		// We have found the right sequence number
@@ -1010,10 +1011,7 @@ function processAudio(e) {						// Main processing loop
 			socketIO.emit("u",packet);
 			let len=JSON.stringify(packet).length/1024;
 			bytesSent += len;
-			if (!performer) {
-console.log("stored seq no ",packet.sequence);
-				packetBuf.push(packet);		// If not performer add packet to buffer for echo cancelling 
-}
+			if (!performer) packetBuf.push(packet);		// If not performer add packet to buffer for echo cancelling 
 			packetsOut++;					// For stats and monitoring
 			packetSequence++;
 		}
