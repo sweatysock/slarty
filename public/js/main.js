@@ -137,7 +137,6 @@ socketIO.on('perf', function (data) {					// Performer status notification
 socketIO.on('d', function (data) { 
 	enterState( dataInState );					// This is one of our key tasks
 	packetsIn++;							// For monitoring and statistics
-if (tracecount > 0) console.log(data);
 	let len=JSON.stringify(data).length/1024;			// Get actual packet size received before any changes
 	bytesRcvd += len;						// Accumulate in incoming data total count
 	serverLiveChannels = data.liveChannels;				// Server live channels are for UI updating
@@ -253,9 +252,9 @@ if (tracecount > 0) console.log(data);
 			let s = vData.seqNos[myChannel];		// If the venue mix contains our audio this will be its sequence no.
 			if (s != null) {				// If we are performer or there are network issues our audio won't be in the mix
 if (tracecount>0) console.log("Sequence no in venue audio");
-if (tracecount>0) console.log(packetBuf);
 				while (packetBuf.length) {		// Scan the packet buffer for the packet with this sequence
 					let p = packetBuf.shift();	// Remove the oldest packet from the buffer until s is found
+if (tracecount>0) console.log("checking ",p.sequence);
 					if (p.sequence == s) {		// We have found the right sequence number
 if (tracecount>0) console.log("Sequence no found");
 						a8 = p.audio.mono8;	// Get our MSRE blocks from packet buffer
@@ -1011,8 +1010,10 @@ function processAudio(e) {						// Main processing loop
 			socketIO.emit("u",packet);
 			let len=JSON.stringify(packet).length/1024;
 			bytesSent += len;
-			if (!performer) packetBuf.push(packet);		// If not performer add packet to buffer for echo cancelling 
-if (tracecount>0) console.log(packetBuf);
+			if (!performer) {
+console.log("added seq ",packet.sequence);
+				packetBuf.push(packet);		// If not performer add packet to buffer for echo cancelling 
+			}
 			packetsOut++;					// For stats and monitoring
 			packetSequence++;
 		}
