@@ -630,8 +630,8 @@ function createMicUI(obj) {						// UI for mic input channel
 			<div style="position:absolute;bottom:8%; left:25%; width:5%; height:0%; background-color:#999999" id="'+name+'Threshold"></div> \
 			<img style="position:absolute;right:5%; top:10%;width:40%; padding-bottom:10%;" src="images/channelOff.png" id="'+name+'Off" onclick="unmuteButton(event)">  \
 			<img style="position:absolute;right:5%; top:10%;width:40%; padding-bottom:10%;" src="images/channelOn.png" id="'+name+'On" onclick="muteButton(event)">  \
-			<img style="position:absolute;left:5%; top:10%;width:40%; padding-bottom:10%;" src="images/stereoOff.png" id="'+name+'stereoOff" onclick="stereoOnOff(event)">  \
-			<img style="position:absolute;left:5%; top:10%;width:40%; padding-bottom:10%;" src="images/stereoOn.png" id="'+name+'stereoOn" onclick="stereoOnOff(event)">  \
+			<img style="position:absolute;left:5%; top:10%;width:40%; padding-bottom:10%;" src="images/StereoOff.png" id="'+name+'stereoOff" onclick="stereoOnOff(event)">  \
+			<img style="position:absolute;left:5%; top:10%;width:40%; padding-bottom:10%;" src="images/StereoOn.png" id="'+name+'stereoOn" onclick="stereoOnOff(event)">  \
 			<img style="position:absolute;right:5%; bottom:1%;width:40%; padding-bottom:10%;" src="images/AGCOff.png" id="'+name+'AGCOff" onclick="agcButton(event)">  \
 			<img style="position:absolute;right:5%; bottom:1%;width:40%; padding-bottom:10%;" src="images/AGCOn.png" id="'+name+'AGCOn" onclick="agcButton(event)">  \
 			<img style="position:absolute;left:5%; bottom:1%;width:40%; padding-bottom:10%;" src="images/HQOff.png" id="'+name+'HQOff" onclick="HQOnOff(event)">  \
