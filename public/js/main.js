@@ -295,7 +295,7 @@ if (tracecount>0) console.log("Sequence no found");
 		performer = (data.perf.chan == myChannel);		// Update performer flag just in case
 		liveShow = data.perf.live;				// Update the live show flag to update display
 		if ((data.perf.live) && (data.perf.packet != null)	// If there is a live performer with data
-			&& (data.perf.perfAudio != false)) {		// and audio then process it and audio then process it
+			&& (data.perf.packet.perfAudio != false)) {	// and audio then process it and audio then process it
 			let audio = zipson.parse(data.perf.packet.perfAudio);	// Uncompress performer audio
 			let m8 = audio.mono8;
 			let m16 = audio.mono16;
