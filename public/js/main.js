@@ -1013,6 +1013,7 @@ function processAudio(e) {						// Main processing loop
 			if (!performer) {
 console.log("stored seq no ",packet.sequence);
 				packetBuf.push(packet);		// If not performer add packet to buffer for echo cancelling 
+}
 			packetsOut++;					// For stats and monitoring
 			packetSequence++;
 		}
