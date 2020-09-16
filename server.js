@@ -535,7 +535,7 @@ function generateMix () {
 				shortages++;				// and also for global monitoring
 				c.playhead = 0;				// Set buffer play position to the start
 			}
-			else {						// Got data. Build mix of downstream channels. 
+			else if (packet.perf == false) {		// Got data and not perfomer. Build mix of downstream channels. 
 				packetCount++;				// Count how many packets have made the mix for tracing
 				if (packet.audio.mono8.length > 0) {	// Unpack the MSRE packet of audio and add to server mix
 					someAudio8 = true;
