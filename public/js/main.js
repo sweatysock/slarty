@@ -137,10 +137,10 @@ socketIO.on('perf', function (data) {					// Performer status notification
 socketIO.on('d', function (data) { 
 	enterState( dataInState );					// This is one of our key tasks
 	packetsIn++;							// For monitoring and statistics
+is (tracecount > 0) console.log(data)
 	let len=JSON.stringify(data).length/1024;			// Get actual packet size received before any changes
 	bytesRcvd += len;						// Accumulate in incoming data total count
 	serverLiveChannels = data.liveChannels;				// Server live channels are for UI updating
-//let tdl, tdr, sdl, sdr;
 	processCommands(data.commands);					// Process commands from server
 	if (micAccessAllowed) {						// Need access to audio before outputting
 		let v = [];						// Our objective is to get the venue audio (if any) in here,
