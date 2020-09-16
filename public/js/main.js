@@ -256,8 +256,8 @@ if (tracecount > 0) console.log(data);
 					let p = packetBuf.shift();	// Remove the oldest packet from the buffer until s is found
 					if (p.sequence == s) {		// We have found the right sequence number
 if (tracecount>0) console.log("Sequence no found");
-//						a8 = p.audio.mono8;	// Get our MSRE blocks from packet buffer
-//						a16 = p.audio.mono16;	
+						a8 = p.audio.mono8;	// Get our MSRE blocks from packet buffer
+						a16 = p.audio.mono16;	
 						break;			// Packet found so stop scanning the packet buffer. 
 					}
 				}
@@ -1009,7 +1009,9 @@ function processAudio(e) {						// Main processing loop
 			socketIO.emit("u",packet);
 			let len=JSON.stringify(packet).length/1024;
 			bytesSent += len;
-			if (!performer) packetBuf.push(packet);		// If not performer add packet to buffer for echo cancelling 
+			if (!performer) {
+console.log("stored seq no ",packet.sequence);
+				packetBuf.push(packet);		// If not performer add packet to buffer for echo cancelling 
 			packetsOut++;					// For stats and monitoring
 			packetSequence++;
 		}
