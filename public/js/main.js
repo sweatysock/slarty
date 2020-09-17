@@ -386,6 +386,7 @@ socketIO.on('d', function (data) {
 			} else ts = data.perf.packet.timestamp;		// I am the performer so grab timestamp for the rtt 
 			if (loopback) ts = data.perf.packet.timestamp;	// In loopback mode we output perf audio but we still need the rtt
 		}
+totalGenerated += mixL.length;
 		// 4. Adjust gain of final mix containing performer and group audio, and send to the speaker buffer
 		var obj;
 		if (isStereo) {
@@ -983,6 +984,7 @@ function processAudio(e) {						// Main processing loop
 			micAudioL = new Array(inDataL.length).fill(0);
 			micAudioR = new Array(inDataL.length).fill(0);
 		}
+totalIncoming += inData.length;
 		micBufferL.push(...micAudioL);				// Buffer mic audio L
 		micBufferR.push(...micAudioR);				// Buffer mic audio R
 		if (micBufferL.length > micAudioPacketSize) {		// If enough audio in buffer 
@@ -1000,7 +1002,6 @@ function processAudio(e) {						// Main processing loop
 			} else {					// Standard audio prep - always mono
 				let mono8 = [], mono16 = [], mono32 = [], stereo8 = [], stereo16 = [], stereo32 = [];
 				audio = reSample(audioL, soundcardSampleRate, SampleRate, downCache, PacketSize);	
-trace("audio from mic after down sampling is ",audio.length," long");
 				let obj = applyAutoGain(audio, micIn);	// Amplify mic with auto limiter
 				if (obj.peak > micIn.peak) 
 					micIn.peak = obj.peak;		// Note peak for local display
@@ -1571,6 +1572,8 @@ var shortages = 0;
 var packetSequence = 0;							// Tracing packet ordering
 var tracecount = 0;
 var sendShortages = 0;
+var totalGenerated = 0;
+var totalIncoming = 0;
 function printReport() {
 	enterState( UIState );						// Measure time spent updating UI even for reporting!
 	let netState = ((((rtt1-rtt5)/rtt5)>0.1) && (rtt5>400)) ? "UNSTABLE":"stable";
@@ -1624,6 +1627,9 @@ function printReport() {
 	shortages = 0;
 	rtt = 0;
 	tracecount = 1;
+tracef("totalIncoming = ",totalIncoming," totalGenerated = ",totalGenerated);
+totalGenerated = 0;
+totalIncoming = 0;
 	enterState( idleState );					// Back to Idling
 }
 
