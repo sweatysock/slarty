@@ -400,6 +400,7 @@ socketIO.on('d', function (data) {
 			}
 		} else obj = applyAutoGain(mixL, mixOut);		// For mono just use left channel
 		mixOut.gain= obj.finalGain;				// Store gain for next loop
+		obj.peak += venue.peak;					// Display the venue level mixed with the main output
 		if (obj.peak > mixOut.peak) mixOut.peak = obj.peak;	// Note peak for display purposes
 		spkrBufferL.push(...mixL);				// put left mix in the left speaker buffer
 		if (isStereo)
