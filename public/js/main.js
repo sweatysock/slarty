@@ -984,7 +984,7 @@ function processAudio(e) {						// Main processing loop
 			micAudioL = new Array(inDataL.length).fill(0);
 			micAudioR = new Array(inDataL.length).fill(0);
 		}
-totalIncoming += inData.length;
+totalIncoming += inDataL.length;
 		micBufferL.push(...micAudioL);				// Buffer mic audio L
 		micBufferR.push(...micAudioR);				// Buffer mic audio R
 		if (micBufferL.length > micAudioPacketSize) {		// If enough audio in buffer 
