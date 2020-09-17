@@ -1202,7 +1202,7 @@ tracef("Sample rate is ",soundcardSampleRate," mic audio per packet is ",micAudi
 	micFilter2.Q.value = 1;
 	
 	reverb = context.createConvolver();				// Reverb for venue ambience
-	reverb.buffer = impulseResponse(1,2,false);			// Default reverb characteristic... simple exponential decay
+	reverb.buffer = impulseResponse(1,8,false);			// Default reverb characteristic... simple exponential decay
 	let splitter = context.createChannelSplitter();			// Need a splitter to separate venue from main audio
 	let combiner = context.createChannelMerger();			// Combiner used to rebuild stereo image
 	let combiDelayL = context.createChannelMerger();		// These combiners are used to rebuild stereo venue
