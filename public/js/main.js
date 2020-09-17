@@ -240,8 +240,8 @@ socketIO.on('d', function (data) {
 				gL[k] = L8[i] - L16[i];
 				gR[k] = R8[i] - R16[i];k++;
 			}						// Bring sample rate up to HW sample rate
-			gL = reSample(gL, SampleRate, soundcardSampleRate, gLCache, micAudioPacketSize); 
-			gR = reSample(gR, SampleRate, soundcardSampleRate, gRCache, micAudioPacketSize); 
+			gL = reSample(gL, SampleRate, soundcardSampleRate, gLCache); 
+			gR = reSample(gR, SampleRate, soundcardSampleRate, gRCache); 
 			isStereo = true;
 		} 
 		let mixL = [], mixR = [];
@@ -296,7 +296,7 @@ socketIO.on('d', function (data) {
 				} else v = v8;				// Only low bandwidth venue audio 
 				let p = maxValue(v);			// Get peak audio for venue level display 
 				if (p > venue.peak) venue.peak = p;
-				v = reSample(v, sr, soundcardSampleRate, vCache, micAudioPacketSize); 
+				v = reSample(v, sr, soundcardSampleRate, vCache); 
 			} else venue.peak = 0;				// Don't need to be a genius to figure that one out if there's no audio!
 		} 
 		// 3. Process performer audio if there is any, and add it to the mix. This could be stereo audio
@@ -333,7 +333,7 @@ socketIO.on('d', function (data) {
 					mono[k] = d + m32[j]; k++;
 					mono[k] = d - m32[j]; j++; k++;
 				}					// Mono perf audio ready to upsample
-				mono = reSample(mono, sr, soundcardSampleRate, upCachePerfM, micAudioPacketSize);
+				mono = reSample(mono, sr, soundcardSampleRate, upCachePerfM);
 				let s8 = audio.stereo8;// Now regenerate the stereo difference signal
 				let s16 = audio.stereo16;
 				let s32 = audio.stereo32;
@@ -357,7 +357,7 @@ socketIO.on('d', function (data) {
 						stereo[k] = d + s32[j]; k++;
 						stereo[k] = d - s32[j]; j++; k++;
 					}				// Stereo difference perf audio upsampling now
-					stereo = reSample(stereo, sr, soundcardSampleRate, upCachePerfS, micAudioPacketSize);
+					stereo = reSample(stereo, sr, soundcardSampleRate, upCachePerfS);
 					let left = [], right = [];	// Time to reconstruct the original left and right audio
 					for (let i=0; i<mono.length; i++) {	// Note. Doing this after upsampling because mono
 						left[i] = (mono[i] + stereo[i])/2;	// and stereo may not have same sample rate
