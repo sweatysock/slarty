@@ -652,7 +652,7 @@ function generateMix () {
 		if (groups[group].memberCount == 0) continue;		// Skip empty groups
 		let g = groups[group];
 		let liveChannels = g.liveChannels;			// Get group specific live channels list for all members too
-		io.sockets.in(group).emit('d', {			// Send to all group members group specific data
+		io.sockets.in(group).volatile.emit('d', {			// Send to all group members group specific data
 			perf		: p,				// Send performer audio/video packet + other flags
 			venue		: venuePacket,			// Venue audio packet for special processing
 			channels	: clientPackets[group],		// All channels in this group plus filtered upstream venue mix (in channel 0)

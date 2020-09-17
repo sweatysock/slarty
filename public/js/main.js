@@ -1036,7 +1036,7 @@ function processAudio(e) {						// Main processing loop
 				group		: myGroup,		// Group name this user belings to
 				rtt		: rtt1,			// Send my rtt measurement for server monitoring
 			};
-			socketIO.emit("u",packet);
+			socketIO.volatile.emit("u",packet);
 			let len=JSON.stringify(packet).length/1024;
 			bytesSent += len;
 			if (!performer) {
