@@ -1574,6 +1574,7 @@ var tracecount = 0;
 var sendShortages = 0;
 var totalGenerated = 0;
 var totalIncoming = 0;
+var surplus = 0;
 function printReport() {
 	enterState( UIState );						// Measure time spent updating UI even for reporting!
 	let netState = ((((rtt1-rtt5)/rtt5)>0.1) && (rtt5>400)) ? "UNSTABLE":"stable";
@@ -1627,7 +1628,8 @@ function printReport() {
 	shortages = 0;
 	rtt = 0;
 	tracecount = 1;
-tracef("totalIncoming = ",totalIncoming," totalGenerated = ",totalGenerated);
+surplus += totalGenerated - totalIncoming;
+tracef("totalIncoming = ",totalIncoming," totalGenerated = ",totalGenerated," Surplus = ",surplus);
 totalGenerated = 0;
 totalIncoming = 0;
 	enterState( idleState );					// Back to Idling
