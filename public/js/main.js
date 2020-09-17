@@ -698,7 +698,6 @@ function muteButton(e) {
 }
 
 function unmuteButton(e) {
-trace2("unmute");
 	let id = event.target.parentNode.id;
 	let b = document.getElementById(id+"On");
 	b.style.visibility = "inherit";
@@ -1001,7 +1000,6 @@ function processAudio(e) {						// Main processing loop
 			} else {					// Standard audio prep - always mono
 				let mono8 = [], mono16 = [], mono32 = [], stereo8 = [], stereo16 = [], stereo32 = [];
 				audio = reSample(audioL, soundcardSampleRate, SampleRate, downCache, PacketSize);	
-trace("audio from mic after down sampling is ",audio.length," long");
 				let obj = applyAutoGain(audio, micIn);	// Amplify mic with auto limiter
 				if (obj.peak > micIn.peak) 
 					micIn.peak = obj.peak;		// Note peak for local display
