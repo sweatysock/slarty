@@ -1067,6 +1067,7 @@ totalIncoming += inDataL.length;
 		outDataL[i] = outAudioL[i];				// Copy left audio to outputL
 		outDataR[i] = outAudioR[i];				// and right audio to outputR
 	}
+totalOutgoing += outDataL.length;
 	// 2.1 Take venue audio from buffer and send to special output
 	let outAudioV = [];
 	if (venueBuffer.length > ChunkSize) {				// There is enough audio buffered
@@ -1574,6 +1575,7 @@ var tracecount = 0;
 var sendShortages = 0;
 var totalGenerated = 0;
 var totalIncoming = 0;
+var totalOutgoing = 0;
 var surplus = 0;
 function printReport() {
 	enterState( UIState );						// Measure time spent updating UI even for reporting!
@@ -1629,9 +1631,10 @@ function printReport() {
 	rtt = 0;
 	tracecount = 1;
 surplus += totalGenerated - totalIncoming;
-tracef("totalIncoming = ",totalIncoming," totalGenerated = ",totalGenerated," Surplus = ",surplus);
+tracef("incoming:",totalIncoming," generated:",totalGenerated," surplus:",surplus," out:",totalOutgoing);
 totalGenerated = 0;
 totalIncoming = 0;
+totalOutgoing = 0;
 	enterState( idleState );					// Back to Idling
 }
 
