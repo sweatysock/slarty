@@ -1246,6 +1246,10 @@ tracef("Sample rate is ",soundcardSampleRate," mic audio per packet is ",micAudi
 
 function loadVenueReverb(filename) {					// Load the venue reverb file to give ambience
 	if (filename == reverbFile) return;				// Don't load the same file again
+	if (filename == "") {						// If the file is empty then lets go for the basic reverb
+		reverb.buffer = impulseResponse(1,8,false); 
+		return;					// 
+	}
 	let ir_request = new XMLHttpRequest();				// Load impulse response to reverb
 	ir_request.open("GET", filename, true);
 	ir_request.responseType = "arraybuffer";
