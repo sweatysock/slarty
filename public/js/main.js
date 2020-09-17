@@ -1177,7 +1177,6 @@ function handleAudio(stream) {						// We have obtained media access
 	soundcardSampleRate = context.sampleRate;			// Get HW sample rate... varies per platform
 	micAudioPacketSize = Math.round(PacketSize * 			// How much micAudio is needed to fill a Packet
 		soundcardSampleRate / SampleRate);			// at our standard SampleRate (rounding error is an issue?)
-tracef("Sample rate is ",soundcardSampleRate," mic audio per packet is ",micAudioPacketSize," rounded from", soundcardSampleRate/(SampleRate/PacketSize));
 	micAccessAllowed = true;
 	createOutputUI( mixOut );					// Create the output mix channel UI
 	createMicUI( micIn );						// Create the microphone channel UI
@@ -1202,7 +1201,7 @@ tracef("Sample rate is ",soundcardSampleRate," mic audio per packet is ",micAudi
 	micFilter2.Q.value = 1;
 	
 	reverb = context.createConvolver();				// Reverb for venue ambience
-	reverb.buffer = impulseResponse(1,8,false);			// Default reverb characteristic... simple exponential decay
+	reverb.buffer = impulseResponse(1,4,false);			// Default reverb characteristic... simple exponential decay
 	let splitter = context.createChannelSplitter();			// Need a splitter to separate venue from main audio
 	let combiner = context.createChannelMerger();			// Combiner used to rebuild stereo image
 	let combiDelayL = context.createChannelMerger();		// These combiners are used to rebuild stereo venue
@@ -1247,7 +1246,7 @@ tracef("Sample rate is ",soundcardSampleRate," mic audio per packet is ",micAudi
 function loadVenueReverb(filename) {					// Load the venue reverb file to give ambience
 	if (filename == reverbFile) return;				// Don't load the same file again
 	if (filename == "") {						// If the file is empty then lets go for the basic reverb
-		reverb.buffer = impulseResponse(1,8,false); 
+		reverb.buffer = impulseResponse(1,4,false); 
 		return;					// 
 	}
 	let ir_request = new XMLHttpRequest();				// Load impulse response to reverb
