@@ -1,10 +1,11 @@
 //Global variables
 //
 const SampleRate = 16000; 						// Global sample rate used for all audio
+const PerfSampleRate = 32000; 						// Target sample rate used for performer audio adjusted for BW
 const PacketSize = 500;							// Server packet size we must conform to
+const PerfPacketSize = PacketSize * PerfSampleRate/SampleRate;		// Figure the Performer packet size now. Handy to have.
 const HighFilterFreq = SampleRate/2.2;					// Mic filter to remove high frequencies before resampling
 const LowFilterFreq = 200;						// Mic filter to remove low frequencies before resampling
-const PerfSampleRate = 32000; 						// Target sample rate used for performer audio adjusted for BW
 const ChunkSize = 1024;							// Audio chunk size. Fixed by js script processor
 var soundcardSampleRate = null; 					// Get this from context 
 var micAudioPacketSize = 0;						// Calculate this once we have soundcard sample rate
@@ -239,14 +240,14 @@ socketIO.on('d', function (data) {
 				gL[k] = L8[i] - L16[i];
 				gR[k] = R8[i] - R16[i];k++;
 			}						// Bring sample rate up to HW sample rate
-			gL = reSample(gL, SampleRate, soundcardSampleRate, gLCache); 
-			gR = reSample(gR, SampleRate, soundcardSampleRate, gRCache); 
+			gL = reSample(gL, SampleRate, soundcardSampleRate, gLCache, micAudioPacketSize); 
+			gR = reSample(gR, SampleRate, soundcardSampleRate, gRCache, micAudioPacketSize); 
 			isStereo = true;
 		} 
 		let mixL = [], mixR = [];
 		if (gL.length > 0) {mixL = gL; mixR = gR;}		// Put group audio in the mix if any
 		else {							// If no group mix then fill mix with 0's
-			let s = Math.round(PacketSize * soundcardSampleRate / SampleRate);	
+			let s = Math.round(micAudioPacketSize);		// This is the size of the input/output packet size
 			mixL = new Array(s).fill(0), mixR = new Array(s).fill(0);
 		}
 		// 2. Process venue mix from server 
@@ -295,7 +296,7 @@ socketIO.on('d', function (data) {
 				} else v = v8;				// Only low bandwidth venue audio 
 				let p = maxValue(v);			// Get peak audio for venue level display 
 				if (p > venue.peak) venue.peak = p;
-				v = reSample(v, sr, soundcardSampleRate, vCache); 
+				v = reSample(v, sr, soundcardSampleRate, vCache, micAudioPacketSize); 
 			} else venue.peak = 0;				// Don't need to be a genius to figure that one out if there's no audio!
 		} 
 		// 3. Process performer audio if there is any, and add it to the mix. This could be stereo audio
@@ -332,7 +333,7 @@ socketIO.on('d', function (data) {
 					mono[k] = d + m32[j]; k++;
 					mono[k] = d - m32[j]; j++; k++;
 				}					// Mono perf audio ready to upsample
-				mono = reSample(mono, sr, soundcardSampleRate, upCachePerfM);
+				mono = reSample(mono, sr, soundcardSampleRate, upCachePerfM, micAudioPacketSize);
 				let s8 = audio.stereo8;// Now regenerate the stereo difference signal
 				let s16 = audio.stereo16;
 				let s32 = audio.stereo32;
@@ -356,7 +357,7 @@ socketIO.on('d', function (data) {
 						stereo[k] = d + s32[j]; k++;
 						stereo[k] = d - s32[j]; j++; k++;
 					}				// Stereo difference perf audio upsampling now
-					stereo = reSample(stereo, sr, soundcardSampleRate, upCachePerfS);
+					stereo = reSample(stereo, sr, soundcardSampleRate, upCachePerfS, micAudioPacketSize);
 					let left = [], right = [];	// Time to reconstruct the original left and right audio
 					for (let i=0; i<mono.length; i++) {	// Note. Doing this after upsampling because mono
 						left[i] = (mono[i] + stereo[i])/2;	// and stereo may not have same sample rate
@@ -998,7 +999,7 @@ function processAudio(e) {						// Main processing loop
 					perf = zipson.stringify({mono8:[],mono16:[],mono32:[],stereo8:[],stereo16:[],stereo32:[]});
 			} else {					// Standard audio prep - always mono
 				let mono8 = [], mono16 = [], mono32 = [], stereo8 = [], stereo16 = [], stereo32 = [];
-				audio = reSample(audioL, soundcardSampleRate, SampleRate, downCache);	
+				audio = reSample(audioL, soundcardSampleRate, SampleRate, downCache, PacketSize);	
 trace("audio from mic after down sampling is ",audio.length," long");
 				let obj = applyAutoGain(audio, micIn);	// Amplify mic with auto limiter
 				if (obj.peak > micIn.peak) 
@@ -1100,9 +1101,9 @@ function prepPerfAudio( audioL, audioR ) {				// Performer audio is HQ and possi
 	let stereo = false;						// Start by detecting is there is stereo audio
 	if (stereoOn) for (let i=0; i<audioL.length; i++) 		// If user has enabled stereo 
 		if (audioL[i] != audioR[i]) stereo = true;		// check if the signal is actually stereo
-	audioL = reSample(audioL, soundcardSampleRate, PerfSampleRate, downCachePerfL);	
+	audioL = reSample(audioL, soundcardSampleRate, PerfSampleRate, downCachePerfL, PerfPacketSize);	
 	if (stereo) {							// If stereo the right channel will need processing
-		audioR = reSample(audioR, soundcardSampleRate, PerfSampleRate, downCachePerfR);	
+		audioR = reSample(audioR, soundcardSampleRate, PerfSampleRate, downCachePerfR, PerfPacketSize);	
 	}
 	let obj;
 	if (stereo) {							// Stereo level setting 
@@ -1173,8 +1174,8 @@ function handleAudio(stream) {						// We have obtained media access
 		alert("Sorry, the Web Audio API is not supported by your browser. Consider upgrading or using Google Chrome or Mozilla Firefox");
 	}
 	soundcardSampleRate = context.sampleRate;			// Get HW sample rate... varies per platform
-	micAudioPacketSize = Math.round( soundcardSampleRate 		// How much micAudio is needed to fill a Packet
-		/ (SampleRate/PacketSize) );				// at our standard SampleRate (rounding error is an issue?)
+	micAudioPacketSize = Math.round(PacketSize * 			// How much micAudio is needed to fill a Packet
+		soundcardSampleRate / SampleRate);			// at our standard SampleRate (rounding error is an issue?)
 tracef("Sample rate is ",soundcardSampleRate," mic audio per packet is ",micAudioPacketSize," rounded from", soundcardSampleRate/(SampleRate/PacketSize));
 	micAccessAllowed = true;
 	createOutputUI( mixOut );					// Create the output mix channel UI
@@ -1315,8 +1316,9 @@ var  downCachePerfL = [0.0,0.0];					// cache for performer audio from mic
 var  downCachePerfR = [0.0,0.0];					// can be stereo
 var  upCachePerfM = [0.0,0.0];						// cache for performer audio to mix and send to speaker
 var  upCachePerfS = [0.0,0.0];						// can be stereo
-function reSample( buffer, originalSampleRate, resampledRate, cache) {
-	let resampledBufferLength = Math.floor( buffer.length * resampledRate / originalSampleRate );
+function reSample( buffer, originalSampleRate, resampledRate, cache, resampledBufferLength) {
+	if (resampledBufferLength == undefined)				// If the output packet size isn't set we calculate it
+		resampledBufferLength = Math.floor( buffer.length * resampledRate / originalSampleRate );
 	let resampleRatio = buffer.length / resampledBufferLength;
 	let outputData = new Array(resampledBufferLength).fill(0);
 	for ( let i = 0; i < resampledBufferLength - 1; i++ ) {
