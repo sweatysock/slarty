@@ -999,6 +999,7 @@ function processAudio(e) {						// Main processing loop
 			} else {					// Standard audio prep - always mono
 				let mono8 = [], mono16 = [], mono32 = [], stereo8 = [], stereo16 = [], stereo32 = [];
 				audio = reSample(audioL, soundcardSampleRate, SampleRate, downCache);	
+trace("audio from mic after down sampling is ",audio.length," long");
 				let obj = applyAutoGain(audio, micIn);	// Amplify mic with auto limiter
 				if (obj.peak > micIn.peak) 
 					micIn.peak = obj.peak;		// Note peak for local display
@@ -1174,7 +1175,7 @@ function handleAudio(stream) {						// We have obtained media access
 	soundcardSampleRate = context.sampleRate;			// Get HW sample rate... varies per platform
 	micAudioPacketSize = Math.round( soundcardSampleRate 		// How much micAudio is needed to fill a Packet
 		/ (SampleRate/PacketSize) );				// at our standard SampleRate (rounding error is an issue?)
-console.log("Sample rate is ",soundcardSampleRate," mic audio per packet is ",micAudioPacketSize," rounded from", soundcardSampleRate/(SampleRate/PacketSize));
+tracef("Sample rate is ",soundcardSampleRate," mic audio per packet is ",micAudioPacketSize," rounded from", soundcardSampleRate/(SampleRate/PacketSize));
 	micAccessAllowed = true;
 	createOutputUI( mixOut );					// Create the output mix channel UI
 	createMicUI( micIn );						// Create the microphone channel UI
@@ -1646,6 +1647,18 @@ function trace(){
 			traceDiv.innerHTML = traceArray.join("");
 			traceDiv.scrollTop = traceDiv.scrollHeight;
 		}
+	}
+}
+function tracef(){							// Same as trace but forces ouput always
+	let s ="";
+	for (let i=0; i<arguments.length; i++)
+		s += arguments[i];
+	console.log(s);
+	traceArray.push(s+"<br>");
+	if (traceArray.length > maxTraces) traceArray.shift(0,1);
+	if (traceDiv != null) {
+		traceDiv.innerHTML = traceArray.join("");
+		traceDiv.scrollTop = traceDiv.scrollHeight;
 	}
 }
 function trace2(){	
