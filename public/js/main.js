@@ -1174,6 +1174,7 @@ function handleAudio(stream) {						// We have obtained media access
 	soundcardSampleRate = context.sampleRate;			// Get HW sample rate... varies per platform
 	micAudioPacketSize = Math.round( soundcardSampleRate 		// How much micAudio is needed to fill a Packet
 		/ (SampleRate/PacketSize) );				// at our standard SampleRate (rounding error is an issue?)
+console.log("Sample rate is ",soundcardSampleRate," mic audio per packet is ",micAudioPacketSize," rounded from", soundcardSampleRate/(SampleRate/PacketSize));
 	micAccessAllowed = true;
 	createOutputUI( mixOut );					// Create the output mix channel UI
 	createMicUI( micIn );						// Create the microphone channel UI
