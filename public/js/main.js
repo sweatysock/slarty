@@ -383,6 +383,7 @@ socketIO.on('d', function (data) {
 					}
 				}
 			} else ts = data.perf.packet.timestamp;		// I am the performer so grab timestamp for the rtt 
+			if (loopback) ts = data.perf.packet.timestamp;	// In loopback mode we output perf audio but we still need the rtt
 		}
 		// 4. Adjust gain of final mix containing performer and group audio, and send to the speaker buffer
 		var obj;
@@ -500,7 +501,7 @@ function displayAnimation() { 						// called 100mS to animate audio displays
 		micIn.peak = micIn.peak * rate; 			// drop mic peak level a little for smooth drops
 		setLevelDisplay( micIn );				// Update LED display for mic.peak
 		setSliderPos( micIn );					// Update slider position for mic gain
-		setThresholdPos( micIn );
+		if (!loopback) setThresholdPos( micIn );		// In loopback the threshold display is not needed
 		venue.peak = venue.peak * rate; 			// drop venue peak level a little for smooth drops
 		setLevelDisplay( venue );				// Update LED display for venue.peak
 		setSliderPos( venue );					// Update slider position for venue gain
