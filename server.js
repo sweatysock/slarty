@@ -463,7 +463,7 @@ function midBoostFilter(audioIn) {					// Filter to boost mids giving distant so
 	let alpha = 0.88888889; 					// First filter is a simple high pass filter
 	out1[0] = (prevFilt1Out + audioIn[0] - prevFilt1In) * alpha;	// First value uses previous filtering values
 	for (let i=1; i<audioIn.length; i++)				// The rest are calculated the same way
-		out1[i] = (out1[i-1] + audioIn[i] - audioIn[i-1]) * alpha;
+		out1[i] = Number.parseFloat((out1[i-1] + audioIn[i] - audioIn[i-1]) * alpha).toPrecision(4);
 	prevFilt1In = audioIn[audioIn.length-1];			// Save last input sample for next filter loop
 	prevFilt1Out = out1[out1.length-1];				// and last output sample for same reason
 	return out1;							// Testing with just the high pass filter
@@ -598,7 +598,7 @@ console.log("Venue Pakcet...");
 console.log(JSON.stringify(venuePacket));
 			let v8 = venuePacket.audio.mono8;		// Get the venue audio from upstream
 			let v16 = venuePacket.audio.mono16;		// in MSRE format
-			let m8 = mix.mono8, a16 = mix.mono16;		// and the mix we have just built too
+			let m8 = mix.mono8, m16 = mix.mono16;		// and the mix we have just built too
 			if (m8.length > 0) {				// Only combine venue and mix if there's mix audio
 				if (v8.length > 0) {			// If there is venue audio add mix to venue
 					for (let i = 0; i < v8.length; i++) v8[i] = v8[i] + m8[i];
