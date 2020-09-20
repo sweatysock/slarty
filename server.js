@@ -594,6 +594,8 @@ function generateMix () {
 		upstreamOut++;
 	// 3.1. Now that mix has gone upstream complete venue audio for downstream by adding our mix to the venue packet if it exists
 		if (venuePacket != null) {				// If we have venue audio from upstream
+console.log("Venue Pakcet...");
+console.log(JSON.stringify(venuePacket);
 			let v8 = venuePacket.audio.mono8;		// Get the venue audio from upstream
 			let v16 = venuePacket.audio.mono16;		// in MSRE format
 			let m8 = mix.mono8, a16 = mix.mono16;		// and the mix we have just built too
