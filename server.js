@@ -613,7 +613,7 @@ function generateMix () {
 			}
 			venuePacket.seqNos = seqNos;			// Add to venue packet the list of seqNos 
 			venuePacket.timestamps = timestamps;		// and timestamps that form part of the local venue mix
-			let venuePacket.audio = zipson.stringify(venuePacket.audio);	// Compress and uncompress remixed venue audio to
+			venuePacket.audio = zipson.stringify(venuePacket.audio);	// Compress and uncompress remixed venue audio to
 		} else {						// Temporarily no venue audio has reached us so generate a packet 
 			venuePacket = {					// Construct the venue packet
 				name		: "VENUE",		// Give packet temp venue name
