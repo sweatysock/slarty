@@ -591,6 +591,7 @@ console.log(JSON.stringify(mix));
 		let packet = {						// Build the packet the same as any client packet
 			name		: myServerName,			// Let others know which server this comes from
 			audio		: mix,				// Mix of all downstream clients connected here
+			perfAudio	: false,			// No performer audio ever goes upstream between servers
 			liveClients	: totalLiveClients,		// Clients visible downstream of this server
 			sequence	: upSequence++,			// Good for data integrity checks
 			timestamp	: now,				// Used for round trip time measurements
@@ -600,7 +601,7 @@ console.log(JSON.stringify(mix));
 			sampleRate	: SampleRate,			// Send sample rate to help processing
 			group		: "noGroup",			// Not part of a group in upstream server
 		};
-		upstreamServer.emit("u",packet); 			// Send the packet upstream
+		upstreamServer.emit('u',packet); 			// Send the packet upstream
 		packetBuf.push(packet);					// Add sent packet to LILO buffer for echo cancelling 
 		upstreamOut++;
 	// 3.1. Now that mix has gone upstream complete venue audio for downstream by adding our mix to the venue packet if it exists
