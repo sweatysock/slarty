@@ -607,7 +607,8 @@ function generateMix () {
 					for (let i = 0; i < v16.length; i++) v16[i] = v16[i] + m16[i];
 				} else v16 = m16;			// otherwise just use the mix high band audio
 			}
-			venuePacket.seqNos = seqNos;			// Add to channel 0 packet the list of seqNos that were used
+			venuePacket.seqNos = seqNos;			// Add to venue packet the list of seqNos 
+			venuePacket.timestamps = timestamps;		// and timestamps that form part of the local venue mix
 		} else {						// Temporarily no venue audio has reached us so generate a packet 
 			venuePacket = {					// Construct the venue packet
 				name		: "VENUE",		// Give packet temp venue name
