@@ -152,8 +152,6 @@ socketIO.on('d', function (data) {
 	bytesRcvd += len;						// Accumulate in incoming data total count
 	serverLiveChannels = data.liveChannels;				// Server live channels are for UI updating
 	processCommands(data.commands);					// Process commands from server
-if (tracecount >0) console.log(data);
-tracecount--;
 	if (micAccessAllowed) {						// Need access to audio before outputting
 		let v = [];						// Our objective is to get the venue audio (if any) in here,
 		let c8 = new Array(PacketSize/2).fill(0);		// Buffer of group audio to be subtracted from the venue audio 
@@ -273,7 +271,8 @@ tracecount--;
 					}
 				}
 			}
-			let v8 = vData.audio.mono8, v16 = vData.audio.mono16;	// Shortcuts to the venue MSRE data blocks
+			let audio = zipson.parse(vData.audio);	// Uncompress performer audio
+			let v8 = audio.mono8, v16 = audio.mono16;	// Shortcuts to the venue MSRE data blocks
 			if ((v8.length > 0) && (!venue.muted)) {	// If there is venue audio & not muted, it will need processing
 				let sr = 8000;				// Minimum sample rate of 8kHz
 				if ((a8.length > 0) && (c8.length > 0))	// If we have audio and group has audio remove both and set venue level
