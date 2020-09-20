@@ -426,7 +426,7 @@ console.log("Packet added to buffer");
 				channel.newBuf = false;			// Buffer has filled enough. Channel can enter the mix
 			}
 		}
-console.log("CHANNEL IS",packet.channel,channel.name," with buffer size ",channel.packet.length);
+console.log("CHANNEL IS",packet.channel,channel.name," with buffer size ",channel.packets.length);
 		packetsIn++;
 		channel.inCount++;
 		enterState( genMixState );
