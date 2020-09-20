@@ -202,8 +202,8 @@ upstreamServer.on('d', function (packet) {
 			} 					
 		} 
 	// 3. Build a venue packet 
-//		if (mix.mono8.length != 0) 				// Filter upstream audio to emulate distance
-//			mix.mono8 = midBoostFilter(mix.mono8);		// Just filter low sample rate part as it is a high pass filter
+		if (mix.mono8.length != 0) 				// Filter upstream audio to emulate distance
+			mix.mono8 = midBoostFilter(mix.mono8);		// Just filter low sample rate part as it is a high pass filter
 		let p = {						// Construct the audio packet
 			name		: venue.name,			// Give packet our channel name
 			audio		: mix,				// The audio is the mix just prepared
