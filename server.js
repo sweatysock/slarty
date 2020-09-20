@@ -1,5 +1,7 @@
 // Globals and constants
 //
+import { stringify } from 'zipson';
+import { parse } from 'zipson';
 const SampleRate = 16000; 						// All audio in audence runs at this sample rate. 
 const PacketSize = 500;							// Number of samples in the client audio packets
 const maxBufferSize = 10;						// Max number of packets to store per client
@@ -351,13 +353,10 @@ io.sockets.on('connection', function (socket) {
 
 	socket.on('u', function (packet) { 				// Audio coming up from one of our downstream clients
 		enterState( downstreamState );
-console.log("INCOMING");
-console.log(JSON.stringify(packet));
 		if (clientPacketBad(packet)) {
 			console.log("Bad client packet");
 			return;
 		}
-console.log("Packet ok");
 		let channel = channels[packet.channel];			// This client sends their channel to save server effort
 		channel.name = packet.name;				// Update name of channel in case it has changed
 		channel.liveClients = packet.liveClients;		// Store the number of clients behind this channel
@@ -414,7 +413,6 @@ console.log("Packet ok");
 			}
 		} else {						// Normal audio: buffer it, clip it, and mix it 
 			channel.packets.push(packet);			// Add packet to its channel packet buffer
-console.log("Packet added to buffer. LENGTH now ",channel.packets.length);
 			channel.recording = packet.recording;		// Recording is used for testing purposes only
 			if ((channel.packets.length > channel.maxBufferSize) &&	
 				(channel.recording == false)) {		// If buffer full and we are not recording this channel
@@ -426,7 +424,6 @@ console.log("Packet added to buffer. LENGTH now ",channel.packets.length);
 				channel.newBuf = false;			// Buffer has filled enough. Channel can enter the mix
 			}
 		}
-console.log("CHANNEL IS",packet.channel,channel.name," with buffer size ",channel.packets.length);
 		packetsIn++;
 		channel.inCount++;
 		enterState( genMixState );
@@ -539,14 +536,12 @@ function generateMix () {
 	let packetCount = 0;						// Keep count of packets that make the mix for monitoring
 	let totalLiveClients = 0;					// Count total clients live downstream of this server
 	channels.forEach( (c, chan) => {				// Review all channels for audio and activity, and build server mix
-console.log("Checking channel ",chan);
 		if (c.name != "") {					// Looking for active channels meaning they have a name
 			if (chan != 0) totalLiveClients +=c.liveClients;// Sum all downstream clients under our active channels
 			if (clientPackets[c.group] == null) 		// If this is the first channel we find for a group
 				clientPackets[c.group] = [];		// create an empty client packet buffer
 		}
 		if (c.newBuf == false) {				// Build mix from channels that are non-new (buffering completed)
-console.log("Channel ",chan," is no longer a new buffer");
 			let packet;
 			if (c.recording) {				// If recording then read the packet 
 				packet = c.packets[c.playhead];		// at the playhead position
@@ -554,13 +549,11 @@ console.log("Channel ",chan," is no longer a new buffer");
 			} else
 				packet = c.packets.shift();		// Take first packet of audio from channel buffer
 			if (packet == undefined) {			// If this client buffer has been emptied...
-console.log("Channel ",chan," is empty");
 				c.shortages++;				// Note shortages for this channel
 				shortages++;				// and also for global monitoring
 				c.playhead = 0;				// Set buffer play position to the start
 			}
 			else if (packet.perfAudio == false) {		// Got data and not perfomer. Build mix of downstream channels. 
-console.log("mixing channel ",chan," with name ",c.name);
 				packetCount++;				// Count how many packets have made the mix for tracing
 				if (packet.audio.mono8.length > 0) {	// Unpack the MSRE packet of audio and add to server mix
 					someAudio8 = true;
@@ -672,8 +665,6 @@ console.log(JSON.stringify(mix));
 			liveChannels	: liveChannels,			// Include group member live channels with member position info
 			commands	: commands,			// Send commands downstream to reach all client endpoints
 		});
-console.log("SENDING DOWNSTREAM venue...");
-console.log(JSON.stringify(venuePacket));
 	}
 	// 5. Trace, monitor and set timer for next marshalling point limit
 	packetsOut++;							// Sent data so log it and set time limit for next send
