@@ -414,7 +414,7 @@ console.log("Packet ok");
 			}
 		} else {						// Normal audio: buffer it, clip it, and mix it 
 			channel.packets.push(packet);			// Add packet to its channel packet buffer
-console.log("Packet added to buffer");
+console.log("Packet added to buffer. LENGTH now ",channel.packets.length);
 			channel.recording = packet.recording;		// Recording is used for testing purposes only
 			if ((channel.packets.length > channel.maxBufferSize) &&	
 				(channel.recording == false)) {		// If buffer full and we are not recording this channel
@@ -539,12 +539,14 @@ function generateMix () {
 	let packetCount = 0;						// Keep count of packets that make the mix for monitoring
 	let totalLiveClients = 0;					// Count total clients live downstream of this server
 	channels.forEach( (c, chan) => {				// Review all channels for audio and activity, and build server mix
+console.log("Checking channel ",chan);
 		if (c.name != "") {					// Looking for active channels meaning they have a name
 			if (chan != 0) totalLiveClients +=c.liveClients;// Sum all downstream clients under our active channels
 			if (clientPackets[c.group] == null) 		// If this is the first channel we find for a group
 				clientPackets[c.group] = [];		// create an empty client packet buffer
 		}
 		if (c.newBuf == false) {				// Build mix from channels that are non-new (buffering completed)
+console.log("Channel ",chan," is no longer a new buffer");
 			let packet;
 			if (c.recording) {				// If recording then read the packet 
 				packet = c.packets[c.playhead];		// at the playhead position
@@ -552,6 +554,7 @@ function generateMix () {
 			} else
 				packet = c.packets.shift();		// Take first packet of audio from channel buffer
 			if (packet == undefined) {			// If this client buffer has been emptied...
+console.log("Channel ",chan," is empty");
 				c.shortages++;				// Note shortages for this channel
 				shortages++;				// and also for global monitoring
 				c.playhead = 0;				// Set buffer play position to the start
