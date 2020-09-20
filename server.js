@@ -357,6 +357,7 @@ console.log(JSON.stringify(packet));
 			console.log("Bad client packet");
 			return;
 		}
+console.log("Packet ok");
 		let channel = channels[packet.channel];			// This client sends their channel to save server effort
 		channel.name = packet.name;				// Update name of channel in case it has changed
 		channel.liveClients = packet.liveClients;		// Store the number of clients behind this channel
@@ -413,6 +414,7 @@ console.log(JSON.stringify(packet));
 			}
 		} else {						// Normal audio: buffer it, clip it, and mix it 
 			channel.packets.push(packet);			// Add packet to its channel packet buffer
+console.log("Packet added to buffer");
 			channel.recording = packet.recording;		// Recording is used for testing purposes only
 			if ((channel.packets.length > channel.maxBufferSize) &&	
 				(channel.recording == false)) {		// If buffer full and we are not recording this channel
@@ -424,6 +426,7 @@ console.log(JSON.stringify(packet));
 				channel.newBuf = false;			// Buffer has filled enough. Channel can enter the mix
 			}
 		}
+console.log("CHANNEL IS",packet.channel,channel.name," with buffer size ",channel.packet.length);
 		packetsIn++;
 		channel.inCount++;
 		enterState( genMixState );
