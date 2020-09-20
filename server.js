@@ -578,6 +578,10 @@ function generateMix () {
 	let mix = {mono8, mono16};					// Build audio block in MSRE format
 console.log("NIX is...");
 console.log(JSON.stringify(mix));
+let m = zipson.stringify(mix);
+mix = zipson.parse(m);
+console.log("NIX is NOW...");
+console.log(JSON.stringify(mix));
 	if (upstreamConnected == true) { 				// Send mix if connected to an upstream server
 		let now = new Date().getTime();
 		let packet = {						// Build the packet the same as any client packet
