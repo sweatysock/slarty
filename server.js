@@ -576,12 +576,8 @@ function generateMix () {
 	if (!someAudio8) mono8 = [];					// If no audio send empty mix to save bandwidth
 	if (!someAudio16) mono16 = [];					
 	let mix = {mono8, mono16};					// Build audio block in MSRE format
-console.log("NIX BEFORE...");
-console.log(JSON.stringify(mix));
-let m = zipson.stringify(mix);
-mix = zipson.parse(m);
-console.log("NIX is NOW...");
-console.log(JSON.stringify(mix));
+	let m = zipson.stringify(mix);					// Compress and uncompress mixed audio to
+	mix = zipson.parse(m);						// reduce it's size down (by trimming over precise values)
 	if (upstreamConnected == true) { 				// Send mix if connected to an upstream server
 		let now = new Date().getTime();
 		let packet = {						// Build the packet the same as any client packet
