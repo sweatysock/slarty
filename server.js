@@ -590,6 +590,7 @@ function generateMix () {
 			group		: "noGroup",			// Not part of a group in upstream server
 		};
 		upstreamServer.emit("u",packet); 			// Send the packet upstream
+console.log(JSON.stringify(packet));
 		packetBuf.push(packet);					// Add sent packet to LILO buffer for echo cancelling 
 		upstreamOut++;
 	// 3.1. Now that mix has gone upstream complete venue audio for downstream by adding our mix to the venue packet if it exists
