@@ -1,7 +1,6 @@
 // Globals and constants
 //
-import { stringify } from 'zipson';
-import { parse } from 'zipson';
+var zipson = require('zipson');
 const SampleRate = 16000; 						// All audio in audence runs at this sample rate. 
 const PacketSize = 500;							// Number of samples in the client audio packets
 const maxBufferSize = 10;						// Max number of packets to store per client
