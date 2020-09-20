@@ -576,13 +576,13 @@ function generateMix () {
 	if (!someAudio8) mono8 = [];					// If no audio send empty mix to save bandwidth
 	if (!someAudio16) mono16 = [];					
 	let mix = {mono8, mono16};					// Build audio block in MSRE format
-	let m = zipson.stringify(mix);					// Compress and uncompress mixed audio to
-	mix = zipson.parse(m);						// reduce it's size down (by trimming over precise values)
+	let zipMix = zipson.stringify(mix);				// Compress mixed audio to save BW for sending downstream
+	mix = zipson.parse(zipMix);					// but uncompress for upstream and mixing with venue (it still saves 60% BW)
 	if (upstreamConnected == true) { 				// Send mix if connected to an upstream server
 		let now = new Date().getTime();
 		let packet = {						// Build the packet the same as any client packet
 			name		: myServerName,			// Let others know which server this comes from
-			audio		: mix,				// Mix of all downstream clients connected here
+			audio		: mix,				// Uncompressed mix of all downstream clients connected here
 			perfAudio	: false,			// No performer audio ever goes upstream between servers
 			liveClients	: totalLiveClients,		// Clients visible downstream of this server
 			sequence	: upSequence++,			// Good for data integrity checks
@@ -613,11 +613,11 @@ function generateMix () {
 			}
 			venuePacket.seqNos = seqNos;			// Add to venue packet the list of seqNos 
 			venuePacket.timestamps = timestamps;		// and timestamps that form part of the local venue mix
-			venuePacket.audio = zipson.stringify(venuePacket.audio);	// Compress and uncompress remixed venue audio to
+			venuePacket.audio = zipson.stringify(venuePacket.audio);	// Compress mixed venue audio
 		} else {						// Temporarily no venue audio has reached us so generate a packet 
 			venuePacket = {					// Construct the venue packet
 				name		: "VENUE",		// Give packet temp venue name
-				audio		: mix,			// Use our mix as the venue audio
+				audio		: zipMix,		// Use our compressed mix as the venue audio
 				seqNos		: seqNos,		// Packet sequence numbers in the mix
 				timestamps	: timestamps,		// Packet timestamps in mix, so clients can measure their rtt
 				liveClients	: venue.liveClients,	// Just is a temporary lack of audio. Use upstream value
@@ -632,7 +632,7 @@ function generateMix () {
 	} else {							// No upstream server connected so we must be the venue server
 		venuePacket = {						// Construct the venue packet
 			name		: "Venue",			// Give packet main venue name
-			audio		: mix,				// Use our mix as the venue audio
+			audio		: zipMix,			// Use our compressed mix as the venue audio
 			seqNos		: seqNos,			// Packet sequence numbers in the mix
 			timestamps	: timestamps,			// Packet timestamps in mix, so clients can measure their rtt
 			liveClients	: totalLiveClients,		// Clients visible downstream of this server
