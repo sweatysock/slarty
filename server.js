@@ -191,7 +191,8 @@ upstreamServer.on('d', function (packet) {
 					break;				// Packet found. Stop scanning the packet buffer. 
 				}
 			}
-			let v8 = mix.mono8, v16 = mix.mono16;		// Shortcuts to the channel 0 MSRE venue audio blocks
+			let audio = zipson.parse(mix);			// Uncompress venue audio
+			let v8 = audio.mono8, v16 = audio.mono16;	// Shortcuts to the venue MSRE venue audio blocks
 			if (v8.length > 0) {				// If there is venue audio it may need processing
 				if (a8.length > 0) 			// Only subtract if our audio is not empty
 					for (let i = 0; i < a8.length; ++i) v8[i] = v8[i] - a8[i];

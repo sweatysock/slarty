@@ -271,7 +271,7 @@ socketIO.on('d', function (data) {
 					}
 				}
 			}
-			let audio = zipson.parse(vData.audio);	// Uncompress performer audio
+			let audio = zipson.parse(vData.audio);		// Uncompress venue audio
 			let v8 = audio.mono8, v16 = audio.mono16;	// Shortcuts to the venue MSRE data blocks
 			if ((v8.length > 0) && (!venue.muted)) {	// If there is venue audio & not muted, it will need processing
 				let sr = 8000;				// Minimum sample rate of 8kHz
