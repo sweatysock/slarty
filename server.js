@@ -351,8 +351,6 @@ io.sockets.on('connection', function (socket) {
 
 	socket.on('u', function (packet) { 				// Audio coming up from one of our downstream clients
 		enterState( downstreamState );
-console.log("INCOMING");
-console.log(JSON.stringify(packet));
 		if (clientPacketBad(packet)) {
 			console.log("Bad client packet");
 			return;
@@ -592,8 +590,6 @@ function generateMix () {
 			group		: "noGroup",			// Not part of a group in upstream server
 		};
 		upstreamServer.emit("u",packet); 			// Send the packet upstream
-console.log("OUTGOING");
-console.log(JSON.stringify(packet));
 		packetBuf.push(packet);					// Add sent packet to LILO buffer for echo cancelling 
 		upstreamOut++;
 	// 3.1. Now that mix has gone upstream complete venue audio for downstream by adding our mix to the venue packet if it exists
@@ -664,6 +660,8 @@ console.log(JSON.stringify(packet));
 			liveChannels	: liveChannels,			// Include group member live channels with member position info
 			commands	: commands,			// Send commands downstream to reach all client endpoints
 		});
+console.log("SENDING DOWNSTREAM venue...");
+console.log(JSON.stringify(venuePacket));
 	}
 	// 5. Trace, monitor and set timer for next marshalling point limit
 	packetsOut++;							// Sent data so log it and set time limit for next send
