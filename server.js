@@ -554,6 +554,7 @@ function generateMix () {
 				c.playhead = 0;				// Set buffer play position to the start
 			}
 			else if (packet.perfAudio == false) {		// Got data and not perfomer. Build mix of downstream channels. 
+console.log("mixing channel ",chan," with name ",c.name);
 				packetCount++;				// Count how many packets have made the mix for tracing
 				if (packet.audio.mono8.length > 0) {	// Unpack the MSRE packet of audio and add to server mix
 					someAudio8 = true;
@@ -577,6 +578,8 @@ function generateMix () {
 	if (!someAudio8) mono8 = [];					// If no audio send empty mix to save bandwidth
 	if (!someAudio16) mono16 = [];					
 	let mix = {mono8, mono16};					// Build audio block in MSRE format
+console.log("NIX is...");
+console.log(JSON.stringify(mix);
 	if (upstreamConnected == true) { 				// Send mix if connected to an upstream server
 		let now = new Date().getTime();
 		let packet = {						// Build the packet the same as any client packet
@@ -592,8 +595,6 @@ function generateMix () {
 			group		: "noGroup",			// Not part of a group in upstream server
 		};
 		upstreamServer.emit("u",packet); 			// Send the packet upstream
-console.log("OUTGOING");
-console.log(JSON.stringify(packet));
 		packetBuf.push(packet);					// Add sent packet to LILO buffer for echo cancelling 
 		upstreamOut++;
 	// 3.1. Now that mix has gone upstream complete venue audio for downstream by adding our mix to the venue packet if it exists
