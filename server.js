@@ -576,7 +576,7 @@ function generateMix () {
 	if (!someAudio8) mono8 = [];					// If no audio send empty mix to save bandwidth
 	if (!someAudio16) mono16 = [];					
 	let mix = {mono8, mono16};					// Build audio block in MSRE format
-console.log("NIX is...");
+console.log("NIX BEFORE...");
 console.log(JSON.stringify(mix));
 let m = zipson.stringify(mix);
 mix = zipson.parse(m);
