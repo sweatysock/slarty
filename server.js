@@ -176,7 +176,7 @@ upstreamServer.on('d', function (packet) {
 	let vData = packet.venue;					// Get the venue data from the packet
 	let ts = 0;
 	if (vData != null) {						// Check there is venue audio. It is not guaranteed 
-		let mix = vData.audio;					// Mix is by default the MSRE audio that came from upstream
+		let mix = zipson.parse(vData.audio);			// Mix is the uncomrpessed MSRE audio that came from upstream
 		venue.liveClients = vData.liveClients;			// Save the number of clients connected upstream in channel 0
 		ts = vData.timestamps[upstreamServerChannel];		// Venue data also contains timestamps that allow rtt measurement
 		let a8 = [], a16 = [];					// Will point to our audio MSRE blocks if there are any
@@ -191,8 +191,7 @@ upstreamServer.on('d', function (packet) {
 					break;				// Packet found. Stop scanning the packet buffer. 
 				}
 			}
-			let audio = zipson.parse(mix);			// Uncompress venue audio
-			let v8 = audio.mono8, v16 = audio.mono16;	// Shortcuts to the venue MSRE venue audio blocks
+			let v8 = mix.mono8, v16 = mix.mono16;		// Shortcuts to the venue MSRE venue audio blocks
 			if (v8.length > 0) {				// If there is venue audio it may need processing
 				if (a8.length > 0) 			// Only subtract if our audio is not empty
 					for (let i = 0; i < a8.length; ++i) v8[i] = v8[i] - a8[i];
@@ -207,7 +206,7 @@ upstreamServer.on('d', function (packet) {
 			mix.mono8 = midBoostFilter(mix.mono8);		// Just filter low sample rate part as it is a high pass filter
 		let p = {						// Construct the audio packet
 			name		: venue.name,			// Give packet our channel name
-			audio		: mix,				// The audio is the mix just prepared
+			audio		: mix,				// The audio is the uncompressed mix just prepared
 			peak		: 0,				// This is calculated in the client.  
 			liveClients	: venue.liveClients,		// Clients visible to upstream server = total venue capacity
 			timestamp	: 0,				// Venue audio goes down but never returns so no rtt to measure
@@ -614,7 +613,7 @@ function generateMix () {
 			}
 			venuePacket.seqNos = seqNos;			// Add to venue packet the list of seqNos 
 			venuePacket.timestamps = timestamps;		// and timestamps that form part of the local venue mix
-			venuePacket.audio = zipson.stringify(venuePacket.audio);	// Compress mixed venue audio
+			venuePacket.audio = zipson.stringify(venuePacket.audio);	// Compress mixed venue audio before sending downstream
 		} else {						// Temporarily no venue audio has reached us so generate a packet 
 			venuePacket = {					// Construct the venue packet
 				name		: "VENUE",		// Give packet temp venue name
