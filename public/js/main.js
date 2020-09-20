@@ -1274,8 +1274,9 @@ function impulseResponse( duration, decay, reverse ) {
 	if (!decay) decay = 2.0;
 	for (let i = 0; i < length; i++){
 		let n = reverse ? length - i : i;
-		impulseL[i] = (Math.random() * 2 - 1) * Math.pow(1 - n / length, decay);
-		impulseR[i] = (Math.random() * 2 - 1) * Math.pow(1 - n / length, decay);
+		let impulseC = (Math.random() * 2 - 1) * Math.pow(1 - n / length, decay);
+		impulseL[i] = impulseC * Math.random();
+		impulseR[i] = impulseC * Math.random();
 	}
 	return impulse;
 }
