@@ -201,8 +201,8 @@ upstreamServer.on('d', function (packet) {
 			} 					
 		} 
 	// 3. Build a venue packet 
-		if (mix.mono8.length != 0) 				// Filter upstream audio to emulate distance
-			mix.mono8 = midBoostFilter(mix.mono8);		// Just filter low sample rate part as it is a high pass filter
+//		if (mix.mono8.length != 0) 				// Filter upstream audio to emulate distance
+//			mix.mono8 = midBoostFilter(mix.mono8);		// Just filter low sample rate part as it is a high pass filter
 		let p = {						// Construct the audio packet
 			name		: venue.name,			// Give packet our channel name
 			audio		: mix,				// The audio is the mix just prepared
@@ -462,10 +462,8 @@ function midBoostFilter(audioIn) {					// Filter to boost mids giving distant so
 	let out1 = [];							// The output of the first filter goes here
 	let alpha = 0.88888889; 					// First filter is a simple high pass filter
 	out1[0] = (prevFilt1Out + audioIn[0] - prevFilt1In) * alpha;	// First value uses previous filtering values
-	for (let i=1; i<audioIn.length; i++) {				// The rest are calculated the same way
+	for (let i=1; i<audioIn.length; i++)				// The rest are calculated the same way
 		out1[i] = (out1[i-1] + audioIn[i] - audioIn[i-1]) * alpha;
-		out1[i] = out1[i].toFixed(3);
-	}
 	prevFilt1In = audioIn[audioIn.length-1];			// Save last input sample for next filter loop
 	prevFilt1Out = out1[out1.length-1];				// and last output sample for same reason
 	return out1;							// Testing with just the high pass filter
