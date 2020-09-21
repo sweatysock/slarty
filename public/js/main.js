@@ -1039,6 +1039,7 @@ function processAudio(e) {						// Main processing loop
 				rtt		: rtt1,			// Send my rtt measurement for server monitoring
 			};
 			socketIO.emit("u",packet);
+trace("packet sent");
 			let len=JSON.stringify(packet).length/1024;
 			bytesSent += len;
 			if (!performer) {
