@@ -352,7 +352,6 @@ io.sockets.on('connection', function (socket) {
 
 	socket.on('u', function (packet) { 				// Audio coming up from one of our downstream clients
 		enterState( downstreamState );
-console.log("Got packet");
 		if (clientPacketBad(packet)) {
 			console.log("Bad client packet");
 			return;
