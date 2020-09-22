@@ -411,7 +411,6 @@ io.sockets.on('connection', function (socket) {
 				nextMixTimeLimit = 0;			// Reset the mix timer so that it doesn't empty the buffer right away
 			}
 		} else {						// Normal audio: buffer it, clip it, and mix it 
-if (packet.peak > 0) console.log("Incoming with peak ",packet.peak);
 			channel.packets.push(packet);			// Add packet to its channel packet buffer
 			channel.recording = packet.recording;		// Recording is used for testing purposes only
 			if ((channel.packets.length > channel.maxBufferSize) &&	
@@ -554,6 +553,7 @@ function generateMix () {
 				c.playhead = 0;				// Set buffer play position to the start
 			}
 			else if (packet.perfAudio == false) {		// Got data and not perfomer. Build mix of downstream channels. 
+if (packet.peak > 0) console.log("Mixing with peak ",packet.peak);
 				packetCount++;				// Count how many packets have made the mix for tracing
 				if (packet.audio.mono8.length > 0) {	// Unpack the MSRE packet of audio and add to server mix
 					someAudio8 = true;
