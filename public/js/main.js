@@ -1259,7 +1259,6 @@ function impulseResponse( duration, decay ) {
 	b0 = b1 = b2 = b3 = b4 = b5 = b6 = 0.0;
 
 	for (let i = 0; i < length; i++){
-//		let impulseC = (Math.random() * 2 - 1) * Math.pow(1 - i / length, decay);
 		let pink;
 		let white = Math.random() * 2 - 1;
 		b0 = 0.99886 * b0 + white * 0.0555179;
@@ -1272,8 +1271,9 @@ function impulseResponse( duration, decay ) {
 		pink *= 0.11; // (roughly) compensate for gain
 		b6 = white * 0.115926;
 
-		let impulseC = pink * Math.pow(1 - i / length, decay);
+//		let impulseC = pink * Math.pow(1 - i / length, decay);
 
+		let impulseC = (Math.random() * 2 - 1) * Math.pow(1 - i / length, decay);
 
 		impulseL[i] = impulseC * Math.random();
 		impulseR[i] = impulseC * Math.random();
