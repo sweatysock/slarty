@@ -668,7 +668,7 @@ if (test) console.log("Mixing with peak ",packet.peak);
 			liveChannels	: liveChannels,			// Include group member live channels with member position info
 			commands	: commands,			// Send commands downstream to reach all client endpoints
 		});
-if (test) console.log("Just sent mix out");
+if (test) console.log("Just sent mix out with venue sequence ",venuePacket.sequence);
 test = false;
 	}
 	// 5. Trace, monitor and set timer for next marshalling point limit
