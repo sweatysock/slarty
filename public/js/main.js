@@ -1,3 +1,4 @@
+var pos = 0;
 //Global variables
 //
 const SampleRate = 16000; 						// Global sample rate used for all audio
@@ -186,7 +187,7 @@ socketIO.on('d', function (data) {
 					let d = groupLayout[p];		// Get the delay (in samples @8kHz) for this position
 					d = (d + 18-(myDelay+1)) % 18;	// Adjust the delay relative to my position
 					d = d - 8;			// Delays are offset by 8MARK
-d=8;
+d=pos;
 					let g = (chan.agc 		// Apply gain. If AGC use mix gain, else channel gain
 						? mixOut.gain : chan.gain);	
 					chan.gain = g;			// Channel gain level should reflect gain applied here
@@ -476,6 +477,27 @@ document.addEventListener('DOMContentLoaded', function(event){
 			} else if (groupNameEntry.innerHTML.match("^[a-zA-Z][a-zA-Z0-9]+$")) {
 				groupNameEntry.setAttribute("contenteditable", false);
 				myGroup = groupNameEntry.innerHTML;
+			}
+			e.preventDefault();
+		}
+	});
+	let posBtn = document.getElementById('posBtn');
+	let posNameEntry = document.getElementById('posEntry');
+	posBtn.onclick = ( (e) => {
+		posEntry.innerHTML = "0";
+		posEntry.style.visibility = "visible";
+		posEntry.style.outline = "none";
+		posEntry.setAttribute("contenteditable", true);
+		posEntry.focus();
+	});
+	posEntry.addEventListener("keydown", (e) => {
+		if (e.which === 13) {
+			if (posEntry.innerHTML=="") {
+				posEntry.setAttribute("contenteditable", false);
+				pos = 0;
+			} else if (posEntry.innerHTML.match("^[0-9.]+$")) {
+				posEntry.setAttribute("contenteditable", false);
+				pos = parseFloat(groupNameEntry.innerHTML);
 			}
 			e.preventDefault();
 		}
