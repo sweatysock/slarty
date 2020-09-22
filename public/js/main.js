@@ -1007,7 +1007,6 @@ function processAudio(e) {						// Main processing loop
 					micIn.peak = obj.peak;		// Note peak for local display
 				peak = obj.peak				// peak for packet to be sent
 console.log("Sending packet with peak ",peak," and sequence ",packetSequence);
-if (peak > 0.1) console.log(audio);
 				micIn.gain = obj.finalGain;		// Store gain for next loop
 				if ((peak == 0) || (micIn.muted) || 	// Send empty packet if silent, muted
 					(serverMuted)) { 		// or muted by server 
@@ -1027,6 +1026,7 @@ if (peak > 0.1) console.log(audio);
 			}
 			let sr = performer ? PerfSampleRate : SampleRate;
 			let now = new Date().getTime();
+if (peak > 0.1) console.log(audio);
 			let packet = {
 				name		: myName,		// Send the name we have chosen 
 				audio		: audio,		// Audio block
