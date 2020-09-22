@@ -168,6 +168,7 @@ socketIO.on('d', function (data) {
 		let myPosition = serverLiveChannels[myChannel];		// Obtain my position in the group
 		let myDelay = groupLayout[myPosition];			// Find the delay that corresponds to my position
 		data.channels.forEach(c => {				// Process all audio channel packets including channel 0
+console.log("channel data for ",c.channel,"!!");
 			let ch = c.channel;				// Channel number the packet belongs to
 			let chan = channels[ch];			// Local data structure for this channel
 			if ((c.socketID != socketIO.id) && (ch != 0)) {	// Don't include my audio or channel 0 in the group mix
@@ -274,7 +275,7 @@ socketIO.on('d', function (data) {
 			let audio = zipson.parse(vData.audio);		// Uncompress venue audio
 			let v8 = audio.mono8, v16 = audio.mono16;	// Shortcuts to the venue MSRE data blocks
 			if ((v8.length > 0) && (!venue.muted)) {	// If there is venue audio & not muted, it will need processing
-console.log("Venue audio incoming");
+console.log("VENUE audio incoming");
 				let sr = 8000;				// Minimum sample rate of 8kHz
 				if ((a8.length > 0) && (c8.length > 0))	// If we have audio and group has audio remove both and set venue level
 					for (let i = 0; i < a8.length; ++i) v8[i] = (v8[i] - a8[i] -c8[i]) * venue.gain / venueSize;
@@ -297,6 +298,7 @@ console.log("Venue audio incoming");
 					sr = 16000;			// This is at the higher sample rate
 				} else v = v8;				// Only low bandwidth venue audio 
 				let p = maxValue(v);			// Get peak audio for venue level display 
+console.log("peak is ",p);
 				if (p > venue.peak) venue.peak = p;
 				v = reSample(v, sr, soundcardSampleRate, vCache, micAudioPacketSize); 
 			} else venue.peak = 0;				// Don't need to be a genius to figure that one out if there's no audio!
@@ -620,7 +622,7 @@ function createOutputUI(obj) {						// UI for output channel
 			<img style="position:absolute;right:5%; top:9%;width:80%; padding-bottom:10%;object-fit: scale-down;visibility: hidden" src="images/live.png" id="'+name+'live" >  \
 			<img style="position:absolute;right:30%; bottom:1%;width:40%; padding-bottom:10%;" src="images/AGCOff.png" id="'+name+'AGCOff" onclick="agcButton(event)">  \
 			<img style="position:absolute;right:30%; bottom:1%;width:40%; padding-bottom:10%;" src="images/AGCOn.png" id="'+name+'AGCOn" onclick="agcButton(event)">  \
-			<div style="position:absolute;top:1%; left:3%; width:90%; height:10%;color:#AAAAAA;font-size: 2vmin" id="'+name+'Name"> \
+			<div style="position:absolute;top:1%; left:3%; width:90%; height:10%;color:#AAAAAA;font-size: 4vmin" id="'+name+'Name"> \
 				<marquee behavior="slide" direction="left">'+obj.name+'</marquee> \
 			</div> \
 		</div>'
@@ -1022,7 +1024,6 @@ function processAudio(e) {						// Main processing loop
 				audio = {mono8,mono16,mono32,stereo8,stereo16,stereo32};	
 				let a = zipson.stringify(audio);		// Compressing and uncompressing
 				audio = zipson.parse(a);			// Saves 65% of bandwidth on its own!
-if (peak>0) console.log("audio being sent");
 			}
 			let sr = performer ? PerfSampleRate : SampleRate;
 			let now = new Date().getTime();
