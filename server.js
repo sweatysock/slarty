@@ -575,7 +575,7 @@ if (test) {console.log("Mixing with peak ",packet.peak," from packet sequence ",
 			}
 		}
 	});
-if (test) console.log(mono8);
+if (test) {console.log(mono8); console.log("flag that there is mono8 is ",someAudio8);
 	// 3. Build server mix packet and send upstream if we have an upstream server connected. 
 	if (!someAudio8) mono8 = [];					// If no audio send empty mix to save bandwidth
 	if (!someAudio16) mono16 = [];					
