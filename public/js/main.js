@@ -497,7 +497,7 @@ document.addEventListener('DOMContentLoaded', function(event){
 				pos = 0;
 			} else if (posEntry.innerHTML.match("^[0-9.]+$")) {
 				posEntry.setAttribute("contenteditable", false);
-				pos = parseFloat(groupNameEntry.innerHTML);
+				pos = parseFloat(posEntry.innerHTML);
 			}
 			e.preventDefault();
 		}
