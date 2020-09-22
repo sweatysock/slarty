@@ -1,3 +1,4 @@
+var test;
 // Globals and constants
 //
 var zipson = require('zipson');						// For compressing and decompressing data
@@ -553,7 +554,8 @@ function generateMix () {
 				c.playhead = 0;				// Set buffer play position to the start
 			}
 			else if (packet.perfAudio == false) {		// Got data and not perfomer. Build mix of downstream channels. 
-if (packet.peak > 0) console.log("Mixing with peak ",packet.peak);
+if (packet.peak > 0) test = true;
+if (test) console.log("Mixing with peak ",packet.peak);
 				packetCount++;				// Count how many packets have made the mix for tracing
 				if (packet.audio.mono8.length > 0) {	// Unpack the MSRE packet of audio and add to server mix
 					someAudio8 = true;
@@ -666,6 +668,8 @@ if (packet.peak > 0) console.log("Mixing with peak ",packet.peak);
 			liveChannels	: liveChannels,			// Include group member live channels with member position info
 			commands	: commands,			// Send commands downstream to reach all client endpoints
 		});
+if (test) console.log("Just sent mix out");
+test = false;
 	}
 	// 5. Trace, monitor and set timer for next marshalling point limit
 	packetsOut++;							// Sent data so log it and set time limit for next send
