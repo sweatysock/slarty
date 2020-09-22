@@ -475,23 +475,6 @@ document.addEventListener('DOMContentLoaded', function(event){
 			e.preventDefault();
 		}
 	});
-	let posBtn = document.getElementById('posBtn');
-	let posEntry = document.getElementById('posEntry');
-	posBtn.onclick = ( (e) => {
-		posEntry.innerHTML = myPos;
-		posEntry.style.visibility = "visible";
-		posEntry.style.outline = "none";
-		posEntry.setAttribute("contenteditable", true);
-		posEntry.focus();
-	});
-	posEntry.addEventListener("keydown", (e) => {
-		if (e.which === 13) {
-			if (posEntry.innerHTML.match("^[0-9]+$")) {
-				myPos = parseInt(posEntry.innerHTML);
-			}
-			e.preventDefault();
-		}
-	});
 });
 
 function displayAnimation() { 						// called 100mS to animate audio displays
@@ -1289,7 +1272,7 @@ function impulseResponse( duration, decay ) {
 		pink *= 0.11; // (roughly) compensate for gain
 		b6 = white * 0.115926;
 
-		let impulseC = impulseC * Math.pow(1 - i / length, decay);
+		let impulseC = pink * Math.pow(1 - i / length, decay);
 
 
 		impulseL[i] = impulseC * Math.random();
