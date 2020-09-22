@@ -616,10 +616,10 @@ function createOutputUI(obj) {						// UI for output channel
 			<div style="position:absolute;bottom:57.5%; left:25%; width:5%; height:0%; background-color:#FF6600" id="'+name+'LevelOrange"></div> \
 			<div style="position:absolute;bottom:66.8%; left:25%; width:5%; height:0%; background-color:#FF0000" id="'+name+'LevelRed"></div> \
 			<div style="position:absolute;bottom:8%; left:25%; width:5%; height:0%; background-color:#999999" id="'+name+'Threshold"></div> \
-			<img style="position:absolute;right:5%; top:9%;width:90%; padding-bottom:10%;object-fit: scale-down;visibility: hidden" src="images/live.png" id="'+name+'live" >  \
+			<img style="position:absolute;right:5%; top:9%;width:80%; padding-bottom:10%;object-fit: scale-down;visibility: hidden" src="images/live.png" id="'+name+'live" >  \
 			<img style="position:absolute;right:30%; bottom:1%;width:40%; padding-bottom:10%;" src="images/AGCOff.png" id="'+name+'AGCOff" onclick="agcButton(event)">  \
 			<img style="position:absolute;right:30%; bottom:1%;width:40%; padding-bottom:10%;" src="images/AGCOn.png" id="'+name+'AGCOn" onclick="agcButton(event)">  \
-			<div style="position:absolute;top:1%; left:3%; width:90%; height:10%;color:#AAAAAA" id="'+name+'Name"> \
+			<div style="position:absolute;top:1%; left:3%; width:90%; height:10%;color:#AAAAAA;font-size: 6vmin" id="'+name+'Name"> \
 				<marquee behavior="slide" direction="left">'+obj.name+'</marquee> \
 			</div> \
 		</div>'
@@ -1201,7 +1201,7 @@ tracef("Sample rate is ",soundcardSampleRate," mic audio per packet is ",micAudi
 	micFilter2.Q.value = 1;
 	
 	reverb = context.createConvolver();				// Reverb for venue ambience
-	reverb.buffer = impulseResponse(1,4,false);			// Default reverb characteristic... simple exponential decay
+	reverb.buffer = impulseResponse(1,8,false);			// Default reverb characteristic... simple exponential decay
 	let splitter = context.createChannelSplitter();			// Need a splitter to separate venue from main audio
 	let combiner = context.createChannelMerger();			// Combiner used to rebuild stereo image
 	let combiDelayL = context.createChannelMerger();		// These combiners are used to rebuild stereo venue
@@ -1246,8 +1246,8 @@ tracef("Sample rate is ",soundcardSampleRate," mic audio per packet is ",micAudi
 function loadVenueReverb(filename) {					// Load the venue reverb file to give ambience
 	if (filename == reverbFile) return;				// Don't load the same file again
 	if (filename == "") {						// If the file is empty then lets go for the basic reverb
-		reverb.buffer = impulseResponse(1,4,false); 
-		return;					// 
+		reverb.buffer = impulseResponse(1,8,false); 
+		return;					
 	}
 	let ir_request = new XMLHttpRequest();				// Load impulse response to reverb
 	ir_request.open("GET", filename, true);
