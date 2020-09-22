@@ -411,7 +411,7 @@ io.sockets.on('connection', function (socket) {
 				nextMixTimeLimit = 0;			// Reset the mix timer so that it doesn't empty the buffer right away
 			}
 		} else {						// Normal audio: buffer it, clip it, and mix it 
-if (packet.peak > 0) console.log("Incoming with peak "packet.peak);
+if (packet.peak > 0) console.log("Incoming with peak ",packet.peak);
 			channel.packets.push(packet);			// Add packet to its channel packet buffer
 			channel.recording = packet.recording;		// Recording is used for testing purposes only
 			if ((channel.packets.length > channel.maxBufferSize) &&	
