@@ -256,6 +256,7 @@ console.log("channel data for ",c.channel,"!!");
 		let vData = data.venue;
 		if (vData != null) {					// If there is venue data find our seq #, subtract it, & correct venue level
 console.log("VENUE audio incoming with venue sequence ",vData.sequence);
+console.log(vData);
 			venue.gain = (venue.agc ? mixOut.gain : venue.gain);
 			ts = vData.timestamps[myChannel];		// Venue data also contains timestamps that allow rtt measurement
 			audience = vData.liveClients;			// The server sends us the current audience count for level setting
@@ -298,7 +299,6 @@ console.log("VENUE audio incoming with venue sequence ",vData.sequence);
 					sr = 16000;			// This is at the higher sample rate
 				} else v = v8;				// Only low bandwidth venue audio 
 				let p = maxValue(v);			// Get peak audio for venue level display 
-console.log("peak is ",p);
 				if (p > venue.peak) venue.peak = p;
 				v = reSample(v, sr, soundcardSampleRate, vCache, micAudioPacketSize); 
 			} else venue.peak = 0;				// Don't need to be a genius to figure that one out if there's no audio!
@@ -1024,7 +1024,6 @@ function processAudio(e) {						// Main processing loop
 				audio = {mono8,mono16,mono32,stereo8,stereo16,stereo32};	
 				let a = zipson.stringify(audio);		// Compressing and uncompressing
 				audio = zipson.parse(a);			// Saves 65% of bandwidth on its own!
-console.log("Sending packet with peak ",peak);
 			}
 			let sr = performer ? PerfSampleRate : SampleRate;
 			let now = new Date().getTime();
