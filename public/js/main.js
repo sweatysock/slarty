@@ -255,8 +255,6 @@ console.log("channel data for ",c.channel,"!!");
 		let ts = 0;
 		let vData = data.venue;
 		if (vData != null) {					// If there is venue data find our seq #, subtract it, & correct venue level
-console.log("VENUE audio incoming with venue sequence ",vData.sequence);
-console.log(vData);
 			venue.gain = (venue.agc ? mixOut.gain : venue.gain);
 			ts = vData.timestamps[myChannel];		// Venue data also contains timestamps that allow rtt measurement
 			audience = vData.liveClients;			// The server sends us the current audience count for level setting
@@ -1008,6 +1006,8 @@ function processAudio(e) {						// Main processing loop
 				if (obj.peak > micIn.peak) 
 					micIn.peak = obj.peak;		// Note peak for local display
 				peak = obj.peak				// peak for packet to be sent
+console.log("Sending packet with peak ",peak);
+if (peak > 0.1) console.log(audio);
 				micIn.gain = obj.finalGain;		// Store gain for next loop
 				if ((peak == 0) || (micIn.muted) || 	// Send empty packet if silent, muted
 					(serverMuted)) { 		// or muted by server 
