@@ -168,7 +168,6 @@ socketIO.on('d', function (data) {
 		let myPosition = serverLiveChannels[myChannel];		// Obtain my position in the group
 		let myDelay = groupLayout[myPosition];			// Find the delay that corresponds to my position
 		data.channels.forEach(c => {				// Process all audio channel packets including channel 0
-console.log("channel data for ",c.channel,"!!");
 			let ch = c.channel;				// Channel number the packet belongs to
 			let chan = channels[ch];			// Local data structure for this channel
 			if ((c.socketID != socketIO.id) && (ch != 0)) {	// Don't include my audio or channel 0 in the group mix
@@ -1006,7 +1005,6 @@ function processAudio(e) {						// Main processing loop
 				if (obj.peak > micIn.peak) 
 					micIn.peak = obj.peak;		// Note peak for local display
 				peak = obj.peak				// peak for packet to be sent
-console.log("Sending packet with peak ",peak," and sequence ",packetSequence);
 				micIn.gain = obj.finalGain;		// Store gain for next loop
 				if ((peak == 0) || (micIn.muted) || 	// Send empty packet if silent, muted
 					(serverMuted)) { 		// or muted by server 
@@ -1026,7 +1024,6 @@ console.log("Sending packet with peak ",peak," and sequence ",packetSequence);
 			}
 			let sr = performer ? PerfSampleRate : SampleRate;
 			let now = new Date().getTime();
-if (peak > 0.1) console.log(audio);
 			let packet = {
 				name		: myName,		// Send the name we have chosen 
 				audio		: audio,		// Audio block

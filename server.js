@@ -554,8 +554,6 @@ function generateMix () {
 				c.playhead = 0;				// Set buffer play position to the start
 			}
 			else if (packet.perfAudio == false) {		// Got data and not perfomer. Build mix of downstream channels. 
-if (packet.peak > 0) test = true;
-if (test) {console.log("Mixing with peak ",packet.peak," from packet sequence ",packet.sequence);console.log(packet.audio)}
 				packetCount++;				// Count how many packets have made the mix for tracing
 				if (packet.audio.mono8.length > 0) {	// Unpack the MSRE packet of audio and add to server mix
 					someAudio8 = true;
@@ -581,7 +579,6 @@ if (test) {console.log("Mixing with peak ",packet.peak," from packet sequence ",
 	let mix = {mono8, mono16};					// Build audio block in MSRE format
 	let zipMix = zipson.stringify(mix);				// Compress mixed audio to save BW for sending downstream
 	mix = zipson.parse(zipMix);					// but uncompress for upstream and mixing with venue (it still saves 60% BW)
-if (test) {console.log("mix after compress & decompress is ");console.log(mix);}
 	if (upstreamConnected == true) { 				// Send mix if connected to an upstream server
 		let now = new Date().getTime();
 		let packet = {						// Build the packet the same as any client packet
@@ -669,8 +666,6 @@ if (test) {console.log("mix after compress & decompress is ");console.log(mix);}
 			liveChannels	: liveChannels,			// Include group member live channels with member position info
 			commands	: commands,			// Send commands downstream to reach all client endpoints
 		});
-if (test) {console.log("Just sent mix out with venue sequence ",venuePacket.sequence); console.log(JSON.stringify(venuePacket));}
-test = false;
 	}
 	// 5. Trace, monitor and set timer for next marshalling point limit
 	packetsOut++;							// Sent data so log it and set time limit for next send
