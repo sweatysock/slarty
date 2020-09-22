@@ -188,6 +188,7 @@ socketIO.on('d', function (data) {
 					d = (d + 18-(myDelay+1)) % 18;	// Adjust the delay relative to my position
 					d = d - 8;			// Delays are offset by 8MARK
 d=pos;
+console.log(d);
 					let g = (chan.agc 		// Apply gain. If AGC use mix gain, else channel gain
 						? mixOut.gain : chan.gain);	
 					chan.gain = g;			// Channel gain level should reflect gain applied here
@@ -493,10 +494,10 @@ document.addEventListener('DOMContentLoaded', function(event){
 	posEntry.addEventListener("keydown", (e) => {
 		if (e.which === 13) {
 			if (posEntry.innerHTML=="") {
-				posEntry.setAttribute("contenteditable", false);
+//				posEntry.setAttribute("contenteditable", false);
 				pos = 0;
-			} else if (posEntry.innerHTML.match("^[0-9.]+$")) {
-				posEntry.setAttribute("contenteditable", false);
+			} else if (posEntry.innerHTML.match("^[0-9.]*$")) {
+//				posEntry.setAttribute("contenteditable", false);
 				pos = parseFloat(posEntry.innerHTML);
 			}
 			e.preventDefault();
