@@ -200,7 +200,7 @@ d=0;
 //							for (let i=0; i < m8.length; i++) {L8[i] += m8[i] * g; c8[i] += m8[i];}
 //							for (let i=dr; i < m8.length; i++) {R8[i] += m8[i-dr] * g;}
 //							chan.buffer8 = m8.slice(m8.length-dr,m8.length);	// store final samples to delay buffer
-							for (let i=0; i < m8.length; i++) {L8[i] += m8[i] *g; c8[i] += m8[i]; R8 += m8[i]*g/(dr+1);}
+							for (let i=0; i < m8.length; i++) {L8[i] += m8[i] *g; c8[i] += m8[i]; R8[i] += m8[i]*g/(dr+1);}
 						} else {		// Applying delay to left channel
 							dl = d;		
 //							if (b8.length != 0)			// Same as for right channel
@@ -208,7 +208,7 @@ d=0;
 //							for (let i=dl; i < m8.length; i++) {L8[i] += m8[i-dl] * g;}
 //							for (let i=0; i < m8.length; i++) {R8[i] += m8[i] * g; c8[i] += m8[i];}
 //							chan.buffer8 = m8.slice(m8.length-dl,m8.length);	
-							for (let i=0; i < m8.length; i++) {R8[i] += m8[i] *g; c8[i] += m8[i]; L8 += m8[i]*g/(dl+1);}
+							for (let i=0; i < m8.length; i++) {R8[i] += m8[i] *g; c8[i] += m8[i]; L8[i] += m8[i]*g/(dl+1);}
 						}			
 					}				
 					if (m16.length > 0) {
@@ -220,7 +220,7 @@ d=0;
 //							for (let i=0; i < m16.length; i++) {L16[i] += m16[i] * g; c16[i] += m16[i];}
 //							for (let i=dr; i < m16.length; i++) {R16[i] += m16[i-dr] * g;}
 //							chan.buffer16 = m16.slice(m16.length-dr,m16.length);	// store final samples to delay buffer
-							for (let i=0; i < m16.length; i++) {L16[i] += m16[i] *g; c16[i] += m16[i]; R16 += m16[i]*g/(dr+1);}
+							for (let i=0; i < m16.length; i++) {L16[i] += m16[i] *g; c16[i] += m16[i]; R16[i] += m16[i]*g/(dr+1);}
 						} else {		// Applying delay to left channel
 							dl = d * 2;	// Multiply by 2 for 16kHz audio
 //							if (b16.length != 0)			// Same as for right channel
@@ -228,7 +228,7 @@ d=0;
 //							for (let i=dl; i < m16.length; i++) {L16[i] += m16[i-dl] * g;}
 //							for (let i=0; i < m16.length; i++) {R16[i] += m16[i] * g; c16[i] += m16[i];}
 //							chan.buffer16 = m16.slice(m16.length-dl,m16.length);	
-							for (let i=0; i < m16.length; i++) {R16[i] += m16[i] *g; c16[i] += m16[i]; L16 += m16[i]*g/(dl+1);}
+							for (let i=0; i < m16.length; i++) {R16[i] += m16[i] *g; c16[i] += m16[i]; L16[i] += m16[i]*g/(dl+1);}
 						}			
 					}
 				}
