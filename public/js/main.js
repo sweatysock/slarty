@@ -1270,11 +1270,11 @@ function impulseResponse( duration, decay ) {
 		pink = b0 + b1 + b2 + b3 + b4 + b5 + b6 + white * 0.5362;
 		pink *= 0.11; // (roughly) compensate for gain
 		b6 = white * 0.115926;
-
-		let impulseC = pink * Math.pow(1 - i / length, decay);
-
-//		let impulseC = (Math.random() * 2 - 1) * Math.pow(1 - i / length, decay);
-
+									// Pink noise reverb option
+//		let impulseC = pink * Math.pow(1 - i / length, decay);	
+									// White noise reverb option
+		let impulseC = (Math.random() * 2 - 1) * Math.pow(1 - i / length, decay);
+									// Stereo reverb
 		impulseL[i] = impulseC * Math.random();
 		impulseR[i] = impulseC * Math.random();
 	}
