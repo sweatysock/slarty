@@ -555,7 +555,7 @@ function generateMix () {
 			}
 			else if (packet.perfAudio == false) {		// Got data and not perfomer. Build mix of downstream channels. 
 if (packet.peak > 0) test = true;
-if (test) console.log("Mixing with peak ",packet.peak);
+if (test) console.log("Mixing with peak ",packet.peak," from packet sequence ",packet.sequence);
 				packetCount++;				// Count how many packets have made the mix for tracing
 				if (packet.audio.mono8.length > 0) {	// Unpack the MSRE packet of audio and add to server mix
 					someAudio8 = true;
