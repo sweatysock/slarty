@@ -575,13 +575,13 @@ if (test) {console.log("Mixing with peak ",packet.peak," from packet sequence ",
 			}
 		}
 	});
-if (test) {console.log(mono8); console.log("flag that there is mono8 is ",someAudio8);}
 	// 3. Build server mix packet and send upstream if we have an upstream server connected. 
 	if (!someAudio8) mono8 = [];					// If no audio send empty mix to save bandwidth
 	if (!someAudio16) mono16 = [];					
 	let mix = {mono8, mono16};					// Build audio block in MSRE format
 	let zipMix = zipson.stringify(mix);				// Compress mixed audio to save BW for sending downstream
 	mix = zipson.parse(zipMix);					// but uncompress for upstream and mixing with venue (it still saves 60% BW)
+if (test) {console.log("mix after compress & decompress is ");console.log(mix);}
 	if (upstreamConnected == true) { 				// Send mix if connected to an upstream server
 		let now = new Date().getTime();
 		let packet = {						// Build the packet the same as any client packet
@@ -608,12 +608,12 @@ if (test) {console.log(mono8); console.log("flag that there is mono8 is ",someAu
 			if (m8.length > 0) {				// Only combine venue and mix if there's mix audio
 				if (v8.length > 0) {			// If there is venue audio add mix to venue
 					for (let i = 0; i < v8.length; i++) v8[i] = v8[i] + m8[i];
-				} else v8 = m8;				// else venue is silent so just use mix directly
+				} else venuePacket.audio.mono8 = m8;	// else venue is silent so just use mix directly
 			}						
 			if (m16.length > 0) {		 		// If there is mix high band audio 
 				if (v16.length > 0) {			// and venue high band audio then mix them
 					for (let i = 0; i < v16.length; i++) v16[i] = v16[i] + m16[i];
-				} else v16 = m16;			// otherwise just use the mix high band audio
+				} else venuePacket.audio.mono16 = m16;	// otherwise just use the mix high band audio
 			}
 			venuePacket.seqNos = seqNos;			// Add to venue packet the list of seqNos 
 			venuePacket.timestamps = timestamps;		// and timestamps that form part of the local venue mix
