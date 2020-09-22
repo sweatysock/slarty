@@ -648,7 +648,7 @@ function createMicUI(obj) {						// UI for mic input channel
 			<img style="position:absolute;right:5%; bottom:1%;width:40%; padding-bottom:10%;" src="images/AGCOn.png" id="'+name+'AGCOn" onclick="agcButton(event)">  \
 			<img style="position:absolute;left:5%; bottom:1%;width:40%; padding-bottom:10%;" src="images/HQOff.png" id="'+name+'HQOff" onclick="HQOnOff(event)">  \
 			<img style="position:absolute;left:5%; bottom:1%;width:40%; padding-bottom:10%;" src="images/HQOn.png" id="'+name+'HQOn" onclick="HQOnOff(event)">  \
-			<div style="position:absolute;top:1%; left:3%; width:90%; height:10%;color:#AAAAAA" id="'+name+'Name; font-size: 3vmin"> \
+			<div style="position:absolute;top:1%; left:3%; width:90%; height:10%;color:#AAAAAA; font-size: 3vmin" id="'+name+'Name"> \
 				<marquee behavior="slide" direction="left">'+obj.name+'</marquee> \
 			</div> \
 		</div>'
@@ -1201,7 +1201,7 @@ tracef("Sample rate is ",soundcardSampleRate," mic audio per packet is ",micAudi
 	micFilter2.Q.value = 1;
 	
 	reverb = context.createConvolver();				// Reverb for venue ambience
-	reverb.buffer = impulseResponse(1,6,false);			// Default reverb characteristic... simple exponential decay
+	reverb.buffer = impulseResponse(1,8);				// Default reverb characteristic... simple exponential decay
 	let splitter = context.createChannelSplitter();			// Need a splitter to separate venue from main audio
 	let combiner = context.createChannelMerger();			// Combiner used to rebuild stereo image
 	let combiDelayL = context.createChannelMerger();		// These combiners are used to rebuild stereo venue
@@ -1246,7 +1246,7 @@ tracef("Sample rate is ",soundcardSampleRate," mic audio per packet is ",micAudi
 function loadVenueReverb(filename) {					// Load the venue reverb file to give ambience
 	if (filename == reverbFile) return;				// Don't load the same file again
 	if (filename == "") {						// If the file is empty then lets go for the basic reverb
-		reverb.buffer = impulseResponse(1,6,false); 
+		reverb.buffer = impulseResponse(1,8); 
 		return;					
 	}
 	let ir_request = new XMLHttpRequest();				// Load impulse response to reverb
@@ -1265,16 +1265,33 @@ console.log(filename," loaded into reverb");
 console.log("Requested to load ",filename);
 }
 
-function impulseResponse( duration, decay, reverse ) {
+function impulseResponse( duration, decay ) {
 	let length = soundcardSampleRate * duration;
 	let impulse = context.createBuffer(2, length, soundcardSampleRate);
 	let impulseL = impulse.getChannelData(0);
 	let impulseR = impulse.getChannelData(1);
-
 	if (!decay) decay = 2.0;
+
+	let b0, b1, b2, b3, b4, b5, b6;
+	b0 = b1 = b2 = b3 = b4 = b5 = b6 = 0.0;
+
 	for (let i = 0; i < length; i++){
-		let n = reverse ? length - i : i;
-		let impulseC = (Math.random() * 2 - 1) * Math.pow(1 - n / length, decay);
+//		let impulseC = (Math.random() * 2 - 1) * Math.pow(1 - i / length, decay);
+		let pink;
+		let white = Math.random() * 2 - 1;
+		b0 = 0.99886 * b0 + white * 0.0555179;
+		b1 = 0.99332 * b1 + white * 0.0750759;
+		b2 = 0.96900 * b2 + white * 0.1538520;
+		b3 = 0.86650 * b3 + white * 0.3104856;
+		b4 = 0.55000 * b4 + white * 0.5329522;
+		b5 = -0.7616 * b5 - white * 0.0168980;
+		pink = b0 + b1 + b2 + b3 + b4 + b5 + b6 + white * 0.5362;
+		pink *= 0.11; // (roughly) compensate for gain
+		b6 = white * 0.115926;
+
+		let impulseC = impulseC * Math.pow(1 - i / length, decay);
+
+
 		impulseL[i] = impulseC * Math.random();
 		impulseR[i] = impulseC * Math.random();
 	}
