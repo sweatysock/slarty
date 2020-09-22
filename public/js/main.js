@@ -194,36 +194,40 @@ socketIO.on('d', function (data) {
 						let dl = 0, dr = 0;	// Delay offsets for each channel. Default is no offset
 						if (d < 0) {		// Applying delay to right channel
 							dr = d * -1;	// Invert delay 
-							if (b8.length != 0) 			// Get delayed samples and build stereo mix plus cancelling buffer
-								for (let i=0;i<b8.length;i++) R8[i] += b8[i] *g;
-							for (let i=0; i < m8.length; i++) {L8[i] += m8[i] * g; c8[i] += m8[i];}
-							for (let i=dr; i < m8.length; i++) {R8[i] += m8[i-dr] * g;}
-							chan.buffer8 = m8.slice(m8.length-dr,m8.length);	// store final samples to delay buffer
+//							if (b8.length != 0) 			// Get delayed samples and build stereo mix plus cancelling buffer
+//								for (let i=0;i<b8.length;i++) R8[i] += b8[i] *g;
+//							for (let i=0; i < m8.length; i++) {L8[i] += m8[i] * g; c8[i] += m8[i];}
+//							for (let i=dr; i < m8.length; i++) {R8[i] += m8[i-dr] * g;}
+//							chan.buffer8 = m8.slice(m8.length-dr,m8.length);	// store final samples to delay buffer
+							for (let i=0; i < m8.length; i++) {L8 += m8[i] *g; c8[i] += m8[i]; R8 += m8*g/(dr+1);}
 						} else {		// Applying delay to left channel
 							dl = d;		
-							if (b8.length != 0)			// Same as for right channel
-								for (let i=0;i<b8.length;i++) L8[i] += b8[i] *g;
-							for (let i=dl; i < m8.length; i++) {L8[i] += m8[i-dl] * g;}
-							for (let i=0; i < m8.length; i++) {R8[i] += m8[i] * g; c8[i] += m8[i];}
-							chan.buffer8 = m8.slice(m8.length-dl,m8.length);	
+//							if (b8.length != 0)			// Same as for right channel
+//								for (let i=0;i<b8.length;i++) L8[i] += b8[i] *g;
+//							for (let i=dl; i < m8.length; i++) {L8[i] += m8[i-dl] * g;}
+//							for (let i=0; i < m8.length; i++) {R8[i] += m8[i] * g; c8[i] += m8[i];}
+//							chan.buffer8 = m8.slice(m8.length-dl,m8.length);	
+							for (let i=0; i < m8.length; i++) {R8 += m8[i] *g; c8[i] += m8[i]; L8 += m8*g/(dl+1);}
 						}			
 					}				
 					if (m16.length > 0) {
 						let dl = 0, dr = 0;
 						if (d < 0) {		// Applying delay to right channel
 							dr = d * -2;	// Invert delay and multiply by 2 for 16kHz audio
-							if (b16.length != 0)			// Get delayed samples and build stereo mix plus cancelling buffer
-								for (let i=0;i<b16.length;i++) R16[i] += b16[i] *g;
-							for (let i=0; i < m16.length; i++) {L16[i] += m16[i] * g; c16[i] += m16[i];}
-							for (let i=dr; i < m16.length; i++) {R16[i] += m16[i-dr] * g;}
-							chan.buffer16 = m16.slice(m16.length-dr,m16.length);	// store final samples to delay buffer
+//							if (b16.length != 0)			// Get delayed samples and build stereo mix plus cancelling buffer
+//								for (let i=0;i<b16.length;i++) R16[i] += b16[i] *g;
+//							for (let i=0; i < m16.length; i++) {L16[i] += m16[i] * g; c16[i] += m16[i];}
+//							for (let i=dr; i < m16.length; i++) {R16[i] += m16[i-dr] * g;}
+//							chan.buffer16 = m16.slice(m16.length-dr,m16.length);	// store final samples to delay buffer
+							for (let i=0; i < m16.length; i++) {L16 += m16[i] *g; c16[i] += m16[i]; R16 += m16*g/(dr+1);}
 						} else {		// Applying delay to left channel
 							dl = d * 2;	// Multiply by 2 for 16kHz audio
-							if (b16.length != 0)			// Same as for right channel
-								for (let i=0;i<b16.length;i++) L16[i] += b16[i] *g;
-							for (let i=dl; i < m16.length; i++) {L16[i] += m16[i-dl] * g;}
-							for (let i=0; i < m16.length; i++) {R16[i] += m16[i] * g; c16[i] += m16[i];}
-							chan.buffer16 = m16.slice(m16.length-dl,m16.length);	
+//							if (b16.length != 0)			// Same as for right channel
+//								for (let i=0;i<b16.length;i++) L16[i] += b16[i] *g;
+//							for (let i=dl; i < m16.length; i++) {L16[i] += m16[i-dl] * g;}
+//							for (let i=0; i < m16.length; i++) {R16[i] += m16[i] * g; c16[i] += m16[i];}
+//							chan.buffer16 = m16.slice(m16.length-dl,m16.length);	
+							for (let i=0; i < m16.length; i++) {R16 += m16[i] *g; c16[i] += m16[i]; L16 += m16*g/(dl+1);}
 						}			
 					}
 				}
