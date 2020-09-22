@@ -1,4 +1,3 @@
-var pos = 0;
 //Global variables
 //
 const SampleRate = 16000; 						// Global sample rate used for all audio
@@ -24,7 +23,7 @@ var myName = "";							// Name assigned to my audio channel
 var myGroup = "noGroup";						// Group user belongs to. Default is no group.
 //var groupLayout = [-9,3,-3,6,-6,0,-8,8,-5,5,-2,2,-7,7,-4,4,-1,1];	// Stereo delays to apply for the different positions in a group
 var groupLayout = [17,11,5,14,2,8,0,16,3,13,6,10,1,15,4,12,7,9];	// Delays to apply for the different positions in a group
-var myPos = 1;
+var myPos = 0;
 var performer = false;							// Indicates if we are the performer
 var loopback = false;							// If we connect to a loopback server this will be true
 var stereoOn = true;							// Default stereo audio setting
@@ -187,7 +186,7 @@ socketIO.on('d', function (data) {
 					let d = groupLayout[p];		// Get the delay (in samples @8kHz) for this position
 					d = (d + 18-(myDelay+1)) % 18;	// Adjust the delay relative to my position
 					d = d - 8;			// Delays are offset by 8MARK
-d=pos;
+d=myPos;
 console.log(d);
 					let g = (chan.agc 		// Apply gain. If AGC use mix gain, else channel gain
 						? mixOut.gain : chan.gain);	
@@ -495,10 +494,11 @@ document.addEventListener('DOMContentLoaded', function(event){
 		if (e.which === 13) {
 			if (posEntry.innerHTML=="") {
 //				posEntry.setAttribute("contenteditable", false);
-				pos = 0;
-			} else if (posEntry.innerHTML.match("^[0-9.]*$")) {
+				myPos = 0;
+//			} else if (posEntry.innerHTML.match("^[0-9.]*$")) {
+			} else {
 //				posEntry.setAttribute("contenteditable", false);
-				pos = parseFloat(posEntry.innerHTML);
+				myPos = parseFloat(posEntry.innerHTML);
 			}
 			e.preventDefault();
 		}
