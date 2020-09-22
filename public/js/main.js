@@ -255,6 +255,7 @@ console.log("channel data for ",c.channel,"!!");
 		let ts = 0;
 		let vData = data.venue;
 		if (vData != null) {					// If there is venue data find our seq #, subtract it, & correct venue level
+console.log("VENUE audio incoming with venue sequence ",vData.sequence);
 			venue.gain = (venue.agc ? mixOut.gain : venue.gain);
 			ts = vData.timestamps[myChannel];		// Venue data also contains timestamps that allow rtt measurement
 			audience = vData.liveClients;			// The server sends us the current audience count for level setting
@@ -275,7 +276,6 @@ console.log("channel data for ",c.channel,"!!");
 			let audio = zipson.parse(vData.audio);		// Uncompress venue audio
 			let v8 = audio.mono8, v16 = audio.mono16;	// Shortcuts to the venue MSRE data blocks
 			if ((v8.length > 0) && (!venue.muted)) {	// If there is venue audio & not muted, it will need processing
-console.log("VENUE audio incoming with venue sequence ",vData.sequence);
 				let sr = 8000;				// Minimum sample rate of 8kHz
 				if ((a8.length > 0) && (c8.length > 0))	// If we have audio and group has audio remove both and set venue level
 					for (let i = 0; i < a8.length; ++i) v8[i] = (v8[i] - a8[i] -c8[i]) * venue.gain / venueSize;
