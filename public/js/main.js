@@ -622,7 +622,7 @@ function createOutputUI(obj) {						// UI for output channel
 			<img style="position:absolute;right:5%; top:9%;width:80%; padding-bottom:10%;object-fit: scale-down;visibility: hidden" src="images/live.png" id="'+name+'live" >  \
 			<img style="position:absolute;right:30%; bottom:1%;width:40%; padding-bottom:10%;" src="images/AGCOff.png" id="'+name+'AGCOff" onclick="agcButton(event)">  \
 			<img style="position:absolute;right:30%; bottom:1%;width:40%; padding-bottom:10%;" src="images/AGCOn.png" id="'+name+'AGCOn" onclick="agcButton(event)">  \
-			<div style="position:absolute;top:1%; left:3%; width:90%; height:10%;color:#AAAAAA;font-size: 4vmin" id="'+name+'Name"> \
+			<div style="position:absolute;top:1%; left:3%; width:90%; height:10%;color:#AAAAAA;font-size: 3vmin" id="'+name+'Name"> \
 				<marquee behavior="slide" direction="left">'+obj.name+'</marquee> \
 			</div> \
 		</div>'
@@ -1024,6 +1024,7 @@ function processAudio(e) {						// Main processing loop
 				audio = {mono8,mono16,mono32,stereo8,stereo16,stereo32};	
 				let a = zipson.stringify(audio);		// Compressing and uncompressing
 				audio = zipson.parse(a);			// Saves 65% of bandwidth on its own!
+console.log("Sending packet with peak ",peak);
 			}
 			let sr = performer ? PerfSampleRate : SampleRate;
 			let now = new Date().getTime();
