@@ -186,6 +186,7 @@ socketIO.on('d', function (data) {
 					let d = groupLayout[p];		// Get the delay (in samples @8kHz) for this position
 					d = (d + 18-(myDelay+1)) % 18;	// Adjust the delay relative to my position
 					d = d - 8;			// Delays are offset by 8MARK
+d=0;
 					let g = (chan.agc 		// Apply gain. If AGC use mix gain, else channel gain
 						? mixOut.gain : chan.gain);	
 					chan.gain = g;			// Channel gain level should reflect gain applied here
