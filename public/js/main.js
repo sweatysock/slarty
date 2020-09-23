@@ -130,7 +130,8 @@ socketIO.on('channel', function (data) {				// Message assigning us a channel
 console.log("GROUP default is ",myGroup);
 		if (myGroup != "noGroup") {
 			let groupNameEntry = document.getElementById('groupNameEntry');
-			groupNameEntry.innerHTML = myGroup;		// Update the group name on screen
+			if (groupNameEntry !== undefined)
+				groupNameEntry.innerHTML = myGroup;	// Update the group name on screen
 		}
 	} else {
 		trace("Server unable to assign a channel");		// Server is probaby full
@@ -449,6 +450,7 @@ var displayRefresh = 100;						// mS between UI updates. MARK change to animatio
 document.addEventListener('DOMContentLoaded', function(event){
 	let groupBtn = document.getElementById('groupBtn');
 	let groupNameEntry = document.getElementById('groupNameEntry');
+	groupNameEntry.innerHTML==myGroup;
 	groupBtn.onclick = ( (e) => {
 		groupNameEntry.innerHTML = "";
 		groupNameEntry.style.visibility = "visible";
