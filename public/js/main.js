@@ -21,8 +21,8 @@ var micBufferR = [];
 var myChannel = -1;							// The server assigns us an audio channel
 var myName = "";							// Name assigned to my audio channel
 var myGroup = "noGroup";						// Group user belongs to. Default is no group.
-//var groupLayout = [-9,3,-3,6,-6,0,-8,8,-5,5,-2,2,-7,7,-4,4,-1,1];	// Stereo delays to apply for the different positions in a group
-var groupLayout = [17,11,5,14,2,8,0,16,3,13,6,10,1,15,4,12,7,9];	// Delays to apply for the different positions in a group
+var groupLayout = [8,12,4,10,6,9,7,11,5,13,3,14,2,15,1,16,0];		// Locations in circle ordered by group position
+var pans = [0,1,-1,0.4,-0.4,0.2,-0.2,0.7,-0.7,1.4,-1.4,2,-2,4,-4,8,-8];	// pan settings for each location on circle
 var myPos = 0;
 var performer = false;							// Indicates if we are the performer
 var loopback = false;							// If we connect to a loopback server this will be true
@@ -166,12 +166,14 @@ socketIO.on('d', function (data) {
 		let R16 = new Array(PacketSize/2).fill(0);		
 		let someAudio = false;					// If no audio this saves us checking
 		let myPosition = serverLiveChannels[myChannel];		// Obtain my position in the group
-		let myDelay = groupLayout[myPosition];			// Find the delay that corresponds to my position
+myPosition=myPos;
+		let myLoc = groupLayout[myPosition];			// Find the location in the cicle that corresponds to my position
+		let shift = groupCentre - myLoc;			// Find how much everyone has to move to put me in the centre
 		data.channels.forEach(c => {				// Process all audio channel packets including channel 0
 			let ch = c.channel;				// Channel number the packet belongs to
 			let chan = channels[ch];			// Local data structure for this channel
-			if ((c.socketID != socketIO.id) && (ch != 0)) {	// Don't include my audio or channel 0 in the group mix
-//			if ((true) && (ch != 0)) {	// TEST CODE... ALWAYS HEAR MYSELF IN GROUP
+//			if ((c.socketID != socketIO.id) && (ch != 0)) {	// Don't include my audio or channel 0 in the group mix
+			if ((true) && (ch != 0)) {	// TEST CODE... ALWAYS HEAR MYSELF IN GROUP
 				chan.name = c.name;			// Update local structure's channel name
 				chan.channel = ch;			// Keep channel number too. It helps speed lookups
 				if (chan.peak < c.peak)			// set the peak for this channel's level display
@@ -182,54 +184,33 @@ socketIO.on('d', function (data) {
 					let m16 = a.mono16;
 					let b8 = chan.buffer8;		// Channel delay buffers where delayed audio is held
 					let b16 = chan.buffer16;
-					let p = serverLiveChannels[ch];	// Get channel's position in the group
-					let d = groupLayout[p];		// Get the delay (in samples @8kHz) for this position
-					d = (d + 18-(myDelay+1)) % 18;	// Adjust the delay relative to my position
-					d = d - 8;			// Delays are offset by 8MARK
-d=myPos;
-console.log(d);
 					let g = (chan.agc 		// Apply gain. If AGC use mix gain, else channel gain
 						? mixOut.gain : chan.gain);	
 					chan.gain = g;			// Channel gain level should reflect gain applied here
+					let p = serverLiveChannels[ch];	// Get channel's position in the group
+					let l = groupLayout[p];		// Get circle location for this group position
+					l = (l + shift) % maxGroupSize;	// Move the position to put me at the centre
+					let att = pans[l];		// find the panning position for this location
+console.log(att);
 					if (m8.length > 0) {		// Only mix if there is audio in channel
 						someAudio = true;	// Flag that there is actually some group audio
-						let dl = 0, dr = 0;	// Delay offsets for each channel. Default is no offset
-						if (d < 0) {		// Applying delay to right channel
-							dr = d * -1;	// Invert delay 
-//							if (b8.length != 0) 			// Get delayed samples and build stereo mix plus cancelling buffer
-//								for (let i=0;i<b8.length;i++) R8[i] += b8[i] *g;
-//							for (let i=0; i < m8.length; i++) {L8[i] += m8[i] * g; c8[i] += m8[i];}
-//							for (let i=dr; i < m8.length; i++) {R8[i] += m8[i-dr] * g;}
-//							chan.buffer8 = m8.slice(m8.length-dr,m8.length);	// store final samples to delay buffer
-							for (let i=0; i < m8.length; i++) {L8[i] += m8[i] *g; c8[i] += m8[i]; R8[i] += m8[i]*g/(dr+1);}
-						} else {		// Applying delay to left channel
-							dl = d;		
-//							if (b8.length != 0)			// Same as for right channel
-//								for (let i=0;i<b8.length;i++) L8[i] += b8[i] *g;
-//							for (let i=dl; i < m8.length; i++) {L8[i] += m8[i-dl] * g;}
-//							for (let i=0; i < m8.length; i++) {R8[i] += m8[i] * g; c8[i] += m8[i];}
-//							chan.buffer8 = m8.slice(m8.length-dl,m8.length);	
-							for (let i=0; i < m8.length; i++) {R8[i] += m8[i] *g; c8[i] += m8[i]; L8[i] += m8[i]*g/(dl+1);}
+						let al = 0, ar = 0;	// Attenuations for each channel. Default is none
+						if (att < 0) {		// Applying attenuation to right channel
+							ar = att * -1;	// Invert attenuation 
+							for (let i=0; i < m8.length; i++) {L8[i] += m8[i] *g; c8[i] += m8[i]; R8[i] += m8[i]*g/ar;}
+						} else {		// Applying attenuation to left channel
+							al = att;		
+							for (let i=0; i < m8.length; i++) {R8[i] += m8[i] *g; c8[i] += m8[i]; L8[i] += m8[i]*g/al;}
 						}			
 					}				
-					if (m16.length > 0) {
-						let dl = 0, dr = 0;
-						if (d < 0) {		// Applying delay to right channel
-							dr = d * -2;	// Invert delay and multiply by 2 for 16kHz audio
-//							if (b16.length != 0)			// Get delayed samples and build stereo mix plus cancelling buffer
-//								for (let i=0;i<b16.length;i++) R16[i] += b16[i] *g;
-//							for (let i=0; i < m16.length; i++) {L16[i] += m16[i] * g; c16[i] += m16[i];}
-//							for (let i=dr; i < m16.length; i++) {R16[i] += m16[i-dr] * g;}
-//							chan.buffer16 = m16.slice(m16.length-dr,m16.length);	// store final samples to delay buffer
-							for (let i=0; i < m16.length; i++) {L16[i] += m16[i] *g; c16[i] += m16[i]; R16[i] += m16[i]*g/(dr+1);}
-						} else {		// Applying delay to left channel
-							dl = d * 2;	// Multiply by 2 for 16kHz audio
-//							if (b16.length != 0)			// Same as for right channel
-//								for (let i=0;i<b16.length;i++) L16[i] += b16[i] *g;
-//							for (let i=dl; i < m16.length; i++) {L16[i] += m16[i-dl] * g;}
-//							for (let i=0; i < m16.length; i++) {R16[i] += m16[i] * g; c16[i] += m16[i];}
-//							chan.buffer16 = m16.slice(m16.length-dl,m16.length);	
-							for (let i=0; i < m16.length; i++) {R16[i] += m16[i] *g; c16[i] += m16[i]; L16[i] += m16[i]*g/(dl+1);}
+					if (m16.length > 0) {		// If there is high frequency content mix it too
+						let al = 0, ar = 0;
+						if (att < 0) {		// Applying attenuation to right channel
+							ar = att * -1;	// Invert attenuation
+							for (let i=0; i < m16.length; i++) {L16[i] += m16[i] *g; c16[i] += m16[i]; R16[i] += m16[i]*g/ar;}
+						} else {		// Applying attenuation to left channel
+							al = att;
+							for (let i=0; i < m16.length; i++) {R16[i] += m16[i] *g; c16[i] += m16[i]; L16[i] += m16[i]*g/al;}
 						}			
 					}
 				}
