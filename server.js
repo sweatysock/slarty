@@ -1,4 +1,3 @@
-var test;
 // Globals and constants
 //
 var zipson = require('zipson');						// For compressing and decompressing data

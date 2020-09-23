@@ -21,8 +21,10 @@ var micBufferR = [];
 var myChannel = -1;							// The server assigns us an audio channel
 var myName = "";							// Name assigned to my audio channel
 var myGroup = "noGroup";						// Group user belongs to. Default is no group.
-var groupLayout = [8,12,4,10,6,9,7,11,5,13,3,14,2,15,1,16,0];		// Locations in circle ordered by group position
-var pans = [0,1,-1,0.4,-0.4,0.2,-0.2,0.7,-0.7,1.4,-1.4,2,-2,4,-4,8,-8];	// pan settings for each location on circle
+var groupLayout = [8,12,4,10,6,9,7,11,5,13,3,14,2,15,1,16,0,4,10,6,9];	// Locations in circle ordered by group position. Last 4 get overlaid on others
+var pans = [-9,-5,-3,-2.4,-2,-1.7,-1.4,-1.2,1,1.2,1.4,1.7,2,2.4,3,5,7];	// pan settings for each location on circle
+var groupCentre = 8;							// In the circle position 8 is right in front of us
+var maxGroupSize = 17;							// Up to 17 can be positioned in a circle. More have to overlap.
 var myPos = 0;
 var performer = false;							// Indicates if we are the performer
 var loopback = false;							// If we connect to a loopback server this will be true
@@ -166,7 +168,7 @@ socketIO.on('d', function (data) {
 		let R16 = new Array(PacketSize/2).fill(0);		
 		let someAudio = false;					// If no audio this saves us checking
 		let myPosition = serverLiveChannels[myChannel];		// Obtain my position in the group
-myPosition=myPos;
+//myPosition=myPos;
 		let myLoc = groupLayout[myPosition];			// Find the location in the cicle that corresponds to my position
 		let shift = groupCentre - myLoc;			// Find how much everyone has to move to put me in the centre
 		data.channels.forEach(c => {				// Process all audio channel packets including channel 0
@@ -188,10 +190,11 @@ myPosition=myPos;
 						? mixOut.gain : chan.gain);	
 					chan.gain = g;			// Channel gain level should reflect gain applied here
 					let p = serverLiveChannels[ch];	// Get channel's position in the group
+//p=myPos;
 					let l = groupLayout[p];		// Get circle location for this group position
 					l = (l + shift) % maxGroupSize;	// Move the position to put me at the centre
 					let att = pans[l];		// find the panning position for this location
-console.log(att);
+//console.log(myPosition, myLoc, shift, p, l, att);
 					if (m8.length > 0) {		// Only mix if there is audio in channel
 						someAudio = true;	// Flag that there is actually some group audio
 						let al = 0, ar = 0;	// Attenuations for each channel. Default is none
