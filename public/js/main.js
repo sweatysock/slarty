@@ -126,10 +126,11 @@ socketIO.on('channel', function (data) {				// Message assigning us a channel
 			micFilter2.frequency.value = 30;
 		} else							// if not in loopback mode
 			loadVenueReverb(data.reverb);			// load the venue reverb file to give ambience
-		group = data.defGroup;					// The server will tell us our default group
-		if (group != "noGroup") {
+		myGroup = data.defGroup;				// The server will tell us our default group
+console.log("GROUP default is ",myGroup);
+		if (myGroup != "noGroup") {
 			let groupNameEntry = document.getElementById('groupNameEntry');
-			groupNameEntry.innerHTML = group;			// Update the group name on screen
+			groupNameEntry.innerHTML = myGroup;		// Update the group name on screen
 		}
 	} else {
 		trace("Server unable to assign a channel");		// Server is probaby full
