@@ -127,10 +127,9 @@ socketIO.on('channel', function (data) {				// Message assigning us a channel
 		} else							// if not in loopback mode
 			loadVenueReverb(data.reverb);			// load the venue reverb file to give ambience
 		myGroup = data.defGroup;				// The server will tell us our default group
-console.log("GROUP default is ",myGroup);
 		if (myGroup != "noGroup") {
 			let groupNameEntry = document.getElementById('groupNameEntry');
-			if (groupNameEntry !== undefined)
+			if (groupNameEntry != null)
 				groupNameEntry.innerHTML = myGroup;	// Update the group name on screen
 		}
 	} else {
@@ -969,13 +968,12 @@ function processAudio(e) {						// Main processing loop
 		let micAudioR = [];					
 		let peak = maxValue(inDataL);				// Get peak of raw mic audio (using left channel for now)
 		if (!pauseTracing) levelClassifier(peak);		// Classify audio incoming for analysis
-		if ((peak > micIn.threshold) &&				// if audio is above dynamic threshold
+		if ((micIn.gate > 0)  && (peak > noiseThreshold/2))	// If noise gate is open it should stay open for less sound
+			micIn.gate = gateDelay;
+		else if ((peak > micIn.threshold) &&			// if audio is above dynamic threshold
 			(peak > noiseThreshold)) {			// and noise threshold, open gate
 console.log("ABOVE THRESHOLD");
-			if (micIn.gate == 0)
-				micIn.gate = gateDelay + 1;		// This signals the gate has just been reopened
-			else						// which means fade up the sample (not done anymore)
-				micIn.gate = gateDelay;
+			micIn.gate = gateDelay;			
 		} 
 else console.log("below");
 		if (performer) micIn.gate = 1				// Performer's mic is always open
