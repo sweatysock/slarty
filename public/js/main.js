@@ -937,7 +937,7 @@ trace2("Noise threshold: ",noiseThreshold);
 }
 
 var thresholdBuffer = new Array(20).fill(0);				// Buffer dynamic thresholds here for delayed mic muting
-var gateDelay = 15;							// Amount of samples (time) the gate stays open
+var gateDelay = 5;							// Amount of samples (time) the gate stays open
 
 function processAudio(e) {						// Main processing loop
 	// There are two activities here (if not performing an echo test that is): 
