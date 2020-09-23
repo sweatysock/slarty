@@ -168,14 +168,14 @@ socketIO.on('d', function (data) {
 		let R16 = new Array(PacketSize/2).fill(0);		
 		let someAudio = false;					// If no audio this saves us checking
 		let myPosition = serverLiveChannels[myChannel];		// Obtain my position in the group
-//myPosition=myPos;
+myPosition=myPos;
 		let myLoc = groupLayout[myPosition];			// Find the location in the cicle that corresponds to my position
 		let shift = groupCentre - myLoc;			// Find how much everyone has to move to put me in the centre
 		data.channels.forEach(c => {				// Process all audio channel packets including channel 0
 			let ch = c.channel;				// Channel number the packet belongs to
 			let chan = channels[ch];			// Local data structure for this channel
-//			if ((c.socketID != socketIO.id) && (ch != 0)) {	// Don't include my audio or channel 0 in the group mix
-			if ((true) && (ch != 0)) {	// TEST CODE... ALWAYS HEAR MYSELF IN GROUP
+			if ((c.socketID != socketIO.id) && (ch != 0)) {	// Don't include my audio or channel 0 in the group mix
+//			if ((true) && (ch != 0)) {	// TEST CODE... ALWAYS HEAR MYSELF IN GROUP
 				chan.name = c.name;			// Update local structure's channel name
 				chan.channel = ch;			// Keep channel number too. It helps speed lookups
 				if (chan.peak < c.peak)			// set the peak for this channel's level display
@@ -190,11 +190,10 @@ socketIO.on('d', function (data) {
 						? mixOut.gain : chan.gain);	
 					chan.gain = g;			// Channel gain level should reflect gain applied here
 					let p = serverLiveChannels[ch];	// Get channel's position in the group
-//p=myPos;
 					let l = groupLayout[p];		// Get circle location for this group position
 					l = (l + shift) % maxGroupSize;	// Move the position to put me at the centre
 					let att = pans[l];		// find the panning position for this location
-//console.log(myPosition, myLoc, shift, p, l, att);
+console.log(myPosition, myLoc, shift, p, l, att);
 					if (m8.length > 0) {		// Only mix if there is audio in channel
 						someAudio = true;	// Flag that there is actually some group audio
 						let al = 0, ar = 0;	// Attenuations for each channel. Default is none
