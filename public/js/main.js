@@ -450,9 +450,9 @@ var displayRefresh = 100;						// mS between UI updates. MARK change to animatio
 document.addEventListener('DOMContentLoaded', function(event){
 	let groupBtn = document.getElementById('groupBtn');
 	let groupNameEntry = document.getElementById('groupNameEntry');
-	groupNameEntry.innerHTML==myGroup;
+	groupNameEntry.innerHTML=myGroup;
 	groupBtn.onclick = ( (e) => {
-		groupNameEntry.innerHTML = "";
+		groupNameEntry.innerHTML = myGroup;
 		groupNameEntry.style.visibility = "visible";
 		groupNameEntry.style.outline = "none";
 		groupNameEntry.setAttribute("contenteditable", true);
