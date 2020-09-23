@@ -450,7 +450,6 @@ var displayRefresh = 100;						// mS between UI updates. MARK change to animatio
 document.addEventListener('DOMContentLoaded', function(event){
 	let groupBtn = document.getElementById('groupBtn');
 	let groupNameEntry = document.getElementById('groupNameEntry');
-	groupNameEntry.innerHTML=myGroup;
 	groupBtn.onclick = ( (e) => {
 		groupNameEntry.innerHTML = myGroup;
 		groupNameEntry.style.visibility = "visible";
@@ -467,6 +466,7 @@ document.addEventListener('DOMContentLoaded', function(event){
 				groupNameEntry.setAttribute("contenteditable", false);
 				myGroup = groupNameEntry.innerHTML;
 			}
+			groupNameEntry.style.visibility = "hidden";
 			e.preventDefault();
 		}
 	});
@@ -971,11 +971,13 @@ function processAudio(e) {						// Main processing loop
 		if (!pauseTracing) levelClassifier(peak);		// Classify audio incoming for analysis
 		if ((peak > micIn.threshold) &&				// if audio is above dynamic threshold
 			(peak > noiseThreshold)) {			// and noise threshold, open gate
+console.log("ABOVE THRESHOLD");
 			if (micIn.gate == 0)
 				micIn.gate = gateDelay + 1;		// This signals the gate has just been reopened
 			else						// which means fade up the sample (not done anymore)
 				micIn.gate = gateDelay;
 		} 
+else console.log("below");
 		if (performer) micIn.gate = 1				// Performer's mic is always open
 		if (micIn.gate > 0) {					// If gate is open prepare the audio for sending
 			micAudioL = inDataL;
