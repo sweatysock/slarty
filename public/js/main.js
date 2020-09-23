@@ -127,7 +127,7 @@ socketIO.on('channel', function (data) {				// Message assigning us a channel
 		} else							// if not in loopback mode
 			loadVenueReverb(data.reverb);			// load the venue reverb file to give ambience
 		group = data.defGroup;					// The server will tell us our default group
-		if group != "noGroup" {
+		if (group != "noGroup") {
 			let groupNameEntry = document.getElementById('groupNameEntry');
 			groupNameEntry.innerHTML = group;			// Update the group name on screen
 		}
