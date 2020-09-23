@@ -50,6 +50,9 @@ var perf = {								// Performer data structure
 	inCount	: 0,							// For monitoring
 }
 var groups = [];							// Client group member lists indexed by group name
+var defGroup = process.env.group;	 				// Get default group name from heroku config variable, if present
+if (defGroup == undefined)						// This name is used to identify us upstream ony
+	defGroup ="noGroup";						// If this is empty our users will not belong to any default group
 var packetBuf = [];							// Buffer of packets sent upstream, subtracted from venue mix later
 var venueSequence = 0;							// Sequence counter for venue sound going downstream
 var upSequence = 0;							// Sequence counter for sending upstream
@@ -261,7 +264,7 @@ io.sockets.on('connection', function (socket) {
 				}
 				if (!c.recording) {			// If recording the channel remains unchanged
 					let g = groups[c.group];	// Remove this channel from its group
-					if (g != undefined) {		// if it was in one... a quickly refreshed client won't be
+					if (g != undefined) {		// if it was in one... (a quickly refreshed client won't be)
 						let pos = g.liveChannels[ch];	// Get member position &
 						g.members[pos] = null;		// leave the position vacant
 						g.memberCount--;		// One less member of the group
@@ -299,6 +302,7 @@ io.sockets.on('connection', function (socket) {
 			channel:channel, 
 			reverb:reverbFile,				// Also instruct the client to load the venue reverb 
 			loopback:loopback,				// Let the client know if we are a loopback server
+			defGroup:defGroup,				// Tell the client what their default group should be
 		});		
 		if (channel != -1) {					// Channel has been successfully assigned
 			channels[channel].packets = [];			// Reset channel values

@@ -126,6 +126,11 @@ socketIO.on('channel', function (data) {				// Message assigning us a channel
 			micFilter2.frequency.value = 30;
 		} else							// if not in loopback mode
 			loadVenueReverb(data.reverb);			// load the venue reverb file to give ambience
+		group = data.defGroup;					// The server will tell us our default group
+		if group != "noGroup" {
+			let groupNameEntry = document.getElementById('groupNameEntry');
+			groupNameEntry.innerHTML = group;			// Update the group name on screen
+		}
 	} else {
 		trace("Server unable to assign a channel");		// Server is probaby full
 		trace("Try a different server");			// Can't do anything more
@@ -168,7 +173,6 @@ socketIO.on('d', function (data) {
 		let R16 = new Array(PacketSize/2).fill(0);		
 		let someAudio = false;					// If no audio this saves us checking
 		let myPosition = serverLiveChannels[myChannel];		// Obtain my position in the group
-//myPosition=myPos;
 		let myLoc = groupLayout[myPosition];			// Find the location in the cicle that corresponds to my position
 		let shift = groupCentre - myLoc;			// Find how much everyone has to move to put me in the centre
 		data.channels.forEach(c => {				// Process all audio channel packets including channel 0
@@ -193,7 +197,6 @@ socketIO.on('d', function (data) {
 					let l = groupLayout[p];		// Get circle location for this group position
 					l = (l + shift) % maxGroupSize;	// Move the position to put me at the centre
 					let att = pans[l];		// find the panning position for this location
-//console.log(myPosition, myLoc, shift, p, l, att);
 					if (m8.length > 0) {		// Only mix if there is audio in channel
 						someAudio = true;	// Flag that there is actually some group audio
 						let al = 0, ar = 0;	// Attenuations for each channel. Default is none
