@@ -396,16 +396,22 @@ socketIO.on('d', function (data) {
 		mixOut.gain= obj.finalGain;				// Store gain for next loop
 		obj.peak += venue.peak;					// Display the venue level mixed with the main output
 		if (obj.peak > mixOut.peak) mixOut.peak = obj.peak;	// Note peak for display purposes
+		if (spkrBufferL.length < spkrBuffTrough) 		// Monitoring purposes
+			spkrBuffTrough = spkrBufferL.length;
 		spkrBufferL.push(...mixL);				// put left mix in the left speaker buffer
 		if (isStereo)
 			spkrBufferR.push(...mixR);			// and the right in the right if stereo
 		else
 			spkrBufferR.push(...mixL);			// otherwise use the left
 		if (spkrBufferL.length > maxBuffSize) {			// Clip buffers if too full
-			spkrBufferL.splice(0, (spkrBufferL.length-maxBuffSize)); 	
-			spkrBufferR.splice(0, (spkrBufferR.length-maxBuffSize)); 	
 			overflows++;					// Note for monitoring purposes
+			let excess = spkrBufferL.length-maxBuffSize;
+			bytesOver += excess;
+			spkrBufferL.splice(0, (excess)); 	
+			spkrBufferR.splice(0, (excess)); 	
 		}
+		if (spkrBufferL.length > spkrBuffPeak) 			// Monitoring purposes
+			spkrBuffPeak = spkrBufferL.length;
 		if (v.length > 0)					// Add the venue audio to its own buffer
 			venueBuffer.push(...v);				// Add any venue audio to the venue buffer
 		if (venueBuffer.length > maxBuffSize) 			// Clip buffer if too full
@@ -984,6 +990,7 @@ function processAudio(e) {						// Main processing loop
 			if (performer) {				// If we believe we are the performer 
 				if (!micIn.muted) {			// & not muted prepare our audio for HQ stereo 
 					let a = prepPerfAudio(audioL, audioR);	
+//audioBytesOut += audioL.mono8.length;
 					perf = zipson.stringify(a);	// and compress audio fully
 				} else 					// send silent perf audio
 					perf = zipson.stringify({mono8:[],mono16:[],mono32:[],stereo8:[],stereo16:[],stereo32:[]});
@@ -1008,6 +1015,7 @@ function processAudio(e) {						// Main processing loop
 					}
 				}
 				audio = {mono8,mono16,mono32,stereo8,stereo16,stereo32};	
+//audioBytesOut += audioL.mono8.length;
 				let a = zipson.stringify(audio);		// Compressing and uncompressing
 				audio = zipson.parse(a);			// Saves 65% of bandwidth on its own!
 			}
@@ -1044,12 +1052,14 @@ function processAudio(e) {						// Main processing loop
 		outAudioL = spkrBufferL.splice(0,ChunkSize);		// Get same amount of audio as came in
 		outAudioR = spkrBufferR.splice(0,ChunkSize);		// for each channel
 	} else {							// Not enough audio.
+		shortages++;						// For stats and monitoring
+		let shortfall = ChunkSize-spkrBufferL.length;
+		bytesShort += shortfall;
 		outAudioL = spkrBufferL.splice(0,spkrBufferL.length);	// Take all that remains and complete with 0s
 		outAudioR = spkrBufferR.splice(0,spkrBufferR.length);	// Take all that remains and complete with 0s
-		let zeros = new Array(ChunkSize-spkrBufferL.length).fill(0);
+		let zeros = new Array(shortfall).fill(0);
 		outAudioL.push(...zeros);
 		outAudioR.push(...zeros);
-		shortages++;						// For stats and monitoring
 	}
 	for (let i in outDataL) { 
 		outDataL[i] = outAudioL[i];				// Copy left audio to outputL
@@ -1328,8 +1338,8 @@ var  downCachePerfR = [0.0,0.0];					// can be stereo
 var  upCachePerfM = [0.0,0.0];						// cache for performer audio to mix and send to speaker
 var  upCachePerfS = [0.0,0.0];						// can be stereo
 function reSample( buffer, originalSampleRate, resampledRate, cache, resampledBufferLength) {
-	if (resampledBufferLength == undefined)				// If the output packet size isn't set we calculate it
-		resampledBufferLength = Math.floor( buffer.length * resampledRate / originalSampleRate );
+//	if (resampledBufferLength == undefined)				// If the output packet size isn't set we calculate it
+//		resampledBufferLength = Math.floor( buffer.length * resampledRate / originalSampleRate );
 	let resampleRatio = buffer.length / resampledBufferLength;
 	let outputData = new Array(resampledBufferLength).fill(0);
 	for ( let i = 0; i < resampledBufferLength - 1; i++ ) {
@@ -1575,18 +1585,22 @@ var bytesSent = 0;
 var bytesRcvd = 0;
 var overflows = 0;
 var shortages = 0;
+var bytesOver = 0;
+var bytesShort = 0;
 var packetSequence = 0;							// Tracing packet ordering
 var tracecount = 0;
 var sendShortages = 0;
+var spkrBuffPeak = 0;
+var spkrBuffTrough = maxBuffSize;
 function printReport() {
 	enterState( UIState );						// Measure time spent updating UI even for reporting!
 	let netState = ((((rtt1-rtt5)/rtt5)>0.1) && (rtt5>400)) ? "UNSTABLE":"stable";
 	if (!pauseTracing) {
-		trace("Idle=", idleState.total, " data in=", dataInState.total, " audio in/out=", audioInOutState.total," UI work=",UIState.total);
-		trace("Sent=",packetsOut," Heard=",packetsIn," overflows=",overflows," shortages=",shortages," RTT=",rtt.toFixed(1)," RTT1=",rtt1.toFixed(1)," RTT5=",rtt5.toFixed(1)," State=",netState," audience=",audience," bytes Out=",bytesSent.toFixed(1)," bytes In=",bytesRcvd.toFixed(1));
-		trace(" micIn.peak:",micIn.peak.toFixed(1)," mixOut.peak:",mixOut.peak.toFixed(1)," speaker buff:",spkrBufferL.length," Max Buff:",maxBuffSize);
+//		trace("Idle=", idleState.total, " data in=", dataInState.total, " audio in/out=", audioInOutState.total," UI work=",UIState.total);
+		trace(packetsOut,"/",packetsIn," over:",overflows,"(",bytesOver,") short:",shortages,"(",bytesShort,") RTT=",rtt.toFixed(1)," ",rtt1.toFixed(1)," ",rtt5.toFixed(1)," ",netState," a:",audience," sent:",bytesSent.toFixed(1)," rcvd:",bytesRcvd.toFixed(1));
+		trace(" speaker buff:",spkrBufferL.length,"(",spkrBuffTrough," - ",spkrBuffPeak,")");
 //		trace("Levels of output: ",levelCategories);
-		trace2("bytes Out=",bytesSent.toFixed(1)," bytes In=",bytesRcvd.toFixed(1));
+		trace2("sent:",bytesSent.toFixed(1)," rcvd:",bytesRcvd.toFixed(1));
 	}
 //	setNoiseThreshold();						// Set mic noise threshold based on level categories
 	if (performer == true) {
@@ -1620,17 +1634,21 @@ function printReport() {
 	if ((packetsIn < lowerLimit) || (packetsIn > upperLimit)) downStatus = "Orange";
 	if (packetsIn < lowerLimit/3) downStatus = "Red";
 	setStatusLED("DownStatus",downStatus);
-	if ((overflows > 2) || (shortages > 2)) 
-		if (maxBuffSize < 20000) maxBuffSize += 100;		// Increase speaker buffer size if we are overflowing or short
-	if (maxBuffSize > 6000) maxBuffSize -= 20;			// Steadily drop buffer back to size to compensate
+//	if ((overflows > 2) || (shortages > 2)) 
+//		if (maxBuffSize < 20000) maxBuffSize += 100;		// Increase speaker buffer size if we are overflowing or short
+//	if (maxBuffSize > 6000) maxBuffSize -= 20;			// Steadily drop buffer back to size to compensate
 	packetsIn = 0;
 	packetsOut = 0;
 	bytesSent = 0;
 	bytesRcvd = 0;
 	overflows = 0;
 	shortages = 0;
+	bytesOver = 0;
+	bytesShort = 0;
 	rtt = 0;
 	tracecount = 1;
+	spkrBuffPeak = 0;
+	spkrBuffTrough = maxBuffSize;
 	enterState( idleState );					// Back to Idling
 }
 
