@@ -450,7 +450,10 @@ document.addEventListener('DOMContentLoaded', function(event){
 	let groupBtn = document.getElementById('groupBtn');
 	let groupNameEntry = document.getElementById('groupNameEntry');
 	groupBtn.onclick = ( (e) => {
-		groupNameEntry.innerHTML = myGroup;
+		if (myGroup == "noGroup")
+			groupNameEntry.innerHTML = "";
+		else
+			groupNameEntry.innerHTML = myGroup;
 		groupNameEntry.style.visibility = "visible";
 		groupNameEntry.style.outline = "none";
 		groupNameEntry.setAttribute("contenteditable", true);
@@ -469,27 +472,14 @@ document.addEventListener('DOMContentLoaded', function(event){
 			e.preventDefault();
 		}
 	});
-	let posBtn = document.getElementById('posBtn');
-	let posNameEntry = document.getElementById('posEntry');
-	posBtn.onclick = ( (e) => {
-		posEntry.innerHTML = "0";
-		posEntry.style.visibility = "visible";
-		posEntry.style.outline = "none";
-		posEntry.setAttribute("contenteditable", true);
-		posEntry.focus();
-	});
-	posEntry.addEventListener("keydown", (e) => {
-		if (e.which === 13) {
-			if (posEntry.innerHTML=="") {
-//				posEntry.setAttribute("contenteditable", false);
-				myPos = 0;
-//			} else if (posEntry.innerHTML.match("^[0-9.]*$")) {
-			} else {
-//				posEntry.setAttribute("contenteditable", false);
-				myPos = parseFloat(posEntry.innerHTML);
-			}
-			e.preventDefault();
-		}
+	let helpBtn = document.getElementById('helpBtn');
+	let helpp = document.getElementById('helpp');
+	helpBtn.onclick = ( (e) => {
+console.log(helpp.style.visibility );
+		if (helpp.style.visibility == "hidden")
+			helpp.style.visibility = "visible";
+		else
+			helpp.style.visibility = "hidden";
 	});
 });
 

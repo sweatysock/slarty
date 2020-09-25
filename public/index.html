@@ -5,7 +5,8 @@
 	<meta charset='utf-8'>
 	<title>Audence</title>
 	<script type="text/javascript" src="./js/socket.io.js"></script>
-	<script type="text/javascript" src="./js/compressed.js"></script>
+	<!--	<script type="text/javascript" src="./js/compressed.js"></script> -->
+	<script type="text/javascript" src="./js/main.js"></script>
 	<script src="https://cdn.jsdelivr.net/npm/zipson@latest/dist/zipson.min.js"></script>
 
 	<link rel="stylesheet" href="./css/main.css">
@@ -48,57 +49,81 @@
 			position: absolute;
 		}
 		div {
-			  -webkit-user-elec: noe;/* Safari */
+			  -webkit-user-elec: none;/* Safari */
 			    -ms-user-select: none; /* IE 10+ and Edge */
 			      user-select: none; /* Standard syntax */
+		}
+		/* Hide scrollbar for Chrome, Safari and Opera */
+		.sb::-webkit-scrollbar {
+			  display: none;
+		}
+
+		/* Hide scrollbar for IE, Edge and Firefox */
+		.sb {
+			  -ms-overflow-style: none;  /* IE and Edge *
+							  scrlbar-wdth: none;  /* Firefox */
+		}
+
+		.bgimg {
+			background-image: url("http://audence.com/wp-content/uploads/2020/08/people-crowd-concert-691777.jpg");
+			height: 100%;
+			width: 100%;
+			top: 0%;
+			bottom: 0%;
+			position: fixed;
+			opacity: 0.65;
+			background-position: bottom center;
+			background-repeat: no-repeat;
+			background-size: cover;
 		}
 	</style>
 </head>
 
 
 <body style="background-color:#000000; font-family: Impact, Charcoal, sans-serif;font-size: 150%;">
-	<div id="main" style="position:fixed; top:2%; left:1%; width:98%; height:96%; background-color: #262626;color: #ffffff">
-		<div id="splash" style="position:absolute; top:10%; left:10%;width:80%;height: 80%;color: #cccccc;font-size:2vmin; font-family: Arial;overflow:auto; visibility: visible">
+	<div class="bgimg"></div>
+	<div id="main" style="position:fixed; top:0%; left:0%; width:98%; height:96%; background-color: #26262600;color: #ffffff">
+		<div id="helpp" style="position:absolute; top:10%; left:10%;width:80%;height: 80%;color: #ffffff;font-size:2vmin; font-family: Arial;overflow:auto; visibility: hidden">
 			<h1>Welcome to audence</h1>
 			<h2>A live platform for performers and their audience</h2>
 			<p>
-			With audence, artists perform live and hear their global audience cheer as if in a real venue.
+			With audence, artists perform live and hear their global audience respond as if in a real venue.
 			<p>
 			For great performances, high quality sound is everything. We have built audence to deliver you the highest quality real time audio possible. 
 			Put on good headphones or connect good speakers and you will hear what we mean. 
 			<p>
 			audence works best with Firefox, and best of all on a PC or Mac. A strong internet connection will also really help.
 			<p>
-			Three green lights in the bottom right corner indicate you have a great connection. Congratulations!. 
+			Three green lights in the bottom right corner indicate you have a great connection. 
 			<p>
 			If any of the lights are orange for a while the sound may be garbled. Red means there are serious issues and there may be
 			no sound. 
-			<p>
 			If the top or bottom light stays orange your device does not have enough power to run the software properly. If the top two lights are orange 
 			there are problems with your network. Refreshing the page or switching between Firefox and Chrome can sometimes resolve these issues. 
 			<h2>You are part of a live audience</h2>
 			Your mic is live so when you clap or shout the performer will hear you. Give them a big hand! Artist know the audience is 
 			<b>the essential energy</b> in any performance. Get comfortable, grab a nice drink, sit back and enjoy the show.
 			<p>
-			If someone gets a little too "enthusiastic", don't worry, venue security will take care of things.
+			Of course in some concerts there are times when the audience needs to be quiet. Don't worry there, if you make an accidental noise we will stop it for you, and
+			if someone gets a little too "enthusiastic" venue security will get on the case.
 			<h2>Got friends in the audience?</h2>
 			If you are in the same zone as your friends (your ticket indicates your zone) click on the lock icon and type in a keyword shared with your friends. You will then be 
 			able to talk to them during the concert.
 		</div>
 		<div id="venueViewer" style="position:absolute; top:10%; left:10%;width:20%; ">
 		</div>
-		<div id="mixerViewer" style="position:absolute; bottom:10%; right:10%; width:80%; height:80%; background-color: #111111; visibility: hidden;overflow: hidden;">
-			<div id="mixerRack" style="position:absolute; bottom:1%; left:1%; height:98%; width:98%; background-color:#000000; overflow-x: scroll; overflow-y: hidden;white-space: nowrap;">
+		<div id="mixerViewer" class="sb" style="position:absolute; bottom:10%; right:10%; width:80%; height:80%; background-color: #11111100; visibility: hidden;overflow: hidden;">
+			<div id="mixerRack" class="sb" style="position:absolute; bottom:1%; left:1%; height:98%; width:98%; background-color:#00000000; overflow-x: hidden; overflow-y: hidden;white-space: nowrap;">
 			</div>
 		</div>
 		<div style="position:absolute; bottom:0%; right:0%; width:100%; height:100%;visibility: hidden">
-			<div id="monitor" style="position:absolute; bottom:10%; right:5%; width:90%; height:80%; background-color: #222222; visibility: hidden">
+			<div id="monitor" style="position:absolute; bottom:10%; right:5%; width:90%; height:80%; background-color: #00000099; visibility: hidden">
 				<div id="Trace" style="position:absolute; overflow: auto; top:2%; left:2%; width:96%; height:96%; color: #FFFFFF; font-family: Courier New, Courier, monospace;">
 				</div>
 			</div>
 		</div>
 		<div style="position:absolute; bottom:5%; right:5%; width:50%; height:90%;visibility: hidden">
-			<div id="monitor2" style="position:absolute; bottom:0%; right:0%; width:100%; height:100%; background-color: #222222; visibility: hidden">
+			<div id="monitor2" style="position:absolute; bottom:0%; right:0%; width:100%; height:100%; background-color: #00000099; visibility: hidden">
 				<div id="Trace2" style="position:absolute; overflow: auto; top:2%; left:2%; width:96%; height:96%; color: #FFFFFF; font-family: Courier New, Courier, monospace;">
 				</div>
 			</div>
@@ -132,18 +157,16 @@
 		<div id="onair" style="position:absolute; top:1%; left:1%;width:98%; height:10%; visibility: hidden">
 				<img style="position:absolute; bottom:0%; right:0%; width:100%; height:100%;object-fit: scale-down;" src="images/onair.png"> 
 		</div>
-		<div style="position:fixed; width:10%; height:10%;">
-			<a href="https://audence.com"><img style="position:absolute; bottom:0%; right:0%; width:100%; height:100%;object-fit: scale-down;" src="images/thumb.png"></a>
+		<div style="position:fixed; top:0%; left:2%; width:10%; height:10%;">
+			<a href="https://audence.com"><img style="position:absolute; bottom:0%; right:0%; width:100%; height:100%;object-fit: scale-down;" src="images/thumbTransp.png"></a>
 		</div>
-		<div style="position:fixed; top:87%; left:2%;width:50%; height:10%;">
-			<img id="groupBtn" style="position:absolute; bottom:0%; left:0%; width:18%; height:100%;object-fit: scale-down;" src="images/lock.png">
-			<div id="groupNameEntry" contenteditable="true"; style="position:absolute; bottom:0%;left:20%;width:85%; color: #6AFF35;font-family: Courier; font-size: 6vmin; visibility: hidden">
+		<div style="position:fixed; bottom:4%; left:2.5%;width:50%; height:10%;">
+			<img id="groupBtn" style="position:absolute; bottom:0%; left:0%; width:18%; height:100%;object-fit: scale-down;cursor: pointer;" src="images/lockTransp.png">
+			<div id="groupNameEntry" contenteditable="true"; style="position:absolute; bottom:0%;left:20%;width:80%; color: #6AFF35;font-family: Courier; font-size: 6vmin; visibility: hidden">
 			</div>
 		</div>
-		<div style="position:fixed; top:7%; left:20%;width:50%; height:10%; visibility:hidden;">
-			<img id="posBtn" style="position:absolute; bottom:0%; left:0%; width:18%; height:100%;object-fit: scale-down;" src="images/lock.png">
-			<div id="posEntry" contenteditable="true"; style="position:absolute; bottom:0%;left:20%;width:85%; color: #6AFF35;font-family: Courier; font-size: 6vmin; visibility: hidden">
-			</div>
+		<div style="position:fixed; bottom:16%; left:2%;width:10%; height:10%;">
+			<img id="helpBtn" style="position:absolute; bottom:0%; right:0%; width:100%; height:100%;object-fit: scale-down;cursor: pointer;" src="images/help.png">
 		</div>
 	</div>
 </body>
