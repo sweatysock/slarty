@@ -307,6 +307,7 @@ socketIO.on('d', function (data) {
 			let m8 = audio.mono8;
 			let m16 = audio.mono16;
 			let m32 = audio.mono32;
+if (m8.length == 0) trace("EMPTY perf audio");
 loopback=true;
 			if ((!performer) || (loopback)) {		// If we are not the performer or we are in loopback play perf audio
 				let mono = [];				// Reconstruct performer mono audio into this array
