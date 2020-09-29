@@ -520,9 +520,12 @@ function enoughAudio() {						// Is there enough audio to build a mix before tim
 function generateMix () { 
 	// 1. Get perf packet if performing and enough perf audio buffered to start streaming
 	let p = {live:perf.live, chan:perf.chan, packet:null};		// Send downstream by default a perf object with no packet
-	if ((perf.streaming) && (perf.packets.length > 0)) {		// Pull a performer packet from its queue if any
-		p.packet = perf.packets.shift();			// add to copy of perf to replace the null packet
-		p.packet.timestamp = channels[perf.chan].timestamp;	// Update the timestamp to the latest one recieved from the perf client
+	if (perf.streaming) 						// If the performer is streaming however...
+		if (perf.packets.length > 0) {				// pull a performer packet from its queue, if any, and
+			p.packet = perf.packets.shift();		// add to performer data replacing the null packet
+			p.packet.timestamp = 
+				channels[perf.chan].timestamp;		// Update the timestamp to the latest one recieved from the perf client
+		} else perfShort++;					// Note performer shortages
 	}
 	// 1.5 Get venue packet if it is streaming
 	let venuePacket = null;						// The channel 0 (venue) audio packet
@@ -723,6 +726,7 @@ var upstreamIn = 0;
 var upstreamOut = 0;
 var overflows = 0;
 var shortages = 0;
+var perfShort = 0;
 var rtt = 0;
 var forcedMixes = 0;
 var packetClassifier = [];
@@ -736,9 +740,6 @@ var counterDivider = 0;							// Used to execute operation 10x slower than the r
 function printReport() {
 	tracecount = 1;
 	enterState( idleState );					// Update timers in case we are inactive
-//	console.log(myServerName," Activity Report");
-//	console.log("Idle = ", idleState.total, " upstream = ", upstreamState.total, " downstream = ", downstreamState.total, " genMix = ", genMixState.total);
-//	console.log("Clients = ",connectedClients,"  Upstream In =",upstreamIn,"Upstream Out = ",upstreamOut,"Upstream Shortages = ",venue.shortages," Upstream overflows = ",venue.overflows,"In = ",packetsIn," Out = ",packetsOut," overflows = ",overflows," shortages = ",shortages," forced mixes = ",forcedMixes," mixMax = ",mixMax," rtt = ",rtt);
 	let cbs = [];
 	let cic = [];
 	for (let c in channels) {
@@ -747,8 +748,6 @@ function printReport() {
 		cic.push(channels[c].inCount);
 		channels[c].inCount = 0;
 	}
-//	console.log("Client buffer lengths: ",cbs);
-//	console.log(packetClassifier);
 	io.sockets.in('supers').emit('s',{
 		"server":	myServerName,
 		"idle":		idleState.total,
@@ -764,6 +763,7 @@ function printReport() {
 		"upOver":	venue.overflows,
 		"overflows":	overflows,
 		"shortages":	shortages,
+		"perfShort":	perfShort,
 		"forcedMixes":	forcedMixes,
 		"cbs":		cbs,
 		"cic":		cic,
@@ -786,6 +786,7 @@ function printReport() {
 	upstreamOut = 0;
 	overflows = 0;
 	shortages = 0;
+	perfShort = 0;
 	rtt = 0;
 	forcedMixes = 0;
 	mixMax = 99;
