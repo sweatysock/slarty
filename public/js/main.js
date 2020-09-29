@@ -90,6 +90,11 @@ var audience = 1;							// Number of clients in this venue as reported to us by 
 var rtt = 0;								// Round Trip Time used to adjust sample rate to avoid logjamming
 var rtt1 = 0;								// 1 second average rtt
 var rtt5 = 0;								// 5 second average rtt. These need to be similar for stability
+var smooth = [];							// Pre-populated array of values for smooth overflow/shortage transations
+for (let i=0; i<400; i++)
+	smooth[i] = Math.cos(i/400*Math.PI)/2 + 0.5;
+console.log(smooth);
+		
 
 function processCommands(newCommands) {					// Apply commands sent from upstream servers
 	if (newCommands.mute != undefined) serverMuted = newCommands.mute; else serverMuted = false;
@@ -302,6 +307,7 @@ socketIO.on('d', function (data) {
 			let m8 = audio.mono8;
 			let m16 = audio.mono16;
 			let m32 = audio.mono32;
+loopback=true;
 			if ((!performer) || (loopback)) {		// If we are not the performer or we are in loopback play perf audio
 				let mono = [];				// Reconstruct performer mono audio into this array
 				let stereo = [];			// Reconstruct performer stereo difference signal into here
@@ -403,12 +409,19 @@ socketIO.on('d', function (data) {
 			spkrBufferR.push(...mixR);			// and the right in the right if stereo
 		else
 			spkrBufferR.push(...mixL);			// otherwise use the left
-		if (spkrBufferL.length > maxBuffSize) {			// Clip buffers if too full
-			overflows++;					// Note for monitoring purposes
+		if (spkrBufferL.length > maxBuffSize) {			// If too full merge final 400 samples
+			for (let i=0; i<400; i++) {			// so that we end with the latest waveform
+				let p = maxBuffSize-i-1;		// Points to end of audio being kept
+				let q = spkrBufferL.length-i-1;		// Points to end of audio being trimmed
+				let f = smooth[i];			// Transition blending factor. From 1 to 0 for INCREASING i
+				spkrBufferL[p] = spkrBufferL[p]*(1-f) + spkrBufferL[q]*f;
+				spkrBufferR[p] = spkrBufferR[p]*(1-f) + spkrBufferR[q]*f;
+			}
 			let excess = spkrBufferL.length-maxBuffSize;
+			spkrBufferL.splice(0, excess); 	
+			spkrBufferR.splice(0, excess); 	
+			overflows++;					// Note for monitoring purposes
 			bytesOver += excess;
-			spkrBufferL.splice(0, (excess)); 	
-			spkrBufferR.splice(0, (excess)); 	
 		}
 		if (spkrBufferL.length > spkrBuffPeak) 			// Monitoring purposes
 			spkrBuffPeak = spkrBufferL.length;
@@ -481,7 +494,6 @@ document.addEventListener('DOMContentLoaded', function(event){
 	let helpBtn = document.getElementById('helpBtn');
 	let helpp = document.getElementById('helpp');
 	helpBtn.onclick = ( (e) => {
-console.log(helpp.style.visibility );
 		if (helpp.style.visibility == "hidden")
 			helpp.style.visibility = "visible";
 		else
@@ -990,7 +1002,6 @@ function processAudio(e) {						// Main processing loop
 			if (performer) {				// If we believe we are the performer 
 				if (!micIn.muted) {			// & not muted prepare our audio for HQ stereo 
 					let a = prepPerfAudio(audioL, audioR);	
-//audioBytesOut += audioL.mono8.length;
 					perf = zipson.stringify(a);	// and compress audio fully
 				} else 					// send silent perf audio
 					perf = zipson.stringify({mono8:[],mono16:[],mono32:[],stereo8:[],stereo16:[],stereo32:[]});
@@ -1015,7 +1026,6 @@ function processAudio(e) {						// Main processing loop
 					}
 				}
 				audio = {mono8,mono16,mono32,stereo8,stereo16,stereo32};	
-//audioBytesOut += audioL.mono8.length;
 				let a = zipson.stringify(audio);		// Compressing and uncompressing
 				audio = zipson.parse(a);			// Saves 65% of bandwidth on its own!
 			}
@@ -1175,7 +1185,6 @@ function handleAudio(stream) {						// We have obtained media access
 	soundcardSampleRate = context.sampleRate;			// Get HW sample rate... varies per platform
 	micAudioPacketSize = Math.round(PacketSize * 			// How much micAudio is needed to fill a Packet
 		soundcardSampleRate / SampleRate);			// at our standard SampleRate (rounding error is an issue?)
-tracef("Sample rate is ",soundcardSampleRate," mic audio per packet is ",micAudioPacketSize," rounded from", soundcardSampleRate/(SampleRate/PacketSize));
 	micAccessAllowed = true;
 	createOutputUI( mixOut );					// Create the output mix channel UI
 	createMicUI( micIn );						// Create the microphone channel UI
