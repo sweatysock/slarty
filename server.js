@@ -520,7 +520,7 @@ function enoughAudio() {						// Is there enough audio to build a mix before tim
 function generateMix () { 
 	// 1. Get perf packet if performing and enough perf audio buffered to start streaming
 	let p = {live:perf.live, chan:perf.chan, packet:null};		// Send downstream by default a perf object with no packet
-	if (perf.streaming) 						// If the performer is streaming however...
+	if (perf.streaming) {						// If the performer is streaming ...
 		if (perf.packets.length > 0) {				// pull a performer packet from its queue, if any, and
 			p.packet = perf.packets.shift();		// add to performer data replacing the null packet
 			p.packet.timestamp = 
