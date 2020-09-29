@@ -14,6 +14,7 @@ var micAccessAllowed = false; 						// Need to get user permission
 var packetBuf = [];							// Buffer of packets sent, subtracted from venue mix later
 var spkrBufferL = []; 							// Audio buffer going to speaker (left)
 var spkrBufferR = []; 							// (right)
+var smoothingNeeded = false;						// Flag to indicate if output smoothing needed after a shortage
 var venueBuffer = []; 							// Buffer for venue audio
 var maxBuffSize = 10000;						// Max audio buffer chunks for playback. 
 var micBufferL = [];							// Buffer mic audio before sending
@@ -307,7 +308,6 @@ socketIO.on('d', function (data) {
 			let m8 = audio.mono8;
 			let m16 = audio.mono16;
 			let m32 = audio.mono32;
-if (m8.length == 0) trace("EMPTY perf audio");
 			if ((!performer) || (loopback)) {		// If we are not the performer or we are in loopback play perf audio
 				let mono = [];				// Reconstruct performer mono audio into this array
 				let stereo = [];			// Reconstruct performer stereo difference signal into here
@@ -1061,12 +1061,25 @@ function processAudio(e) {						// Main processing loop
 	if (spkrBufferL.length > ChunkSize) {				// There is enough audio buffered
 		outAudioL = spkrBufferL.splice(0,ChunkSize);		// Get same amount of audio as came in
 		outAudioR = spkrBufferR.splice(0,ChunkSize);		// for each channel
+		if (smoothingNeeded) {					// We had a shortage so now we need to smooth audio re-entry 
+			for (let i=0; i<400; i++) {			// Smoothly ramp up from zero to one
+				outAudioL[i] = outAudioL[i]*(1-smooth[i]);
+				outAudioR[i] = outAudioR[i]*(1-smooth[i]);
+			}
+			smoothingNeeded = false;
+		}
 	} else {							// Not enough audio.
 		shortages++;						// For stats and monitoring
 		let shortfall = ChunkSize-spkrBufferL.length;
 		bytesShort += shortfall;
 		outAudioL = spkrBufferL.splice(0,spkrBufferL.length);	// Take all that remains and complete with 0s
 		outAudioR = spkrBufferR.splice(0,spkrBufferR.length);	// Take all that remains and complete with 0s
+		let t = (shortfall < 400): shortfall : 400;		// Transition to zero is up to 400 samples long
+		for (let i=0; i<t; i++) {				// Smoothly drop to zero to reduce harsh clicks
+			outAudioL[i] = outAudioL[i]*smooth[Math.round(i*400/t)];
+			outAudioR[i] = outAudioR[i]*smooth[Math.round(i*400/t)];
+		}
+		smoothingNeeded = true;
 		let zeros = new Array(shortfall).fill(0);
 		outAudioL.push(...zeros);
 		outAudioR.push(...zeros);
