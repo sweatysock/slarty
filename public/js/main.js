@@ -15,7 +15,7 @@ var packetBuf = [];							// Buffer of packets sent, subtracted from venue mix l
 var spkrBufferL = []; 							// Audio buffer going to speaker (left)
 var spkrBufferR = []; 							// (right)
 var venueBuffer = []; 							// Buffer for venue audio
-var maxBuffSize = 20000;						// Max audio buffer chunks for playback. 
+var maxBuffSize = 10000;						// Max audio buffer chunks for playback. 
 var micBufferL = [];							// Buffer mic audio before sending
 var micBufferR = [];							
 var myChannel = -1;							// The server assigns us an audio channel
@@ -308,6 +308,7 @@ socketIO.on('d', function (data) {
 			let m16 = audio.mono16;
 			let m32 = audio.mono32;
 if (m8.length == 0) trace("EMPTY perf audio");
+loopback=true;
 			if ((!performer) || (loopback)) {		// If we are not the performer or we are in loopback play perf audio
 				let mono = [];				// Reconstruct performer mono audio into this array
 				let stereo = [];			// Reconstruct performer stereo difference signal into here
