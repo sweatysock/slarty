@@ -1103,12 +1103,16 @@ function processAudio(e) {						// Main processing loop
 		thresholdBuffer[echoTest.sampleDelay+2]
 	])) * echoTest.factor * mixOut.gain;				// multiply by factor and mixOutGain
 	thresholdBuffer.pop();						// Remove oldest threshold buffer value
-
+let now = new Date().getTime();
+delta = now - previous;
+if (delta > deltaMax) deltaMax = delta;
+if (delta < deltaMin) deltaMin = delta;
+previous = now;
 	enterState( idleState );					// We are done. Back to Idling
 }
 
 function prepPerfAudio( audioL, audioR ) {				// Performer audio is HQ and possibly stereo
-	let stereo = false;						// Start by detecting is there is stereo audio
+	let stereo = false;						// Start by detecting if there is stereo audio
 	if (stereoOn) for (let i=0; i<audioL.length; i++) 		// If user has enabled stereo 
 		if (audioL[i] != audioR[i]) stereo = true;		// check if the signal is actually stereo
 	audioL = reSample(audioL, soundcardSampleRate, PerfSampleRate, downCachePerfL, PerfPacketSize);	
@@ -1602,13 +1606,17 @@ var tracecount = 0;
 var sendShortages = 0;
 var spkrBuffPeak = 0;
 var spkrBuffTrough = maxBuffSize;
+var delta;
+var previous;
+var deltaMax = 0;
+var deltaMin = 10000;
 function printReport() {
 	enterState( UIState );						// Measure time spent updating UI even for reporting!
 	let netState = ((((rtt1-rtt5)/rtt5)>0.1) && (rtt5>400)) ? "UNSTABLE":"stable";
 	if (!pauseTracing) {
 //		trace("Idle=", idleState.total, " data in=", dataInState.total, " audio in/out=", audioInOutState.total," UI work=",UIState.total);
 		trace(packetsOut,"/",packetsIn," over:",overflows,"(",bytesOver,") short:",shortages,"(",bytesShort,") RTT=",rtt.toFixed(1)," ",rtt1.toFixed(1)," ",rtt5.toFixed(1)," ",netState," a:",audience," sent:",bytesSent.toFixed(1)," rcvd:",bytesRcvd.toFixed(1));
-		trace(" speaker buff:",spkrBufferL.length,"(",spkrBuffTrough," - ",spkrBuffPeak,")");
+		trace(" speaker buff:",spkrBufferL.length,"(",spkrBuffTrough," - ",spkrBuffPeak,") Delta max/min:",deltaMax,"/",deltaMin);
 //		trace("Levels of output: ",levelCategories);
 		trace2("sent:",bytesSent.toFixed(1)," rcvd:",bytesRcvd.toFixed(1));
 	}
@@ -1659,6 +1667,8 @@ function printReport() {
 	tracecount = 1;
 	spkrBuffPeak = 0;
 	spkrBuffTrough = maxBuffSize;
+	deltaMax = 0;
+	deltaMin = 10000;
 	enterState( idleState );					// Back to Idling
 }
 
