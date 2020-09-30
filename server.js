@@ -544,8 +544,9 @@ function generateMix () {
 	channels.forEach( (c, chan) => {				// Review all channels for audio and activity, and build server mix
 		if (c.name != "") {					// Looking for active channels meaning they have a name
 			if (chan != 0) totalLiveClients +=c.liveClients;// Sum all downstream clients under our active channels
-			if (clientPackets[c.group] == null) 		// If this is the first channel we find for a group
+			if ((c.group != "") && (clientPackets[c.group] == null)) {	// If this is the first channel for its' group
 				clientPackets[c.group] = [];		// create an empty client packet buffer
+			}
 		}
 		if (c.newBuf == false) {				// Build mix from channels that are non-new (buffering completed)
 			let packet;
@@ -574,7 +575,11 @@ function generateMix () {
 				timestamps[packet.channel]		// Store the latest timestamp received from the client
 					= c.timestamp;			// so that the sending client can measure its rtt
 				if (c.group != "noGroup") {		// Store packet if part of a group. Used for client controlled mixing
-					clientPackets[c.group].push( packet );	
+					if (clientPackets[c.group] == null)
+						console.log("Null group buffer for ",c.group);
+					else {
+						clientPackets[c.group].push( packet );	
+					}
 				}
 			}
 		}

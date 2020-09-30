@@ -94,7 +94,7 @@ var rtt5 = 0;								// 5 second average rtt. These need to be similar for stabi
 var smooth = [];							// Pre-populated array of values for smooth overflow/shortage transations
 for (let i=0; i<400; i++)
 	smooth[i] = Math.cos(i/400*Math.PI)/2 + 0.5;
-console.log(smooth);
+var chatText = "";							// Text input by user to send to server
 		
 
 function processCommands(newCommands) {					// Apply commands sent from upstream servers
@@ -185,10 +185,13 @@ socketIO.on('d', function (data) {
 		data.channels.forEach(c => {				// Process all audio channel packets including channel 0
 			let ch = c.channel;				// Channel number the packet belongs to
 			let chan = channels[ch];			// Local data structure for this channel
+			chan.name = c.name;				// Update local structure's channel name
+			chan.channel = ch;				// Keep channel number too. It helps speed lookups
+			if (c.chatText != "") {			// If there is some chatText included, update the chat UI
+				let chat = document.getElementById('chat');
+				chat.innerHTML += "<div><span style='color:#FFFFFF'>"+c.name+": </span>"+c.chatText+"</div>";
+			}
 			if ((c.socketID != socketIO.id) && (ch != 0)) {	// Don't include my audio or channel 0 in the group mix
-//			if ((true) && (ch != 0)) {	// TEST CODE... ALWAYS HEAR MYSELF IN GROUP
-				chan.name = c.name;			// Update local structure's channel name
-				chan.channel = ch;			// Keep channel number too. It helps speed lookups
 				if (chan.peak < c.peak)			// set the peak for this channel's level display
 					chan.peak = c.peak;		// even if muted
 				let a = c.audio;			// Get the audio from the packet
@@ -446,17 +449,6 @@ socketIO.on('disconnect', function () {
 	socketConnected = false;
 });
 
-var lastReset = new Date().getTime();					// Note previous socket reset to avoid excess resets
-function resetConnection() {						// Use this to reset the socket if needed
-	let now = new Date().getTime();
-	if ((lastReset + 60000) < now) {				// 20 second minimum between socket resets
-		trace2("Socket resetting...");
-		socketIO.disconnect();
-		socketIO.connect();
-		lastReset = now
-	}
-}
-
 
 
 
@@ -464,10 +456,15 @@ function resetConnection() {						// Use this to reset the socket if needed
 // Media management and display code (audio in and out)
 //
 var displayRefresh = 100;						// mS between UI updates. MARK change to animation frame
-
+var prevValue = "";
 document.addEventListener('DOMContentLoaded', function(event){
 	let groupBtn = document.getElementById('groupBtn');
 	let groupNameEntry = document.getElementById('groupNameEntry');
+	let nickEntry = document.getElementById('nickname');
+	let inputText = document.getElementById('inputText');
+	let chatWin = document.getElementById('chatWin');
+	let nameBadge = document.getElementById('nameBadge');
+	let chatInput = document.getElementById('chatInput');
 	groupBtn.onclick = ( (e) => {
 		if (myGroup == "noGroup")
 			groupNameEntry.innerHTML = "";
@@ -479,15 +476,65 @@ document.addEventListener('DOMContentLoaded', function(event){
 		groupNameEntry.focus();
 	});
 	groupNameEntry.addEventListener("keydown", (e) => {
+		if (e.which === 32) e.preventDefault();
 		if (e.which === 13) {
-			if (groupNameEntry.innerHTML=="") {
-				groupNameEntry.setAttribute("contenteditable", false);
+			if (groupNameEntry.value=="") {
 				myGroup = "noGroup";
-			} else if (groupNameEntry.innerHTML.match("^[a-zA-Z][a-zA-Z0-9]+$")) {
-				groupNameEntry.setAttribute("contenteditable", false);
-				myGroup = groupNameEntry.innerHTML;
+				chatWin.style.visibility = "hidden";
+				nameBadge.style.visibility = "hidden";
+				chatInput.style.visibility = "hidden";
+				groupNameEntry.blur();
+			} else {
+				myGroup = groupNameEntry.value;
+				chatWin.style.visibility = "visible";
+				nameBadge.style.visibility = "visible";
+				chatInput.style.visibility = "visible";
+				nickEntry.focus();
 			}
-			groupNameEntry.style.visibility = "hidden";
+			e.preventDefault();
+		}
+	});
+	groupNameEntry.addEventListener("focusout", (e) => {
+		if (groupNameEntry.value=="") {
+			myGroup = "noGroup";
+			chatWin.style.visibility = "hidden";
+			nameBadge.style.visibility = "hidden";
+			chatInput.style.visibility = "hidden";
+			groupNameEntry.blur();
+		} else {
+			myGroup = groupNameEntry.value;
+			chatWin.style.visibility = "visible";
+			nameBadge.style.visibility = "visible";
+			chatInput.style.visibility = "visible";
+			nickEntry.focus();
+		}
+	});
+	nickEntry.addEventListener("keydown", (e) => {
+		if (e.which === 32) e.preventDefault();
+		if (e.which === 13) {
+			if (nickEntry.value=="") {
+				nickEntry.value = myName;
+			} else {
+				myName = nickEntry.value;
+				document.getElementById("IDmicInName").innerHTML = myName;
+				inputText.focus();
+			}
+			e.preventDefault();
+		}
+	});
+	nickEntry.addEventListener("focusout", (e) => {
+		if (nickEntry.value=="") {
+			nickEntry.value = myName;
+		} else {
+			myName = nickEntry.value;
+			document.getElementById("IDmicInName").innerHTML = myName;
+			inputText.focus();
+		}
+	});
+	inputText.addEventListener("keydown", (e) => {
+		if (e.which === 13) {
+			chatText = inputText.value;
+			inputText.value = "";
 			e.preventDefault();
 		}
 	});
@@ -624,7 +671,7 @@ function createOutputUI(obj) {						// UI for output channel
 			<div style="position:absolute;bottom:57.5%; left:25%; width:5%; height:0%; background-color:#FF6600" id="'+name+'LevelOrange"></div> \
 			<div style="position:absolute;bottom:66.8%; left:25%; width:5%; height:0%; background-color:#FF0000" id="'+name+'LevelRed"></div> \
 			<div style="position:absolute;bottom:8%; left:25%; width:5%; height:0%; background-color:#999999" id="'+name+'Threshold"></div> \
-			<img style="position:absolute;right:5%; top:9%;width:80%; padding-bottom:10%;object-fit: scale-down;visibility: hidden" src="images/live.png" id="'+name+'live" >  \
+			<img style="position:absolute;right:14%; top:9.3%;width:72%; padding-bottom:10%;visibility: hidden" src="images/live.png" id="'+name+'live" >  \
 			<img style="position:absolute;right:30%; bottom:1%;width:40%; padding-bottom:10%;" src="images/AGCOff.png" id="'+name+'AGCOff" onclick="agcButton(event)">  \
 			<img style="position:absolute;right:30%; bottom:1%;width:40%; padding-bottom:10%;" src="images/AGCOn.png" id="'+name+'AGCOn" onclick="agcButton(event)">  \
 			<div style="position:absolute;top:1%; left:3%; width:90%; height:10%;color:#AAAAAA;font-size: 3vmin" id="'+name+'Name"> \
@@ -1044,8 +1091,10 @@ function processAudio(e) {						// Main processing loop
 				sampleRate	: sr,			// Send sample rate to help processing
 				group		: myGroup,		// Group name this user belings to
 				rtt		: rtt1,			// Send my rtt measurement for server monitoring
+				chatText	: chatText,		// Any text that has been input for the chat
 			};
 			socketIO.emit("u",packet);
+			chatText = "";					// After sending the chat text we clear it out
 			let len=JSON.stringify(packet).length/1024;
 			bytesSent += len;
 			if (!performer) {
@@ -1115,7 +1164,7 @@ function processAudio(e) {						// Main processing loop
 		thresholdBuffer[echoTest.sampleDelay+2]
 	])) * echoTest.factor * mixOut.gain;				// multiply by factor and mixOutGain
 	thresholdBuffer.pop();						// Remove oldest threshold buffer value
-let now = new Date().getTime();
+let now = new Date().getTime();						// MARK REMOVE?
 delta = now - previous;
 if (delta > deltaMax) deltaMax = delta;
 if (delta < deltaMin) deltaMin = delta;
@@ -1229,16 +1278,6 @@ function handleAudio(stream) {						// We have obtained media access
 	reverb.buffer = impulseResponse(1,8);				// Default reverb characteristic... simple exponential decay
 	let splitter = context.createChannelSplitter();			// Need a splitter to separate venue from main audio
 	let combiner = context.createChannelMerger();			// Combiner used to rebuild stereo image
-	let combiDelayL = context.createChannelMerger();		// These combiners are used to rebuild stereo venue
-	let combiDelayR = context.createChannelMerger();		// spacial effects for left and right widening
-	let delayL = context.createDelay();				// Spacial venue effect requires special delays
-	let delayR = context.createDelay();				// for left and right venue
-	let delay1 = context.createDelay();				// Also need specific delays to separate the widened
-	let delay2 = context.createDelay();				// venue audio
-	delayL.delayTime.value = 0.0003;				// Delay that fools us into hearing sound to left
-	delayR.delayTime.value = 0.0003;				// and right
-	delay1.delayTime.value = 0.019;					// Delay to separate first wide venue from centre
-	delay2.delayTime.value = 0.033;					// Delay for second wide venue track
 
 	liveSource.connect(micFilter1);					// Mic goes to the lowpass filter
 	micFilter1.connect(micFilter2);					// then to the highpass filter
@@ -1251,18 +1290,6 @@ function handleAudio(stream) {						// We have obtained media access
 
 	splitter.connect(reverb,2);					// Send centre venue to the stereo reverb
 	
-//	splitter.connect(delayL,2,0);					// Create 2 stereo panned & delayed venue tracks
-//	splitter.connect(combiDelayL,2,1);				// by sending direct sound to one channel
-//	delayL.connect(combiDelayL,0,0);				// and slightly delayed to the other
-//	combiDelayL.connect(delay1);					// Then add a delay that separates this sound
-//	delay1.connect(context.destination);				// from the original and send it out dry
-
-//	splitter.connect(delayR,2,0);					// Repeat for the second panned venue track
-//	splitter.connect(combiDelayR,2,0);
-//	delayR.connect(combiDelayR,0,1);
-//	combiDelayR.connect(delay2);
-//	delay2.connect(context.destination);
-
 	reverb.connect(context.destination);				// and finally feed the centre venue with reverb to the output 
 
 	startEchoTest();
@@ -1537,28 +1564,6 @@ function runEchoTest(audio) {						// Test audio system in a series of tests
 	return outAudio;
 }
 
-function drawWave(audio,n,d) {
-	let str = '<div id="'+n+'" style="position:absolute; bottom:10%; right:5%; width:80%; height:80%; background-color: #222222; visibility: hidden">'+n;
-	let max = 0;
-	for (let i=0; i<audio.length;i++) {audio[i] = Math.abs(audio[i]); if (audio[i] > max) max = audio[i];}
-	for (let i=4;i<(audio.length-4);i++) {
-		let l = (i*100)/audio.length;
-		let b = 50 + 50*audio[i];
-		str += '<div style="position:absolute; bottom:'+b+'%;left:'+l+'%;width:1px;height:1px;background-color:#66FF33"></div>';
-	}
-	max = 50 + 50*max;
-	str += '<div style="position:absolute; bottom:'+max+'%;left:0%;width:100%;height:1px;background-color:#FF0000">'+max+'</div>';
-	str += '<div style="position:absolute; bottom:0%;left:'+d+'%;width:1px;height:100%;background-color:#FF0000"></div>';
-	str += '</div>';
-	let container = document.getElementById("graphs");
-	container.innerHTML += str;
-	monitors.push(n);
-}
-
-
-
-
-
 
 
 // Tracing, monitoring, reporting and debugging code
@@ -1594,8 +1599,6 @@ document.addEventListener('DOMContentLoaded', function(event){
 	};
 	let actionBtn=document.getElementById('actionBtn');
 	actionBtn.onclick = function () {
-//		trace("Reset connection pressed");
-//		resetConnection();
 		trace("Pause traces pressed");
 		if (pauseTracing == true) pauseTracing = false;
 		else pauseTracing = true;
@@ -1761,37 +1764,6 @@ function enterState( newState ) {
 }
 
 
-
-// SVG analysis testing...
-//
-window.addEventListener("load", function(event){
-	deriveTree();							
-});
-
-function deriveTree() {
-	let svg = document.getElementById('venue');
-	if (svg == null) return;
-	svg = svg.contentDocument;
-	let kids = svg.getElementsByClassName("selectable");
-	kids = svg.getElementsByTagName("rect"); 
-	for (var i=0,len=kids.length;i<len;++i) {
-		let kid = kids[i];
-		if (kid.nodeType!=1) continue;
-		switch(kid.nodeName){
-			case 'circle':
-			break;
-			case 'rect':
-				let x = parseFloat(kid.getAttributeNS(null,'x'));
-				let y = parseFloat(kid.getAttributeNS(null,'y'));
-				let width = parseFloat(kid.getAttributeNS(null,'width'));
-				let height = parseFloat(kid.getAttributeNS(null,'height'));
-				let ID = kid.getAttributeNS(null,'id');
-console.log("Found a rectangle");
-console.log(x,y,width,height,ID);
-			break;
-		}
-	}
-}
 
 enterState( idleState );
 trace("Starting V3.1");
