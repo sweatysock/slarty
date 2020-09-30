@@ -470,9 +470,9 @@ document.addEventListener('DOMContentLoaded', function(event){
 			groupNameEntry.innerHTML = "";
 		else
 			groupNameEntry.innerHTML = myGroup;
+		groupNameEntry.removeAttribute("readonly");
 		groupNameEntry.style.visibility = "visible";
 		groupNameEntry.style.outline = "none";
-		groupNameEntry.setAttribute("contenteditable", true);
 		groupNameEntry.focus();
 	});
 	groupNameEntry.addEventListener("keydown", (e) => {
@@ -489,6 +489,7 @@ document.addEventListener('DOMContentLoaded', function(event){
 				chatWin.style.visibility = "visible";
 				nameBadge.style.visibility = "visible";
 				chatInput.style.visibility = "visible";
+				groupNameEntry.setAttribute("readonly", true);
 				nickEntry.focus();
 			}
 			e.preventDefault();
@@ -500,12 +501,14 @@ document.addEventListener('DOMContentLoaded', function(event){
 			chatWin.style.visibility = "hidden";
 			nameBadge.style.visibility = "hidden";
 			chatInput.style.visibility = "hidden";
+			groupNameEntry.setAttribute("readonly", true);
 			groupNameEntry.blur();
 		} else {
 			myGroup = groupNameEntry.value;
 			chatWin.style.visibility = "visible";
 			nameBadge.style.visibility = "visible";
 			chatInput.style.visibility = "visible";
+			groupNameEntry.setAttribute("readonly", true);
 			nickEntry.focus();
 		}
 	});
