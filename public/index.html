@@ -48,6 +48,22 @@
  			padding-bottom: 100%;
 			position: absolute;
 		}
+		.chatBubble {
+			position: absolute;
+			display: inline-block;
+			margin: 1%; 
+			width:15%;
+			padding:2%; 
+			border-radius:3%; 
+			background-color: #00000099;
+			animation: floatUp 10s;
+			animation-iteration-count: 1;
+			animation-timing-function: linear;
+		}
+		@keyframes floatUp {
+			  from {top: 70%;}
+			    to {top: 0%;}
+		}
 		div {
 			  -webkit-user-elec: none;/* Safari */
 			    -ms-user-select: none; /* IE 10+ and Edge */
@@ -111,18 +127,21 @@
 			able to talk to them during the concert.
 		</div>
 		<div id="chatWin" style="position:absolute; bottom:10%; left:30%; width:65%; height:80%; background-color: #00000099; visibility: hidden">
-			<div id="chat" style="position:absolute; overflow: auto; top:2%; left:2%; width:96%; height:96%; color: #6AFF35;font-family: Courier; font-size: 4vmin;">
+			<div id="chatHistory" style="position:absolute; overflow: auto; top:2%; left:2%; width:96%; height:96%; color: #6AFF35;font-family: Courier; font-size: 4vmin;">
 			</div>
 		</div>
-		<div id="nameBadge" style="position:absolute; bottom:0%; left:30%; width:14%; height:8%; background-color: #00000099; visibility: hidden">
-			<input id="nickname" tabindex="2" style="position:absolute; background-color:#00000000; border:none; bottom:0%; left:1%; width:98%; color: #FFFFFF;font-family: Courier; font-size: 6vmin;"/>
+		<div id="nameBadge" style="position:absolute; bottom:0%; left:30%; width:14%; height:7%; background-color: #00000000; visibility: hidden">
+			<input id="nickname" tabindex="2" style="position:absolute; background-color:#00000099; border:none; bottom:0%; left:1%; width:98%; color: #FFFFFF;font-family: Courier; font-size: 6vmin;"/>
 		</div>
-		<div id="chatInput" style="position:absolute; bottom:0%; left:45%; width:50%; height:8%; background-color: #00000099; visibility: hidden">
-			<input id="inputText" tabindex="3" style="position:absolute; background-color:#00000000; border:none; bottom:0%; left:1%; width:98%; color: #6AFF35;font-family: Courier; font-size: 6vmin;"/>
+		<div id="chatInput" style="position:absolute; bottom:0%; left:45%; width:50%; height:7%; background-color: #00000000; visibility: hidden">
+			<input id="inputText" tabindex="3" style="position:absolute; background-color:#00000099; border:none; bottom:0%; left:0%; width:82%; color: #6AFF35;font-family: Courier; font-size: 6vmin;"/>
+			<img id="chatHistBtn" style="position:absolute; bottom:0%; right:2%; width:12%; height:100%; object-fit: scale-down;cursor: pointer;" src="images/chatHistory.png">
 		</div>
 		<div id="mixerViewer" class="sb" style="position:absolute; bottom:10%; right:10%; width:80%; height:80%; background-color: #11111100; visibility: hidden;overflow: hidden;">
 			<div id="mixerRack" class="sb" style="position:absolute; bottom:1%; left:1%; height:98%; width:98%; background-color:#00000000; overflow-x: hidden; overflow-y: hidden;white-space: nowrap;">
 			</div>
+		</div>
+		<div id="chatBubbleArea" style="position:absolute; top:10%; left:5%; width:90%; height:60%; background-color: #00000000; color:#6AFF35; font-family: Arial, Helvetica, sans-serif; font-size: 4vmin;visibility: visible">
 		</div>
 		<div style="position:absolute; bottom:0%; right:0%; width:100%; height:100%;visibility: hidden">
 			<div id="monitor" style="position:absolute; bottom:10%; left:7%; width:88%; height:80%; background-color: #00000099; visibility: hidden">
@@ -166,11 +185,11 @@
 		<div style="position:absolute; top:0%; left:0%; width:10%; height:10%;">
 			<a href="https://audence.com"><img style="position:absolute; bottom:0%; right:0%; width:100%; height:100%;object-fit: scale-down;" src="images/thumbTransp.png"></a>
 		</div>
-		<div style="position:absolute; bottom:0%; left:0%;width:30%; height:10%;">
+		<div style="position:absolute; bottom:0%; left:0%;width:30%; height:7%;">
 			<img id="groupBtn" style="position:absolute; bottom:0%; left:0%; width:20%; height:100%;object-fit: scale-down;cursor: pointer;" src="images/lockTransp.png">
 			<input id="groupNameEntry" tabindex="1" style="position:absolute; background-color:#00000000; border:none; bottom:0%;left:20%;width:80%; color: #6AFF35;font-family: Courier; font-size: 6vmin; visibility: hidden"/>
 		</div>
-		<div style="position:absolute; bottom:12%; left:0%;width:7%; height:10%;">
+		<div style="position:absolute; bottom:10%; left:0%;width:7%; height:10%;">
 			<img id="helpBtn" style="position:absolute; bottom:0%; right:0%; width:100%; height:100%;object-fit: scale-down;cursor: pointer;" src="images/help.png">
 		</div>
 	</div>

@@ -440,9 +440,11 @@ function clientPacketBad(p) {						// Perform basic checks on packets to stop ba
 	if (p.audio.mono8 === undefined) return true;
 	if (p.audio.mono16 === undefined) return true;
 	if (p.name === undefined) return true;
+	if (p.name == "") return true;
 	if (p.channel === undefined) return true;
 	if (p.liveClients === undefined) return true;
 	if (p.group === undefined) return true;
+	if (p.group == "") return true;
 	return false;
 }
 

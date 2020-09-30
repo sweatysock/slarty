@@ -21,9 +21,11 @@ var micBufferL = [];							// Buffer mic audio before sending
 var micBufferR = [];							
 var myChannel = -1;							// The server assigns us an audio channel
 var myName = "";							// Name assigned to my audio channel
+var MaxNameLength = 15;							// User name max length
 var myGroup = "noGroup";						// Group user belongs to. Default is no group.
 var groupLayout = [8,12,4,10,6,9,7,11,5,13,3,14,2,15,1,16,0,4,10,6,9];	// Locations in circle ordered by group position. Last 4 get overlaid on others
-var pans = [-9,-5,-3,-2.4,-2,-1.7,-1.4,-1.2,1,1.2,1.4,1.7,2,2.4,3,5,7];	// pan settings for each location on circle
+var pans = [-9,-5,-3,-2.4,-2,-1.7,-1.4,-1.2,1,1.2,1.4,1.7,2,2.4,3,5,9];	// pan settings for each location on circle
+var chatAdj = [0,5,10,15,20,25,30,35,40,45,50,55,60,65,70,75,80];	// chat bubble lateral adjustments for each location on circle
 var groupCentre = 8;							// In the circle position 8 is right in front of us
 var maxGroupSize = 17;							// Up to 17 can be positioned in a circle. More have to overlap.
 var myPos = 0;
@@ -95,7 +97,8 @@ var smooth = [];							// Pre-populated array of values for smooth overflow/shor
 for (let i=0; i<400; i++)
 	smooth[i] = Math.cos(i/400*Math.PI)/2 + 0.5;
 var chatText = "";							// Text input by user to send to server
-		
+var chatArea;								// Object where chat bubbles appear
+var chatHistory;							// div where a full hisory of the group chat is held
 
 function processCommands(newCommands) {					// Apply commands sent from upstream servers
 	if (newCommands.mute != undefined) serverMuted = newCommands.mute; else serverMuted = false;
@@ -187,9 +190,20 @@ socketIO.on('d', function (data) {
 			let chan = channels[ch];			// Local data structure for this channel
 			chan.name = c.name;				// Update local structure's channel name
 			chan.channel = ch;				// Keep channel number too. It helps speed lookups
-			if (c.chatText != "") {			// If there is some chatText included, update the chat UI
-				let chat = document.getElementById('chat');
-				chat.innerHTML += "<div><span style='color:#FFFFFF'>"+c.name+": </span>"+c.chatText+"</div>";
+			let p = serverLiveChannels[ch];			// Get channel's position in the group
+			let l = groupLayout[p];				// Get circle location for this group position
+			l = (l + shift) % maxGroupSize;			// Move the position to put me at the centre
+			let att = pans[l];				// find the panning position for this location
+			if (c.chatText != "") {				// If there is some chatText included add it to the chat history
+				chatHistory.innerHTML += "<div><span style='color:#FFFFFF'>"+c.name+": </span>"+c.chatText+"</div>";
+				chatHistory.scrollTop = chatHistory.scrollHeight;
+				let adj = chatAdj[l];			// Get the lateral adjustment that corresponds too
+				let div = document.createElement("div");// Create a new div for the chat bubble
+				div.style.left = adj+"%";		// Adjust it's position in the column
+				div.classList.add("chatBubble");	// Set the class and add the contents to display
+				div.innerHTML = "<span style='color:#FFFFFF'>"+c.name+": </span>"+c.chatText+"</div>";
+				setTimeout(function () {div.parentNode.removeChild(div)},10000);
+				chatArea.appendChild(div);
 			}
 			if ((c.socketID != socketIO.id) && (ch != 0)) {	// Don't include my audio or channel 0 in the group mix
 				if (chan.peak < c.peak)			// set the peak for this channel's level display
@@ -203,10 +217,6 @@ socketIO.on('d', function (data) {
 					let g = (chan.agc 		// Apply gain. If AGC use mix gain, else channel gain
 						? mixOut.gain : chan.gain);	
 					chan.gain = g;			// Channel gain level should reflect gain applied here
-					let p = serverLiveChannels[ch];	// Get channel's position in the group
-					let l = groupLayout[p];		// Get circle location for this group position
-					l = (l + shift) % maxGroupSize;	// Move the position to put me at the centre
-					let att = pans[l];		// find the panning position for this location
 					if (m8.length > 0) {		// Only mix if there is audio in channel
 						someAudio = true;	// Flag that there is actually some group audio
 						let al = 0, ar = 0;	// Attenuations for each channel. Default is none
@@ -456,92 +466,91 @@ socketIO.on('disconnect', function () {
 // Media management and display code (audio in and out)
 //
 var displayRefresh = 100;						// mS between UI updates. MARK change to animation frame
-var prevValue = "";
-document.addEventListener('DOMContentLoaded', function(event){
-	let groupBtn = document.getElementById('groupBtn');
-	let groupNameEntry = document.getElementById('groupNameEntry');
-	let nickEntry = document.getElementById('nickname');
-	let inputText = document.getElementById('inputText');
-	let chatWin = document.getElementById('chatWin');
-	let nameBadge = document.getElementById('nameBadge');
-	let chatInput = document.getElementById('chatInput');
+document.addEventListener('DOMContentLoaded', function(event){		// Add dynamic behaviour to UI elements
+	let groupBtn = document.getElementById('groupBtn');		// Button that activates group name entry field
+	let groupNameEntry = document.getElementById('groupNameEntry');	// Group name entry field iself
+	let nickEntry = document.getElementById('nickname');		// User's screen name display on their audio channel and chat messages
+	let inputText = document.getElementById('inputText');		// Chat text input area
+	let chatWin = document.getElementById('chatWin');		// The div that contains the chat history window. Not sure why 2 divs!
+	let nameBadge = document.getElementById('nameBadge');		// Div that contains the nickname entry field. Don't need two divs either!
+	let chatInput = document.getElementById('chatInput');		// Div containing the input text. 2 divs not needed here either.
+	chatArea = document.getElementById('chatBubbleArea');		// Div where chat bublesa are animated
+	chatHistory = document.getElementById('chatHistory');		// The chat history window itself. Again, 2 divs not needed.
 	groupBtn.onclick = ( (e) => {
-		if (myGroup == "noGroup")
+		if (myGroup == "noGroup")				// Group entry. By default we are in "noGroup". This displays as ""
 			groupNameEntry.innerHTML = "";
 		else
 			groupNameEntry.innerHTML = myGroup;
-		groupNameEntry.removeAttribute("readonly");
 		groupNameEntry.style.visibility = "visible";
-		groupNameEntry.style.outline = "none";
-		groupNameEntry.focus();
+		groupNameEntry.focus();					// UI has been designed to be easily navigated with keys.
 	});
-	groupNameEntry.addEventListener("keydown", (e) => {
-		if (e.which === 32) e.preventDefault();
-		if (e.which === 13) {
-			if (groupNameEntry.value=="") {
+	groupNameEntry.addEventListener("keydown", (e) => {		// Filter key presses directly
+		if (e.which === 32) e.preventDefault();			// No spaces allowed in group name
+		if (e.which === 13) {					// Enter is captured and processed in js
+			if (groupNameEntry.value=="") {			// An empty group name means "noGroup" - hide all group UI
 				myGroup = "noGroup";
 				chatWin.style.visibility = "hidden";
 				nameBadge.style.visibility = "hidden";
 				chatInput.style.visibility = "hidden";
-				groupNameEntry.blur();
+				groupNameEntry.blur();			// and remove the focus from the group input field
 			} else {
-				myGroup = groupNameEntry.value;
-				chatWin.style.visibility = "visible";
+				myGroup = groupNameEntry.value;		// group name is good. Make name and chat text area visible
 				nameBadge.style.visibility = "visible";
 				chatInput.style.visibility = "visible";
-				groupNameEntry.setAttribute("readonly", true);
-				nickEntry.focus();
+				nickEntry.focus();			// put focus in name entry field
 			}
 			e.preventDefault();
 		}
 	});
-	groupNameEntry.addEventListener("focusout", (e) => {
+	groupNameEntry.addEventListener("focusout", (e) => {		// If you tab or click out of the field the same needs to happen
 		if (groupNameEntry.value=="") {
 			myGroup = "noGroup";
 			chatWin.style.visibility = "hidden";
 			nameBadge.style.visibility = "hidden";
 			chatInput.style.visibility = "hidden";
-			groupNameEntry.setAttribute("readonly", true);
 			groupNameEntry.blur();
 		} else {
 			myGroup = groupNameEntry.value;
-			chatWin.style.visibility = "visible";
 			nameBadge.style.visibility = "visible";
 			chatInput.style.visibility = "visible";
-			groupNameEntry.setAttribute("readonly", true);
 			nickEntry.focus();
 		}
 	});
+	nickEntry.setAttribute("maxlength",MaxNameLength);		// Set nickname length limit 
 	nickEntry.addEventListener("keydown", (e) => {
-		if (e.which === 32) e.preventDefault();
 		if (e.which === 13) {
-			if (nickEntry.value=="") {
-				nickEntry.value = myName;
-			} else {
-				myName = nickEntry.value;
-				document.getElementById("IDmicInName").innerHTML = myName;
-				inputText.focus();
-			}
+			inputText.focus();				// When enter is hit move focus to chat text entry 
 			e.preventDefault();
 		}
 	});
-	nickEntry.addEventListener("focusout", (e) => {
+	nickEntry.addEventListener("focusout", (e) => {			// By clicking, tabbing or hitting enter, focus is lost. Process the nickname
 		if (nickEntry.value=="") {
-			nickEntry.value = myName;
-		} else {
+			nickEntry.value = myName;			// If the name is empty use the old one
+		} else if (nickEntry.value != myName) {			// If it has changed log it to the chat history
+			chatHistory.innerHTML += "<div style='color:#FFCC00'>"+myName+" changed to "+nickEntry.value+"</div>";
+			chatHistory.scrollTop = chatHistory.scrollHeight;	
 			myName = nickEntry.value;
-			document.getElementById("IDmicInName").innerHTML = myName;
-			inputText.focus();
 		}
+		document.getElementById("IDmicInName").innerHTML = myName;	// Update the mixer UI with the new name
 	});
 	inputText.addEventListener("keydown", (e) => {
-		if (e.which === 13) {
-			chatText = inputText.value;
-			inputText.value = "";
+		if (e.which === 13) {					// When they hit enter in the chat text input
+			chatText = inputText.value;			// store the text for sending to the server
+			inputText.value = "";				// and empty the field
 			e.preventDefault();
 		}
 	});
-	let helpBtn = document.getElementById('helpBtn');
+	let chatHistBtn = document.getElementById('chatHistBtn');	// The chat history button shows/hides the traditional chat window
+	chatHistBtn.onclick = ( (e) => {
+		if (chatWin.style.visibility == "hidden") {
+			chatArea.style.visibility = "hidden";		// Chat bubbles are hidden if chat history is visible
+			chatWin.style.visibility = "visible";
+		} else {
+			chatArea.style.visibility = "visible";
+			chatWin.style.visibility = "hidden";
+		}
+	});
+	let helpBtn = document.getElementById('helpBtn');		// Help button toggles the help window
 	let helpp = document.getElementById('helpp');
 	helpBtn.onclick = ( (e) => {
 		if (helpp.style.visibility == "hidden")
@@ -577,6 +586,9 @@ function displayAnimation() { 						// called 100mS to animate audio displays
 					c.peak = c.peak * rate;		// drop smoothly the max level for the channel
 					setLevelDisplay( c );		// update LED display for channel peak
 					setSliderPos( c );		// update slider position for channel gain
+					let id = "ID"+c.channel+"Name";	// Get the id used for the channel UI name element
+					let n = document.getObjectById(id);
+					n.innerHTML = c.name;		// Update the channel display name
 				}
 			}
 		}
