@@ -564,7 +564,8 @@ function displayAnimation() { 						// called 100mS to animate audio displays
 		setSliderPos( venue );					// Update slider position for venue gain
 		for (let ch in channels) {				// Update dynamic channel's UI
 			c = channels[ch];
-			if (c.name != "") {				// A channel needs a name to be active
+			if ((c.name != "") && 				// A channel needs a name to be active
+				(c.channel != myChannel)) {		// and I don't want my channel to appear
 				if (serverLiveChannels[ch] == null)	// Channel must have disconnected. 
 					removeChannelUI(c);		// Remove its UI presence
 				else {
