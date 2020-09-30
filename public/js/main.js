@@ -587,7 +587,7 @@ function displayAnimation() { 						// called 100mS to animate audio displays
 					setLevelDisplay( c );		// update LED display for channel peak
 					setSliderPos( c );		// update slider position for channel gain
 					let id = "ID"+c.channel+"Name";	// Get the id used for the channel UI name element
-					let n = document.getObjectById(id);
+					let n = document.getElementById(id);
 					n.innerHTML = c.name;		// Update the channel display name
 				}
 			}
