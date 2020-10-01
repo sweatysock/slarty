@@ -412,8 +412,10 @@ io.sockets.on('connection', function (socket) {
 		if (packet.channel == perf.chan) { 			// This is the performer. Note: Channel 0 comes down in 'd' packets
 			perf.inCount++;					// For monitoring
 			perf.packets.push(packet);			// Store performer audio/video packet
-			if (perf.packets.length > perfMaxBufferSize)
+			if (perf.packets.length > perfMaxBufferSize) {
 				perf.packets.shift();			// Clip the performer buffer removing the oldest packet
+console.log("PERFORMER OVERflow for channel ",packet.channel);
+			}
 			if ((!perf.streaming) && (perf.packets.length > mixTriggerLevel)) {
 				perf.streaming = true;			// If not streaming but enough now buffered, performer is go!
 				nextMixTimeLimit = 0;			// Reset the mix timer so that it doesn't empty the buffer right away
@@ -425,6 +427,7 @@ io.sockets.on('connection', function (socket) {
 				(channel.recording == false)) {		// If buffer full and we are not recording this channel
 				channel.packets.shift();		// then remove the oldest packet.
 				channel.overflows++;			// Log overflows per channel
+console.log("OVERflow for channel ",packet.channel);
 				overflows++;				// and also globally for monitoring
 			}
 			if (channel.packets.length >= channel.mixTriggerLevel) {
