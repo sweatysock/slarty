@@ -367,6 +367,7 @@ io.sockets.on('connection', function (socket) {
 		channel.timestamp = packet.timestamp;			// Store this latest timestamp for the client to measure rtt
 		channel.socketID = socket.id;				// Store socket ID associated with channel
 		packet.socketID = socket.id;				// Also store it in the packet to help client skip own audio
+console.log("Channel ",packet.channel," sequence ",packet.sequence);
 		if (packet.sequence != (channel.seq + 1)) 
 			console.log("Channel ",packet.channel," incoming has jumped ",(packet.sequence - channel.seq)," packets");
 		channel.seq = packet.sequence;
