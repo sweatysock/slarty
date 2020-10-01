@@ -25,6 +25,7 @@ for (let i=0; i < NumberOfChannels; i++) {				// Create all the channels pre-ini
 		recording	: false,				// Flags that all audio is to be recorded and looped
 		playHead	: 0,					// Points to where we are reading from the buffer
 		timestamp	: 0,					// The latest timestamp received from the client
+		seq		: 0,					// Latest sequence number from client. For tracking losses.
 	}
 }
 var venue = {								// Venue audio data structure coming down from our upstream server
@@ -366,6 +367,9 @@ io.sockets.on('connection', function (socket) {
 		channel.timestamp = packet.timestamp;			// Store this latest timestamp for the client to measure rtt
 		channel.socketID = socket.id;				// Store socket ID associated with channel
 		packet.socketID = socket.id;				// Also store it in the packet to help client skip own audio
+		if (packet.sequence != (channel.seq + 1)) 
+			console.log("Channel ",packet.channel," incoming has jumped ",(packet.sequence - channel.seq)," packets");
+		channel.seq = packet.sequence;
 		if (loopback) {						// Loopback mode means treating everyone like a performer
 			perf.chan = packet.channel;			// Set this channel as the performer for as long as it takes to return their packet
 			perf.live = true;				// In loopback you are always live!
