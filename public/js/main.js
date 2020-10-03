@@ -486,6 +486,7 @@ document.addEventListener('DOMContentLoaded', function(event){		// Add dynamic b
 		else {
 			groupNameEntry.innerHTML = myGroup;
 console.log(myGroup);
+console.log(groupNameEntry.innerHTML);
 		}
 		groupNameEntry.style.visibility = "visible";
 		groupNameEntry.focus();					// UI has been designed to be easily navigated with keys.
