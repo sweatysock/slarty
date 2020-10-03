@@ -126,7 +126,7 @@ socketIO.on('connect', function (socket) {				// New connection coming in
 	(s = ua.match(/chrome\/([\d.]+)/)) ? browser = s[1] :
 	(s = ua.match(/opera.([\d.]+)/)) ? browser = s[1] :
 	(s = ua.match(/version\/([\d.]+).*safari/)) ? browser = s[1] : 0;
-console.log("the browser id seems to be ",browser);
+tracef("the browser id seems to be ",browser);
 	socketIO.emit("upstreamHi",{channel:myChannel,key:key});	// Register with server and request channel, supplying the key given
 });
 
