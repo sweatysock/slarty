@@ -482,11 +482,9 @@ document.addEventListener('DOMContentLoaded', function(event){		// Add dynamic b
 	chatHistory = document.getElementById('chatHistory');		// The chat history window itself. Again, 2 divs not needed.
 	groupBtn.onclick = ( (e) => {
 		if (myGroup == "noGroup")				// Group entry. By default we are in "noGroup". This displays as ""
-			groupNameEntry.innerHTML = "";
+			groupNameEntry.value = "";
 		else {
-			groupNameEntry.innerHTML = myGroup;
-console.log(myGroup);
-console.log(groupNameEntry.innerHTML);
+			groupNameEntry.value = myGroup;
 		}
 		groupNameEntry.style.visibility = "visible";
 		groupNameEntry.focus();					// UI has been designed to be easily navigated with keys.
@@ -502,12 +500,12 @@ console.log(groupNameEntry.innerHTML);
 				chatArea.style.visibility = "hidden";
 				groupNameEntry.blur();			// and remove the focus from the group input field
 			} else {
-//				chatHistory.innerHTML += "<div style='color:#FFCC00'>Group changed from "+myGroup+" to "+groupNameEntry.value+"</div>";
-//				chatHistory.scrollTop = chatHistory.scrollHeight;	
-//				myGroup = groupNameEntry.value;		// group name is good. Make name and chat text area visible
-//				nameBadge.style.visibility = "visible";
-//				chatInput.style.visibility = "visible";
-//				chatArea.style.visibility = "visible";
+				chatHistory.innerHTML += "<div style='color:#FFCC00'>Group changed from "+myGroup+" to "+groupNameEntry.value+"</div>";
+				chatHistory.scrollTop = chatHistory.scrollHeight;	
+				myGroup = groupNameEntry.value;		// group name is good. Make name and chat text area visible
+				nameBadge.style.visibility = "visible";
+				chatInput.style.visibility = "visible";
+				chatArea.style.visibility = "visible";
 				nickEntry.focus();			// put focus in name entry field
 			}
 			e.preventDefault();
