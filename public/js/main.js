@@ -496,6 +496,7 @@ document.addEventListener('DOMContentLoaded', function(event){		// Add dynamic b
 				chatWin.style.visibility = "hidden";
 				nameBadge.style.visibility = "hidden";
 				chatInput.style.visibility = "hidden";
+				chatArea.style.visibility = "hidden";
 				groupNameEntry.blur();			// and remove the focus from the group input field
 			} else {
 				chatHistory.innerHTML += "<div style='color:#FFCC00'>Group changed from "+myGroup+" to "+groupNameEntry.value+"</div>";
@@ -503,6 +504,7 @@ document.addEventListener('DOMContentLoaded', function(event){		// Add dynamic b
 				myGroup = groupNameEntry.value;		// group name is good. Make name and chat text area visible
 				nameBadge.style.visibility = "visible";
 				chatInput.style.visibility = "visible";
+				chatArea.style.visibility = "visible";
 				nickEntry.focus();			// put focus in name entry field
 			}
 			e.preventDefault();
@@ -514,6 +516,7 @@ document.addEventListener('DOMContentLoaded', function(event){		// Add dynamic b
 			chatWin.style.visibility = "hidden";
 			nameBadge.style.visibility = "hidden";
 			chatInput.style.visibility = "hidden";
+			chatArea.style.visibility = "hidden";
 			groupNameEntry.blur();
 		} else {
 			chatHistory.innerHTML += "<div style='color:#FFCC00'>Group changed from "+myGroup+" to "+groupNameEntry.value+"</div>";
@@ -521,6 +524,7 @@ document.addEventListener('DOMContentLoaded', function(event){		// Add dynamic b
 			myGroup = groupNameEntry.value;
 			nameBadge.style.visibility = "visible";
 			chatInput.style.visibility = "visible";
+			chatArea.style.visibility = "visible";
 			nickEntry.focus();
 		}
 	});

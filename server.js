@@ -26,6 +26,7 @@ for (let i=0; i < NumberOfChannels; i++) {				// Create all the channels pre-ini
 		playHead	: 0,					// Points to where we are reading from the buffer
 		timestamp	: 0,					// The latest timestamp received from the client
 		seq		: 0,					// Latest sequence number from client. For tracking losses.
+		key		: null,					// The key used by this channel client to access this server
 	}
 }
 var venue = {								// Venue audio data structure coming down from our upstream server
@@ -131,6 +132,8 @@ const request = require('request');					// Used to access RestAPI in audence.com
 var upstreamName = process.env.upstream; 				// Get upstream server from heroku config variable, if present
 if (upstreamName == undefined)		
 	upstreamName ="";						// If this is empty we will connect later when it is set
+else
+	upstreamName = upstreamName + "?key=audenceServer";		// Add the server to server connection key parameter
 var upstreamServer = require('socket.io-client')(upstreamName);		// Upstream server uses client version of socketIO
 var upstreamServerChannel = -1;						// Channel assigned to us by upstream server
 var upstreamConnected = false;						// Flag to control sending upstream
@@ -274,14 +277,15 @@ io.sockets.on('connection', function (socket) {
 						g.liveChannels[ch] = null;	// & remove channel from group's list of live channels
 					}
 					c.group = "";			// Set to empty to force rejoining default group
-					c.packets = [];			
+					c.packets = [];			// Clean out buffers etc. leaving channel clean
 					c.name = "";
 					c.liveClients = 1;
 					c.socketID = undefined;
 					c.shortages = 0,
 					c.overflows = 0,
 					c.newBuf = true;
-					connectedClients--;
+					c.key = null;
+					connectedClients--;		// One client less is connected now
 				}
 			}
 		}
@@ -290,8 +294,13 @@ io.sockets.on('connection', function (socket) {
 	socket.on('upstreamHi', function (data) { 			// A downstream client or server requests to join
 		console.log("New client ", socket.id," requesting channel ",data.channel," with key ",data.key);
 		let key = data.key;					// Get the key sent from the client
-		let address = socket.handshake.address;
-console.log("client address is ",address);
+		let used = false;					// Start assuming the key is fresh
+		if (key != "audenceServer")				// Unless this is an audence server scan to see if this key is already in use
+			channels.forEach( (c) => {if (c.key == key) used = true});
+		if (used) {						// If in use just don't reply to Hi message. Leave client hanging.
+			console.log("Client trying to connect with key ",key," already in use!");
+			return;
+		}
 		request('https://audence.com/lobby/keyCheck.php?key='+key, { json: true }, (err, res, body) => {
 			if ((key != serverKey) && (!body.result)) 	// If the key is not from a server and keyCheck is not positive 
 				return;					// just don't reply to the message. Client will not connect
@@ -317,6 +326,7 @@ console.log("client address is ",address);
 				channels[channel].shortages = 0;
 				channels[channel].overflows = 0;
 				channels[channel].newBuf = true;		
+				channels[channel].key = key;		// Store the key in the channel. Stops key reuse.
 				socket.join(channels[channel].group);	// Add to default group for downstream data MARK CHECK THIS!!!!???
 				connectedClients++;			// For monitoring purposes
 				console.log("Client assigned channel ",channel);
