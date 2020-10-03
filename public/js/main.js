@@ -483,8 +483,10 @@ document.addEventListener('DOMContentLoaded', function(event){		// Add dynamic b
 	groupBtn.onclick = ( (e) => {
 		if (myGroup == "noGroup")				// Group entry. By default we are in "noGroup". This displays as ""
 			groupNameEntry.innerHTML = "";
-		else
+		else {
 			groupNameEntry.innerHTML = myGroup;
+console.log(myGroup);
+		}
 		groupNameEntry.style.visibility = "visible";
 		groupNameEntry.focus();					// UI has been designed to be easily navigated with keys.
 	});
@@ -499,12 +501,12 @@ document.addEventListener('DOMContentLoaded', function(event){		// Add dynamic b
 				chatArea.style.visibility = "hidden";
 				groupNameEntry.blur();			// and remove the focus from the group input field
 			} else {
-				chatHistory.innerHTML += "<div style='color:#FFCC00'>Group changed from "+myGroup+" to "+groupNameEntry.value+"</div>";
-				chatHistory.scrollTop = chatHistory.scrollHeight;	
-				myGroup = groupNameEntry.value;		// group name is good. Make name and chat text area visible
-				nameBadge.style.visibility = "visible";
-				chatInput.style.visibility = "visible";
-				chatArea.style.visibility = "visible";
+//				chatHistory.innerHTML += "<div style='color:#FFCC00'>Group changed from "+myGroup+" to "+groupNameEntry.value+"</div>";
+//				chatHistory.scrollTop = chatHistory.scrollHeight;	
+//				myGroup = groupNameEntry.value;		// group name is good. Make name and chat text area visible
+//				nameBadge.style.visibility = "visible";
+//				chatInput.style.visibility = "visible";
+//				chatArea.style.visibility = "visible";
 				nickEntry.focus();			// put focus in name entry field
 			}
 			e.preventDefault();
