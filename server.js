@@ -132,9 +132,8 @@ const request = require('request');					// Used to access RestAPI in audence.com
 var upstreamName = process.env.upstream; 				// Get upstream server from heroku config variable, if present
 if (upstreamName == undefined)		
 	upstreamName ="";						// If this is empty we will connect later when it is set
-else
-	upstreamName = upstreamName + "?key=audenceServer";		// Add the server to server connection key parameter
-var upstreamServer = require('socket.io-client')(upstreamName);		// Upstream server uses client version of socketIO
+var upstreamServer = 							// Upstream server uses client version of socketIO
+	require('socket.io-client')(upstreamName+"?key=audenceServer");	// Connect adding internal server key in query string
 var upstreamServerChannel = -1;						// Channel assigned to us by upstream server
 var upstreamConnected = false;						// Flag to control sending upstream
 
