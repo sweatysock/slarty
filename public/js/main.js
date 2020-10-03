@@ -115,7 +115,19 @@ function processCommands(newCommands) {					// Apply commands sent from upstream
 var socketIO = io();
 socketIO.on('connect', function (socket) {				// New connection coming in
 	trace('socket connected!');
-	socketIO.emit("upstreamHi",{channel:myChannel}); 		// Register with server and request channel
+	let urlParams = new URLSearchParams(window.location.search);	
+	let key = urlParams.get('key');					// Get the key from the URL
+	if (key == null)  						// If it isn't there then go to the error page
+		window.location.href = "https://audence.com/error-serveraccess";
+	let ua = navigator.userAgent.toLowerCase();
+	let s, browser = "nothing";
+	(s = ua.match(/msie ([\d.]+)/)) ? browser = s[1] :
+	(s = ua.match(/firefox\/([\d.]+)/)) ? browser = s[1] :
+	(s = ua.match(/chrome\/([\d.]+)/)) ? browser = s[1] :
+	(s = ua.match(/opera.([\d.]+)/)) ? browser = s[1] :
+	(s = ua.match(/version\/([\d.]+).*safari/)) ? browser = s[1] : 0;
+console.log("the browser id seems to be ",browser);
+	socketIO.emit("upstreamHi",{channel:myChannel,key:key});	// Register with server and request channel, supplying the key given
 });
 
 socketIO.on('channel', function (data) {				// Message assigning us a channel
@@ -494,6 +506,8 @@ document.addEventListener('DOMContentLoaded', function(event){		// Add dynamic b
 				chatInput.style.visibility = "hidden";
 				groupNameEntry.blur();			// and remove the focus from the group input field
 			} else {
+				chatHistory.innerHTML += "<div style='color:#FFCC00'>Group changed from "+myGroup+" to "+groupNameEntry.value+"</div>";
+				chatHistory.scrollTop = chatHistory.scrollHeight;	
 				myGroup = groupNameEntry.value;		// group name is good. Make name and chat text area visible
 				nameBadge.style.visibility = "visible";
 				chatInput.style.visibility = "visible";
@@ -510,6 +524,8 @@ document.addEventListener('DOMContentLoaded', function(event){		// Add dynamic b
 			chatInput.style.visibility = "hidden";
 			groupNameEntry.blur();
 		} else {
+			chatHistory.innerHTML += "<div style='color:#FFCC00'>Group changed from "+myGroup+" to "+groupNameEntry.value+"</div>";
+			chatHistory.scrollTop = chatHistory.scrollHeight;	
 			myGroup = groupNameEntry.value;
 			nameBadge.style.visibility = "visible";
 			chatInput.style.visibility = "visible";

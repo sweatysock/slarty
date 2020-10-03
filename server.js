@@ -73,6 +73,7 @@ if ((loopback != undefined) && (loopback == "true")) {			// It needs to be defin
 }
 else loopback = false;							// If the variable has been set to any value we are in loopback mode
 var connectedClients = 0;						// Count of the number of clients connected to this server
+const serverKey = "audenceServer";					// Key used to identify server with another server
 var commands = {};							// Commands generated here or from upstream server
 
 function addCommands(newCommands) {
@@ -122,7 +123,7 @@ if (PORT == undefined) {						// Not running on heroku so use SSL
 var io  = require('socket.io').listen(server, 
 	{ cookie: false, log: false });					// socketIO for downstream connections
 
-
+const request = require('request');					// Used to access RestAPI in audence.com
 
 // Socket IO Client for upstream connections
 //
@@ -143,7 +144,8 @@ upstreamServer.on('connect', function(socket){				// We initiate the connection 
 	console.log("upstream server connected ",upstreamName);
 	upstreamServer.emit("upstreamHi",				// As client we need to say Hi 
 	{
-		"channel"	: upstreamServerChannel			// Send our channel (in case we have been re-connected)
+		"channel"	: upstreamServerChannel,		// Send our channel (in case we have been re-connected)
+		"key"		: serverKey,				// We are a server so we use the special server key
 	});
 });
 
@@ -286,40 +288,45 @@ io.sockets.on('connection', function (socket) {
 	});
 
 	socket.on('upstreamHi', function (data) { 			// A downstream client or server requests to join
-		console.log("New client ", socket.id);
-		let requestedChannel = data.channel;			// If a reconnect they will already have a channel
-		let channel = -1;					// Assigned channel. -1 means none (default response)
-		if ((requestedChannel != -1) &&	(channels[requestedChannel].socketID === undefined)) {
-			channel = requestedChannel;			// If requested channel is set and available reassign it
-		} else {
-			for (let i=1; i < channels.length; i++) {	// else find the next available channel from 1 upwards
-				if ((channels[i] == null) || (channels[i].socketID === undefined)) {
-					channel = i;			// assign fresh channel to this connection
-					break;				// No need to look anymore
+		console.log("New client ", socket.id," requesting channel ",data.channel," with key ",data.key);
+		let key = data.key;					// Get the key sent from the client
+		request('https://audence.com/lobby/keyCheck.php?key='+key, { json: true }, (err, res, body) => {
+			if ((key != serverKey) && (!body.result)) 	// If the key is not from a server and keyCheck is not positive 
+				return;					// just don't reply to the message. Client will not connect
+			let requestedChannel = data.channel;		// If a reconnect they will already have a channel
+			let channel = -1;				// Assigned channel. -1 means none (default response)
+			if ((requestedChannel != -1) &&	(channels[requestedChannel].socketID === undefined)) {
+				channel = requestedChannel;		// If requested channel is set and available reassign it
+			} else {
+				for (let i=1; i < channels.length; i++) {// else find the next available channel from 1 upwards
+					if ((channels[i] == null) || (channels[i].socketID === undefined)) {
+						channel = i;		// assign fresh channel to this connection
+						break;			// No need to look anymore
+					}
 				}
 			}
-		}
-		socket.emit('channel', { 				// Send channel assignment result to client
-			channel:channel, 
-			reverb:reverbFile,				// Also instruct the client to load the venue reverb 
-			loopback:loopback,				// Let the client know if we are a loopback server
-			defGroup:defGroup,				// Tell the client what their default group should be
-		});		
-		if (channel != -1) {					// Channel has been successfully assigned
-			channels[channel].packets = [];			// Reset channel values
-			channels[channel].name = "";			// This will be set when data comes in
-			channels[channel].liveClients = 0;		// Reset number of clients under this channel
-			channels[channel].group = "";			// Empty group name forces joining default group
-			channels[channel].socketID = socket.id;
-			channels[channel].socket = socket;
-			channels[channel].shortages = 0;
-			channels[channel].overflows = 0;
-			channels[channel].newBuf = true;		
-			socket.join(channels[channel].group);		// Add to default group for downstream data
-			connectedClients++;				// For monitoring purposes
-			console.log("Client assigned channel ",channel);
-		} else
-			console.log("No channels available. Client rejected.");
+			if (channel != -1) {				// Channel has been successfully assigned
+				channels[channel].packets = [];		// Reset channel values
+				channels[channel].name = "";		// This will be set when data comes in
+				channels[channel].liveClients = 0;	// Reset number of clients under this channel
+				channels[channel].group = "";		// Empty group name forces joining default group
+				channels[channel].socketID = socket.id;
+				channels[channel].socket = socket;
+				channels[channel].shortages = 0;
+				channels[channel].overflows = 0;
+				channels[channel].newBuf = true;		
+				socket.join(channels[channel].group);	// Add to default group for downstream data MARK CHECK THIS!!!!???
+				connectedClients++;			// For monitoring purposes
+				console.log("Client assigned channel ",channel);
+			} else
+				console.log("No channels available. Client rejected.");
+			socket.emit('channel', { 			// Send channel assignment result to client
+				channel:channel, 
+				reverb:reverbFile,			// Also instruct the client to load the venue reverb 
+				loopback:loopback,			// Let the client know if we are a loopback server
+				defGroup:defGroup,			// Tell the client what their default group should be
+			});		
+		});
 	});
 
 	socket.on('superHi', function (data) {				// A supervisor is registering for status updates PROTECT
@@ -414,7 +421,7 @@ io.sockets.on('connection', function (socket) {
 			perf.packets.push(packet);			// Store performer audio/video packet
 			if (perf.packets.length > perfMaxBufferSize) {
 				perf.packets.shift();			// Clip the performer buffer removing the oldest packet
-console.log("PERFORMER OVERflow for channel ",packet.channel);
+//console.log("PERFORMER OVERflow for channel ",packet.channel);
 			}
 			if ((!perf.streaming) && (perf.packets.length > mixTriggerLevel)) {
 				perf.streaming = true;			// If not streaming but enough now buffered, performer is go!
@@ -427,7 +434,7 @@ console.log("PERFORMER OVERflow for channel ",packet.channel);
 				(channel.recording == false)) {		// If buffer full and we are not recording this channel
 				channel.packets.shift();		// then remove the oldest packet.
 				channel.overflows++;			// Log overflows per channel
-console.log("OVERflow for channel ",packet.channel);
+//console.log("OVERflow for channel ",packet.channel);
 				overflows++;				// and also globally for monitoring
 			}
 			if (channel.packets.length >= channel.mixTriggerLevel) {
