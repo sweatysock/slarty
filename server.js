@@ -292,6 +292,7 @@ io.sockets.on('connection', function (socket) {
 		let key = data.key;					// Get the key sent from the client
 		let address = socket.handshake.address;
 console.log("client address is ",address);
+console.log(JSON.stringify(socket);
 		request('https://audence.com/lobby/keyCheck.php?key='+key, { json: true }, (err, res, body) => {
 			if ((key != serverKey) && (!body.result)) 	// If the key is not from a server and keyCheck is not positive 
 				return;					// just don't reply to the message. Client will not connect
