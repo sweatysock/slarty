@@ -119,14 +119,6 @@ socketIO.on('connect', function (socket) {				// New connection coming in
 	let key = urlParams.get('key');					// Get the key from the URL
 	if (key == null)  						// If it isn't there then go to the error page
 		window.location.href = "https://audence.com/error-serveraccess";
-	let ua = navigator.userAgent.toLowerCase();
-	let s, browser = "nothing";
-	(s = ua.match(/msie ([\d.]+)/)) ? browser = s[1] :
-	(s = ua.match(/firefox\/([\d.]+)/)) ? browser = s[1] :
-	(s = ua.match(/chrome\/([\d.]+)/)) ? browser = s[1] :
-	(s = ua.match(/opera.([\d.]+)/)) ? browser = s[1] :
-	(s = ua.match(/version\/([\d.]+).*safari/)) ? browser = s[1] : 0;
-tracef("the browser id seems to be ",browser);
 	socketIO.emit("upstreamHi",{channel:myChannel,key:key});	// Register with server and request channel, supplying the key given
 });
 
