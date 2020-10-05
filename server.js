@@ -306,7 +306,8 @@ io.sockets.on('connection', function (socket) {
 			console.log("Client trying to connect with key ",key," already in use!");
 			return;
 		}
-		request('https://audence.com/lobby/keyCheck.php?key='+key, { json: true }, (err, res, body) => {
+//		request('https://audence.com/lobby/keyCheck.php?key='+key, { json: true }, (err, res, body) => { // Version that just verifies key
+		request('https://audence.com/lobby/keyLock.php?key='+key, { json: true }, (err, res, body) => { // Version that marks key as used
 			if ((key != serverKey) && (!body.result)) 	// If the key is not from a server and keyCheck is not positive 
 				return;					// just don't reply to the message. Client will not connect
 			let requestedChannel = data.channel;		// If a reconnect they will already have a channel
