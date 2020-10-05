@@ -133,7 +133,7 @@ var upstreamName = process.env.upstream; 				// Get upstream server from heroku 
 if (upstreamName == undefined)		
 	upstreamName ="";						// If this is empty we will connect later when it is set
 var upstreamServer = 							// Upstream server uses client version of socketIO
-	require('socket.io-client')(upstreamName+"?key=audenceServer");	// Connect adding internal server key in query string
+	require('socket.io-client')(upstreamName+"?key="+serverKey);	// Connect adding internal server key in query string
 var upstreamServerChannel = -1;						// Channel assigned to us by upstream server
 var upstreamConnected = false;						// Flag to control sending upstream
 
@@ -270,7 +270,7 @@ io.sockets.on('connection', function (socket) {
 // NOTE: DB key locking requires the following plus all server key unlocking at startup (not implemented). Server controls key reuse for now.
 //				let key = c.key;			// Release the key in the ticket DB so that the user
 //				let channel = ch;			// can reenter the lobby if required.
-//				if (key != "audenceServer") 
+//				if (key != serverKey) 
 //					request('https://audence.com/lobby/keyRelease.php?key='+key, { json: true }, (err, res, body) => {
 //						console.log("Channel ",channel," disconnected. Key ",key," released");
 //					});
@@ -299,9 +299,10 @@ io.sockets.on('connection', function (socket) {
 
 	socket.on('upstreamHi', function (data) { 			// A downstream client or server requests to join
 		console.log("New client ", socket.id," requesting channel ",data.channel," with key ",data.key);
+		if (loopback) key = serverKey;				// If we are a loopback server use the internal key to skip tests
 		let key = data.key;					// Get the key sent from the client
 		let used = false;					// Start assuming the key is fresh
-		if (key != "audenceServer")				// Unless this is an audence server scan to see if this key is already in use
+		if (key != serverKey)				// Unless this is an audence server scan to see if this key is already in use
 			channels.forEach( (c) => {if (c.key == key) used = true});
 		if (used) {						// If in use just don't reply to Hi message. Leave client hanging.
 			console.log("Client trying to connect with key ",key," already in use!");
