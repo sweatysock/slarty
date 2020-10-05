@@ -267,12 +267,13 @@ io.sockets.on('connection', function (socket) {
 					perf.chan = 0;
 					perf.live = false;
 				}
-				let key = c.key;			// Release the key in the ticket DB so that the user
-				let channel = ch;			// can reenter the lobby if required.
-				if (key != "audenceServer") 
-					request('https://audence.com/lobby/keyRelease.php?key='+key, { json: true }, (err, res, body) => {
-						console.log("Channel ",channel," disconnected. Key ",key," released");
-					});
+// NOTE: DB key locking requires the following plus all server key unlocking at startup (not implemented). Server controls key reuse for now.
+//				let key = c.key;			// Release the key in the ticket DB so that the user
+//				let channel = ch;			// can reenter the lobby if required.
+//				if (key != "audenceServer") 
+//					request('https://audence.com/lobby/keyRelease.php?key='+key, { json: true }, (err, res, body) => {
+//						console.log("Channel ",channel," disconnected. Key ",key," released");
+//					});
 				if (!c.recording) {			// If recording the channel remains unchanged
 					let g = groups[c.group];	// Remove this channel from its group
 					if (g != undefined) {		// if it was in one... (a quickly refreshed client won't be)
@@ -306,8 +307,9 @@ io.sockets.on('connection', function (socket) {
 			console.log("Client trying to connect with key ",key," already in use!");
 			return;
 		}
-//		request('https://audence.com/lobby/keyCheck.php?key='+key, { json: true }, (err, res, body) => { // Version that just verifies key
-		request('https://audence.com/lobby/keyLock.php?key='+key, { json: true }, (err, res, body) => { // Version that marks key as used
+// Key reuse is controlled by the server here. Enable request to keyLock is DB level control of reuse is desired.
+		request('https://audence.com/lobby/keyCheck.php?key='+key, { json: true }, (err, res, body) => { // Version that just verifies key
+//		request('https://audence.com/lobby/keyLock.php?key='+key, { json: true }, (err, res, body) => { // Version that marks key as used
 			if ((key != serverKey) && (!body.result)) 	// If the key is not from a server and keyCheck is not positive 
 				return;					// just don't reply to the message. Client will not connect
 			let requestedChannel = data.channel;		// If a reconnect they will already have a channel
