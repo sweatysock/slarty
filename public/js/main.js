@@ -1152,7 +1152,8 @@ function processAudio(e) {						// Main processing loop
 		bytesShort += shortfall;
 		outAudioL = spkrBufferL.splice(0,spkrBufferL.length);	// Take all that remains and complete with 0s
 		outAudioR = spkrBufferR.splice(0,spkrBufferR.length);	// Take all that remains and complete with 0s
-		let t = (shortfall < 400)? shortfall : 400;		// Transition to zero is up to 400 samples long
+		let t = (spkrBufferL.length < 400)? 			// Transition to zero is as long as remaining audio
+			spkrBufferL.length : 400;			// up to a maximum of 400 samples
 		for (let i=0; i<t; i++) {				// Smoothly drop to zero to reduce harsh clicks
 			outAudioL[i] = outAudioL[i]*smooth[Math.round(i*400/t)];
 			outAudioR[i] = outAudioR[i]*smooth[Math.round(i*400/t)];

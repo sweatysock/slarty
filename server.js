@@ -267,6 +267,12 @@ io.sockets.on('connection', function (socket) {
 					perf.chan = 0;
 					perf.live = false;
 				}
+				let key = c.key;			// Release the key in the ticket DB so that the user
+				let channel = ch;			// can reenter the lobby if required.
+				if (key != "audenceServer") 
+					request('https://audence.com/lobby/keyRelease.php?key='+key, { json: true }, (err, res, body) => {
+						console.log("Channel ",channel," disconnected. Key ",key," released");
+					});
 				if (!c.recording) {			// If recording the channel remains unchanged
 					let g = groups[c.group];	// Remove this channel from its group
 					if (g != undefined) {		// if it was in one... (a quickly refreshed client won't be)
