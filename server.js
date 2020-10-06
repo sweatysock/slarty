@@ -299,8 +299,8 @@ io.sockets.on('connection', function (socket) {
 
 	socket.on('upstreamHi', function (data) { 			// A downstream client or server requests to join
 		console.log("New client ", socket.id," requesting channel ",data.channel," with key ",data.key);
-		if (loopback) key = serverKey;				// If we are a loopback server use the internal key to skip tests
 		let key = data.key;					// Get the key sent from the client
+		if (loopback) key = serverKey;				// If we are a loopback server use the internal key to skip tests
 		let used = false;					// Start assuming the key is fresh
 		if (key != serverKey)				// Unless this is an audence server scan to see if this key is already in use
 			channels.forEach( (c) => {if (c.key == key) used = true});
