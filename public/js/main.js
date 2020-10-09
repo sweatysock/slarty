@@ -1432,13 +1432,15 @@ function reSample( buffer, cache, resampledBufferLength) {		// Takes an audio bu
 		let nearestPoint = Math.round( resampleValue );
 		for ( let tap = -1; tap < 2; tap++ ) {
 			let sampleValue = buffer[ nearestPoint + tap ];
-			if (isNaN(sampleValue)) sampleValue = cache[ 1 + tap ];
+			if (isNaN(sampleValue)) {sampleValue = cache[ 1 + tap ];
+console.log("Outside of array... getting value from buffer:",sampleValue);}
 //				if (isNaN(sampleValue)) sampleValue = buffer[ nearestPoint ];
 			outputData[ i ] += sampleValue * magicKernel( resampleValue - nearestPoint - tap );
 		}
 	}
 	cache[ 0 ] = buffer[ buffer.length - 2 ];
 	cache[ 1 ] = outputData[ resampledBufferLength - 1 ] = buffer[ buffer.length - 1 ];
+console.log("Saved in cache:",cache);
 	return outputData;
 }
 
