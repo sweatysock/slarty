@@ -263,7 +263,7 @@ socketIO.on('d', function (data) {
 		let mixL = [], mixR = [];
 		if (gL.length > 0) {mixL = gL; mixR = gR;}		// Put group audio in the mix if any
 		else {							// If no group mix then fill mix with 0's
-			let s = Math.round(micAudioPacketSize);		// This is the size of the input/output packet size
+			let s = micAudioPacketSize;			// This is the size of the input/output packet size
 			mixL = new Array(s).fill(0), mixR = new Array(s).fill(0);
 		}
 		// 2. Process venue mix from server 
@@ -1070,9 +1070,9 @@ function processAudio(e) {						// Main processing loop
 		}
 		micBufferL.push(...micAudioL);				// Buffer mic audio L
 		micBufferR.push(...micAudioR);				// Buffer mic audio R
-		if (micBufferL.length > micAudioPacketSize) {		// If enough audio in buffer 
-			let audioL = micBufferL.splice(0, micAudioPacketSize);		// Get a packet of audio
-			let audioR = micBufferR.splice(0, micAudioPacketSize);		// for each channel
+		if (micBufferL.length > adjMicPacketSize) {		// If enough audio in buffer 
+			let audioL = micBufferL.splice(0, adjMicPacketSize);		// Get a packet of audio
+			let audioR = micBufferR.splice(0, adjMicPacketSize);		// for each channel
 			let audio = {mono8:[],mono16:[]};		// default empty audio and perf objects to send
 			let perf = false;				// Signal to server we believe we are not the performer
 			let peak = 0;					// Note: no need for perf to set peak
@@ -1654,13 +1654,14 @@ var delta;
 var previous;
 var deltaMax = 0;
 var deltaMin = 10000;
+var pitch = 0;
 function printReport() {
 	enterState( UIState );						// Measure time spent updating UI even for reporting!
 	let netState = ((((rtt1-rtt5)/rtt5)>0.1) && (rtt5>400)) ? "UNSTABLE":"stable";
 	if (!pauseTracing) {
 //		trace("Idle=", idleState.total, " data in=", dataInState.total, " audio in/out=", audioInOutState.total," UI work=",UIState.total);
 		trace(packetsOut,"/",packetsIn," over:",overflows,"(",bytesOver,") short:",shortages,"(",bytesShort,") RTT=",rtt.toFixed(1)," ",rtt1.toFixed(1)," ",rtt5.toFixed(1)," ",netState," a:",audience," sent:",bytesSent.toFixed(1)," rcvd:",bytesRcvd.toFixed(1));
-		trace(" speaker buff:",spkrBufferL.length,"(",spkrBuffTrough," - ",spkrBuffPeak,") Delta max/min:",deltaMax,"/",deltaMin);
+		trace(" speaker buff:",spkrBufferL.length,"(",spkrBuffTrough," - ",spkrBuffPeak,") Delta max/min:",deltaMax,"/",deltaMin," pitch:",pitch);
 		trace2("sent:",bytesSent.toFixed(1)," rcvd:",bytesRcvd.toFixed(1));
 	}
 	if (performer == true) {
@@ -1709,9 +1710,10 @@ function printReport() {
 	deltaMax = 0;
 	deltaMin = 10000;
 	if (spkrBufferL.length > maxBuffSize/2)				// If speaker buffer is above middle take less audio per packet to increase packet rate
-		micAudioPacketSize--;
+		pitch--;
 	else								// otherwise reduce audio per packet to reduce packet rate
-		micAudioPacketSize++;
+		pitch++;
+	adjMicPacketSize = micAudioPacketSize + pitch;			// pitch is adjusted to keep things flowing smoothly
 	enterState( idleState );					// Back to Idling
 }
 
