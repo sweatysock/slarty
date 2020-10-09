@@ -313,10 +313,7 @@ socketIO.on('d', function (data) {
 				} else v = v8;				// Only low bandwidth venue audio 
 				let p = maxValue(v);			// Get peak audio for venue level display 
 				if (p > venue.peak) venue.peak = p;
-if (tracecount>0) console.log(v);
-				v = reSample(v, sr, adjMicPacketSize); 
-if (tracecount>0) console.log(v);
-tracecount--;
+				v = reSample(v, vCache, adjMicPacketSize); 
 			} else venue.peak = 0;				// Don't need to be a genius to figure that one out if there's no audio!
 		} 
 		// 3. Process performer audio if there is any, and add it to the mix. This could be stereo audio
@@ -353,7 +350,7 @@ tracecount--;
 					mono[k] = d + m32[j]; k++;
 					mono[k] = d - m32[j]; j++; k++;
 				}					// Mono perf audio ready to upsample
-				mono = reSample(mono, sr, adjMicPacketSize);
+				mono = reSample(mono, upCachePerfM, adjMicPacketSize);
 				let s8 = audio.stereo8;// Now regenerate the stereo difference signal
 				let s16 = audio.stereo16;
 				let s32 = audio.stereo32;
@@ -377,7 +374,7 @@ tracecount--;
 						stereo[k] = d + s32[j]; k++;
 						stereo[k] = d - s32[j]; j++; k++;
 					}				// Stereo difference perf audio upsampling now
-					stereo = reSample(stereo, sr, adjMicPacketSize);
+					stereo = reSample(stereo, upCachePerfS, adjMicPacketSize);
 					let left = [], right = [];	// Time to reconstruct the original left and right audio
 					for (let i=0; i<mono.length; i++) {	// Note. Doing this after upsampling because mono
 						left[i] = (mono[i] + stereo[i])/2;	// and stereo may not have same sample rate
@@ -1433,14 +1430,11 @@ function reSample( buffer, cache, resampledBufferLength) {		// Takes an audio bu
 		for ( let tap = -1; tap < 2; tap++ ) {
 			let sampleValue = buffer[ nearestPoint + tap ];
 			if (isNaN(sampleValue)) {sampleValue = cache[ 1 + tap ];
-console.log("Outside of array... getting value from buffer:",sampleValue);}
-//				if (isNaN(sampleValue)) sampleValue = buffer[ nearestPoint ];
 			outputData[ i ] += sampleValue * magicKernel( resampleValue - nearestPoint - tap );
 		}
 	}
 	cache[ 0 ] = buffer[ buffer.length - 2 ];
 	cache[ 1 ] = outputData[ resampledBufferLength - 1 ] = buffer[ buffer.length - 1 ];
-console.log("Saved in cache:",cache);
 	return outputData;
 }
 
