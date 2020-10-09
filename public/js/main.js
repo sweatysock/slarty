@@ -256,8 +256,8 @@ socketIO.on('d', function (data) {
 				gL[k] = L8[i] - L16[i];
 				gR[k] = R8[i] - R16[i];k++;
 			}						// Bring sample rate up to HW sample rate
-			gL = reSample(gL, SampleRate, soundcardSampleRate, gLCache, micAudioPacketSize); 
-			gR = reSample(gR, SampleRate, soundcardSampleRate, gRCache, micAudioPacketSize); 
+			gL = reSample(gL, gLCache, micAudioPacketSize); 
+			gR = reSample(gR, gRCache, micAudioPacketSize); 
 			isStereo = true;
 		} 
 		let mixL = [], mixR = [];
@@ -313,7 +313,7 @@ socketIO.on('d', function (data) {
 				} else v = v8;				// Only low bandwidth venue audio 
 				let p = maxValue(v);			// Get peak audio for venue level display 
 				if (p > venue.peak) venue.peak = p;
-				v = reSample(v, sr, soundcardSampleRate, vCache, micAudioPacketSize); 
+				v = reSample(v, sr, micAudioPacketSize); 
 			} else venue.peak = 0;				// Don't need to be a genius to figure that one out if there's no audio!
 		} 
 		// 3. Process performer audio if there is any, and add it to the mix. This could be stereo audio
@@ -350,7 +350,7 @@ socketIO.on('d', function (data) {
 					mono[k] = d + m32[j]; k++;
 					mono[k] = d - m32[j]; j++; k++;
 				}					// Mono perf audio ready to upsample
-				mono = reSample(mono, sr, soundcardSampleRate, upCachePerfM, micAudioPacketSize);
+				mono = reSample(mono, sr, micAudioPacketSize);
 				let s8 = audio.stereo8;// Now regenerate the stereo difference signal
 				let s16 = audio.stereo16;
 				let s32 = audio.stereo32;
@@ -374,7 +374,7 @@ socketIO.on('d', function (data) {
 						stereo[k] = d + s32[j]; k++;
 						stereo[k] = d - s32[j]; j++; k++;
 					}				// Stereo difference perf audio upsampling now
-					stereo = reSample(stereo, sr, soundcardSampleRate, upCachePerfS, micAudioPacketSize);
+					stereo = reSample(stereo, sr, micAudioPacketSize);
 					let left = [], right = [];	// Time to reconstruct the original left and right audio
 					for (let i=0; i<mono.length; i++) {	// Note. Doing this after upsampling because mono
 						left[i] = (mono[i] + stereo[i])/2;	// and stereo may not have same sample rate
@@ -1053,7 +1053,6 @@ function processAudio(e) {						// Main processing loop
 		let micAudioL = [];					// Our objective is to fill this with audio
 		let micAudioR = [];					
 		let peak = maxValue(inDataL);				// Get peak of raw mic audio (using left channel for now)
-		if (!pauseTracing) levelClassifier(peak);		// Classify audio incoming for analysis
 		if ((micIn.gate > 0)  && (peak > noiseThreshold/3))	// If noise gate is open it should stay open for less sound
 			micIn.gate = gateDelay;
 		else if ((peak > micIn.threshold) &&			// if audio is above dynamic threshold
@@ -1085,7 +1084,7 @@ function processAudio(e) {						// Main processing loop
 					perf = zipson.stringify({mono8:[],mono16:[],mono32:[],stereo8:[],stereo16:[],stereo32:[]});
 			} else {					// Standard audio prep - always mono
 				let mono8 = [], mono16 = [], mono32 = [], stereo8 = [], stereo16 = [], stereo32 = [];
-				audio = reSample(audioL, soundcardSampleRate, SampleRate, downCache, PacketSize);	
+				audio = reSample(audioL, downCache, PacketSize);	
 				let obj = applyAutoGain(audio, micIn);	// Amplify mic with auto limiter
 				if (obj.peak > micIn.peak) 
 					micIn.peak = obj.peak;		// Note peak for local display
@@ -1208,9 +1207,9 @@ function prepPerfAudio( audioL, audioR ) {				// Performer audio is HQ and possi
 	let stereo = false;						// Start by detecting if there is stereo audio
 	if (stereoOn) for (let i=0; i<audioL.length; i++) 		// If user has enabled stereo 
 		if (audioL[i] != audioR[i]) stereo = true;		// check if the signal is actually stereo
-	audioL = reSample(audioL, soundcardSampleRate, PerfSampleRate, downCachePerfL, PerfPacketSize);	
+	audioL = reSample(audioL, downCachePerfL, PerfPacketSize);	
 	if (stereo) {							// If stereo the right channel will need processing
-		audioR = reSample(audioR, soundcardSampleRate, PerfSampleRate, downCachePerfR, PerfPacketSize);	
+		audioR = reSample(audioR, downCachePerfR, PerfPacketSize);	
 	}
 	let obj;
 	if (stereo) {							// Stereo level setting 
@@ -1422,9 +1421,7 @@ var  downCachePerfL = [0.0,0.0];					// cache for performer audio from mic
 var  downCachePerfR = [0.0,0.0];					// can be stereo
 var  upCachePerfM = [0.0,0.0];						// cache for performer audio to mix and send to speaker
 var  upCachePerfS = [0.0,0.0];						// can be stereo
-function reSample( buffer, originalSampleRate, resampledRate, cache, resampledBufferLength) {
-//	if (resampledBufferLength == undefined)				// If the output packet size isn't set we calculate it
-//		resampledBufferLength = Math.floor( buffer.length * resampledRate / originalSampleRate );
+function reSample( buffer, cache, resampledBufferLength) {		// Takes an audio buffer and stretches or shrinks it to fit the resampledBufferLength
 	let resampleRatio = buffer.length / resampledBufferLength;
 	let outputData = new Array(resampledBufferLength).fill(0);
 	for ( let i = 0; i < resampledBufferLength - 1; i++ ) {
@@ -1664,10 +1661,8 @@ function printReport() {
 //		trace("Idle=", idleState.total, " data in=", dataInState.total, " audio in/out=", audioInOutState.total," UI work=",UIState.total);
 		trace(packetsOut,"/",packetsIn," over:",overflows,"(",bytesOver,") short:",shortages,"(",bytesShort,") RTT=",rtt.toFixed(1)," ",rtt1.toFixed(1)," ",rtt5.toFixed(1)," ",netState," a:",audience," sent:",bytesSent.toFixed(1)," rcvd:",bytesRcvd.toFixed(1));
 		trace(" speaker buff:",spkrBufferL.length,"(",spkrBuffTrough," - ",spkrBuffPeak,") Delta max/min:",deltaMax,"/",deltaMin);
-//		trace("Levels of output: ",levelCategories);
 		trace2("sent:",bytesSent.toFixed(1)," rcvd:",bytesRcvd.toFixed(1));
 	}
-//	setNoiseThreshold();						// Set mic noise threshold based on level categories
 	if (performer == true) {
 		document.getElementById("onair").style.visibility = "visible";
 		micFilter1.frequency.value = PerfSampleRate/2.2;	// Change mic filter for performance audio
@@ -1699,9 +1694,6 @@ function printReport() {
 	if ((packetsIn < lowerLimit) || (packetsIn > upperLimit)) downStatus = "Orange";
 	if (packetsIn < lowerLimit/3) downStatus = "Red";
 	setStatusLED("DownStatus",downStatus);
-//	if ((overflows > 2) || (shortages > 2)) 
-//		if (maxBuffSize < 20000) maxBuffSize += 100;		// Increase speaker buffer size if we are overflowing or short
-//	if (maxBuffSize > 6000) maxBuffSize -= 20;			// Steadily drop buffer back to size to compensate
 	packetsIn = 0;
 	packetsOut = 0;
 	bytesSent = 0;
@@ -1716,6 +1708,10 @@ function printReport() {
 	spkrBuffTrough = maxBuffSize;
 	deltaMax = 0;
 	deltaMin = 10000;
+	if (spkrBufferL.length > maxBuffSize/2)				// If speaker buffer is above middle take less audio per packet to increase packet rate
+		micAudioPacketSize--;
+	else								// otherwise reduce audio per packet to reduce packet rate
+		micAudioPacketSize++;
 	enterState( idleState );					// Back to Idling
 }
 
