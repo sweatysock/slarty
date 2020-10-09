@@ -422,7 +422,6 @@ socketIO.on('d', function (data) {
 		if (spkrBufferL.length < spkrBuffTrough) 		// Monitoring purposes
 			spkrBuffTrough = spkrBufferL.length;
 if (tracecount>0) console.log(mixL);
-tracecount--;
 		spkrBufferL.push(...mixL);				// put left mix in the left speaker buffer
 		if (isStereo)
 			spkrBufferR.push(...mixR);			// and the right in the right if stereo
@@ -444,6 +443,8 @@ tracecount--;
 		}
 		if (spkrBufferL.length > spkrBuffPeak) 			// Monitoring purposes
 			spkrBuffPeak = spkrBufferL.length;
+if (tracecount>0) console.log(v);
+tracecount--;
 		if (v.length > 0)					// Add the venue audio to its own buffer
 			venueBuffer.push(...v);				// Add any venue audio to the venue buffer
 		if (venueBuffer.length > maxBuffSize) 			// Clip buffer if too full
