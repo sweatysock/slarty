@@ -481,14 +481,16 @@ document.addEventListener('DOMContentLoaded', function(event){		// Add dynamic b
 	chatArea = document.getElementById('chatBubbleArea');		// Div where chat bublesa are animated
 	chatHistory = document.getElementById('chatHistory');		// The chat history window itself. Again, 2 divs not needed.
 	groupBtn.onclick = ( (e) => {
-		if (myGroup == "noGroup")				// Group entry. By default we are in "noGroup". This displays as ""
+		if (myGroup == "noGroup") {				// Group entry. By default we are in "noGroup". This displays as ""
 			groupNameEntry.value = "";
-		else {
+			groupNameEntry.focus();				// Enter group name first
+		} else {
 			groupNameEntry.value = myGroup;
+			nickEntry.focus();				// We have a group name so go to user name
 		}
 		groupNameEntry.style.visibility = "visible";
-		groupNameEntry.focus();					// UI has been designed to be easily navigated with keys.
 	});
+	groupNameEntry.setAttribute("maxlength",30);			// Set group name length limit to 30
 	groupNameEntry.addEventListener("keydown", (e) => {		// Filter key presses directly
 		if (e.which === 32) e.preventDefault();			// No spaces allowed in group name
 		if (e.which === 13) {					// Enter is captured and processed in js

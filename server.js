@@ -267,13 +267,6 @@ io.sockets.on('connection', function (socket) {
 					perf.chan = 0;
 					perf.live = false;
 				}
-// NOTE: DB key locking requires the following plus all server key unlocking at startup (not implemented). Server controls key reuse for now.
-//				let key = c.key;			// Release the key in the ticket DB so that the user
-//				let channel = ch;			// can reenter the lobby if required.
-//				if (key != serverKey) 
-//					request('https://audence.com/lobby/keyRelease.php?key='+key, { json: true }, (err, res, body) => {
-//						console.log("Channel ",channel," disconnected. Key ",key," released");
-//					});
 				if (!c.recording) {			// If recording the channel remains unchanged
 					let g = groups[c.group];	// Remove this channel from its group
 					if (g != undefined) {		// if it was in one... (a quickly refreshed client won't be)
@@ -308,11 +301,12 @@ io.sockets.on('connection', function (socket) {
 			console.log("Client trying to connect with key ",key," already in use!");
 			return;
 		}
-// Key reuse is controlled by the server here. Enable request to keyLock is DB level control of reuse is desired.
-		request('https://audence.com/lobby/keyCheck.php?key='+key, { json: true }, (err, res, body) => { // Version that just verifies key
-//		request('https://audence.com/lobby/keyLock.php?key='+key, { json: true }, (err, res, body) => { // Version that marks key as used
-			if ((key != serverKey) && (!body.result)) 	// If the key is not from a server and keyCheck is not positive 
-				return;					// just don't reply to the message. Client will not connect
+		request('https://audence.com/lobby/keyCheck.php?key='	// Keys are confirmed with audence DB. 
+					+key, { json: true }, (err, res, data) => { 
+			let n = "zxzyz"+data.eventID+"-"+data.zone;	// Build server name associated with this key
+			if ((key != serverKey) && 			// If the connection isn't from another audence server, and
+				((!data.result) || (n != myServerName)))// if the key is bad or is meant for a different server
+				return;					// don't reply to the message. Client will be left in limbo
 			let requestedChannel = data.channel;		// If a reconnect they will already have a channel
 			let channel = -1;				// Assigned channel. -1 means none (default response)
 			if ((requestedChannel != -1) &&	(channels[requestedChannel].socketID === undefined)) {
@@ -342,10 +336,11 @@ io.sockets.on('connection', function (socket) {
 			} else
 				console.log("No channels available. Client rejected.");
 			socket.emit('channel', { 			// Send channel assignment result to client
-				channel:channel, 
-				reverb:reverbFile,			// Also instruct the client to load the venue reverb 
+				channel	:channel, 
+				reverb	:reverbFile,			// Also instruct the client to load the venue reverb 
 				loopback:loopback,			// Let the client know if we are a loopback server
 				defGroup:defGroup,			// Tell the client what their default group should be
+				role	:data.type,			// Tell the client their role according to the audence DB
 			});		
 		});
 	});
@@ -727,7 +722,7 @@ function generateMix () {
 			f = perfMaxBufferSize/2 - perf.packets.length;	// Aim to keep its buffer perfectly in the middle
 			f = f *3;					// Boost the rate of correction to keep closer control
 		}							// to optimize sound quality
-		nextMixTimeLimit += (PacketSize * (1000+f))/SampleRate;	// Next mix will be needed PacketSize samples in the future
+		nextMixTimeLimit += (PacketSize * (1000+f+200))/SampleRate;	// Next mix will be needed PacketSize samples in the future
 		mixTimer = setTimeout(forceMix,(nextMixTimeLimit-now));	// Set forceMix timer for when next mix will be needed
 	}
 	else nextMixTimeLimit = 0;					// No data sent. No timer needed. Reset next mix target time
@@ -826,8 +821,8 @@ function printReport() {
 	packetsOut = 0;
 	upstreamIn = 0;
 	upstreamOut = 0;
-	overflows = 0;
-	shortages = 0;
+//	overflows = 0;
+//	shortages = 0;
 	perfShort = 0;
 	rtt = 0;
 	forcedMixes = 0;
