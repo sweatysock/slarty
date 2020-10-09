@@ -1433,7 +1433,7 @@ function reSample( buffer, cache, resampledBufferLength) {		// Takes an audio bu
 		for ( let tap = -1; tap < 2; tap++ ) {
 			let sampleValue = buffer[ nearestPoint + tap ];
 			if (isNaN(sampleValue)) sampleValue = cache[ 1 + tap ];
-				if (isNaN(sampleValue)) sampleValue = buffer[ nearestPoint ];
+//				if (isNaN(sampleValue)) sampleValue = buffer[ nearestPoint ];
 			outputData[ i ] += sampleValue * magicKernel( resampleValue - nearestPoint - tap );
 		}
 	}
