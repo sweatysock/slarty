@@ -309,6 +309,8 @@ io.sockets.on('connection', function (socket) {
 				return;					// don't reply to the message. Client will be left in limbo
 			let requestedChannel = data.channel;		// If a reconnect they will already have a channel
 			let channel = -1;				// Assigned channel. -1 means none (default response)
+console.log("Requested channel ",requestedChannel," channel looks like...");
+console.log(channels[requestedChannel]);
 			if ((requestedChannel != -1) &&	(channels[requestedChannel].socketID === undefined)) {
 				channel = requestedChannel;		// If requested channel is set and available reassign it
 			} else {
