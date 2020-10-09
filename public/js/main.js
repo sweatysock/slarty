@@ -1709,10 +1709,11 @@ function printReport() {
 	spkrBuffTrough = maxBuffSize;
 	deltaMax = 0;
 	deltaMin = 10000;
-	if (spkrBufferL.length > maxBuffSize/2)				// If speaker buffer is above middle take less audio per packet to increase packet rate
-		pitch--;
-	else								// otherwise reduce audio per packet to reduce packet rate
-		pitch++;
+	pitch = Math.round((maxBuffSize/2 - spkrBufferL.length)/1000);
+// 	if (spkrBufferL.length > maxBuffSize/2)				// If speaker buffer is above middle take less audio per packet to increase packet rate
+//		pitch--;
+//	else								// otherwise reduce audio per packet to reduce packet rate
+//		pitch++;
 	adjMicPacketSize = micAudioPacketSize + pitch;			// pitch is adjusted to keep things flowing smoothly
 	enterState( idleState );					// Back to Idling
 }
