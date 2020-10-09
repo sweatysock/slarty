@@ -422,7 +422,7 @@ socketIO.on('d', function (data) {
 		if (spkrBufferL.length < spkrBuffTrough) 		// Monitoring purposes
 			spkrBuffTrough = spkrBufferL.length;
 if (tracecount>0) console.log(mixL);
-traceount--;
+tracecount--;
 		spkrBufferL.push(...mixL);				// put left mix in the left speaker buffer
 		if (isStereo)
 			spkrBufferR.push(...mixR);			// and the right in the right if stereo
