@@ -295,11 +295,11 @@ io.sockets.on('connection', function (socket) {
 		let key = data.key;					// Get the key sent from the client
 		if (loopback) key = serverKey;				// If we are a loopback server use the internal key to skip tests
 		let used = false;					// Start assuming the key is fresh
-		if (key != serverKey)				// Unless this is an audence server scan to see if this key is already in use
+		if (key != serverKey)					// Unless this is an audence server scan to see if this key is already in use
 			channels.forEach( (c) => {if (c.key == key) used = true});
 		if (used) {						// If in use just don't reply to Hi message. Leave client hanging.
 			console.log("Client trying to connect with key ",key," already in use!");
-			return;
+//			return;
 		}
 		request('https://audence.com/lobby/keyCheck.php?key='	// Keys are confirmed with audence DB. 
 					+key, { json: true }, (err, res, info) => { 
@@ -516,6 +516,7 @@ function enoughAudio() {						// Is there enough audio to build a mix before tim
 	if (now > nextMixTimeLimit) {
 		return true;						// If timer has failed to trigger just generate the mix now
 	}
+else return false;
 	let allFull = true; 
 	let fullCount = 0;		
 	for (let ch=0; ch<channels.length; ch++) {
@@ -722,7 +723,7 @@ function generateMix () {
 			f = perfMaxBufferSize/2 - perf.packets.length;	// Aim to keep its buffer perfectly in the middle
 			f = f *3;					// Boost the rate of correction to keep closer control
 		}							// to optimize sound quality
-		nextMixTimeLimit += (PacketSize * (1000+f+200))/SampleRate;	// Next mix will be needed PacketSize samples in the future
+		nextMixTimeLimit += (PacketSize * (1000+f))/SampleRate;	// Next mix will be needed PacketSize samples in the future
 		mixTimer = setTimeout(forceMix,(nextMixTimeLimit-now));	// Set forceMix timer for when next mix will be needed
 	}
 	else nextMixTimeLimit = 0;					// No data sent. No timer needed. Reset next mix target time
