@@ -256,14 +256,14 @@ socketIO.on('d', function (data) {
 				gL[k] = L8[i] - L16[i];
 				gR[k] = R8[i] - R16[i];k++;
 			}						// Bring sample rate up to HW sample rate
-			gL = reSample(gL, gLCache, micAudioPacketSize); 
-			gR = reSample(gR, gRCache, micAudioPacketSize); 
+			gL = reSample(gL, gLCache, adjMicPacketSize); 
+			gR = reSample(gR, gRCache, adjMicPacketSize); 
 			isStereo = true;
 		} 
 		let mixL = [], mixR = [];
 		if (gL.length > 0) {mixL = gL; mixR = gR;}		// Put group audio in the mix if any
 		else {							// If no group mix then fill mix with 0's
-			let s = micAudioPacketSize;			// This is the size of the input/output packet size
+			let s = adjMicPacketSize;			// This is the size of the input/output packet size
 			mixL = new Array(s).fill(0), mixR = new Array(s).fill(0);
 		}
 		// 2. Process venue mix from server 
@@ -313,7 +313,7 @@ socketIO.on('d', function (data) {
 				} else v = v8;				// Only low bandwidth venue audio 
 				let p = maxValue(v);			// Get peak audio for venue level display 
 				if (p > venue.peak) venue.peak = p;
-				v = reSample(v, sr, micAudioPacketSize); 
+				v = reSample(v, sr, adjMicPacketSize); 
 			} else venue.peak = 0;				// Don't need to be a genius to figure that one out if there's no audio!
 		} 
 		// 3. Process performer audio if there is any, and add it to the mix. This could be stereo audio
@@ -350,7 +350,7 @@ socketIO.on('d', function (data) {
 					mono[k] = d + m32[j]; k++;
 					mono[k] = d - m32[j]; j++; k++;
 				}					// Mono perf audio ready to upsample
-				mono = reSample(mono, sr, micAudioPacketSize);
+				mono = reSample(mono, sr, adjMicPacketSize);
 				let s8 = audio.stereo8;// Now regenerate the stereo difference signal
 				let s16 = audio.stereo16;
 				let s32 = audio.stereo32;
@@ -374,7 +374,7 @@ socketIO.on('d', function (data) {
 						stereo[k] = d + s32[j]; k++;
 						stereo[k] = d - s32[j]; j++; k++;
 					}				// Stereo difference perf audio upsampling now
-					stereo = reSample(stereo, sr, micAudioPacketSize);
+					stereo = reSample(stereo, sr, adjMicPacketSize);
 					let left = [], right = [];	// Time to reconstruct the original left and right audio
 					for (let i=0; i<mono.length; i++) {	// Note. Doing this after upsampling because mono
 						left[i] = (mono[i] + stereo[i])/2;	// and stereo may not have same sample rate
