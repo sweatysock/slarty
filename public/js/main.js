@@ -1165,7 +1165,6 @@ function processAudio(e) {						// Main processing loop
 		outAudioR.push(...zeros);
 	}
 if (tracecount>0) console.log(outDataL);
-tracecount--;
 	for (let i in outDataL) { 
 		outDataL[i] = outAudioL[i];				// Copy left audio to outputL
 		outDataR[i] = outAudioR[i];				// and right audio to outputR
@@ -1179,6 +1178,8 @@ tracecount--;
 		let zeros = new Array(ChunkSize-venueBuffer.length).fill(0);
 		outAudioV.push(...zeros);
 	}
+if (tracecount>0) console.log(outDataV);
+tracecount--;
 	for (let i in outDataV) { 
 		outDataV[i] = outAudioV[i];				// Copy venue audio to it's special output
 	}
