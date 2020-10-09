@@ -302,16 +302,13 @@ io.sockets.on('connection', function (socket) {
 			return;
 		}
 		request('https://audence.com/lobby/keyCheck.php?key='	// Keys are confirmed with audence DB. 
-					+key, { json: true }, (err, res, data) => { 
-			let n = "zxzyz"+data.eventID+"-"+data.zone;	// Build server name associated with this key
+					+key, { json: true }, (err, res, info) => { 
+			let n = "zxzyz"+info.eventID+"-"+info.zone;	// Build server name associated with this key
 			if ((key != serverKey) && 			// If the connection isn't from another audence server, and
-				((!data.result) || (n != myServerName)))// if the key is bad or is meant for a different server
+				((!info.result) || (n != myServerName)))// if the key is bad or is meant for a different server
 				return;					// don't reply to the message. Client will be left in limbo
 			let requestedChannel = data.channel;		// If a reconnect they will already have a channel
 			let channel = -1;				// Assigned channel. -1 means none (default response)
-console.log("Requested channel ",requestedChannel," channel looks like...");
-console.log(channels[requestedChannel]);
-console.log(data);
 			if ((requestedChannel != -1) &&	(channels[requestedChannel].socketID === undefined)) {
 				channel = requestedChannel;		// If requested channel is set and available reassign it
 			} else {
