@@ -313,7 +313,10 @@ socketIO.on('d', function (data) {
 				} else v = v8;				// Only low bandwidth venue audio 
 				let p = maxValue(v);			// Get peak audio for venue level display 
 				if (p > venue.peak) venue.peak = p;
+if (tracecount>0) console.log(v);
 				v = reSample(v, vCache, adjMicPacketSize); 
+if (tracecount>0) console.log(v);
+tracecount--;
 			} else venue.peak = 0;				// Don't need to be a genius to figure that one out if there's no audio!
 		} 
 		// 3. Process performer audio if there is any, and add it to the mix. This could be stereo audio
