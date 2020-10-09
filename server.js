@@ -133,7 +133,7 @@ var upstreamName = process.env.upstream; 				// Get upstream server from heroku 
 if (upstreamName == undefined)		
 	upstreamName ="";						// If this is empty we will connect later when it is set
 var upstreamServer = 							// Upstream server uses client version of socketIO
-	require('socket.io-client')(upstreamName+"?key="+serverKey);	// Connect adding internal server key in query string
+	require('socket.io-client')("https://"+upstreamName+".herokuapp.com/?key="+serverKey);		// Connect adding internal server key in query string
 var upstreamServerChannel = -1;						// Channel assigned to us by upstream server
 var upstreamConnected = false;						// Flag to control sending upstream
 
@@ -160,7 +160,6 @@ upstreamServer.on('channel', function (data) {				// The response to our "Hi" is
 	} else {
 		console.log("Upstream server unable to assign a channel");		
 		console.log("Try a different server");		
-		upstreamName = "no upstream server";
 		upstreamServer.close();					// Disconnect and clear upstream server name
 	}
 });
@@ -173,6 +172,7 @@ upstreamServer.on('d', function (packet) {
 	addCommands(packet.commands);					// Store upstream commands for sending downstream
 	// 1. Gather performer audio and queue it up
 	perf.live = packet.perf.live;					// Performer status is shared by all servers
+	if (!perf.live) perf.streaming = false;				// Make sure we stop streaming perf audio if not live anymore
 	if (packet.perf.packet != null) 				// If there is performer data buffer it
 		perf.packets.push(packet.perf.packet);	
 	if (perf.packets.length > perfMaxBufferSize)
