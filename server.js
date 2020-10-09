@@ -588,9 +588,11 @@ function generateMix () {
 				c.playhead++;				// and move the playhead forward
 			} else
 				packet = c.packets.shift();		// Take first packet of audio from channel buffer
-			if (packet == undefined) {			// If this client buffer has been emptied...
-				c.shortages++;				// Note shortages for this channel
-				shortages++;				// and also for global monitoring
+			if (packet == undefined){			// If this client buffer has been emptied...
+				if (chan!=perf.chan) {
+					c.shortages++;			// Note shortages for this channel if not performer
+					shortages++;			// and also for global monitoring
+				}
 				c.playhead = 0;				// Set buffer play position to the start
 			}
 			else if (packet.perfAudio == false) {		// Got data and not perfomer. Build mix of downstream channels. 
@@ -824,7 +826,7 @@ function printReport() {
 	upstreamOut = 0;
 //	overflows = 0;
 //	shortages = 0;
-	perfShort = 0;
+//	perfShort = 0;
 	rtt = 0;
 	forcedMixes = 0;
 	mixMax = 99;
