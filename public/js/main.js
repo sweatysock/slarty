@@ -289,7 +289,6 @@ socketIO.on('d', function (data) {
 			}
 			let audio = zipson.parse(vData.audio);		// Uncompress venue audio
 			let v8 = audio.mono8, v16 = audio.mono16;	// Shortcuts to the venue MSRE data blocks
-if (tracecount>0) console.log(v8);
 			if ((v8.length > 0) && (!venue.muted)) {	// If there is venue audio & not muted, it will need processing
 				let sr = 8000;				// Minimum sample rate of 8kHz
 				if ((a8.length > 0) && (c8.length > 0))	// If we have audio and group has audio remove both and set venue level
@@ -316,6 +315,8 @@ if (tracecount>0) console.log(v8);
 				if (p > venue.peak) venue.peak = p;
 if (tracecount>0) console.log(v);
 				v = reSample(v, sr, adjMicPacketSize); 
+if (tracecount>0) console.log(v);
+tracecount--;
 			} else venue.peak = 0;				// Don't need to be a genius to figure that one out if there's no audio!
 		} 
 		// 3. Process performer audio if there is any, and add it to the mix. This could be stereo audio
@@ -423,7 +424,6 @@ if (tracecount>0) console.log(v);
 		if (obj.peak > mixOut.peak) mixOut.peak = obj.peak;	// Note peak for display purposes
 		if (spkrBufferL.length < spkrBuffTrough) 		// Monitoring purposes
 			spkrBuffTrough = spkrBufferL.length;
-if (tracecount>0) console.log(mixL);
 		spkrBufferL.push(...mixL);				// put left mix in the left speaker buffer
 		if (isStereo)
 			spkrBufferR.push(...mixR);			// and the right in the right if stereo
@@ -445,8 +445,6 @@ if (tracecount>0) console.log(mixL);
 		}
 		if (spkrBufferL.length > spkrBuffPeak) 			// Monitoring purposes
 			spkrBuffPeak = spkrBufferL.length;
-if (tracecount>0) console.log(v);
-tracecount--;
 		if (v.length > 0)					// Add the venue audio to its own buffer
 			venueBuffer.push(...v);				// Add any venue audio to the venue buffer
 		if (venueBuffer.length > maxBuffSize) 			// Clip buffer if too full
