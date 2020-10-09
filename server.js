@@ -311,6 +311,7 @@ io.sockets.on('connection', function (socket) {
 			let channel = -1;				// Assigned channel. -1 means none (default response)
 console.log("Requested channel ",requestedChannel," channel looks like...");
 console.log(channels[requestedChannel]);
+console.log(data);
 			if ((requestedChannel != -1) &&	(channels[requestedChannel].socketID === undefined)) {
 				channel = requestedChannel;		// If requested channel is set and available reassign it
 			} else {
