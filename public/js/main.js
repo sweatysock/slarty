@@ -421,7 +421,6 @@ socketIO.on('d', function (data) {
 		if (obj.peak > mixOut.peak) mixOut.peak = obj.peak;	// Note peak for display purposes
 		if (spkrBufferL.length < spkrBuffTrough) 		// Monitoring purposes
 			spkrBuffTrough = spkrBufferL.length;
-if (tracecount>0) console.log(mixL);
 		spkrBufferL.push(...mixL);				// put left mix in the left speaker buffer
 		if (isStereo)
 			spkrBufferR.push(...mixR);			// and the right in the right if stereo
@@ -443,8 +442,6 @@ if (tracecount>0) console.log(mixL);
 		}
 		if (spkrBufferL.length > spkrBuffPeak) 			// Monitoring purposes
 			spkrBuffPeak = spkrBufferL.length;
-if (tracecount>0) console.log(v);
-tracecount--;
 		if (v.length > 0)					// Add the venue audio to its own buffer
 			venueBuffer.push(...v);				// Add any venue audio to the venue buffer
 		if (venueBuffer.length > maxBuffSize) 			// Clip buffer if too full
@@ -1167,6 +1164,8 @@ function processAudio(e) {						// Main processing loop
 		outAudioL.push(...zeros);
 		outAudioR.push(...zeros);
 	}
+if (tracecount>0) console.log(outDataL);
+tracecount--;
 	for (let i in outDataL) { 
 		outDataL[i] = outAudioL[i];				// Copy left audio to outputL
 		outDataR[i] = outAudioR[i];				// and right audio to outputR
