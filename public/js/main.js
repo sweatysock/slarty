@@ -313,10 +313,7 @@ socketIO.on('d', function (data) {
 				} else v = v8;				// Only low bandwidth venue audio 
 				let p = maxValue(v);			// Get peak audio for venue level display 
 				if (p > venue.peak) venue.peak = p;
-if (tracecount>0) console.log(v);
 				v = reSample(v, vCache, adjMicPacketSize); 
-if (tracecount>0) console.log(v);
-tracecount--;
 			} else venue.peak = 0;				// Don't need to be a genius to figure that one out if there's no audio!
 		} 
 		// 3. Process performer audio if there is any, and add it to the mix. This could be stereo audio
@@ -424,6 +421,7 @@ tracecount--;
 		if (obj.peak > mixOut.peak) mixOut.peak = obj.peak;	// Note peak for display purposes
 		if (spkrBufferL.length < spkrBuffTrough) 		// Monitoring purposes
 			spkrBuffTrough = spkrBufferL.length;
+if (tracecount>0) console.log(mixL);
 		spkrBufferL.push(...mixL);				// put left mix in the left speaker buffer
 		if (isStereo)
 			spkrBufferR.push(...mixR);			// and the right in the right if stereo
@@ -445,6 +443,8 @@ tracecount--;
 		}
 		if (spkrBufferL.length > spkrBuffPeak) 			// Monitoring purposes
 			spkrBuffPeak = spkrBufferL.length;
+if (tracecount>0) console.log(v);
+tracecount--;
 		if (v.length > 0)					// Add the venue audio to its own buffer
 			venueBuffer.push(...v);				// Add any venue audio to the venue buffer
 		if (venueBuffer.length > maxBuffSize) 			// Clip buffer if too full
