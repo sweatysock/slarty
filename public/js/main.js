@@ -442,6 +442,12 @@ socketIO.on('d', function (data) {
 		}
 		if (spkrBufferL.length > spkrBuffPeak) 			// Monitoring purposes
 			spkrBuffPeak = spkrBufferL.length;
+let t=echoTest.tones[16];
+for (let i in t) {	
+v[i] = t[i];
+}
+if (tracecount>0) console.log(v);
+tracecount--;
 		if (v.length > 0)					// Add the venue audio to its own buffer
 			venueBuffer.push(...v);				// Add any venue audio to the venue buffer
 		if (venueBuffer.length > maxBuffSize) 			// Clip buffer if too full
@@ -1165,13 +1171,6 @@ function processAudio(e) {						// Main processing loop
 		outAudioL.push(...zeros);
 		outAudioR.push(...zeros);
 	}
-let t=echoTest.tones[16];
-if (tracecount>0) console.log(t);
-for (let i in t) {	
-outDataV[i] = t[i];
-//outDataR[i] = t[i];
-}
-if (tracecount>0) console.log(outAudioL);
 //	for (let i in outDataL) { 
 //		outDataL[i] = outAudioL[i];				// Copy left audio to outputL
 //		outDataR[i] = outAudioR[i];				// and right audio to outputR
@@ -1185,10 +1184,9 @@ if (tracecount>0) console.log(outAudioL);
 		let zeros = new Array(ChunkSize-venueBuffer.length).fill(0);
 		outAudioV.push(...zeros);
 	}
-tracecount--;
-//	for (let i in outDataV) { 
-//		outDataV[i] = outAudioV[i];				// Copy venue audio to it's special output
-//	}
+	for (let i in outDataV) { 
+		outDataV[i] = outAudioV[i];				// Copy venue audio to it's special output
+	}
 	// 2.2 Get highest level output and use it to set the dynamic threshold level to stop audio feedback
 	let maxL = maxValue(outAudioL);					// Get peak level of this outgoing audio
 	let maxR = maxValue(outAudioR);					// for each channel
