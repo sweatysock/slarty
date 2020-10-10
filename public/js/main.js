@@ -427,16 +427,18 @@ socketIO.on('d', function (data) {
 		else
 			spkrBufferR.push(...mixL);			// otherwise use the left
 		if (spkrBufferL.length > maxBuffSize) {			// If too full merge final 400 samples
-			for (let i=0; i<400; i++) {			// so that we end with the latest waveform
-				let p = maxBuffSize-i-1;		// Points to end of audio being kept
-				let q = spkrBufferL.length-i-1;		// Points to end of audio being trimmed
-				let f = smooth[i];			// Transition blending factor. From 1 to 0 for INCREASING i
-				spkrBufferL[p] = spkrBufferL[p]*(1-f) + spkrBufferL[q]*f;
-				spkrBufferR[p] = spkrBufferR[p]*(1-f) + spkrBufferR[q]*f;
-			}
+//			for (let i=0; i<400; i++) {			// so that we end with the latest waveform
+//				let p = maxBuffSize-i-1;		// Points to end of audio being kept
+//				let q = spkrBufferL.length-i-1;		// Points to end of audio being trimmed
+//				let f = smooth[i];			// Transition blending factor. From 1 to 0 for INCREASING i
+//				spkrBufferL[p] = spkrBufferL[p]*(1-f) + spkrBufferL[q]*f;
+//				spkrBufferR[p] = spkrBufferR[p]*(1-f) + spkrBufferR[q]*f;
+//			}
 			let excess = spkrBufferL.length-maxBuffSize;
-			spkrBufferL.splice(0, excess); 	
-			spkrBufferR.splice(0, excess); 	
+			spkrBufferL.splice(maxBuffSize/2,maxBuffSize/2);// Chop buffer in half
+			spkrBufferR.splice(maxBuffSize/2,maxBuffSize/2);// Chop buffer in half
+//			spkrBufferL.splice(0, excess); 	
+//			spkrBufferR.splice(0, excess); 	
 			overflows++;					// Note for monitoring purposes
 			bytesOver += excess;
 		}
@@ -1138,7 +1140,7 @@ function processAudio(e) {						// Main processing loop
 
 	// 2. Take audio buffered from server and send it to the speaker
 	let outAudioL = [], outAudioR = [];					
-	if ((smoothingNeeded) && (spkrBufferL.length < maxBuffSize/2)) {
+	if ((smoothingNeeded) && (spkrBufferL.length < maxBuffSize/2)) { // MARK Review logic and tidy
 	} else
 	if (spkrBufferL.length > ChunkSize) {				// There is enough audio buffered
 		outAudioL = spkrBufferL.splice(0,ChunkSize);		// Get same amount of audio as came in
