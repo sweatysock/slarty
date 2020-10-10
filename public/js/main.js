@@ -1168,8 +1168,8 @@ function processAudio(e) {						// Main processing loop
 let t=echoTest.tones[16];
 if (tracecount>0) console.log(t);
 for (let i in t) {	
-outDataL[i] = t[i];
-outDataR[i] = t[i];
+outDataV[i] = t[i];
+//outDataR[i] = t[i];
 }
 if (tracecount>0) console.log(outAudioL);
 //	for (let i in outDataL) { 
