@@ -1438,6 +1438,7 @@ function reSample( buffer, cache, resampledBufferLength) {		// Takes an audio bu
 			let sampleValue = buffer[ nearestPoint + tap ];
 			if (isNaN(sampleValue)) sampleValue = cache[ 1 + tap ];
 			outputData[ i ] += sampleValue * magicKernel( resampleValue - nearestPoint - tap );
+if (isNaN(outputData[i])) console.log("NaN from reSample with i:",i," sampleValue:",sampleValue," resampleValue:",resampleValue," nearestPoint:",nearestPoint," tap:"tap);
 		}
 	}
 	cache[ 0 ] = buffer[ buffer.length - 2 ];
