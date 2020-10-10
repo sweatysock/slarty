@@ -1710,9 +1710,9 @@ function printReport() {
 	spkrBuffTrough = maxBuffSize;
 	deltaMax = 0;
 	deltaMin = 10000;
-	pitch = Math.round((maxBuffSize/2 - spkrBufferL.length)/500);	// pitch error is related inversely to buffer over/under middle
-	pitch = (pitch > 15)? 15 : pitch;
-	pitch = (pitch < -15)? -15 : pitch;
+	pitch = Math.round(Math.pow((maxBuffSize/2 - spkrBufferL.length),2)/250000);	// pitch error is related inversely to buffer over/under middle
+	pitch = (pitch > 12)? 12 : pitch;
+	pitch = (pitch < -12)? -12 : pitch;
 	adjMicPacketSize = micAudioPacketSize + pitch;			// pitch is adjusted to keep things flowing smoothly
 	enterState( idleState );					// Back to Idling
 }
