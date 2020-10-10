@@ -1710,7 +1710,7 @@ function printReport() {
 	spkrBuffTrough = maxBuffSize;
 	deltaMax = 0;
 	deltaMin = 10000;
-	pitch = Math.round((maxBuffSize/2 - spkrBufferL.length)/200);	// pitch error is related inversely to buffer over/under middle
+	pitch = (3 * pitch + Math.round((maxBuffSize/2 - spkrBufferL.length)/200))/4;	// pitch error is related inversely to buffer over/under middle
 	adjMicPacketSize = micAudioPacketSize + pitch;			// pitch is adjusted to keep things flowing smoothly
 	enterState( idleState );					// Back to Idling
 }
