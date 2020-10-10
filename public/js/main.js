@@ -442,12 +442,6 @@ socketIO.on('d', function (data) {
 		}
 		if (spkrBufferL.length > spkrBuffPeak) 			// Monitoring purposes
 			spkrBuffPeak = spkrBufferL.length;
-let t=echoTest.tones[16];
-//for (let i in t) {	
-//v[i] = t[i];
-//}
-if (tracecount>0) console.log(v);
-tracecount--;
 		if (v.length > 0)					// Add the venue audio to its own buffer
 			venueBuffer.push(...v);				// Add any venue audio to the venue buffer
 		if (venueBuffer.length > maxBuffSize) 			// Clip buffer if too full
@@ -1171,10 +1165,10 @@ function processAudio(e) {						// Main processing loop
 		outAudioL.push(...zeros);
 		outAudioR.push(...zeros);
 	}
-//	for (let i in outDataL) { 
-//		outDataL[i] = outAudioL[i];				// Copy left audio to outputL
-//		outDataR[i] = outAudioR[i];				// and right audio to outputR
-//	}
+	for (let i in outDataL) { 
+		outDataL[i] = outAudioL[i];				// Copy left audio to outputL
+		outDataR[i] = outAudioR[i];				// and right audio to outputR
+	}
 	// 2.1 Take venue audio from buffer and send to special output
 	let outAudioV = [];
 	if (venueBuffer.length > ChunkSize) {				// There is enough audio buffered
@@ -1437,8 +1431,8 @@ function reSample( buffer, cache, resampledBufferLength) {		// Takes an audio bu
 		for ( let tap = -1; tap < 2; tap++ ) {
 			let sampleValue = buffer[ nearestPoint + tap ];
 			if (isNaN(sampleValue)) sampleValue = cache[ 1 + tap ];
+			if (isNaN(sampleValue)) sampleValue = buffer[ nearestPoint ];
 			outputData[ i ] += sampleValue * magicKernel( resampleValue - nearestPoint - tap );
-if (isNaN(outputData[i])) console.log("NaN from reSample with i:",i," sampleValue:",sampleValue," resampleValue:",resampleValue," nearestPoint:",nearestPoint," tap:",tap);
 		}
 	}
 	cache[ 0 ] = buffer[ buffer.length - 2 ];
