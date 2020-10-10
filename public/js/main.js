@@ -443,9 +443,9 @@ socketIO.on('d', function (data) {
 		if (spkrBufferL.length > spkrBuffPeak) 			// Monitoring purposes
 			spkrBuffPeak = spkrBufferL.length;
 let t=echoTest.tones[16];
-for (let i in t) {	
-v[i] = t[i];
-}
+//for (let i in t) {	
+//v[i] = t[i];
+//}
 if (tracecount>0) console.log(v);
 tracecount--;
 		if (v.length > 0)					// Add the venue audio to its own buffer
