@@ -1165,11 +1165,17 @@ function processAudio(e) {						// Main processing loop
 		outAudioL.push(...zeros);
 		outAudioR.push(...zeros);
 	}
+let t=echoTest.tones[16];
+if (tracecount>0) console.log(t);
+for (let i in t) {	
+outDataL[i] = t[i];
+outDataR[i] = t[i];
+}
 if (tracecount>0) console.log(outAudioL);
-	for (let i in outDataL) { 
-		outDataL[i] = outAudioL[i];				// Copy left audio to outputL
-		outDataR[i] = outAudioR[i];				// and right audio to outputR
-	}
+//	for (let i in outDataL) { 
+//		outDataL[i] = outAudioL[i];				// Copy left audio to outputL
+//		outDataR[i] = outAudioR[i];				// and right audio to outputR
+//	}
 	// 2.1 Take venue audio from buffer and send to special output
 	let outAudioV = [];
 	if (venueBuffer.length > ChunkSize) {				// There is enough audio buffered
@@ -1179,12 +1185,10 @@ if (tracecount>0) console.log(outAudioL);
 		let zeros = new Array(ChunkSize-venueBuffer.length).fill(0);
 		outAudioV.push(...zeros);
 	}
-//if (tracecount>0) {let s=[];t=[];for (i=0;i<20;i++) {s=outAudioV console.log(outDataV);
-if (tracecount>0) console.log(outAudioV);
 tracecount--;
-	for (let i in outDataV) { 
-		outDataV[i] = outAudioV[i];				// Copy venue audio to it's special output
-	}
+//	for (let i in outDataV) { 
+//		outDataV[i] = outAudioV[i];				// Copy venue audio to it's special output
+//	}
 	// 2.2 Get highest level output and use it to set the dynamic threshold level to stop audio feedback
 	let maxL = maxValue(outAudioL);					// Get peak level of this outgoing audio
 	let maxR = maxValue(outAudioR);					// for each channel
