@@ -1314,6 +1314,7 @@ function handleAudio(stream) {						// We have obtained media access
 	
 	reverb = context.createConvolver();				// Reverb for venue ambience
 	reverb.buffer = impulseResponse(1,16);				// Default reverb characteristic... simple exponential decay
+	reverb.normalize = true;
 	let splitter = context.createChannelSplitter();			// Need a splitter to separate venue from main audio
 	let combiner = context.createChannelMerger();			// Combiner used to rebuild stereo image
 
