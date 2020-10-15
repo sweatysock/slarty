@@ -1358,10 +1358,17 @@ console.log("Requested to load ",filename);
 
 function impulseResponse( duration, decay ) {
 	let length = soundcardSampleRate * duration;
+length = 2;
 	let impulse = context.createBuffer(2, length, soundcardSampleRate);
 	let impulseL = impulse.getChannelData(0);
 	let impulseR = impulse.getChannelData(1);
 	if (!decay) decay = 2.0;
+
+impulseL[0]=1;
+impulseR[0]=1;
+impulseL[1]=0;
+impulseR[1]=0;
+return impulse;
 
 	let b0, b1, b2, b3, b4, b5, b6;
 	b0 = b1 = b2 = b3 = b4 = b5 = b6 = 0.0;
