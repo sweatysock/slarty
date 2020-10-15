@@ -289,21 +289,22 @@ socketIO.on('d', function (data) {
 			}
 			let audio = zipson.parse(vData.audio);		// Uncompress venue audio
 			let v8 = audio.mono8, v16 = audio.mono16;	// Shortcuts to the venue MSRE data blocks
+let vs = venueSize/2;
 			if ((v8.length > 0) && (!venue.muted)) {	// If there is venue audio & not muted, it will need processing
 				let sr = 8000;				// Minimum sample rate of 8kHz
 				if ((a8.length > 0) && (c8.length > 0))	// If we have audio and group has audio remove both and set venue level
-					for (let i = 0; i < a8.length; ++i) v8[i] = (v8[i] - a8[i] -c8[i]) * venue.gain / venueSize;
+					for (let i = 0; i < a8.length; ++i) v8[i] = (v8[i] - a8[i] -c8[i]) * venue.gain / vs;
 				if ((a8.length > 0) && (c8.length == 0))// If there is only our audio subtract it and set venue level
-					for (let i = 0; i < a8.length; ++i) v8[i] = (v8[i] - a8[i]) * venue.gain / venueSize;
+					for (let i = 0; i < a8.length; ++i) v8[i] = (v8[i] - a8[i]) * venue.gain / vs;
 				if ((a8.length == 0) && (c8.length > 0))// If there is only group cancelling audio subtract it and set venue level
-					for (let i = 0; i < c8.length; ++i) v8[i] = (v8[i] - c8[i]) * venue.gain / venueSize;
+					for (let i = 0; i < c8.length; ++i) v8[i] = (v8[i] - c8[i]) * venue.gain / vs;
 				if (v16.length > 0) {			// If the venue has higher quality audio repeat the same process
 					if ((a16.length > 0) && (c16.length > 0))
-						for (let i = 0; i < a16.length; ++i) v16[i] = (v16[i] - a16[i] -c16[i]) * venue.gain / venueSize;
+						for (let i = 0; i < a16.length; ++i) v16[i] = (v16[i] - a16[i] -c16[i]) * venue.gain / vs;
 					if ((a16.length > 0) && (c16.length == 0))
-						for (let i = 0; i < a16.length; ++i) v16[i] = (v16[i] - a16[i]) * venue.gain / venueSize;
+						for (let i = 0; i < a16.length; ++i) v16[i] = (v16[i] - a16[i]) * venue.gain / vs;
 					if ((a16.length == 0) && (c16.length > 0))
-						for (let i = 0; i < c16.length; ++i) v16[i] = (v16[i] - c16[i]) * venue.gain / venueSize;
+						for (let i = 0; i < c16.length; ++i) v16[i] = (v16[i] - c16[i]) * venue.gain / vs;
 					let k = 0;			// reconstruct the original venue audio in v[]
 					for (let i=0;i<v8.length;i++) {	
 						v[k] = v8[i] + v16[i];k++;
@@ -1311,7 +1312,7 @@ function handleAudio(stream) {						// We have obtained media access
 	micFilter2.Q.value = 1;
 	
 	reverb = context.createConvolver();				// Reverb for venue ambience
-	reverb.buffer = impulseResponse(1,8);				// Default reverb characteristic... simple exponential decay
+	reverb.buffer = impulseResponse(1,16);				// Default reverb characteristic... simple exponential decay
 	let splitter = context.createChannelSplitter();			// Need a splitter to separate venue from main audio
 	let combiner = context.createChannelMerger();			// Combiner used to rebuild stereo image
 
@@ -1334,7 +1335,7 @@ function handleAudio(stream) {						// We have obtained media access
 function loadVenueReverb(filename) {					// Load the venue reverb file to give ambience
 	if (filename == reverbFile) return;				// Don't load the same file again
 	if (filename == "") {						// If the file is empty then lets go for the basic reverb
-		reverb.buffer = impulseResponse(1,8); 
+		reverb.buffer = impulseResponse(1,16); 
 		return;					
 	}
 	let ir_request = new XMLHttpRequest();				// Load impulse response to reverb
