@@ -313,6 +313,7 @@ let vs = venueSize/2;
 					sr = 16000;			// This is at the higher sample rate
 				} else v = v8;				// Only low bandwidth venue audio 
 				let p = maxValue(v);			// Get peak audio for venue level display 
+if (p > 1) console.log("Venue output peak ",p);
 				if (p > venue.peak) venue.peak = p;
 				v = reSample(v, vCache, adjMicPacketSize); 
 			} else venue.peak = 0;				// Don't need to be a genius to figure that one out if there's no audio!
