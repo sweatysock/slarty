@@ -97,7 +97,7 @@ var smooth = [];							// Pre-populated array of values for smooth overflow/shor
 for (let i=0; i<400; i++)
 	smooth[i] = Math.cos(i/400*Math.PI)/2 + 0.5;
 var chatText = "";							// Text input by user to send to server
-var chatArea;								// Object where chat bubbles appear
+var bubbleArea;								// Object where chat bubbles appear
 var chatHistory;							// div where a full hisory of the group chat is held
 
 function processCommands(newCommands) {					// Apply commands sent from upstream servers
@@ -207,7 +207,7 @@ socketIO.on('d', function (data) {
 				div.classList.add("chatBubble");	// Set the class and add the contents to display
 				div.innerHTML = "<span style='color:#FFFFFF'>"+c.name+": </span>"+c.chatText+"</div>";
 				setTimeout(function () {div.parentNode.removeChild(div)},10000);
-				chatArea.appendChild(div);
+				bubbleArea.appendChild(div);
 			}
 			if ((c.socketID != socketIO.id) && (ch != 0)) {	// Don't include my audio or channel 0 in the group mix
 				if (chan.peak < c.peak)			// set the peak for this channel's level display
@@ -482,17 +482,19 @@ document.addEventListener('DOMContentLoaded', function(event){		// Add dynamic b
 	let chatWin = document.getElementById('chatWin');		// The div that contains the chat history window. Not sure why 2 divs!
 	let nameBadge = document.getElementById('nameBadge');		// Div that contains the nickname entry field. Don't need two divs either!
 	let chatInput = document.getElementById('chatInput');		// Div containing the input text. 2 divs not needed here either.
-	chatArea = document.getElementById('chatBubbleArea');		// Div where chat bublesa are animated
+	bubbleArea = document.getElementById('chatBubbleArea');		// Div where chat bublesa are animated
 	chatHistory = document.getElementById('chatHistory');		// The chat history window itself. Again, 2 divs not needed.
 	groupBtn.onclick = ( (e) => {
+		groupNameEntry.style.visibility = "visible";
 		if (myGroup == "noGroup") {				// Group entry. By default we are in "noGroup". This displays as ""
 			groupNameEntry.value = "";
 			groupNameEntry.focus();				// Enter group name first
 		} else {
 			groupNameEntry.value = myGroup;
+			nameBadge.style.visibility = "visible";
 			nickEntry.focus();				// We have a group name so go to user name
+			chatInput.style.visibility = "visible";
 		}
-		groupNameEntry.style.visibility = "visible";
 	});
 	groupNameEntry.setAttribute("maxlength",30);			// Set group name length limit to 30
 	groupNameEntry.addEventListener("keydown", (e) => {		// Filter key presses directly
@@ -500,10 +502,10 @@ document.addEventListener('DOMContentLoaded', function(event){		// Add dynamic b
 		if (e.which === 13) {					// Enter is captured and processed in js
 			if (groupNameEntry.value=="") {			// An empty group name means "noGroup" - hide all group UI
 				myGroup = "noGroup";
-				chatWin.style.visibility = "hidden";
 				nameBadge.style.visibility = "hidden";
 				chatInput.style.visibility = "hidden";
-				chatArea.style.visibility = "hidden";
+				chatWin.style.visibility = "hidden";	// Hide chat window (history window)
+				bubbleArea.style.visibility = "hidden";	// and bubble area
 				groupNameEntry.blur();			// and remove the focus from the group input field
 			} else {
 				chatHistory.innerHTML += "<div style='color:#FFCC00'>Group changed from "+myGroup+" to "+groupNameEntry.value+"</div>";
@@ -511,19 +513,20 @@ document.addEventListener('DOMContentLoaded', function(event){		// Add dynamic b
 				myGroup = groupNameEntry.value;		// group name is good. Make name and chat text area visible
 				nameBadge.style.visibility = "visible";
 				chatInput.style.visibility = "visible";
-				chatArea.style.visibility = "visible";
+				chatWin.style.visibility = "hidden";	// Hide chat window (history window)
+				bubbleArea.style.visibility = "visible";// and make the bubble area visible by default
 				nickEntry.focus();			// put focus in name entry field
 			}
 			e.preventDefault();
 		}
 	});
 	groupNameEntry.addEventListener("focusout", (e) => {		// If you tab or click out of the field the same needs to happen
-		if (groupNameEntry.value=="") {
+		if (groupNameEntry.value=="") {				// User has opted for no group so hide all chat UI elements
 			myGroup = "noGroup";
-			chatWin.style.visibility = "hidden";
 			nameBadge.style.visibility = "hidden";
 			chatInput.style.visibility = "hidden";
-			chatArea.style.visibility = "hidden";
+			chatWin.style.visibility = "hidden";
+			bubbleArea.style.visibility = "hidden";
 			groupNameEntry.blur();
 		} else {
 			chatHistory.innerHTML += "<div style='color:#FFCC00'>Group changed from "+myGroup+" to "+groupNameEntry.value+"</div>";
@@ -531,7 +534,8 @@ document.addEventListener('DOMContentLoaded', function(event){		// Add dynamic b
 			myGroup = groupNameEntry.value;
 			nameBadge.style.visibility = "visible";
 			chatInput.style.visibility = "visible";
-			chatArea.style.visibility = "visible";
+			chatWin.style.visibility = "hidden";		// Hide chat window (history window)
+			bubbleArea.style.visibility = "visible";	// and make the bubble area visible by default
 			nickEntry.focus();
 		}
 	});
@@ -562,10 +566,10 @@ document.addEventListener('DOMContentLoaded', function(event){		// Add dynamic b
 	let chatHistBtn = document.getElementById('chatHistBtn');	// The chat history button shows/hides the traditional chat window
 	chatHistBtn.onclick = ( (e) => {
 		if (chatWin.style.visibility == "hidden") {
-			chatArea.style.visibility = "hidden";		// Chat bubbles are hidden if chat history is visible
+			bubbleArea.style.visibility = "hidden";		// Chat bubbles are hidden if chat history is visible
 			chatWin.style.visibility = "visible";
 		} else {
-			chatArea.style.visibility = "visible";
+			bubbleArea.style.visibility = "visible";
 			chatWin.style.visibility = "hidden";
 		}
 	});
