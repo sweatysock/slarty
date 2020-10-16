@@ -584,6 +584,24 @@ document.addEventListener('DOMContentLoaded', function(event){		// Add dynamic b
 		else
 			helpp.style.visibility = "hidden";
 	});
+	let micBtn = document.getElementById('micBtn');			// mic button mutes/unmutes the mic
+	let micMuted = document.getElementById('micMuted');
+	let micOpen = document.getElementById('micOpen');
+	micBtn.onclick = ( (e) => {
+		let micOnMixer = document.getElementById('IDmicInOn');
+		if (micIn.muted) {
+			micIn.muted = false;
+			micMuted.style.visibility = "hidden";
+			micOpen.style.visibility = "visible";
+			micOnMixer.style.visibility = "inherit";
+
+		} else {
+			micIn.muted = true;
+			micMuted.style.visibility = "visible";
+			micOpen.style.visibility = "hidden";
+			micOnMixer.style.visibility = "hidden";
+		}
+	});
 });
 
 function displayAnimation() { 						// called 100mS to animate audio displays

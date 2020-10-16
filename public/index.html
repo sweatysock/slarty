@@ -117,14 +117,14 @@
 			If the top or bottom light stays orange your device does not have enough power to run the software properly. If the top two lights are orange 
 			there are problems with your network. Refreshing the page or switching between Firefox and Chrome can sometimes resolve these issues. 
 			<h2>You are part of a live audience</h2>
-			Your mic is live so when you clap or shout the performer will hear you. Give them a big hand! Artist know the audience is 
-			<b>the essential energy</b> in any performance. Get comfortable, grab a nice drink, sit back and enjoy the show.
+			Your mic is live so when you clap or shout the performer will hear you. Give them a big hand! Artists know the audience is 
+			<b>the essential energy</b> in any performance. So grab a nice drink, get comfortable, sit back and enjoy the show.
 			<p>
 			Of course in some concerts there are times when the audience needs to be quiet. Don't worry there, if you make an accidental noise we will stop it for you, and
 			if someone gets a little too "enthusiastic" venue security will get on the case.
 			<h2>Got friends in the audience?</h2>
-			If you are in the same zone as your friends (your ticket indicates your zone) click on the lock icon and type in a keyword shared with your friends. You will then be 
-			able to talk to them during the concert.
+			If you are in the same zone as your friends (your ticket indicates your zone) click on the lock icon and type in a keyword known to you and your friends. You will then be 
+			able to talk and chat to them during the concert. Chat is better when the show is underway of course!
 		</div>
 		<div id="chatWin" style="position:absolute; bottom:10%; left:30%; width:65%; height:80%; background-color: #00000099; visibility: hidden">
 			<div id="chatHistory" style="position:absolute; overflow: auto; top:2%; left:2%; width:96%; height:96%; color: #6AFF35;font-family: Courier; font-size: 4vmin;">
@@ -132,12 +132,12 @@
 		</div>
 		<div id="nameBadge" style="position:absolute; bottom:0%; left:30%; width:14%; height:7%; background-color: #00000000; visibility: hidden">
 			<label style="font-size: 2vmin; position:absolute; left:0%; bottom:-30%; font-family: Arial;">name</label>
-			<input id="nickname" tabindex="2" style="position:absolute; background-color:#00000000; border:none; bottom:0%; left:1%; width:98%; color: #FFFFFF;font-family: Courier; font-size: 6vmin;"/>
+			<input id="nickname" title="your name in the chat" tabindex="2" style="position:absolute; background-color:#00000000; border:none; bottom:0%; left:1%; width:98%; color: #FFFFFF;font-family: Courier; font-size: 6vmin;"/>
 		</div>
 		<div id="chatInput" style="position:absolute; bottom:0%; left:45%; width:50%; height:7%; background-color: #00000000; visibility: hidden">
 			<label style="font-size: 2vmin; position:absolute; left:0%; bottom:-30%; font-family: Arial;">message</label>
-			<input id="inputText" tabindex="3" style="position:absolute; background-color:#00000000; border:none; bottom:0%; left:0%; width:82%; color: #6AFF35;font-family: Courier; font-size: 6vmin;"/>
-			<img id="chatHistBtn" style="position:absolute; bottom:0%; right:2%; width:12%; height:100%; object-fit: scale-down;cursor: pointer;" src="images/chatHistory.png">
+			<input id="inputText" title="hit ENTER to send - only visible to your group members" tabindex="3" style="position:absolute; background-color:#00000000; border:none; bottom:0%; left:0%; width:82%; color: #6AFF35;font-family: Courier; font-size: 6vmin;"/>
+			<img id="chatHistBtn" title="toggle bubble chat and traditional chat" style="position:absolute; bottom:0%; right:2%; width:12%; height:100%; object-fit: scale-down;cursor: pointer;" src="images/chatHistory.png">
 		</div>
 		<div id="chatBubbleArea" style="position:absolute; top:10%; left:5%; width:90%; height:60%; background-color: #00000000; color:#6AFF35; font-family: Arial, Helvetica, sans-serif; font-size: 4vmin;visibility: visible">
 		</div>
@@ -160,39 +160,44 @@
 		<div id="StatusDisplay" style="position:absolute; bottom:0%; right:0%; width:5%; padding-bottom: 20%; ">
 			<div class="square" id="Settings" style="bottom:75%; right:0%;">
 				<img style="position:absolute; bottom:0%; right:0%; width:100%; height:100%;object-fit: scale-down;" src="images/settings.png"> 
-				<div id="settingsBtn" style="position:absolute; width:100%; height:100%; cursor:pointer"></div>
+				<div id="settingsBtn" title="open internal mixing console" style="position:absolute; width:100%; height:100%; cursor:pointer"></div>
 			</div>
 			<div class="square" id="UpLED" style="bottom:50%; right:0%;">
 					<span id="UpStatus" class="redLED"></span>
 				<img style="position:absolute; bottom:0%; right:0%; width:100%; height:100%;object-fit: scale-down;" src="images/LEDRing.png"> 
-				<div id="testBtn" style="position:absolute; width:100%; height:100%; cursor:pointer"></div>
+				<div id="testBtn" title="run local echo test" style="position:absolute; width:100%; height:100%; cursor:pointer"></div>
 			</div>
 			<div class="square" id="DownLED" style="bottom:25%; right:0%; ">
 					<span id="DownStatus" class="redLED"></span>
 				<img style="position:absolute; bottom:0%; right:0%; width:100%; height:100%;object-fit: scale-down;" src="images/LEDRing.png"> 
-				<div id="actionBtn" style="position:absolute; width:100%; height:100%; cursor:pointer"></div>
+				<div id="actionBtn" title="traces on/off" style="position:absolute; width:100%; height:100%; cursor:pointer"></div>
 			</div>
 			<div class="square" id="GeneralLED" style="bottom:0%; right:0%; ">
 					<span id="GeneralStatus" class="redLED"></span>
 				<img style="position:absolute; bottom:0%; right:0%; width:100%; height:100%;object-fit: scale-down;" src="images/LEDRing.png"> 
-				<div id="monitorBtn" style="position:absolute; width:100%; height:100%; cursor:pointer"></div>
+				<div id="monitorBtn" title="show trace monitors" style="position:absolute; width:100%; height:100%; cursor:pointer"></div>
 			</div> 
 		</div>
 		<div id="live" style="position:absolute; top:1%; left:1%;width:98%; height:10%; visibility: hidden">
-				<img style="position:absolute; bottom:0%; right:0%; width:100%; height:100%;object-fit: scale-down;" src="images/live.png"> 
+				<img title="the performer is broadcasting now" style="position:absolute; bottom:0%; right:0%; width:100%; height:100%;object-fit: scale-down;" src="images/live.png"> 
 		</div>
 		<div id="onair" style="position:absolute; top:1%; left:1%;width:98%; height:10%; visibility: hidden">
 				<img style="position:absolute; bottom:0%; right:0%; width:100%; height:100%;object-fit: scale-down;" src="images/onair.png"> 
 		</div>
 		<div style="position:absolute; top:0%; left:0%; width:10%; height:10%;">
-			<a href="https://audence.com"><img style="position:absolute; bottom:0%; right:0%; width:100%; height:100%;object-fit: scale-down;" src="images/thumbTransp.png"></a>
+			<a href="https://audence.com"><img title="EXIT venue" style="position:absolute; bottom:0%; right:0%; width:100%; height:100%;object-fit: scale-down;" src="images/thumbTransp.png"></a>
 		</div>
 		<div style="position:absolute; bottom:0%; left:0%;width:30%; height:7%;">
-			<img id="groupBtn" style="position:absolute; bottom:0%; left:0%; width:20%; height:100%;object-fit: scale-down;cursor: pointer;" src="images/lockTransp.png">
-			<input id="groupNameEntry" tabindex="1" style="position:absolute; background-color:#00000000; border:none; bottom:0%;left:20%;width:80%; color: #6AFF35;font-family: Courier; font-size: 6vmin; visibility: hidden"/>
+			<img id="groupBtn" title="enter group keyword to chat & talk" style="position:absolute; bottom:0%; left:0%; width:20%; height:100%;object-fit: scale-down;cursor: pointer;" src="images/lockTransp.png">
+			<input id="groupNameEntry" title="group keyword - erase to leave group" tabindex="1" style="position:absolute; background-color:#00000000; border:none; bottom:0%;left:20%;width:80%; color: #6AFF35;font-family: Courier; font-size: 6vmin; visibility: hidden"/>
 		</div>
-		<div style="position:absolute; bottom:10%; left:0%;width:7%; height:10%;">
-			<img id="helpBtn" style="position:absolute; bottom:0%; right:0%; width:100%; height:100%;object-fit: scale-down;cursor: pointer;" src="images/help.png">
+		<div style="position:absolute; bottom:9%; left:0%;width:7%; height:10%;">
+			<img id="helpBtn" title="show/hide help text" style="position:absolute; bottom:0%; right:0%; width:100%; height:100%;object-fit: scale-down;cursor: pointer;" src="images/help.png">
+		</div>
+		<div style="position:absolute; bottom:20%; left:0%;width:7%; height:10%;">
+			<img id="micMuted" style="position:absolute; bottom:0%; right:0%; width:100%; height:100%;object-fit: scale-down;cursor: pointer; visibility:hidden" src="images/micMuted.png">
+			<img id="micOpen" style="position:absolute; bottom:0%; right:0%; width:100%; height:100%;object-fit: scale-down;cursor: pointer;" src="images/micOpen.png">
+			<div id="micBtn" title="mute/unmute your mic" style="position:absolute; width:100%; height:100%; cursor:pointer"></div>
 		</div>
 	</div>
 </body>
