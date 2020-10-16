@@ -485,7 +485,8 @@ document.addEventListener('DOMContentLoaded', function(event){		// Add dynamic b
 	bubbleArea = document.getElementById('chatBubbleArea');		// Div where chat bublesa are animated
 	chatHistory = document.getElementById('chatHistory');		// The chat history window itself. Again, 2 divs not needed.
 	groupBtn.onclick = ( (e) => {
-		groupNameEntry.style.visibility = "visible";
+		groupNameEntry.style.visibility = "visible";		// Make the group entry field visible
+		helpp.style.visibility = "hidden";			// Hide the help window 
 		if (myGroup == "noGroup") {				// Group entry. By default we are in "noGroup". This displays as ""
 			groupNameEntry.value = "";
 			groupNameEntry.focus();				// Enter group name first
