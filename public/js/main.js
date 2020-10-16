@@ -502,19 +502,19 @@ document.addEventListener('DOMContentLoaded', function(event){		// Add dynamic b
 		if (e.which === 13) {					// Enter is captured and processed in js
 			if (groupNameEntry.value=="") {			// An empty group name means "noGroup" - hide all group UI
 				myGroup = "noGroup";
-//				nameBadge.style.visibility = "hidden";
-//				chatInput.style.visibility = "hidden";
-//				chatWin.style.visibility = "hidden";	// Hide chat window (history window)
-//				bubbleArea.style.visibility = "hidden";	// and bubble area
+				nameBadge.style.visibility = "hidden";
+				chatInput.style.visibility = "hidden";
+				chatWin.style.visibility = "hidden";	// Hide chat window (history window)
+				bubbleArea.style.visibility = "hidden";	// and bubble area
 				groupNameEntry.blur();			// and remove the focus from the group input field
 			} else {
 //				chatHistory.innerHTML += "<div style='color:#FFCC00'>Group changed from "+myGroup+" to "+groupNameEntry.value+"</div>";
 //				chatHistory.scrollTop = chatHistory.scrollHeight;	
 //				myGroup = groupNameEntry.value;		// group name is good. Make name and chat text area visible
-//				nameBadge.style.visibility = "visible";
-//				chatInput.style.visibility = "visible";
-//				chatWin.style.visibility = "hidden";	// Hide chat window (history window)
-//				bubbleArea.style.visibility = "visible";// and make the bubble area visible by default
+				nameBadge.style.visibility = "visible";
+				chatInput.style.visibility = "visible";
+				chatWin.style.visibility = "hidden";	// Hide chat window (history window)
+				bubbleArea.style.visibility = "visible";// and make the bubble area visible by default
 				nickEntry.focus();			// put focus in name entry field
 			}
 			e.preventDefault();
