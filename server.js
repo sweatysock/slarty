@@ -591,7 +591,8 @@ function simulateSound() {						// Generate simulated clapping for load testing 
 	let now = new Date().getTime();
 	if (nextClap < now) {
 console.log("clap");
-		nextClap = now + clapPeriod + Math.random() * clapVariance;
+		nextClap = Math.round(now + clapPeriod + Math.random() * clapVariance);
+console.log("now is ",now," next clap is at ",nextClap);
 		channels[1].packets.push(clapPacket);			// Add clap packet to channel packet buffer
 	} else
 		channels[1].packets.push(emptyPacket);			// Else add quiet packet
