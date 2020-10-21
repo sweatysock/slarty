@@ -574,8 +574,8 @@ function genClap8() {
 		d=(0-l)/dr;
 		l=l+d;
 		clap8[i] = ((Math.random() * 2) -1)*l;
-if (i<100) console.log(l);
 	}
+for (let i=0;i<250;i++) console.log(clap8[i]);
 	return clap8;
 }
 var clapPacket = {							// Simulate a clap sound
@@ -600,7 +600,6 @@ function simulateSound() {						// Generate simulated clapping for load testing 
 	}
 	let now = new Date().getTime();
 	if (nextClap < now) {
-console.log("clap");
 		nextClap = Math.round(now + clapPeriod + Math.random() * clapVariance);
 		channels[1].packets.push(clapPacket);			// Add clap packet to channel packet buffer
 	} else
