@@ -570,7 +570,11 @@ function genClap8() {
 	let d=0.3;
 	let dr=50;
 	let l=1;
-	for (let i=40;i<250;i++) {
+	clap8.push(...clap8);
+	clap8.push(...clap8);
+	clap8.push(...clap8);
+	clap8.push(...clap8);
+	for (let i=200;i<250;i++) {
 		d=(0-l)/dr;
 		l=l+d;
 		clap8[i] = ((Math.random() * 2) -1)*l;
