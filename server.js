@@ -565,14 +565,18 @@ var emptyPacket = {							// Simulate empty audio
 	sequence	: 0,	
 	channel		: 1,		
 }
-var clap8=[0.5,1,0.5,0,-0.5,-1,-0.2,0.3,-0.4,0.7,-0.2,0.6,0.1,-0.4,0.1];					// Generate samples of a clap sound
-for (let i=15;i<250;i++)
-	clap8[i] = ((Math.random() * 0.8) -0.4)*(15/(i));
-console.log("clap samples:");
-console.log(clap8);
+function genClap8() {
+	let clap8=[];
+	let a=1
+	for (let i=0;i<250;i++)
+		clap8[i] = ((Math.random() * 2) -1)*(a/i);
+	console.log("clap samples:");
+	console.log(clap8);
+	return clap8;
+}
 var clapPacket = {							// Simulate a clap sound
 	name		: "SIM",		
-	audio		: {mono8:clap8,mono16:[],mono32:[],stereo8:[],stereo16:[],stereo32:[]},
+	audio		: {mono8:genClap8(),mono16:[],mono32:[],stereo8:[],stereo16:[],stereo32:[]},
 	perfAudio	: false,	
 	liveClients	: 1,
 	sequence	: 0,	
