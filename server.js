@@ -587,6 +587,7 @@ function simulateSound() {						// Generate simulated clapping for load testing 
 		channels[1].packets.push(emptyPacket);			
 		channels[1].packets.push(emptyPacket);		
 		channels[1].packets.push(emptyPacket);	
+		mixTimer = setTimeout(forceMix,(100));			// Kick off simulation with an artificial call to force mix in 100mS
 	}
 	let now = new Date().getTime();
 console.log("SIM... now is ",now);
