@@ -67,12 +67,18 @@ if (myServerName == undefined)						// This name is used to identify us upstream
 var reverbFile = process.env.reverbfile; 				// Get venue reverb file from heroku config variable, if present
 if (reverbFile == undefined)						// This file gives the reverb vibe for the venue audio
 	reverbFile ="";							// If this is empty the room will be dry as a bone
+var simulating = process.env.simulating; 				// Get flag that tells us to simulate sound for load testing
+if ((simulating != undefined) && (simulating == "true")) {		// It needs to be defined and set to "true" to engage simulation mode
+	simulating = true;	
+	console.log("SIMULATING SERVER");
+}
+else simulating = false;							
 var loopback = process.env.loopback; 					// Get flag that tells us to be a loopback server
 if ((loopback != undefined) && (loopback == "true")) {			// It needs to be defined and set to "true" to engage this mode
 	loopback = true;	
 	console.log("LOOPBACK SERVER MODE");
 }
-else loopback = false;							// If the variable has been set to any value we are in loopback mode
+else loopback = false;						
 var connectedClients = 0;						// Count of the number of clients connected to this server
 const serverKey = "audenceServer";					// Key used to identify server with another server
 var commands = {};							// Commands generated here or from upstream server
@@ -157,10 +163,11 @@ upstreamServer.on('channel', function (data) {				// The response to our "Hi" is
 		if (myServerName == "") myServerName = "Channel " + upstreamServerChannel;
 		console.log("Upstream server has assigned us channel ",upstreamServerChannel);
 		upstreamConnected = true;
+		if (simulating) simulateSound();			// Once connected upstream we can start simulating
 	} else {
 		console.log("Upstream server unable to assign a channel");		
 		console.log("Try a different server");		
-		upstreamServer.close();					// Disconnect and clear upstream server name
+		upstreamServer.close();					// Disconnect and retry soon
 	}
 });
 
@@ -508,6 +515,7 @@ function midBoostFilter(audioIn) {					// Filter to boost mids giving distant so
 
 function forceMix() {							// The timer has triggered a mix 
 	forcedMixes++;							// Note how many times the timer forces a mix for monitoring
+	if (simulating) simulateSound();				// If we are in simulation mode generate sound now
 	generateMix();							// We need to push out a mix
 }
 
@@ -546,6 +554,49 @@ else return false;
 	} else return false;						// otherwise ñets not mix and wait for channels to buffer more
 }
 
+var nextClap = 0;							// When to simulate next clap
+var clapPeriod = 500;							// mS between claps
+var clapVariance = 100;							// mS of variance between claps
+var emptyPacket = {							// Simulate empty audio
+	name		: "SIM",		
+	audio		: {mono8:[],mono16:[],mono32:[],stereo8:[],stereo16:[],stereo32:[]},
+	perfAudio	: false,	
+	liveClients	: 1,
+	sequence	: 0,	
+	channel		: 1,		
+}
+var clap8=[0.5,1,0.5,0,-0.5,-1,-0.2];					// Generate samples of a clap sound
+for (let i=7;i<250;i++)
+	clap8[i] = ((Math.random() * 0.8) -0.4)*(7/(i));
+console.log("clap samples:");
+console.log(clap8);
+var clapPacket = {							// Simulate a clap sound
+	name		: "SIM",		
+	audio		: {mono8:clap8,mono16:[],mono32:[],stereo8:[],stereo16:[],stereo32:[]},
+	perfAudio	: false,	
+	liveClients	: 1,
+	sequence	: 0,	
+	channel		: 1,		
+}
+function simulateSound() {						// Generate simulated clapping for load testing and venue sound shaping
+	if (channels[1].name == "") {					// If this is the first time we are called, set up channel 1 for simulation
+		channels[1].name = "SIM";
+		channels[1].newBuf = false;
+		channels[1].packets.push(clapPacket);			// Add clap packet to channel packet buffer
+		channels[1].packets.push(emptyPacket);			// followed by some quiet to fill buffer a little
+		channels[1].packets.push(emptyPacket);			
+		channels[1].packets.push(emptyPacket);		
+		channels[1].packets.push(emptyPacket);	
+	}
+	let now = new Date().getTime();
+	if (nextClap < now) {
+console.log("clap");
+		nextClap = now + clapPeriod + Math.random() * clapVariance;
+		channels[1].packets.push(clapPacket);			// Add clap packet to channel packet buffer
+	} else
+		channels[1].packets.push(emptyPacket);			// Else add quiet packet
+	// APPLY THRESHOLDS ETC HERE TO REALLY SIMULATE VENUE SOUND & IT'S ISSUES
+}
 
 
 // The main working function where audio marshalling, venue mixing and sending up and downstream happens
