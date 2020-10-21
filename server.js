@@ -568,8 +568,8 @@ var emptyPacket = {							// Simulate empty audio
 function genClap8() {
 	let clap8=[];
 	let d=0.3;
-	let ar=6;
-	let dr=9;
+	let ar=20;
+	let dr=40;
 	let r=ar;
 	let o=1;
 	let l=0;
