@@ -173,7 +173,7 @@ upstreamServer.on('channel', function (data) {				// The response to our "Hi" is
 
 // Venue audio coming down from our upstream server. Channels of audio from upstream plus all our peers.
 upstreamServer.on('d', function (packet) { 
-	if ( connectedClients == 0 ) return;				// If no clients no reason to process upstream data
+	if (( connectedClients == 0 ) && (!simulating)) return;		// If no clients and not simulating clients no reason to process upstream data
 	enterState( upstreamState );					
 	upstreamIn++;						
 	addCommands(packet.commands);					// Store upstream commands for sending downstream
@@ -566,7 +566,7 @@ var emptyPacket = {							// Simulate empty audio
 	channel		: 1,		
 }
 function genClap8() {
-	let clap8=[0.3,0.4,-0.1,0.4,0,-0.5,-0.8,-0.2,0.5,1,0.2,-0.3,-0.9,-0.1,0.5,0.8,1,0.4,-0.6,-0.1,0.3,0.7,0.3,0.4,0,-0.5,-0.1,-0.2,0.5,0.6,0.2,-0.3,-1,-0.1,0.5,0.8,0.1,0.4,-0.6,-0.1];
+	let clap8=[0.3,0.4,-0.1,0.4,0,-0.5,-0.8,-0.2,0.5,1,0.2,-0.3,-0.9,-0.1,0.5,0.2,0.1,0.4,-0.6,-0.1,0.3,0.7,0.3,0.4,0,-0.5,-0.1,-0.2,0.5,0.6,0.2,-0.3,-1,-0.5,0,0.2,0.1,0.4,-0.6,-0.1];
 	let d=0.3;
 	let dr=50;
 	let l=1;
