@@ -569,9 +569,11 @@ function genClap8() {
 	let clap8=[];
 	let a=1
 	let b=0
+	let l=0;
 	for (let i=0;i<250;i++) {
-		b=(a-b)/2;
-		clap8[i] = ((Math.random() * 2) -1)*((a*b)/i);
+		b=(a-b)/8;
+		if (b<0.9) l=b; else l=a/i;
+		clap8[i] = ((Math.random() * 2) -1)*l;
 	}
 	console.log("clap samples:");
 	console.log(clap8);
