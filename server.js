@@ -555,7 +555,7 @@ else return false;
 }
 
 var nextClap = 0;							// When to simulate next clap
-var clapPeriod = 500;							// mS between claps
+var clapPeriod = 400;							// mS between claps
 var clapVariance = 100;							// mS of variance between claps
 var emptyPacket = {							// Simulate empty audio
 	name		: "SIM",		
@@ -565,9 +565,9 @@ var emptyPacket = {							// Simulate empty audio
 	sequence	: 0,	
 	channel		: 1,		
 }
-var clap8=[0.5,1,0.5,0,-0.5,-1,-0.2];					// Generate samples of a clap sound
-for (let i=7;i<250;i++)
-	clap8[i] = ((Math.random() * 0.8) -0.4)*(7/(i));
+var clap8=[0.5,1,0.5,0,-0.5,-1,-0.2,0.3,-0.4,0.7,-0.2,0.6,0.1,-0.4,0.1];					// Generate samples of a clap sound
+for (let i=15;i<250;i++)
+	clap8[i] = ((Math.random() * 0.8) -0.4)*(15/(i));
 console.log("clap samples:");
 console.log(clap8);
 var clapPacket = {							// Simulate a clap sound
@@ -581,6 +581,7 @@ var clapPacket = {							// Simulate a clap sound
 function simulateSound() {						// Generate simulated clapping for load testing and venue sound shaping
 	if (channels[1].name == "") {					// If this is the first time we are called, set up channel 1 for simulation
 		channels[1].name = "SIM";
+		channels[1].group = "noGroup";
 		channels[1].newBuf = false;
 		channels[1].packets.push(clapPacket);			// Add clap packet to channel packet buffer
 		channels[1].packets.push(emptyPacket);			// followed by some quiet to fill buffer a little
@@ -590,11 +591,9 @@ function simulateSound() {						// Generate simulated clapping for load testing 
 		mixTimer = setTimeout(forceMix,(100));			// Kick off simulation with an artificial call to force mix in 100mS
 	}
 	let now = new Date().getTime();
-console.log("SIM... now is ",now);
 	if (nextClap < now) {
 console.log("clap");
 		nextClap = Math.round(now + clapPeriod + Math.random() * clapVariance);
-console.log("now is ",now," next clap is at ",nextClap);
 		channels[1].packets.push(clapPacket);			// Add clap packet to channel packet buffer
 	} else
 		channels[1].packets.push(emptyPacket);			// Else add quiet packet
