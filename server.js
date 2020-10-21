@@ -555,7 +555,7 @@ else return false;
 }
 
 var nextClap = 0;							// When to simulate next clap
-var clapPeriod = 400;							// mS between claps
+var clapPeriod = 300;							// mS between claps
 var clapVariance = 100;							// mS of variance between claps
 var emptyPacket = {							// Simulate empty audio
 	name		: "SIM",		
@@ -566,7 +566,7 @@ var emptyPacket = {							// Simulate empty audio
 	channel		: 1,		
 }
 function genClap8() {
-	let clap8=[0.3,0.7,0.1,0.4,0,-0.5,-0.1,-0.2,0.5,1,0.2,-0.3,-0.9,-0.1,0.5,0.8,1,0.4,-0.6,-0.1,0.3,0.7,1,0.4,0,-0.5,-1,-0.2,0.5,1,0.2,-0.3,-0.9,-0.1,0.5,0.8,1,0.4,-0.6,-0.1];
+	let clap8=[0.3,0.7,1,0.4,0,-0.5,-1,-0.2,0.5,1,0.2,-0.3,-0.9,-0.1,0.5,0.8,1,0.4,-0.6,-0.1,0.3,0.7,1,0.4,0,-0.5,-1,-0.2,0.5,1,0.2,-0.3,0.9,-0.1,0.5,0.8,0.1,0.4,-0.6,-0.1];
 	let d=0.3;
 	let dr=50;
 	let l=1;
