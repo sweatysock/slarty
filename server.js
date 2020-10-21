@@ -567,21 +567,12 @@ var emptyPacket = {							// Simulate empty audio
 }
 function genClap8() {
 	let clap8=[];
-	let a=0
-	let d=0
-	let b=0.4;
-	let c=-0.4;
+	let r=0.4;
 	let l=0;
 	for (let i=0;i<250;i++) {
-		if (a<0.9) {
-			l=a; 
-			a+=b;
-			b=b/2;
-		} else {
-			l=d;
-			d+=c;
-			c=c/8;
-		}
+		if ((r<0.01)&&(r>0)) r=-0.4;
+		l=l+r;
+		r=r/2;
 		clap8[i] = ((Math.random() * 2) -1)*l;
 	}
 	console.log("clap samples:");
