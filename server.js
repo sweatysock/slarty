@@ -602,8 +602,10 @@ function simulateSound() {						// Generate simulated clapping for load testing 
 	if (nextClap < now) {
 		nextClap = Math.round(now + clapPeriod + Math.random() * clapVariance);
 		let peak = 0;
-		if ((typeof venue.packets[0] !== 'undefined') && (typeof venue.packets[0].audio !== 'undefined') && (typeof venue.packets[0].audio.mono8 !== 'undefined'))
+		if ((typeof venue.packets[0] !== 'undefined') && (typeof venue.packets[0].audio !== 'undefined') && (typeof venue.packets[0].audio.mono8 !== 'undefined')) {
 			peak = maxValue(venue.packets[0].audio.mono8);
+console.log("peak of "peak);
+		}
 		if (peak < 0.7)
 			channels[1].packets.push(clapPacket);		// Add clap packet to channel packet buffer if venue not too loud
 		else {
