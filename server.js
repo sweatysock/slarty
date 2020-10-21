@@ -573,10 +573,9 @@ function genClap8() {
 		if ((r<0.01)&&(r>0)) r=-0.4;
 		l=l+r;
 		r=r/8;
+console.log(l);
 		clap8[i] = ((Math.random() * 2) -1)*l;
 	}
-	console.log("clap samples:");
-	console.log(clap8);
 	return clap8;
 }
 var clapPacket = {							// Simulate a clap sound
