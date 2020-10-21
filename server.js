@@ -572,7 +572,7 @@ function genClap8() {
 	for (let i=0;i<250;i++) {
 		if ((r<0.01)&&(r>0)) r=-0.4;
 		l=l+r;
-		r=r/2;
+		r=r/4;
 		clap8[i] = ((Math.random() * 2) -1)*l;
 	}
 	console.log("clap samples:");
