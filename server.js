@@ -7,7 +7,7 @@ const maxBufferSize = 15;						// Max number of packets to store per client
 const perfMaxBufferSize = 30;						// Max packets buffered for the performer
 const mixTriggerLevel = 6;						// When all clients have this many packets we create a mix
 const MaxOutputLevel = 1;						// Max output level for INT16, for auto gain control
-const NumberOfChannels = 20;						// Max number of channels in this server
+const NumberOfChannels = 21;						// Max number of channels in this server = 20 + channel 0 (now not used)
 var channels = [];							// Each channel's data & buffer held here
 for (let i=0; i < NumberOfChannels; i++) {				// Create all the channels pre-initialized
 	channels[i] = {
@@ -601,10 +601,17 @@ function simulateSound() {						// Generate simulated clapping for load testing 
 	let now = new Date().getTime();
 	if (nextClap < now) {
 		nextClap = Math.round(now + clapPeriod + Math.random() * clapVariance);
-		channels[1].packets.push(clapPacket);			// Add clap packet to channel packet buffer
+		let peak = 0;
+		if (typeof venue.packets[0].audio.mono8 !== 'undefined')
+			peak = maxValue(venue.packets[0].audio.mono8);
+		if (peak < 0.7)
+			channels[1].packets.push(clapPacket);		// Add clap packet to channel packet buffer if venue not too loud
+		else {
+console.log("venue level too high for clap");
+			channels[1].packets.push(emptyPacket);
+		}
 	} else
 		channels[1].packets.push(emptyPacket);			// Else add quiet packet
-	// APPLY THRESHOLDS ETC HERE TO REALLY SIMULATE VENUE SOUND & IT'S ISSUES
 }
 
 

@@ -43,26 +43,37 @@ do
 	fi
 	((number = number + 1))
 done
-number=1
 target=$4
 start=30000
-upstream=$name
+number=1
+upstreamStart=20000
+upstreamNumber=1
+peerCount=0
+maxPeers=20
 while ((number <= target))
 do
-	echo "Level 3 needs to set upstream server correctly... build code first!!"
+	if ((peerCount == maxPeers)); then
+		peerCount=0
+		((upstreamNumber = upstreamNumber +1))
+	fi
+	((upstream=upstreamStart+upstreamNumber))
+	upstreamName=$base$upstream
 	((server = start + number))
 	name=$base$server
+	((peerCount = peerCount + 1))
 	echo "heroku apps:create "$name" --region eu"
 	echo "heroku git:remote -a "$name
 	echo 'heroku config:set servername="'$name'"'
-	echo 'heroku config:set upstream="'$upstream'"'
+	echo 'heroku config:set upstream="'$upstreamName'"'
+	echo 'heroku config:set simulating="true"'
 	echo 'git push heroku master'
 	if [ $execute == "y" ]; then
-		echo "heroku apps:create "$name" --region eu"
-		echo "heroku git:remote -a "$name
-		echo 'heroku config:set servername="'$name'"'
-		echo 'heroku config:set upstream="'$upstream'"'
-		echo 'git push heroku master'
+		heroku apps:create "$name" --region eu
+		heroku git:remote -a $name
+		heroku config:set servername="$name"
+		heroku config:set upstream="$upstreamName"
+		heroku config:set simulating="true"
+		git push heroku master
 	fi
 	((number = number + 1))
 done
