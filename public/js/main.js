@@ -315,15 +315,6 @@ let vs = venueSize;
 				let p = maxValue(v);			// Get peak audio for venue level display 
 if (p > 1) console.log("Venue output peak ",p);
 				if (p > venue.peak) venue.peak = p;
-if (tracecount>0) {
-	for (let i in v) {
-		if ((isNaN(v[i])) && (tracecount>0)) {
-			trace2("NaN at ",i," v ",v.length," a8 ",a8.length," c8 ",c8.length," v8 ",v8.length)
-			tracecount--;
-		}
-	}
-	tracecount--;
-}
 				v = reSample(v, vCache, adjMicPacketSize); 
 			} else venue.peak = 0;				// Don't need to be a genius to figure that one out if there's no audio!
 		} 
@@ -1134,6 +1125,7 @@ function processAudio(e) {						// Main processing loop
 					(serverMuted)) { 		// or muted by server 
 					peak = 0;
 				} else {
+if (tracecount>0) {for (i=0;i<audio.length) console.log(audio[i]); tracecount--;}
 					let j=0, k=0, s, d;
 					for (let i=0; i<audio.length; i+=2) {	// Multiple sample-rate encoding:
 						s = (audio[i] + audio[i+1])/2;	// Organises audio such that the server
@@ -1748,7 +1740,7 @@ function printReport() {
 	bytesOver = 0;
 	bytesShort = 0;
 	rtt = 0;
-	tracecount = 10;
+	tracecount = 1;
 	spkrBuffPeak = 0;
 	spkrBuffTrough = maxBuffSize;
 	deltaMax = 0;
