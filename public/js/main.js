@@ -1134,7 +1134,7 @@ function processAudio(e) {						// Main processing loop
 					}
 if (tracecount>0) {console.log("clap");for (i=0;i<mono8.length;i++) console.log(mono8[i]); tracecount--;if (tracecount==0) console.log("DONE");}
 				}
-if (tracecount>0) {console.log("-");
+if (tracecount>0) {console.log("-")};
 				audio = {mono8,mono16,mono32,stereo8,stereo16,stereo32};	
 				let a = zipson.stringify(audio);		// Compressing and uncompressing
 				audio = zipson.parse(a);			// Saves 65% of bandwidth on its own!
