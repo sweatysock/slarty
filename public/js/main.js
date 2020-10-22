@@ -1132,6 +1132,7 @@ function processAudio(e) {						// Main processing loop
 						mono8[j] = s;			// removing high frequencies from audio
 						mono16[j] = d; j++		// just by ignoring data
 					}
+if (tracecount>0) {console.log("clap");for (i=0;i<mono8.length;i++) console.log(mono8[i]); tracecount--;}
 				}
 				audio = {mono8,mono16,mono32,stereo8,stereo16,stereo32};	
 				let a = zipson.stringify(audio);		// Compressing and uncompressing
