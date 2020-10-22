@@ -315,6 +315,15 @@ let vs = venueSize;
 				let p = maxValue(v);			// Get peak audio for venue level display 
 if (p > 1) console.log("Venue output peak ",p);
 				if (p > venue.peak) venue.peak = p;
+if (tracecount>0) {
+	for (let i in v) {
+		if ((isNaN(v[i])) && (tracecount>0)) {
+			trace2("NaN at ",i," length ",v.length)
+			tracecount--;
+		}
+	}
+	tracecount--;
+}
 				v = reSample(v, vCache, adjMicPacketSize); 
 			} else venue.peak = 0;				// Don't need to be a genius to figure that one out if there's no audio!
 		} 
@@ -447,15 +456,6 @@ if (p > 1) console.log("Venue output peak ",p);
 		if (spkrBufferL.length > spkrBuffPeak) 			// Monitoring purposes
 			spkrBuffPeak = spkrBufferL.length;
 		if (v.length > 0) {					// Add the venue audio to its own buffer
-if (tracecount>0) {
-	for (let i in v) {
-		if ((isNaN(v[i])) && (tracecount>0)) {
-			trace2("NaN at ",i," length ",v.length)
-			tracecount--;
-		}
-	}
-	tracecount--;
-}
 			venueBuffer.push(...v);				// Add any venue audio to the venue buffer
 		}
 		if (venueBuffer.length > maxBuffSize) 			// Clip buffer if too full
