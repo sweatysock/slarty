@@ -1211,7 +1211,7 @@ function processAudio(e) {						// Main processing loop
 	}
 	for (let i in outDataV) { 
 		outDataV[i] = outAudioV[i];				// Copy venue audio to it's special output
-if (isNaN(outAudioV[i]) trace2("NAN");
+if (isNaN(outAudioV[i])) trace2("NAN");
 	}
 trace2("length of venue audio sent = ",outAudioV.length);
 	// 2.2 Get highest level output and use it to set the dynamic threshold level to stop audio feedback
