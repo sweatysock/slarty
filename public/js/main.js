@@ -1211,7 +1211,7 @@ function processAudio(e) {						// Main processing loop
 	}
 	for (let i in outDataV) { 
 		outDataV[i] = outAudioV[i];				// Copy venue audio to it's special output
-if ((isNaN(outAudioV[i])) && (tracecount>0)) {trace2("NAN"); tracecount--}
+if ((isNaN(outAudioV[i])) && (tracecount>0)) {trace2("NAN at ",i); tracecount--}
 	}
 	// 2.2 Get highest level output and use it to set the dynamic threshold level to stop audio feedback
 	let maxL = maxValue(outAudioL);					// Get peak level of this outgoing audio
@@ -1739,7 +1739,7 @@ function printReport() {
 	bytesOver = 0;
 	bytesShort = 0;
 	rtt = 0;
-	tracecount = 1;
+	tracecount = 10;
 	spkrBuffPeak = 0;
 	spkrBuffTrough = maxBuffSize;
 	deltaMax = 0;
