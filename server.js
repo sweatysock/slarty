@@ -590,6 +590,7 @@ var clapPacket = {							// Simulate a clap sound
 	sequence	: 0,	
 	channel		: 1,		
 }
+console.log("CLAP PACKET ",clapPacket.audio.mono8.length);
 function simulateSound() {						// Generate simulated clapping for load testing and venue sound shaping
 	if (channels[1].name == "") {					// If this is the first time we are called, set up channel 1 for simulation
 		channels[1].name = "SIM";
