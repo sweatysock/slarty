@@ -572,14 +572,13 @@ function genClap8() {
 	let l=1;
 	clap8.push(...clap8);
 	clap8.push(...clap8);
-	clap8.push(...clap8);
-	clap8.push(...clap8);
-	for (let i=200;i<250;i++) {
+	for (let i=160;i<250;i++) {
 		d=(0-l)/dr;
 		l=l+d;
 		clap8[i] = ((Math.random() * 2) -1)*l;
 	}
 for (let i=0;i<250;i++) console.log(clap8[i]);
+console.log("CLAP PACKET ",clap8.length);
 	return clap8;
 }
 var clapPacket = {							// Simulate a clap sound
@@ -590,7 +589,6 @@ var clapPacket = {							// Simulate a clap sound
 	sequence	: 0,	
 	channel		: 1,		
 }
-console.log("CLAP PACKET ",clapPacket.audio.mono8.length);
 function simulateSound() {						// Generate simulated clapping for load testing and venue sound shaping
 	if (channels[1].name == "") {					// If this is the first time we are called, set up channel 1 for simulation
 		channels[1].name = "SIM";
