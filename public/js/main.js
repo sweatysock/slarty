@@ -1132,9 +1132,7 @@ function processAudio(e) {						// Main processing loop
 						mono8[j] = s;			// removing high frequencies from audio
 						mono16[j] = d; j++		// just by ignoring data
 					}
-//if (tracecount>0) {console.log("clap");for (i=0;i<mono8.length;i++) console.log(mono8[i]); tracecount--;if (tracecount==0) console.log("DONE");}
 				}
-//if (tracecount>0) {console.log("-")};
 				audio = {mono8,mono16,mono32,stereo8,stereo16,stereo32};	
 				let a = zipson.stringify(audio);		// Compressing and uncompressing
 				audio = zipson.parse(a);			// Saves 65% of bandwidth on its own!
@@ -1355,8 +1353,8 @@ function handleAudio(stream) {						// We have obtained media access
 	splitter.connect(combiner,1,1);
 	combiner.connect(context.destination);				// And send this stereo signal direct to the output
 
-//	splitter.connect(reverb,2);					// Send centre venue to the stereo reverb
-	splitter.connect(context.destination,2);					// Send centre venue to the stereo reverb
+	splitter.connect(reverb,2);					// Send centre venue to the stereo reverb
+//	splitter.connect(context.destination,2);					// Send centre venue to the stereo reverb
 	
 	reverb.connect(context.destination);				// and finally feed the centre venue with reverb to the output 
 
