@@ -1339,7 +1339,7 @@ function handleAudio(stream) {						// We have obtained media access
 	micFilter2.Q.value = 1;
 	
 	reverb = context.createConvolver();				// Reverb for venue ambience
-	reverb.buffer = impulseResponse(1,16);				// Default reverb characteristic... simple exponential decay
+	reverb.buffer = impulseResponse(1,8);				// Default reverb characteristic... simple exponential decay
 	reverb.normalize = true;
 	let splitter = context.createChannelSplitter();			// Need a splitter to separate venue from main audio
 	let combiner = context.createChannelMerger();			// Combiner used to rebuild stereo image
@@ -1364,7 +1364,7 @@ function handleAudio(stream) {						// We have obtained media access
 function loadVenueReverb(filename) {					// Load the venue reverb file to give ambience
 	if (filename == reverbFile) return;				// Don't load the same file again
 	if (filename == "") {						// If the file is empty then lets go for the basic reverb
-		reverb.buffer = impulseResponse(1,16); 
+		reverb.buffer = impulseResponse(1,8); 
 		return;					
 	}
 	let ir_request = new XMLHttpRequest();				// Load impulse response to reverb
