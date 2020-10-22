@@ -446,8 +446,18 @@ if (p > 1) console.log("Venue output peak ",p);
 		}
 		if (spkrBufferL.length > spkrBuffPeak) 			// Monitoring purposes
 			spkrBuffPeak = spkrBufferL.length;
-		if (v.length > 0)					// Add the venue audio to its own buffer
+		if (v.length > 0) {					// Add the venue audio to its own buffer
+if (tracecount>0) {
+	for (let i in v) {
+		if ((isNaN(v[i])) && (tracecount>0)) {
+			trace2("NaN at ",i," putting data into venue buffer");
+			tracecount--;
+		}
+	}
+	tracecount--;
+}
 			venueBuffer.push(...v);				// Add any venue audio to the venue buffer
+		}
 		if (venueBuffer.length > maxBuffSize) 			// Clip buffer if too full
 			venueBuffer.splice(0, (venueBuffer.length-maxBuffSize)); 	
 		// 5. Calculate RTT 
@@ -1211,7 +1221,6 @@ function processAudio(e) {						// Main processing loop
 	}
 	for (let i in outDataV) { 
 		outDataV[i] = outAudioV[i];				// Copy venue audio to it's special output
-if ((isNaN(outAudioV[i])) && (tracecount>0)) {trace2("NAN at ",i); tracecount--}
 	}
 	// 2.2 Get highest level output and use it to set the dynamic threshold level to stop audio feedback
 	let maxL = maxValue(outAudioL);					// Get peak level of this outgoing audio
