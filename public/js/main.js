@@ -450,7 +450,7 @@ if (p > 1) console.log("Venue output peak ",p);
 if (tracecount>0) {
 	for (let i in v) {
 		if ((isNaN(v[i])) && (tracecount>0)) {
-			trace2("NaN at ",i," putting data into venue buffer");
+			trace2("NaN at ",i," length ",v.length)
 			tracecount--;
 		}
 	}
