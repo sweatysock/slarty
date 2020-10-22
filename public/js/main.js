@@ -1125,7 +1125,6 @@ function processAudio(e) {						// Main processing loop
 					(serverMuted)) { 		// or muted by server 
 					peak = 0;
 				} else {
-if (tracecount>0) {for (i=0;i<audio.length;i++) console.log(audio[i]); tracecount--;}
 					let j=0, k=0, s, d;
 					for (let i=0; i<audio.length; i+=2) {	// Multiple sample-rate encoding:
 						s = (audio[i] + audio[i+1])/2;	// Organises audio such that the server
