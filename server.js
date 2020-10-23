@@ -679,6 +679,7 @@ function generateMix () {
 				c.playhead = 0;				// Set buffer play position to the start
 			}
 			else if (packet.perfAudio == false) {		// Got data and not perfomer. Build mix of downstream channels. 
+console.log("Mixing ",chan," with mono8 length of ",packet.audio.mono8.length);
 				packetCount++;				// Count how many packets have made the mix for tracing
 				if (packet.audio.mono8.length > 0) {	// Unpack the MSRE packet of audio and add to server mix
 					someAudio8 = true;
