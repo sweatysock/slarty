@@ -174,7 +174,7 @@ socketIO.on('d', function (data) {
 	serverLiveChannels = data.liveChannels;				// Server live channels are for UI updating
 	processCommands(data.commands);					// Process commands from server
 	if (micAccessAllowed) {						// Need access to audio before outputting
-		let v = [];						// Our objective is to get the venue audio (if any) in here,
+		let v = new Array(adjMicPacketSize).fill(0);		// Our objective is to get the venue audio (if any) in here,
 		let c8 = new Array(PacketSize/2).fill(0);		// Buffer of group audio to be subtracted from the venue audio 
 		let c16 = new Array(PacketSize/2).fill(0);		// in MSRE format
 		let gL = [], gR = [];					// the group stereo audio (if any) in here
@@ -289,22 +289,21 @@ socketIO.on('d', function (data) {
 			}
 			let audio = zipson.parse(vData.audio);		// Uncompress venue audio
 			let v8 = audio.mono8, v16 = audio.mono16;	// Shortcuts to the venue MSRE data blocks
-let vs = venueSize;
 			if ((v8.length > 0) && (!venue.muted)) {	// If there is venue audio & not muted, it will need processing
 				let sr = 8000;				// Minimum sample rate of 8kHz
 				if ((a8.length > 0) && (c8.length > 0))	// If we have audio and group has audio remove both and set venue level
-					for (let i = 0; i < a8.length; ++i) v8[i] = (v8[i] - a8[i] -c8[i]) * venue.gain / vs;
+					for (let i = 0; i < a8.length; ++i) v8[i] = (v8[i] - a8[i] -c8[i]) * venue.gain / venueSize;
 				if ((a8.length > 0) && (c8.length == 0))// If there is only our audio subtract it and set venue level
-					for (let i = 0; i < a8.length; ++i) v8[i] = (v8[i] - a8[i]) * venue.gain / vs;
+					for (let i = 0; i < a8.length; ++i) v8[i] = (v8[i] - a8[i]) * venue.gain / venueSize;
 				if ((a8.length == 0) && (c8.length > 0))// If there is only group cancelling audio subtract it and set venue level
-					for (let i = 0; i < c8.length; ++i) v8[i] = (v8[i] - c8[i]) * venue.gain / vs;
+					for (let i = 0; i < c8.length; ++i) v8[i] = (v8[i] - c8[i]) * venue.gain / venueSize;
 				if (v16.length > 0) {			// If the venue has higher quality audio repeat the same process
 					if ((a16.length > 0) && (c16.length > 0))
-						for (let i = 0; i < a16.length; ++i) v16[i] = (v16[i] - a16[i] -c16[i]) * venue.gain / vs;
+						for (let i = 0; i < a16.length; ++i) v16[i] = (v16[i] - a16[i] -c16[i]) * venue.gain / venueSize;
 					if ((a16.length > 0) && (c16.length == 0))
-						for (let i = 0; i < a16.length; ++i) v16[i] = (v16[i] - a16[i]) * venue.gain / vs;
+						for (let i = 0; i < a16.length; ++i) v16[i] = (v16[i] - a16[i]) * venue.gain / venueSize;
 					if ((a16.length == 0) && (c16.length > 0))
-						for (let i = 0; i < c16.length; ++i) v16[i] = (v16[i] - c16[i]) * venue.gain / vs;
+						for (let i = 0; i < c16.length; ++i) v16[i] = (v16[i] - c16[i]) * venue.gain / venueSize;
 					let k = 0;			// reconstruct the original venue audio in v[]
 					for (let i=0;i<v8.length;i++) {	
 						v[k] = v8[i] + v16[i];k++;
@@ -446,8 +445,7 @@ if (p > 1) console.log("Venue output peak ",p);
 		}
 		if (spkrBufferL.length > spkrBuffPeak) 			// Monitoring purposes
 			spkrBuffPeak = spkrBufferL.length;
-		if (v.length > 0) {					// Add the venue audio to its own buffer
-			venueBuffer.push(...v);				// Add any venue audio to the venue buffer
+		venueBuffer.push(...v);					// Add any venue audio to the venue buffer
 		}
 		if (venueBuffer.length > maxBuffSize) 			// Clip buffer if too full
 			venueBuffer.splice(0, (venueBuffer.length-maxBuffSize)); 	
@@ -1356,7 +1354,7 @@ function handleAudio(stream) {						// We have obtained media access
 	combiner.connect(context.destination);				// And send this stereo signal direct to the output
 
 	splitter.connect(reverb,2);					// Send centre venue to the stereo reverb
-//	splitter.connect(context.destination,2);					// Send centre venue to the stereo reverb
+//	splitter.connect(context.destination,2);			// Send centre venue direct to output
 	
 	reverb.connect(context.destination);				// and finally feed the centre venue with reverb to the output 
 
