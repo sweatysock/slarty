@@ -291,8 +291,8 @@ socketIO.on('d', function (data) {
 			let v8 = audio.mono8, v16 = audio.mono16;	// Shortcuts to the venue MSRE data blocks
 			if ((v8.length > 0) && (!venue.muted)) {	// If there is venue audio & not muted, it will need processing
 				let sr = 8000;				// Minimum sample rate of 8kHz
-				let gn = (venue.peak < 0.1)? 		// Gain applied to venue is maxed at 8x
-					8 : 0.8/venue.peak;		// but tapers if the previous peak was above 0.8
+				let gn = (venue.peak < 0.05)? 		// Gain applied to venue is maxed at 4x
+					8 : 0.4/venue.peak;		// but tapers if the previous peak was above 0.6
 console.log("Venue gain adjust is ",gn);
 				gn = gn * venue.gain / venueSize;	// Gain also adjusts for fader setting and venue size most importantly
 				if ((a8.length > 0) && (c8.length > 0))	// If we have audio and group has audio remove both and set venue level
