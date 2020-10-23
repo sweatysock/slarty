@@ -313,7 +313,9 @@ socketIO.on('d', function (data) {
 					sr = 16000;			// This is at the higher sample rate
 				} else v = v8;				// Only low bandwidth venue audio 
 				let obj = applyAutoGain(v, venue);	// Amplify venue with auto limiter
+				venue.gain = obj.gain;			// Store gain for next time round
 if (obj.peak > 0.6) console.log("Venue output peak ",obj.peak);
+console.log(venue.gain);
 				if (obj.peak > venue.peak) venue.peak = obj.peak;
 				v = reSample(v, vCache, adjMicPacketSize); 
 			} else venue.peak = 0;				// Don't need to be a genius to figure that one out if there's no audio!
