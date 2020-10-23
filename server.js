@@ -73,6 +73,9 @@ if ((simulating != undefined) && (simulating == "true")) {		// It needs to be de
 	console.log("SIMULATING SERVER");
 }
 else simulating = false;							
+
+simulating=true;
+
 var loopback = process.env.loopback; 					// Get flag that tells us to be a loopback server
 if ((loopback != undefined) && (loopback == "true")) {			// It needs to be defined and set to "true" to engage this mode
 	loopback = true;	
@@ -607,10 +610,10 @@ function simulateSound() {						// Generate simulated clapping for load testing 
 console.log("peak of ",peak);
 		}
 		if (peak < 0.7)	{					// Simulated thresholding on venue sound. If not too loud add clap
-			let level = (Math.random() * 0.8) + 0.2;		// Adjust clap sound level in a random manner between 0.2 and 1
+			let level = (Math.random() * 0.9) + 0.1;	// Adjust clap sound level in a random manner between 0.1 and 1
 			if (preamble > 31) preamble = 31;		// No point in the preamble being longer than the duration of a packet at system sample rate (16kHz)
 			let mono8 = new Array(8*preamble).fill(0);	// Fill with silence the time until the clap was due to happen. 8 samples / mS for mono8
-			let clapRemaining = 2076;			// Length of the full clap sample is 2076 samples 
+			let clapRemaining = getClap8(1,0).length;	// Get length of full clap sample
 			let pointer = 0;				// Where we are in the clap sample
 			while (clapRemaining > 250) {
 				let needed = 250 - mono8.length;
@@ -620,7 +623,7 @@ console.log("peak of ",peak);
 				pointer += needed;			// Bump pointer on 
 				clapRemaining -= needed;		// And clock back amount of slap sample remaining for packetizing
 			}
-			mono8.push(...getClap8(level, pointer, 0));	// Add last piece of clap sample remaining
+			mono8.push(...getClap8(level, pointer));	// Add last piece of clap sample remaining (skip last param to get all up to end)
 			let silence = new Array(250 - mono8.length).fill(0);
 			mono8.push(...silence);				// Complete sample with silence
 			channels[1].packets.push(genSimPacket(mono8));	// Add packet to channel packet buffer 
