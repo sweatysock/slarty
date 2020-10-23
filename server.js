@@ -708,6 +708,8 @@ function generateMix () {
 	let mix = {mono8, mono16};					// Build audio block in MSRE format
 	let zipMix = zipson.stringify(mix);				// Compress mixed audio to save BW for sending downstream
 	mix = zipson.parse(zipMix);					// but uncompress for upstream and mixing with venue (it still saves 60% BW)
+console.log("sending mix...");
+console.log(mix.mono8);
 	if (upstreamConnected == true) { 				// Send mix if connected to an upstream server
 		let now = new Date().getTime();
 		let packet = {						// Build the packet the same as any client packet
