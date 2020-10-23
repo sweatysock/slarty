@@ -293,6 +293,7 @@ socketIO.on('d', function (data) {
 				let sr = 8000;				// Minimum sample rate of 8kHz
 				let gn = (venue.peak < 0.15)? 		// Gain applied to venue is maxed at 4x
 					4 : 0.6/venue.peak;		// but tapers if the previous peak was above 0.6
+console.log("Venue gain adjust is ",gn);
 				gn = gn * venue.gain / venueSize;	// Gain also adjusts for fader setting and venue size most importantly
 				if ((a8.length > 0) && (c8.length > 0))	// If we have audio and group has audio remove both and set venue level
 					for (let i = 0; i < a8.length; ++i) v8[i] = (v8[i] - a8[i] -c8[i]) * gn;
@@ -315,7 +316,7 @@ socketIO.on('d', function (data) {
 					sr = 16000;			// This is at the higher sample rate
 				} else v = v8;				// Only low bandwidth venue audio 
 				let p = maxValue(v);			// Get peak audio for venue level display 
-if (p > 1) console.log("Venue output peak ",p);
+if (p > 0.6) console.log("Venue output peak ",p);
 				if (p > venue.peak) venue.peak = p;
 				v = reSample(v, vCache, adjMicPacketSize); 
 			} else venue.peak = 0;				// Don't need to be a genius to figure that one out if there's no audio!
