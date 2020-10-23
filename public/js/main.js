@@ -174,7 +174,7 @@ socketIO.on('d', function (data) {
 	serverLiveChannels = data.liveChannels;				// Server live channels are for UI updating
 	processCommands(data.commands);					// Process commands from server
 	if (micAccessAllowed) {						// Need access to audio before outputting
-		let v = new Array(adjMicPacketSize).fill(0);		// Our objective is to get the venue audio (if any) in here,
+		let v = [];						// Our objective is to get the venue audio (if any) in here,
 		let c8 = new Array(PacketSize/2).fill(0);		// Buffer of group audio to be subtracted from the venue audio 
 		let c16 = new Array(PacketSize/2).fill(0);		// in MSRE format
 		let gL = [], gR = [];					// the group stereo audio (if any) in here
@@ -445,7 +445,8 @@ if (p > 1) console.log("Venue output peak ",p);
 		}
 		if (spkrBufferL.length > spkrBuffPeak) 			// Monitoring purposes
 			spkrBuffPeak = spkrBufferL.length;
-		venueBuffer.push(...v);					// Add any venue audio to the venue buffer
+		if (v.length > 0) {					// Add the venue audio to its own buffer
+			venueBuffer.push(...v);				// Add any venue audio to the venue buffer
 		}
 		if (venueBuffer.length > maxBuffSize) 			// Clip buffer if too full
 			venueBuffer.splice(0, (venueBuffer.length-maxBuffSize)); 	
@@ -1168,38 +1169,38 @@ function processAudio(e) {						// Main processing loop
 
 	// 2. Take audio buffered from server and send it to the speaker
 	let outAudioL = [], outAudioR = [];					
-	if ((smoothingNeeded) && (spkrBufferL.length < maxBuffSize/2)) { // MARK Review logic and tidy
-	} else
-	if (spkrBufferL.length > ChunkSize) {				// There is enough audio buffered
-		outAudioL = spkrBufferL.splice(0,ChunkSize);		// Get same amount of audio as came in
-		outAudioR = spkrBufferR.splice(0,ChunkSize);		// for each channel
-		if (smoothingNeeded) {					// We had a shortage so now we need to smooth audio re-entry 
-			for (let i=0; i<400; i++) {			// Smoothly ramp up from zero to one
-				outAudioL[i] = outAudioL[i]*(1-smooth[i]);
-				outAudioR[i] = outAudioR[i]*(1-smooth[i]);
+	if ((!smoothingNeeded)||(spkrBufferL.length > maxBuffSize/2)) {	// If no current shortages or buffer now full enough to restart
+		if (spkrBufferL.length > ChunkSize) {			// There is enough audio buffered
+			outAudioL = spkrBufferL.splice(0,ChunkSize);	// Get same amount of audio as came in
+			outAudioR = spkrBufferR.splice(0,ChunkSize);	// for each channel
+			if (smoothingNeeded) {				// We had a shortage so now we need to smooth audio re-entry 
+				for (let i=0; i<400; i++) {		// Smoothly ramp up from zero to one
+					outAudioL[i] = outAudioL[i]*(1-smooth[i]);
+					outAudioR[i] = outAudioR[i]*(1-smooth[i]);
+				}
+				smoothingNeeded = false;
 			}
-			smoothingNeeded = false;
+		} else {						// Not enough audio.
+			shortages++;					// For stats and monitoring
+			let shortfall = ChunkSize-spkrBufferL.length;
+			bytesShort += shortfall;
+			outAudioL = spkrBufferL.splice(0,spkrBufferL.length);	// Take all that remains and complete with 0s
+			outAudioR = spkrBufferR.splice(0,spkrBufferR.length);	// Take all that remains and complete with 0s
+			let t = (spkrBufferL.length < 400)? 			// Transition to zero is as long as remaining audio
+				spkrBufferL.length : 400;			// up to a maximum of 400 samples
+			for (let i=0; i<t; i++) {				// Smoothly drop to zero to reduce harsh clicks
+				outAudioL[i] = outAudioL[i]*smooth[Math.round(i*400/t)];
+				outAudioR[i] = outAudioR[i]*smooth[Math.round(i*400/t)];
+			}
+			smoothingNeeded = true;
+			let zeros = new Array(shortfall).fill(0);
+			outAudioL.push(...zeros);
+			outAudioR.push(...zeros);
 		}
-	} else {							// Not enough audio.
-		shortages++;						// For stats and monitoring
-		let shortfall = ChunkSize-spkrBufferL.length;
-		bytesShort += shortfall;
-		outAudioL = spkrBufferL.splice(0,spkrBufferL.length);	// Take all that remains and complete with 0s
-		outAudioR = spkrBufferR.splice(0,spkrBufferR.length);	// Take all that remains and complete with 0s
-		let t = (spkrBufferL.length < 400)? 			// Transition to zero is as long as remaining audio
-			spkrBufferL.length : 400;			// up to a maximum of 400 samples
-		for (let i=0; i<t; i++) {				// Smoothly drop to zero to reduce harsh clicks
-			outAudioL[i] = outAudioL[i]*smooth[Math.round(i*400/t)];
-			outAudioR[i] = outAudioR[i]*smooth[Math.round(i*400/t)];
+		for (let i in outDataL) { 
+			outDataL[i] = outAudioL[i];			// Copy left audio to outputL
+			outDataR[i] = outAudioR[i];			// and right audio to outputR
 		}
-		smoothingNeeded = true;
-		let zeros = new Array(shortfall).fill(0);
-		outAudioL.push(...zeros);
-		outAudioR.push(...zeros);
-	}
-	for (let i in outDataL) { 
-		outDataL[i] = outAudioL[i];				// Copy left audio to outputL
-		outDataR[i] = outAudioR[i];				// and right audio to outputR
 	}
 	// 2.1 Take venue audio from buffer and send to special output
 	let outAudioV = [];
