@@ -1132,7 +1132,9 @@ function processAudio(e) {						// Main processing loop
 						mono8[j] = s;			// removing high frequencies from audio
 						mono16[j] = d; j++		// just by ignoring data
 					}
+if (tracecount>0) {console.log("clap");for (i=0;i<mono8.length;i++) console.log(mono8[i]); tracecount--;if (tracecount==0) console.log("DONE");}
 				}
+if (tracecount>0) {console.log("-")};
 				audio = {mono8,mono16,mono32,stereo8,stereo16,stereo32};	
 				let a = zipson.stringify(audio);		// Compressing and uncompressing
 				audio = zipson.parse(a);			// Saves 65% of bandwidth on its own!
@@ -1739,7 +1741,7 @@ function printReport() {
 	bytesOver = 0;
 	bytesShort = 0;
 	rtt = 0;
-	tracecount = 2;
+	tracecount = 9;
 	spkrBuffPeak = 0;
 	spkrBuffTrough = maxBuffSize;
 	deltaMax = 0;
