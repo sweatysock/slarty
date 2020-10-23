@@ -598,7 +598,7 @@ function simulateSound() {						// Generate simulated clapping for load testing 
 console.log("peak of ",peak);
 		}
 		if (peak < 0.7)	{					// Simulated thresholding on venue sound. If not too loud add clap
-			let level = (Math.random * 0.8) + 0.2;		// Adjust clap sound level in a random manner between 0.2 and 1
+			let level = (Math.random() * 0.8) + 0.2;		// Adjust clap sound level in a random manner between 0.2 and 1
 console.log("clap with preamble of ",preamble," and level ",level);
 			if (preamble > 31) preamble = 31;		// No point in the preamble being longer than the duration of a packet at system sample rate (16kHz)
 			let mono8 = new Array(8*preamble).fill(0);	// Fill with silence the time until the clap was due to happen. 8 samples / mS for mono8
