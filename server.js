@@ -607,7 +607,7 @@ console.log("clap with preamble of ",preamble," and level ",level);
 			while (clapRemaining > 250) {
 				let needed = 250 - mono8.length;
 				mono8.push(...getClap8(level, pointer, (pointer + needed)));
-				emptyPacket.audio.mono8 = mono8;	// Add new mono8 audio block to the empty packet
+				emptyPacket.audio.mono8.push(...mono8);	// Add new mono8 audio block to the empty packet
 				channels[1].packets.push(emptyPacket);	// Add packet to channel packet buffer 
 console.log("Sample of ",mono8.length," generated. Pointer ",pointer," clap remaining ",clapRemaining," buffer length ",channels[1].packets.length);
 				mono8 = [];				// Empty mono8 and start again
@@ -619,7 +619,7 @@ console.log("final sample of ",clapRemaining," samples");
 console.log(mono8);
 			let silence = new Array(250 - clapRemaining).fill(0);
 			mono8.push(...silence);				// Complete sample with silence
-			emptyPacket.audio.mono8 = mono8;		// Add final mono8 audio block to the empty packet
+			emptyPacket.audio.mono8.push(...mono8);		// Add final mono8 audio block to the empty packet
 			channels[1].packets.push(emptyPacket);		// Add packet to channel packet buffer 
 			emptyPacket.audio.mono8 = [];			// Make empty packet empty again
 		} else {
