@@ -598,9 +598,9 @@ function simulateSound() {						// Generate simulated clapping for load testing 
 console.log("peak of ",peak);
 		}
 		if (peak < 0.7)	{					// Simulated thresholding on venue sound. If not too loud add clap
-console.log("clap with preamble of ",preamble);
 			let level = (Math.random * 0.8) + 0.2;		// Adjust clap sound level in a random manner between 0.2 and 1
-			if (preamble > 15) preamble = 15;		// No point in the preamble being longer than the duration of a mono8 packet size
+console.log("clap with preamble of ",preamble," and level ",level);
+			if (preamble > 31) preamble = 31;		// No point in the preamble being longer than the duration of a packet at system sample rate (16kHz)
 			let mono8 = new Array(8*preamble).fill(0);	// Fill with silence the time until the clap was due to happen. 8 samples / mS for mono8
 			let clapRemaining = 1499;			// Length of the full clap sample is 1499 samples 
 			let pointer = 0;				// Where we are in the clap sample
@@ -616,6 +616,7 @@ console.log("Sample of ",mono8.length," generated. Pointer ",pointer," clap rema
 			}
 console.log("final sample of ",clapRemaining," samples");
 			mono8.push(...getClap8(level, pointer, 1499));	// Add last piece of clap sample remaining
+console.log(mono8);
 			let silence = new Array(250 - clapRemaining).fill(0);
 			mono8.push(...silence);				// Complete sample with silence
 			emptyPacket.audio.mono8 = mono8;		// Add final mono8 audio block to the empty packet
