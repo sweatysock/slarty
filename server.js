@@ -73,9 +73,6 @@ if ((simulating != undefined) && (simulating == "true")) {		// It needs to be de
 	console.log("SIMULATING SERVER");
 }
 else simulating = false;							
-
-simulating=true;
-
 var loopback = process.env.loopback; 					// Get flag that tells us to be a loopback server
 if ((loopback != undefined) && (loopback == "true")) {			// It needs to be defined and set to "true" to engage this mode
 	loopback = true;	
