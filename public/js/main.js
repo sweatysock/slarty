@@ -291,19 +291,22 @@ socketIO.on('d', function (data) {
 			let v8 = audio.mono8, v16 = audio.mono16;	// Shortcuts to the venue MSRE data blocks
 			if ((v8.length > 0) && (!venue.muted)) {	// If there is venue audio & not muted, it will need processing
 				let sr = 8000;				// Minimum sample rate of 8kHz
+				let gn = (venue.peak < 0.15)? 		// Gain applied to venue is maxed at 4x
+					4 : 0.6/venue.peak;		// but tapers if the previous peak was above 0.6
+				gn = gn * venue.gain / venueSize;	// Gain also adjusts for fader setting and venue size most importantly
 				if ((a8.length > 0) && (c8.length > 0))	// If we have audio and group has audio remove both and set venue level
-					for (let i = 0; i < a8.length; ++i) v8[i] = (v8[i] - a8[i] -c8[i]) * venue.gain / venueSize;
+					for (let i = 0; i < a8.length; ++i) v8[i] = (v8[i] - a8[i] -c8[i]) * gn;
 				if ((a8.length > 0) && (c8.length == 0))// If there is only our audio subtract it and set venue level
-					for (let i = 0; i < a8.length; ++i) v8[i] = (v8[i] - a8[i]) * venue.gain / venueSize;
+					for (let i = 0; i < a8.length; ++i) v8[i] = (v8[i] - a8[i]) * gn;
 				if ((a8.length == 0) && (c8.length > 0))// If there is only group cancelling audio subtract it and set venue level
-					for (let i = 0; i < c8.length; ++i) v8[i] = (v8[i] - c8[i]) * venue.gain / venueSize;
+					for (let i = 0; i < c8.length; ++i) v8[i] = (v8[i] - c8[i]) * gn;
 				if (v16.length > 0) {			// If the venue has higher quality audio repeat the same process
 					if ((a16.length > 0) && (c16.length > 0))
-						for (let i = 0; i < a16.length; ++i) v16[i] = (v16[i] - a16[i] -c16[i]) * venue.gain / venueSize;
+						for (let i = 0; i < a16.length; ++i) v16[i] = (v16[i] - a16[i] -c16[i]) * gn;
 					if ((a16.length > 0) && (c16.length == 0))
-						for (let i = 0; i < a16.length; ++i) v16[i] = (v16[i] - a16[i]) * venue.gain / venueSize;
+						for (let i = 0; i < a16.length; ++i) v16[i] = (v16[i] - a16[i]) * gn;
 					if ((a16.length == 0) && (c16.length > 0))
-						for (let i = 0; i < c16.length; ++i) v16[i] = (v16[i] - c16[i]) * venue.gain / venueSize;
+						for (let i = 0; i < c16.length; ++i) v16[i] = (v16[i] - c16[i]) * gn;
 					let k = 0;			// reconstruct the original venue audio in v[]
 					for (let i=0;i<v8.length;i++) {	
 						v[k] = v8[i] + v16[i];k++;
