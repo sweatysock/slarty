@@ -951,6 +951,7 @@ console.log("TARGET starts as ",targetGain);
 	let ceiling = obj.ceiling;
 	let negCeiling = ceiling * -1;
 	let gainRate = obj.gainRate;
+console.log("GAIN RATE starts as ",targetGain);
 	let agc = obj.agc;
 	let tempGain, maxLevel, endGain, p, x, transitionLength; 
 	if (!agc) targetGain = startGain;				// If no AGC not much to do. Just clip and apply ceiling
@@ -962,7 +963,7 @@ console.log("TARGET starts as ",targetGain);
 		endGain = targetGain;					// otherwise end gain is the target gain
 console.log("endGain set to target gain");
 	}
-console.log("end gain ",endGain," max ",maxLevel," target ",targetGain," ceiling ",ceiling);
+console.log("start gain ",startGain," end gain ",endGain," max ",maxLevel," target ",targetGain," ceiling ",ceiling);
 	maxLevel = 0;							// Use this to capture peak
 	if (endGain >= startGain) {					// Gain adjustment speed varies
 		transitionLength = audio.length;			// Gain increases are over entire sample
