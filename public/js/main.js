@@ -951,6 +951,7 @@ function applyAutoGain(audio, obj) {
 	if (!agc) targetGain = startGain;				// If no AGC not much to do. Just clip and apply ceiling
 	maxLevel = maxValue(audio);					// Find peak audio level 
 	endGain = ceiling / maxLevel;					// Our endGain can never exceed this to avoid overload
+console.log("AGC: endGain ",endGain," max ",maxLevel);
 	maxLevel = 0;							// Use this to capture peak
 	if (endGain > targetGain) endGain = targetGain;			// endGain is the max, but if target is lower then use that
 	else {
