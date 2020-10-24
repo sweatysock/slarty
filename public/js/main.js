@@ -312,7 +312,7 @@ socketIO.on('d', function (data) {
 					}
 					sr = 16000;			// This is at the higher sample rate
 				} else v = v8;				// Only low bandwidth venue audio 
-				venue.targetGain = 18/venueSize;
+				venue.targetGain = 180/venueSize;
 				let obj = applyAutoGain(v, venue);	// Amplify venue with auto limiter
 				venue.gain = obj.finalGain;		// Store gain for next time round
 if (obj.peak > 0.6) console.log("Venue output peak ",obj.peak);
