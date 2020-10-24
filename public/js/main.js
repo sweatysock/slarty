@@ -77,8 +77,8 @@ var micIn = {								// and for microphone input
 var venue = {								// Similar structure for the venue channel
 	name 	: "Venue",
 	gain	: 0,
-	gainRate: 2,
-	targetGain: 8,
+	gainRate: 20,
+	targetGain: 4,
 	ceiling : 1,
 	agc	: true,
 	muted	: false,
@@ -311,7 +311,7 @@ socketIO.on('d', function (data) {
 					}
 					sr = 16000;			// This is at the higher sample rate
 				} else v = v8;				// Only low bandwidth venue audio 
-				venue.targetGain = 9/venueSize;
+				venue.targetGain = 4/venueSize;
 				let obj = applyAutoGain(v, venue);	// Amplify venue with auto limiter
 				venue.gain = obj.finalGain;		// Store gain for next time round
 				if (obj.peak > venue.peak) venue.peak = obj.peak;
@@ -969,12 +969,7 @@ function applyAutoGain(audio, obj) {
 	tempGain = startGain;						// Start at current gain level
 	for (let i = 0; i < transitionLength; i++) {			// Adjust gain over transition
 		x = i/transitionLength;
-		if (i < (2*transitionLength/3))				// Use the Magic formula
-			p = 3*x*x/2;					
-		else
-			p = -3*x*x + 6*x -2;
-		tempGain = startGain + (endGain - startGain) * p;
-//		tempGain = startGain + (endGain - startGain) * x;
+		tempGain = startGain + (endGain - startGain) * x;
 	 	audio[i] = audio[i] * tempGain;
 		if (audio[i] >= ceiling) audio[i] = ceiling;
 		else if (audio[i] <= negCeiling) audio[i] = negCeiling;
