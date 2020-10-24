@@ -969,12 +969,12 @@ function applyAutoGain(audio, obj) {
 	tempGain = startGain;						// Start at current gain level
 	for (let i = 0; i < transitionLength; i++) {			// Adjust gain over transition
 		x = i/transitionLength;
-//		if (i < (2*transitionLength/3))				// Use the Magic formula
-//			p = 3*x*x/2;					
-//		else
-//			p = -3*x*x + 6*x -2;
-//		tempGain = startGain + (endGain - startGain) * p;
-		tempGain = startGain + (endGain - startGain) * x;
+		if (i < (2*transitionLength/3))				// Use the Magic formula
+			p = 3*x*x/2;					
+		else
+			p = -3*x*x + 6*x -2;
+		tempGain = startGain + (endGain - startGain) * p;
+//		tempGain = startGain + (endGain - startGain) * x;
 	 	audio[i] = audio[i] * tempGain;
 		if (audio[i] >= ceiling) audio[i] = ceiling;
 		else if (audio[i] <= negCeiling) audio[i] = negCeiling;
