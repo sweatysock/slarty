@@ -77,7 +77,7 @@ var micIn = {								// and for microphone input
 var venue = {								// Similar structure for the venue channel
 	name 	: "Venue",
 	gain	: 0,
-	gainRate: 10,
+	gainRate: 30,
 	targetGain: 8,
 	ceiling : 1,
 	agc	: true,
