@@ -270,7 +270,7 @@ socketIO.on('d', function (data) {
 		let ts = 0;
 		let vData = data.venue;
 		if (vData != null) {					// If there is venue data find our seq #, subtract it, & correct venue level
-			venue.gain = (venue.agc ? mixOut.gain : venue.gain);
+//			venue.gain = (venue.agc ? mixOut.gain : venue.gain);
 			ts = vData.timestamps[myChannel];		// Venue data also contains timestamps that allow rtt measurement
 			audience = vData.liveClients;			// The server sends us the current audience count for level setting
 			if (venueSizeCmd == 0) venueSize = audience;	// If there is no command setting the venue size we use the audience size
@@ -946,12 +946,13 @@ function avgValue( arr ) { 						// Find average value in an array
 
 function applyAutoGain(audio, obj) {
 	let startGain = obj.gain;
+console.log("START GAIN starts as ",startGain);
 	let targetGain = obj.targetGain;
 console.log("TARGET starts as ",targetGain);
 	let ceiling = obj.ceiling;
 	let negCeiling = ceiling * -1;
 	let gainRate = obj.gainRate;
-console.log("GAIN RATE starts as ",targetGain);
+console.log("GAIN RATE starts as ",gainRate);
 	let agc = obj.agc;
 	let tempGain, maxLevel, endGain, p, x, transitionLength; 
 	if (!agc) targetGain = startGain;				// If no AGC not much to do. Just clip and apply ceiling
