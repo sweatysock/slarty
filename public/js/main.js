@@ -77,7 +77,7 @@ var micIn = {								// and for microphone input
 var venue = {								// Similar structure for the venue channel
 	name 	: "Venue",
 	gain	: 0,
-	gainRate: 30,
+	gainRate: 10,
 	targetGain: 8,
 	ceiling : 1,
 	agc	: true,
@@ -312,11 +312,11 @@ socketIO.on('d', function (data) {
 					}
 					sr = 16000;			// This is at the higher sample rate
 				} else v = v8;				// Only low bandwidth venue audio 
-				venue.targetGain = 40/venueSize;
+				venue.targetGain = 80/venueSize;
 				let obj = applyAutoGain(v, venue);	// Amplify venue with auto limiter
 				venue.gain = obj.finalGain;		// Store gain for next time round
 if (obj.peak > 0.6) console.log("Venue output peak ",obj.peak);
-console.log(venue.gain);
+console.log("venue gain ",venue.gain," target gain ",venue.targetGain);
 				if (obj.peak > venue.peak) venue.peak = obj.peak;
 				v = reSample(v, vCache, adjMicPacketSize); 
 			} else venue.peak = 0;				// Don't need to be a genius to figure that one out if there's no audio!
@@ -969,12 +969,12 @@ function applyAutoGain(audio, obj) {
 	tempGain = startGain;						// Start at current gain level
 	for (let i = 0; i < transitionLength; i++) {			// Adjust gain over transition
 		x = i/transitionLength;
-//		if (i < (2*transitionLength/3))				// Use the Magic formula
-//			p = 3*x*x/2;					
-//		else
-//			p = -3*x*x + 6*x -2;
-//		tempGain = startGain + (endGain - startGain) * p;
-		tempGain = startGain + (endGain - startGain) * x;
+		if (i < (2*transitionLength/3))				// Use the Magic formula
+			p = 3*x*x/2;					
+		else
+			p = -3*x*x + 6*x -2;
+		tempGain = startGain + (endGain - startGain) * p;
+//		tempGain = startGain + (endGain - startGain) * x;
 	 	audio[i] = audio[i] * tempGain;
 		if (audio[i] >= ceiling) audio[i] = ceiling;
 		else if (audio[i] <= negCeiling) audio[i] = negCeiling;
