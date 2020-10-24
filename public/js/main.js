@@ -77,7 +77,7 @@ var micIn = {								// and for microphone input
 var venue = {								// Similar structure for the venue channel
 	name 	: "Venue",
 	gain	: 0,
-	gainRate: 20,
+	gainRate: 50,
 	targetGain: 4,
 	ceiling : 1,
 	agc	: true,
@@ -311,7 +311,7 @@ socketIO.on('d', function (data) {
 					}
 					sr = 16000;			// This is at the higher sample rate
 				} else v = v8;				// Only low bandwidth venue audio 
-				venue.targetGain = 1/venueSize;
+				venue.targetGain = 2/venueSize;		// Have to manually set ths to take into account venue size
 				let obj = applyAutoGain(v, venue);	// Amplify venue with auto limiter
 				venue.gain = obj.finalGain;		// Store gain for next time round
 				if (obj.peak > venue.peak) venue.peak = obj.peak;
