@@ -956,11 +956,11 @@ function applyAutoGain(audio, obj) {
 		endGain = targetGain;					// otherwise end gain is the target gain
 	maxLevel = 0;							// Use this to capture peak
 	if (endGain > targetGain) endGain = targetGain;			// endGain is the max, but if target is lower then use that
-console.log("end gain ",endGain," max ",maxLevel);
 	else {
 //		obj.gainRate = 10000;					// clipping! slow gain increases - set obj value
 		trace2("Clipping gain");
 	}
+console.log("end gain ",endGain," max ",maxLevel);
 	if (endGain >= startGain) {					// Gain adjustment speed varies
 		transitionLength = audio.length;			// Gain increases are over entire sample
 		if (agc) endGain = startGain 				// and, if using AGC, are very gentle
