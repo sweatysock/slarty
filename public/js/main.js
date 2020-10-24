@@ -953,8 +953,11 @@ function applyAutoGain(audio, obj) {
 	if ((maxLevel * targetGain) > ceiling) { 				// If applying target gain level takes us over the ceiling
 		endGain = ceiling / maxLevel;				// end gain is set such that the max level IS ceiling
 		trace2("Clipping gain");				// Indicate that clipping has been avoided
-	} else endGain = targetGain;					// otherwise end gain is the target gain
-console.log("end gain ",endGain," max ",maxLevel);
+	} else {
+		endGain = targetGain;					// otherwise end gain is the target gain
+console.log("endGain set to target gain");
+	}
+console.log("end gain ",endGain," max ",maxLevel," target ",targetGain," ceiling ",ceiling);
 	maxLevel = 0;							// Use this to capture peak
 	if (endGain >= startGain) {					// Gain adjustment speed varies
 		transitionLength = audio.length;			// Gain increases are over entire sample
