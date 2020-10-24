@@ -943,6 +943,7 @@ function avgValue( arr ) { 						// Find average value in an array
 function applyAutoGain(audio, obj) {
 	let startGain = obj.gain;
 	let targetGain = obj.targetGain;
+console.log("TARGET starts as ",targetGain);
 	let ceiling = obj.ceiling;
 	let negCeiling = ceiling * -1;
 	let gainRate = obj.gainRate;
