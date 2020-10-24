@@ -950,7 +950,7 @@ function applyAutoGain(audio, obj) {
 	let tempGain, maxLevel, endGain, p, x, transitionLength; 
 	if (!agc) targetGain = startGain;				// If no AGC not much to do. Just clip and apply ceiling
 	maxLevel = maxValue(audio);					// Find peak audio level 
-	if (maxLevel * targetGain > ceiling) { 				// If applying target gain level takes us over the ceiling
+	if ((maxLevel * targetGain) > ceiling) { 				// If applying target gain level takes us over the ceiling
 		endGain = ceiling / maxLevel;				// end gain is set such that the max level IS ceiling
 		trace2("Clipping gain");				// Indicate that clipping has been avoided
 	} else endGain = targetGain;					// otherwise end gain is the target gain
