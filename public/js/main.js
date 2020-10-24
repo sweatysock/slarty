@@ -966,11 +966,11 @@ console.log("end gain ",endGain," max ",maxLevel);
 		if (agc) endGain = startGain 				// and, if using AGC, are very gentle
 			+ ((endGain - startGain)/gainRate);	 	
 	}
-console.log("end gain finally ",endGain);
 	else {
 		transitionLength = Math.floor(audio.length/10);		// Gain decreases are fast
 		trace2("Gain dropping");
 	}
+console.log("end gain finally ",endGain);
 	tempGain = startGain;						// Start at current gain level
 	for (let i = 0; i < transitionLength; i++) {			// Adjust gain over transition
 		x = i/transitionLength;
