@@ -313,13 +313,17 @@ socketIO.on('d', function (data) {
 					sr = 16000;			// This is at the higher sample rate
 				} else v = v8;				// Only low bandwidth venue audio 
 				venue.targetGain = 4/venueSize;
+console.log("venue gain ",venue.gain," target gain ",venue.targetGain);
 				let obj = applyAutoGain(v, venue);	// Amplify venue with auto limiter
 				venue.gain = obj.finalGain;		// Store gain for next time round
 if (obj.peak > 0.6) console.log("Venue output peak ",obj.peak);
 console.log("venue gain ",venue.gain," target gain ",venue.targetGain);
 				if (obj.peak > venue.peak) venue.peak = obj.peak;
 				v = reSample(v, vCache, adjMicPacketSize); 
-			} else venue.peak = 0;				// Don't need to be a genius to figure that one out if there's no audio!
+			} else {
+				venue.peak = 0;				// Don't need to be a genius to figure that one out if there's no audio!
+console.log("NO VENUE AUDIO");
+			}
 		} 
 		// 3. Process performer audio if there is any, and add it to the mix. This could be stereo audio
 		performer = (data.perf.chan == myChannel);		// Update performer flag just in case
