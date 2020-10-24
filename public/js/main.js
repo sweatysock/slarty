@@ -311,13 +311,13 @@ socketIO.on('d', function (data) {
 					}
 					sr = 16000;			// This is at the higher sample rate
 				} else v = v8;				// Only low bandwidth venue audio 
-				venue.targetGain = 4/venueSize;
+				venue.targetGain = 1/venueSize;
 				let obj = applyAutoGain(v, venue);	// Amplify venue with auto limiter
 				venue.gain = obj.finalGain;		// Store gain for next time round
 				if (obj.peak > venue.peak) venue.peak = obj.peak;
 				v = reSample(v, vCache, adjMicPacketSize); 
 			} else {
-				venue.peak = 0;				// Don't need to be a genius to figure that one out if there's no audio!
+//				venue.peak = 0;				// Don't need to be a genius to figure that one out if there's no audio!
 				trace2("NO VENUE AUDIO");
 			}
 		} 
