@@ -312,7 +312,7 @@ socketIO.on('d', function (data) {
 					}
 					sr = 16000;			// This is at the higher sample rate
 				} else v = v8;				// Only low bandwidth venue audio 
-				venue.targetGain = 80/venueSize;
+				venue.targetGain = 4/venueSize;
 				let obj = applyAutoGain(v, venue);	// Amplify venue with auto limiter
 				venue.gain = obj.finalGain;		// Store gain for next time round
 if (obj.peak > 0.6) console.log("Venue output peak ",obj.peak);
@@ -950,8 +950,10 @@ function applyAutoGain(audio, obj) {
 	let tempGain, maxLevel, endGain, p, x, transitionLength; 
 	if (!agc) targetGain = startGain;				// If no AGC not much to do. Just clip and apply ceiling
 	maxLevel = maxValue(audio);					// Find peak audio level 
-	endGain = ceiling / maxLevel;					// Our endGain can never exceed this to avoid overload
-console.log("AGC: endGain ",endGain," max ",maxLevel);
+	if (maxLevel * targetGain > ceiling) 				// If applying target gain level takes us over the ceiling
+		endGain = ceiling / maxLevel;				// end gain is set such that the max level IS ceiling
+	else
+		endGain = targetGain;					// otherwise end gain is the target gain
 	maxLevel = 0;							// Use this to capture peak
 	if (endGain > targetGain) endGain = targetGain;			// endGain is the max, but if target is lower then use that
 	else {
