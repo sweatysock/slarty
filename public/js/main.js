@@ -77,7 +77,7 @@ var micIn = {								// and for microphone input
 var venue = {								// Similar structure for the venue channel
 	name 	: "Venue",
 	gain	: 0,
-	gainRate: 2,
+	gainRate: 10,
 	targetGain: 8,
 	ceiling : 1,
 	agc	: true,
@@ -270,7 +270,6 @@ socketIO.on('d', function (data) {
 		let ts = 0;
 		let vData = data.venue;
 		if (vData != null) {					// If there is venue data find our seq #, subtract it, & correct venue level
-//			venue.gain = (venue.agc ? mixOut.gain : venue.gain);
 			ts = vData.timestamps[myChannel];		// Venue data also contains timestamps that allow rtt measurement
 			audience = vData.liveClients;			// The server sends us the current audience count for level setting
 			if (venueSizeCmd == 0) venueSize = audience;	// If there is no command setting the venue size we use the audience size
@@ -313,7 +312,6 @@ socketIO.on('d', function (data) {
 					sr = 16000;			// This is at the higher sample rate
 				} else v = v8;				// Only low bandwidth venue audio 
 				venue.targetGain = 4/venueSize;
-console.log("venue gain ",venue.gain," target gain ",venue.targetGain);
 				let obj = applyAutoGain(v, venue);	// Amplify venue with auto limiter
 				venue.gain = obj.finalGain;		// Store gain for next time round
 if (obj.peak > 0.6) console.log("Venue output peak ",obj.peak);
@@ -322,7 +320,7 @@ console.log("venue gain ",venue.gain," target gain ",venue.targetGain);
 				v = reSample(v, vCache, adjMicPacketSize); 
 			} else {
 				venue.peak = 0;				// Don't need to be a genius to figure that one out if there's no audio!
-console.log("NO VENUE AUDIO");
+				trace2("NO VENUE AUDIO");
 			}
 		} 
 		// 3. Process performer audio if there is any, and add it to the mix. This could be stereo audio
