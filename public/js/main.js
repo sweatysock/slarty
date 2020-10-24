@@ -77,7 +77,7 @@ var micIn = {								// and for microphone input
 var venue = {								// Similar structure for the venue channel
 	name 	: "Venue",
 	gain	: 0,
-	gainRate: 10,
+	gainRate: 20,
 	targetGain: 8,
 	ceiling : 1,
 	agc	: true,
@@ -311,11 +311,9 @@ socketIO.on('d', function (data) {
 					}
 					sr = 16000;			// This is at the higher sample rate
 				} else v = v8;				// Only low bandwidth venue audio 
-				venue.targetGain = 4/venueSize;
+				venue.targetGain = 9/venueSize;
 				let obj = applyAutoGain(v, venue);	// Amplify venue with auto limiter
 				venue.gain = obj.finalGain;		// Store gain for next time round
-if (obj.peak > 0.6) console.log("Venue output peak ",obj.peak);
-console.log("venue gain ",venue.gain," target gain ",venue.targetGain);
 				if (obj.peak > venue.peak) venue.peak = obj.peak;
 				v = reSample(v, vCache, adjMicPacketSize); 
 			} else {
@@ -944,13 +942,10 @@ function avgValue( arr ) { 						// Find average value in an array
 
 function applyAutoGain(audio, obj) {
 	let startGain = obj.gain;
-console.log("START GAIN starts as ",startGain);
 	let targetGain = obj.targetGain;
-console.log("TARGET starts as ",targetGain);
 	let ceiling = obj.ceiling;
 	let negCeiling = ceiling * -1;
 	let gainRate = obj.gainRate;
-console.log("GAIN RATE starts as ",gainRate);
 	let agc = obj.agc;
 	let tempGain, maxLevel, endGain, p, x, transitionLength; 
 	if (!agc) targetGain = startGain;				// If no AGC not much to do. Just clip and apply ceiling
@@ -960,9 +955,7 @@ console.log("GAIN RATE starts as ",gainRate);
 		trace2("Clipping gain");				// Indicate that clipping has been avoided
 	} else {
 		endGain = targetGain;					// otherwise end gain is the target gain
-console.log("endGain set to target gain");
 	}
-console.log("start gain ",startGain," end gain ",endGain," max ",maxLevel," target ",targetGain," ceiling ",ceiling);
 	maxLevel = 0;							// Use this to capture peak
 	if (endGain >= startGain) {					// Gain adjustment speed varies
 		transitionLength = audio.length;			// Gain increases are over entire sample
@@ -973,7 +966,6 @@ console.log("start gain ",startGain," end gain ",endGain," max ",maxLevel," targ
 		transitionLength = Math.floor(audio.length/10);		// Gain decreases are fast
 		trace2("Gain dropping");
 	}
-console.log("end gain finally ",endGain);
 	tempGain = startGain;						// Start at current gain level
 	for (let i = 0; i < transitionLength; i++) {			// Adjust gain over transition
 		x = i/transitionLength;
