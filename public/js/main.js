@@ -293,18 +293,18 @@ socketIO.on('d', function (data) {
 				let sr = 8000;				// Minimum sample rate of 8kHz
 				let gn = venue.gain / venueSize;	// Gain adjusts for fader setting and venue size most importantly
 				if ((a8.length > 0) && (c8.length > 0))	// If we have audio and group has audio remove both and set venue level
-					for (let i = 0; i < a8.length; ++i) v8[i] = (v8[i] - a8[i] -c8[i]) * gn;
+					for (let i = 0; i < a8.length; ++i) v8[i] = (v8[i] - a8[i] -c8[i]);
 				if ((a8.length > 0) && (c8.length == 0))// If there is only our audio subtract it and set venue level
-					for (let i = 0; i < a8.length; ++i) v8[i] = (v8[i] - a8[i]) * gn;
+					for (let i = 0; i < a8.length; ++i) v8[i] = (v8[i] - a8[i]);
 				if ((a8.length == 0) && (c8.length > 0))// If there is only group cancelling audio subtract it and set venue level
-					for (let i = 0; i < c8.length; ++i) v8[i] = (v8[i] - c8[i]) * gn;
+					for (let i = 0; i < c8.length; ++i) v8[i] = (v8[i] - c8[i]);
 				if (v16.length > 0) {			// If the venue has higher quality audio repeat the same process
 					if ((a16.length > 0) && (c16.length > 0))
-						for (let i = 0; i < a16.length; ++i) v16[i] = (v16[i] - a16[i] -c16[i]) * gn;
+						for (let i = 0; i < a16.length; ++i) v16[i] = (v16[i] - a16[i] -c16[i]);
 					if ((a16.length > 0) && (c16.length == 0))
-						for (let i = 0; i < a16.length; ++i) v16[i] = (v16[i] - a16[i]) * gn;
+						for (let i = 0; i < a16.length; ++i) v16[i] = (v16[i] - a16[i]);
 					if ((a16.length == 0) && (c16.length > 0))
-						for (let i = 0; i < c16.length; ++i) v16[i] = (v16[i] - c16[i]) * gn;
+						for (let i = 0; i < c16.length; ++i) v16[i] = (v16[i] - c16[i]);
 					let k = 0;			// reconstruct the original venue audio in v[]
 					for (let i=0;i<v8.length;i++) {	
 						v[k] = v8[i] + v16[i];k++;
@@ -312,6 +312,7 @@ socketIO.on('d', function (data) {
 					}
 					sr = 16000;			// This is at the higher sample rate
 				} else v = v8;				// Only low bandwidth venue audio 
+				venue.targetGain = 4/venueSize;
 				let obj = applyAutoGain(v, venue);	// Amplify venue with auto limiter
 				venue.gain = obj.finalGain;		// Store gain for next time round
 if (obj.peak > 0.6) console.log("Venue output peak ",obj.peak);
@@ -968,12 +969,12 @@ function applyAutoGain(audio, obj) {
 	tempGain = startGain;						// Start at current gain level
 	for (let i = 0; i < transitionLength; i++) {			// Adjust gain over transition
 		x = i/transitionLength;
-		if (i < (2*transitionLength/3))				// Use the Magic formula
-			p = 3*x*x/2;					
-		else
-			p = -3*x*x + 6*x -2;
-		tempGain = startGain + (endGain - startGain) * p;
-//		tempGain = startGain + (endGain - startGain) * x;
+//		if (i < (2*transitionLength/3))				// Use the Magic formula
+//			p = 3*x*x/2;					
+//		else
+//			p = -3*x*x + 6*x -2;
+//		tempGain = startGain + (endGain - startGain) * p;
+		tempGain = startGain + (endGain - startGain) * x;
 	 	audio[i] = audio[i] * tempGain;
 		if (audio[i] >= ceiling) audio[i] = ceiling;
 		else if (audio[i] <= negCeiling) audio[i] = negCeiling;
