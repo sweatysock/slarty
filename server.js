@@ -502,7 +502,8 @@ function midBoostFilter(audioIn) {					// Filter to boost mids giving distant so
 	if (isNaN(prevFilt1In)) prevFilt1In = 0;
 	if (isNaN(prevFilt1Out)) prevFilt1Out = 0;
 	let out1 = [];							// The output of the first filter goes here
-	let alpha = 0.88888889; 					// First filter is a simple high pass filter
+//	let alpha = 0.88888889; 					// First filter is a simple high pass filter
+	let alpha = 0.76; 						// Trying strong high pass filtering
 	out1[0] = (prevFilt1Out + audioIn[0] - prevFilt1In) * alpha;	// First value uses previous filtering values
 	for (let i=1; i<audioIn.length; i++)				// The rest are calculated the same way
 		out1[i] = (out1[i-1] + audioIn[i] - audioIn[i-1]) * alpha;

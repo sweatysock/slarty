@@ -267,6 +267,7 @@ console.time("downstream");
 			let s = adjMicPacketSize;			// This is the size of the input/output packet size
 			mixL = new Array(s).fill(0), mixR = new Array(s).fill(0);
 		}
+console.time("venue");
 		// 2. Process venue mix from server 
 		let ts = 0;
 		let vData = data.venue;
@@ -322,6 +323,7 @@ console.time("downstream");
 				trace2("NO VENUE AUDIO");
 			}
 		} 
+console.timeEnd("venue");
 		// 3. Process performer audio if there is any, and add it to the mix. This could be stereo audio
 		performer = (data.perf.chan == myChannel);		// Update performer flag just in case
 		liveShow = data.perf.live;				// Update the live show flag to update display
