@@ -433,6 +433,7 @@ console.time("isStereo");
 		// 4. Adjust gain of final mix containing performer and group audio, and send to the speaker buffer
 		let obj;						// VAR MARK ?????
 		if (isStereo) {
+console.log("stereo");
 			let peakL = maxValue(mixL);			// Set gain according to loudest channel
 			let peakR = maxValue(mixR);
 			if (peakL > peakR) {
