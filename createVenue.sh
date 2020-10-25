@@ -1,4 +1,4 @@
-echo "Useage sh createVenue.sh <x> eventId 1 <level 2 servers> <level 3 servers> <level 4 servers>"
+echo "SIMULATING AT LEVEL 3!!! Useage sh createVenue.sh <x> eventId 1 <level 2 servers> <level 3 servers> <level 4 servers>"
 echo "eventId and the 1 after (for the number of venue servers) are obligatory. A letter x before them will execute the command, otherwise it will do a mock run."
 execute="n"
 if [ $1 == "x" ]; then

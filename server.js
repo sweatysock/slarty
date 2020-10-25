@@ -217,8 +217,6 @@ upstreamServer.on('d', function (packet) {
 			} 					
 		} 
 	// 3. Build a venue packet 
-		if (mix.mono8.length != 0) 				// Filter upstream audio to emulate distance
-			mix.mono8 = midBoostFilter(mix.mono8);		// Just filter low sample rate part as it is a high pass filter
 		let p = {						// Construct the audio packet
 			name		: venue.name,			// Give packet our channel name
 			audio		: mix,				// The audio is the uncompressed mix just prepared
@@ -705,17 +703,19 @@ function generateMix () {
 			}
 		}
 	});
-	// 3. Build server mix packet and send upstream if we have an upstream server connected. 
-	if (!someAudio8) mono8 = [];					// If no audio send empty mix to save bandwidth
+	if (!someAudio8) mono8 = [];					// If no audio use empty mix to save bandwidth
 	if (!someAudio16) mono16 = [];					
-	let mix = {mono8, mono16};					// Build audio block in MSRE format
-	let zipMix = zipson.stringify(mix);				// Compress mixed audio to save BW for sending downstream
-	mix = zipson.parse(zipMix);					// but uncompress for upstream and mixing with venue (it still saves 60% BW)
+	// 3. Build server mix packet and send upstream if we have an upstream server connected. 
 	if (upstreamConnected == true) { 				// Send mix if connected to an upstream server
+		let mono8up = [];					// Special low BW audio packet for sending upstream
+		if (mono8.length > 0) mono8up = midBoostFilter(mono8);	// Apply high pass filter low frequency audio to simulate distance
+		let upMix = {mono8:mono8up, mono16};			// Build audio block in MSRE format using filtered low BW block
+		upMix = zipson.stringify(upMix);			// Compress and uncompress audio to save 60% of BW 
+		upMix = zipson.parse(upMix);				
 		let now = new Date().getTime();
 		let packet = {						// Build the packet the same as any client packet
 			name		: myServerName,			// Let others know which server this comes from
-			audio		: mix,				// Uncompressed mix of all downstream clients connected here
+			audio		: upMix,			// Uncompressed mix of all downstream clients connected here
 			perfAudio	: false,			// No performer audio ever goes upstream between servers
 			liveClients	: totalLiveClients,		// Clients visible downstream of this server
 			sequence	: upSequence++,			// Good for data integrity checks
@@ -733,7 +733,7 @@ function generateMix () {
 		if (venuePacket != null) {				// If we have venue audio from upstream
 			let v8 = venuePacket.audio.mono8;		// Get the venue audio from upstream
 			let v16 = venuePacket.audio.mono16;		// in MSRE format
-			let m8 = mix.mono8, m16 = mix.mono16;		// and the mix we have just built too
+			let m8 = mono8, m16 = mono16;			// and the mix we have just built too
 			if (m8.length > 0) {				// Only combine venue and mix if there's mix audio
 				if (v8.length > 0) {			// If there is venue audio add mix to venue
 					for (let i = 0; i < v8.length; i++) v8[i] = v8[i] + m8[i];
@@ -748,6 +748,7 @@ function generateMix () {
 			venuePacket.timestamps = timestamps;		// and timestamps that form part of the local venue mix
 			venuePacket.audio = zipson.stringify(venuePacket.audio);	// Compress mixed venue audio before sending downstream
 		} else {						// Temporarily no venue audio has reached us so generate a packet 
+			let zipMix = zipson.stringify({mono8,mono16});	// Need to zip up this server mix as is and send as venue mix
 			venuePacket = {					// Construct the venue packet
 				name		: "VENUE",		// Give packet temp venue name
 				audio		: zipMix,		// Use our compressed mix as the venue audio
@@ -763,6 +764,7 @@ function generateMix () {
 			}
 		}
 	} else {							// No upstream server connected so we must be the venue server
+		let zipMix = zipson.stringify({mono8,mono16});		// Need to zip up this server mix as is and send as venue mix
 		venuePacket = {						// Construct the venue packet
 			name		: "Venue",			// Give packet main venue name
 			audio		: zipMix,			// Use our compressed mix as the venue audio
