@@ -343,8 +343,8 @@ console.timeEnd("resample");
 		// 3. Process performer audio if there is any, and add it to the mix. This could be stereo audio
 		performer = (data.perf.chan == myChannel);		// Update performer flag just in case
 		liveShow = data.perf.live;				// Update the live show flag to update display
-		if ((data.perf.live) && (data.perf.packet != null)	// If there is a live performer with data
 console.time("perf");
+		if ((data.perf.live) && (data.perf.packet != null)	// If there is a live performer with data
 			&& (data.perf.packet.perfAudio != false)) {	// and audio then process it and audio then process it
 			let audio = zipson.parse(data.perf.packet.perfAudio);	// Uncompress performer audio
 			let m8 = audio.mono8;
@@ -427,8 +427,8 @@ console.time("perf");
 				}
 			} else ts = data.perf.packet.timestamp;		// I am the performer so grab timestamp for the rtt 
 			if (loopback) ts = data.perf.packet.timestamp;	// In loopback mode we output perf audio but we still need the rtt
-console.timeEnd("perf");
 		}
+console.timeEnd("perf");
 console.time("enddownstream");
 		// 4. Adjust gain of final mix containing performer and group audio, and send to the speaker buffer
 		var obj;						// VAR MARK ?????
