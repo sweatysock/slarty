@@ -429,7 +429,7 @@ console.time("perf");
 			if (loopback) ts = data.perf.packet.timestamp;	// In loopback mode we output perf audio but we still need the rtt
 		}
 console.timeEnd("perf");
-console.time("enddownstream");
+console.time("isStereo");
 		// 4. Adjust gain of final mix containing performer and group audio, and send to the speaker buffer
 		var obj;						// VAR MARK ?????
 		if (isStereo) {
@@ -443,6 +443,8 @@ console.time("enddownstream");
 				applyGain(mixL, obj.finalGain);		// and left follows
 			}
 		} else obj = applyAutoGain(mixL, mixOut);		// For mono just use left channel
+console.timeEnd("isStereo");
+console.time("mainOut");
 		mixOut.gain= obj.finalGain;				// Store gain for next loop
 		obj.peak += venue.peak;					// Display the venue level mixed with the main output
 		if (obj.peak > mixOut.peak) mixOut.peak = obj.peak;	// Note peak for display purposes
@@ -471,6 +473,8 @@ console.time("enddownstream");
 		}
 		if (spkrBufferL.length > spkrBuffPeak) 			// Monitoring purposes
 			spkrBuffPeak = spkrBufferL.length;
+console.timeEnd("mainOut");
+console.time("venueOut");
 		if (v.length > 0) {					// Add the venue audio to its own buffer
 			venueBuffer.push(...v);				// Add any venue audio to the venue buffer
 		}
@@ -484,9 +488,9 @@ console.time("enddownstream");
 			else rtt1 = (9 * rtt1 + rtt)/10;
 			rtt5 = (49 * rtt5 + rtt)/50;
 		}
+console.timeEnd("venueOut");
 	}
 	enterState( idleState );					// Back to Idling
-console.timeEnd("enddownstream");
 });
 
 socketIO.on('disconnect', function () {
