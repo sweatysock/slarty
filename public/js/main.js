@@ -288,7 +288,9 @@ console.time("venue");
 					}
 				}
 			}
+console.time("zip");
 			let audio = zipson.parse(vData.audio);		// Uncompress venue audio
+console.timeEnd("zip");
 			let v8 = audio.mono8, v16 = audio.mono16;	// Shortcuts to the venue MSRE data blocks
 			if ((v8.length > 0) && (!venue.muted)) {	// If there is venue audio & not muted, it will need processing
 				let sr = 8000;				// Minimum sample rate of 8kHz
@@ -314,7 +316,9 @@ console.time("venue");
 					sr = 16000;			// This is at the higher sample rate
 				} else v = v8;				// Only low bandwidth venue audio 
 				venue.targetGain = 2/venueSize;		// Have to manually set ths to take into account venue size
+console.time("AGC");
 				let obj = applyAutoGain(v, venue);	// Amplify venue with auto limiter
+console.timeEnd("AGC");
 				venue.gain = obj.finalGain;		// Store gain for next time round
 				if (obj.peak > venue.peak) venue.peak = obj.peak;
 				v = reSample(v, vCache, adjMicPacketSize); 
