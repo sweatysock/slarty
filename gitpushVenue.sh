@@ -1,4 +1,4 @@
-if ![ [ "$#" -eq 1 ] || [ "$#" -eq 2 ] ]; then
+if [[ "$#" -lt 1  ||  "$#" -gt 2 ]]; then
 	echo "Usage: sh $0 <x> eventID" >&2
 	echo "insert x before event ID to execute commands, otherwise dry run" >&2
 	exit 1

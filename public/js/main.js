@@ -167,6 +167,7 @@ socketIO.on('perf', function (data) {					// Performer status notification
 
 // Data coming down from upstream server: Group mix plus separate member audios
 socketIO.on('d', function (data) { 
+console.time("downstream");
 	enterState( dataInState );					// This is one of our key tasks
 	packetsIn++;							// For monitoring and statistics
 	let len=JSON.stringify(data).length/1024;			// Get actual packet size received before any changes
@@ -464,6 +465,7 @@ socketIO.on('d', function (data) {
 		}
 	}
 	enterState( idleState );					// Back to Idling
+console.timeEnd("downstream");
 });
 
 socketIO.on('disconnect', function () {
