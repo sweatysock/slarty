@@ -684,7 +684,10 @@ function generateMix () {
 				packetCount++;				// Count how many packets have made the mix for tracing
 				if (packet.audio.mono8.length > 0) {	// Unpack the MSRE packet of audio and add to server mix
 					someAudio8 = true;
-					for (let i = 0; i < packet.audio.mono8.length; ++i) mono8[i] += packet.audio.mono8[i];	
+					if (simulating)
+						for (let i = 0; i < packet.audio.mono8.length; ++i) mono8[i] += packet.audio.mono8[i]*(Math.random()*0.25+0.75);	
+					else
+						for (let i = 0; i < packet.audio.mono8.length; ++i) mono8[i] += packet.audio.mono8[i];	
 				}
 				if (packet.audio.mono16.length > 0) {
 					someAudio16 = true;
