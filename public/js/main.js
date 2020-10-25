@@ -279,6 +279,7 @@ console.time("venue");
 			let a8 = [], a16 = [];				// Temp store for our audio for subtracting (echo cancelling)
 			let s = vData.seqNos[myChannel];		// If the venue mix contains our audio this will be its sequence no.
 			if (s != null) {				// If we are performer or there are network issues our audio won't be in the mix
+console.time("whileSearch");
 				while (packetBuf.length) {		// Scan the packet buffer for the packet with this sequence
 					let p = packetBuf.shift();	// Remove the oldest packet from the buffer until s is found
 					if (p.sequence == s) {		// We have found the right sequence number
@@ -287,6 +288,7 @@ console.time("venue");
 						break;			// Packet found so stop scanning the packet buffer. 
 					}
 				}
+console.timeEnd("whileSearch");
 			}
 console.time("zip");
 			let audio = zipson.parse(vData.audio);		// Uncompress venue audio
@@ -295,6 +297,7 @@ console.timeEnd("zip");
 			if ((v8.length > 0) && (!venue.muted)) {	// If there is venue audio & not muted, it will need processing
 				let sr = 8000;				// Minimum sample rate of 8kHz
 				let gn = venue.gain / venueSize;	// Gain adjusts for fader setting and venue size most importantly
+console.time("mix");
 				if ((a8.length > 0) && (c8.length > 0))	// If we have audio and group has audio remove both and set venue level
 					for (let i = 0; i < a8.length; ++i) v8[i] = (v8[i] - a8[i] -c8[i]);
 				if ((a8.length > 0) && (c8.length == 0))// If there is only our audio subtract it and set venue level
@@ -315,13 +318,16 @@ console.timeEnd("zip");
 					}
 					sr = 16000;			// This is at the higher sample rate
 				} else v = v8;				// Only low bandwidth venue audio 
+console.timeEnd("mix");
 				venue.targetGain = 2/venueSize;		// Have to manually set ths to take into account venue size
 console.time("AGC");
 				let obj = applyAutoGain(v, venue);	// Amplify venue with auto limiter
 console.timeEnd("AGC");
 				venue.gain = obj.finalGain;		// Store gain for next time round
 				if (obj.peak > venue.peak) venue.peak = obj.peak;
+console.time("resample");
 				v = reSample(v, vCache, adjMicPacketSize); 
+console.timeEnd("resample");
 			} else {
 //				venue.peak = 0;				// Don't need to be a genius to figure that one out if there's no audio!
 				trace2("NO VENUE AUDIO");
