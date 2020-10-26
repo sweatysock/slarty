@@ -1204,7 +1204,7 @@ function processAudio(e) {						// Main processing loop
 			outAudioL.push(...zeros);
 			outAudioR.push(...zeros);
 		}
-		if ((!echoRisk) || (!micIn.gate))			// If echo is unlikely, or the mic is off, output audio
+		if ((!echoRisk) || (micIn.gate == 0))			// If echo is unlikely, or the mic is off, output audio
 			for (let i in outDataL) { 
 				outDataL[i] = outAudioL[i];		// Copy left audio to outputL
 				outDataR[i] = outAudioR[i];		// and right audio to outputR
@@ -1219,7 +1219,7 @@ function processAudio(e) {						// Main processing loop
 		let zeros = new Array(ChunkSize-venueBuffer.length).fill(0);
 		outAudioV.push(...zeros);
 	}
-	if ((!echoRisk) || (!micIn.gate))				// If echo is unlikely, or the mic is off, output audio
+	if ((!echoRisk) || (micIn.gate == 0))				// If echo is unlikely, or the mic is off, output audio
 	for (let i in outDataV) { 
 		outDataV[i] = outAudioV[i];				// Copy venue audio to it's special output
 	}
