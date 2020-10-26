@@ -180,8 +180,11 @@ upstreamServer.on('d', function (packet) {
 	// 1. Gather performer audio and queue it up
 	perf.live = packet.perf.live;					// Performer status is shared by all servers
 	if (!perf.live) perf.streaming = false;				// Make sure we stop streaming perf audio if not live anymore
-	if (packet.perf.packet != null) 				// If there is performer data buffer it
+	if (packet.perf.packet != null) { 				// If there is performer data buffer it
+		packet.perf.packet.chatText = "";			// Remove any performer chat texts as these are private to venue server
+		packet.perf.packet.group = "noGroup";			// Remove performer group for privacy
 		perf.packets.push(packet.perf.packet);	
+	}
 	if (perf.packets.length > perfMaxBufferSize)
 		perf.packets.shift();					// Clip the performer buffer removing the oldest packet
 	if ((!perf.streaming) && (perf.packets.length > 5)){		// If not streaming but enough perf data buffered
@@ -782,6 +785,7 @@ function generateMix () {
 			sampleRate	: SampleRate,			// Send sample rate to help processing
 			group		: "",				// Venue data doesn't go through group processing
 		}
+console.log(totalLiveClients);
 	} 
 	// 4. Send packets to all clients group by group, adding performer, venue and group audio, plus group live channels and commands
 	if ((loopback) && (channels[perf.chan].socketID != undefined)) {// If we are a loopback server and the performer has a socket ready

@@ -198,17 +198,8 @@ socketIO.on('d', function (data) {
 			let l = groupLayout[p];				// Get circle location for this group position
 			l = (l + shift) % maxGroupSize;			// Move the position to put me at the centre
 			let att = pans[l];				// find the panning position for this location
-			if (c.chatText != "") {				// If there is some chatText included add it to the chat history
-				chatHistory.innerHTML += "<div><span style='color:#FFFFFF'>"+c.name+": </span>"+c.chatText+"</div>";
-				chatHistory.scrollTop = chatHistory.scrollHeight;
-				let adj = chatAdj[l];			// Get the lateral adjustment that corresponds too
-				let div = document.createElement("div");// Create a new div for the chat bubble
-				div.style.left = adj+"%";		// Adjust it's position in the column
-				div.classList.add("chatBubble");	// Set the class and add the contents to display
-				div.innerHTML = "<span style='color:#FFFFFF'>"+c.name+": </span>"+c.chatText+"</div>";
-				setTimeout(function () {div.parentNode.removeChild(div)},15000);
-				bubbleArea.appendChild(div);
-			}
+			if (c.chatText != "") 				// If there is some chatText from this channel display it
+				chatMessage(c.name, c.text, l);
 			if ((c.socketID != socketIO.id) && (ch != 0)) {	// Don't include my audio or channel 0 in the group mix
 				if (chan.peak < c.peak)			// set the peak for this channel's level display
 					chan.peak = c.peak;		// even if muted
@@ -403,6 +394,17 @@ socketIO.on('d', function (data) {
 							mixR[i] += mono[i];
 						}
 					}
+				}
+				let p = data.perf.packet;		// If the performer was in our group and is chatting
+				if ((myGroup != "noGroup") && (p.group == myGroup) && (p.chatText != "")) {
+					let ch = p.channel;			// Channel number the perf if using
+					let pos = serverLiveChannels[ch];	// Get perf's position in the group
+					let l = groupLayout[pos];		// Get circle location for this group position
+					let myP = serverLiveChannels[myChannel];// Obtain my position in the group
+					let myLoc = groupLayout[myP];		// Find the location in the circle that corresponds to my position
+					let shift = groupCentre - myLoc;	// Find how much everyone has to move to put me in the centre
+					l = (l + shift) % maxGroupSize;		// Move the position to put me at the centre
+					chatMessage(p.name, p.text, l);		// Display the perf's chat message
 				}
 			} else ts = data.perf.packet.timestamp;		// I am the performer so grab timestamp for the rtt 
 			if (loopback) ts = data.perf.packet.timestamp;	// In loopback mode we output perf audio but we still need the rtt
@@ -606,6 +608,19 @@ document.addEventListener('DOMContentLoaded', function(event){		// Add dynamic b
 		}
 	});
 });
+
+function chatMessage(name, text, loc) {					// Display chat message in multiple places for given name and location
+	chatHistory.innerHTML += "<div><span style='color:#FFFFFF'>"+name+": </span>"+text+"</div>";
+	chatHistory.scrollTop = chatHistory.scrollHeight;		// Use the global chatHistory 
+	let adj = chatAdj[loc];						// Get the lateral adjustment that corresponds to this location
+	let div = document.createElement("div");			// Create a new div for the chat bubble
+	div.style.left = adj+"%";					// Adjust it's position in the column
+	div.classList.add("chatBubble");				// Set the class and add the contents to display
+	div.innerHTML = "<span style='color:#FFFFFF'>"+name+": </span>"+text+"</div>";
+	setTimeout(function () {div.parentNode.removeChild(div)},15000);
+	bubbleArea.appendChild(div);					// Use the global bubbleArea
+
+}
 
 function displayAnimation() { 						// called 100mS to animate audio displays
 	enterState( UIState );						// Measure time spent updating UI
@@ -1149,7 +1164,7 @@ function processAudio(e) {						// Main processing loop
 				channel		: myChannel,		// Send assigned channel to help server
 				recording	: recording,		// Flag used for recording - test function
 				sampleRate	: sr,			// Send sample rate to help processing
-				group		: myGroup,		// Group name this user belings to
+				group		: myGroup,		// Group name this user belongs to
 				rtt		: rtt1,			// Send my rtt measurement for server monitoring
 				chatText	: chatText,		// Any text that has been input for the chat
 			};
