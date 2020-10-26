@@ -1095,13 +1095,10 @@ function processAudio(e) {						// Main processing loop
 		let micAudioR = [];					
 		let peak = maxValue(inDataL);				// Get peak of raw mic audio (using left channel for now)
 		if (!pauseTracing) levelClassifier(peak);		// Classify audio incoming for analysis
-if (tracecount>0) trace2("micIn.threshold ",micIn.threshold," micIn.gate ",micIn.gate," noiseThreshold ",noiseThreshold," peak ",peak);
-tracecount--;
 		if ((micIn.gate > 0)  && (peak > noiseThreshold*30))	// If noise gate is open it should stay open for less sound
 			micIn.gate = gateDelay;
 		else if ((peak > micIn.threshold) &&			// if audio is above dynamic threshold
 			(peak > noiseThreshold)) {			// and noise threshold, open gate
-trace2("peak in of ",peak," beats micIn.threshold of ",micIn.threshold);
 			micIn.gate = gateDelay;			
 		} 
 		if (performer) micIn.gate = 1				// Performer's mic is always open
@@ -1230,25 +1227,30 @@ trace2("peak in of ",peak," beats micIn.threshold of ",micIn.threshold);
 		outDataV[i] = outAudioV[i];				// Copy venue audio to it's special output
 	}
 	// 2.2 Get highest level output and use it to set the dynamic threshold level to stop audio feedback
-	let maxL = maxValue(outAudioL);					// Get peak level of this outgoing audio
-	let maxR = maxValue(outAudioR);					// for each channel
-	let maxV = maxValue(outAudioV);					// and venue audio
-	if (maxL < maxR) maxL = maxR;					// Choose loudest channel
-	if (maxL < maxV) maxL = maxV;					
-	thresholdBuffer.unshift( maxL );				// add to start of dynamic threshold queue
-	micIn.threshold = (maxValue([					// Apply most aggressive threshold near current +/-2 chunks
-		thresholdBuffer[echoTest.sampleDelay-2],
-		thresholdBuffer[echoTest.sampleDelay-1],
-		thresholdBuffer[echoTest.sampleDelay],	
-		thresholdBuffer[echoTest.sampleDelay+1],
-		thresholdBuffer[echoTest.sampleDelay+2]
-	])) * echoTest.factor * mixOut.gain;				// multiply by factor and mixOutGain
-	thresholdBuffer.pop();						// Remove oldest threshold buffer value
-let now = new Date().getTime();						// MARK REMOVE?
-delta = now - previous;
-if (delta > deltaMax) deltaMax = delta;
-if (delta < deltaMin) deltaMin = delta;
-previous = now;
+	if (echoRisk) {
+		let maxL = maxValue(outAudioL);					// Get peak level of this outgoing audio
+		let maxR = maxValue(outAudioR);					// for each channel
+		let maxV = maxValue(outAudioV);					// and venue audio
+		if (maxL < maxR) maxL = maxR;					// Choose loudest channel
+		if (maxL < maxV) maxL = maxV;					
+		thresholdBuffer.unshift( maxL );				// add to start of dynamic threshold queue
+		micIn.threshold = (maxValue([					// Apply most aggressive threshold near current +/-3 chunks
+			thresholdBuffer[echoTest.sampleDelay-3],
+			thresholdBuffer[echoTest.sampleDelay-2],
+			thresholdBuffer[echoTest.sampleDelay-1],
+			thresholdBuffer[echoTest.sampleDelay],	
+			thresholdBuffer[echoTest.sampleDelay+1],
+			thresholdBuffer[echoTest.sampleDelay+2]
+			thresholdBuffer[echoTest.sampleDelay+3]
+		])) * echoTest.factor * mixOut.gain;				// multiply by factor and mixOutGain
+trace2(micIn.threshold);
+		thresholdBuffer.pop();						// Remove oldest threshold buffer value
+	}
+	let now = new Date().getTime();					// Note time between audio processing loops
+	delta = now - previous;
+	if (delta > deltaMax) deltaMax = delta;				// Keep max and min as this indicates the 
+	if (delta < deltaMin) deltaMin = delta;				// load the client is enduring. A big difference is bad.
+	previous = now;
 	enterState( idleState );					// We are done. Back to Idling
 }
 
@@ -1335,6 +1337,12 @@ function handleAudio(stream) {						// We have obtained media access
 	createOutputUI( mixOut );					// Create the output mix channel UI
 	createMicUI( micIn );						// Create the microphone channel UI
 	createChannelUI( venue );					// Create the venue channel UI
+
+	if (navigator.userAgent.indexOf("Firefox") != -1) {
+		echoRisk = false;
+	} else {
+		echoRisk = true;
+	}
 
 	let liveSource = context.createMediaStreamSource(stream); 	// Create audio source (mic)
 	let node = undefined;
@@ -1508,6 +1516,7 @@ function magicKernel( x ) {						// This thing is crazy cool
 
 // Echo testing code
 //
+var echoRisk = true;							// Flag that indicates if audio feedback is a risk. Firefox and headphones fix this
 var echoTest = {
 	running		: false,
 	steps		: [16,8,128,64,32,1,0.5,0.2,0.1,0.05,0.02,0],	// Test frequencies and levels ended with 0
@@ -1594,9 +1603,6 @@ function runEchoTest(audio) {						// Test audio system in a series of tests
 			let delay = Math.round((edge*100)/soundcardSampleRate)*10;	// convert result to nearest 10mS
 			trace2("Pulse delay is ",delay,"mS");
 			echoTest.delays.push(delay.toFixed(0));		// Gather results n mS for each step
-//			for (j=0; j<conv.length; j++)			// Normalize output for graphs
-//				conv[j] = conv[j]/max;
-//			drawWave(results,name,(edge*100/results.length));
 		} else {						// All tests have been analyzed. Get conclusions.
 			trace2("Reviewing results");
 			let counts = [];				// Collate results on mS values
@@ -1610,11 +1616,11 @@ function runEchoTest(audio) {						// Test audio system in a series of tests
 					winner = true;
 					echoTest.delay = c;		// Store final delay result
 					echoTest.sampleDelay = Math.ceil((echoTest.delay * soundcardSampleRate / 1000)/1024)
-echoTest.sampleDelay = 9;
 					trace2("Sample delay is ",echoTest.sampleDelay);
 				}
 			}
 			if (winner) {					// If delay obtained calculate gain factor
+				echoRisk = true;			// We have heard our tones clearly so feedback can happen
 				// Convert delay back to samples as start point for averaging level
 				let edge = Math.round(echoTest.delay * soundcardSampleRate / 1000);
 				let factors = [];			// Buffer results here
@@ -1631,12 +1637,15 @@ echoTest.sampleDelay = 9;
 				}
 				// Get average factor value
 				echoTest.factor = avgValue(factors) * 3; // boost factor to give echo margin
-				echoTest.factor = 4;			// Force strong factor always
+				echoTest.factor = 5;			// Force strong factor always
 				trace2("Forced factor is ",echoTest.factor);
 			} else {
 				trace2("No clear result");		// No agreement, no result
-				if (max > 3)
+				echoRisk = false;			// Should be ok without feedback control
+				if (max > 3) {				// Not sure... have to be cautious
+					echoRisk = true;
 					trace2("It may be worth repeating the test");
+				}
 			}
 			echoTest.running = false;			// Stop test 
 		}
