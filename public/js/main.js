@@ -1240,7 +1240,7 @@ function processAudio(e) {						// Main processing loop
 			thresholdBuffer[echoTest.sampleDelay-1],
 			thresholdBuffer[echoTest.sampleDelay],	
 			thresholdBuffer[echoTest.sampleDelay+1],
-			thresholdBuffer[echoTest.sampleDelay+2]
+			thresholdBuffer[echoTest.sampleDelay+2],
 			thresholdBuffer[echoTest.sampleDelay+3]
 		])) * echoTest.factor * mixOut.gain;				// multiply by factor and mixOutGain
 trace2(micIn.threshold);
