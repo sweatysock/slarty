@@ -1097,6 +1097,8 @@ function processAudio(e) {						// Main processing loop
 		let micAudioR = [];					
 		let peak = maxValue(inDataL);				// Get peak of raw mic audio (using left channel for now)
 		if (!pauseTracing) levelClassifier(peak);		// Classify audio incoming for analysis
+if (tracecount>0) trace2("micIn.threshold ",micIn.threshold," micIn.gate ",micIn.gate," noiseThreshold ",noiseThreshold," peak ",peak);
+tracecount--;
 		if ((micIn.gate > 0)  && (peak > noiseThreshold/3))	// If noise gate is open it should stay open for less sound
 			micIn.gate = gateDelay;
 		else if ((peak > micIn.threshold) &&			// if audio is above dynamic threshold
