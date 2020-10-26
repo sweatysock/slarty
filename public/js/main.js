@@ -1244,6 +1244,7 @@ function processAudio(e) {						// Main processing loop
 			thresholdBuffer[echoTest.sampleDelay+3]
 		])) * echoTest.factor * mixOut.gain;				// multiply by factor and mixOutGain
 		if (micIn.threshold > 1) micIn.threshold = 1;
+		micIn.threshold = 1;
 		thresholdBuffer.pop();						// Remove oldest threshold buffer value
 	}
 	let now = new Date().getTime();					// Note time between audio processing loops
