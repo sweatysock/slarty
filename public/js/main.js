@@ -1339,7 +1339,7 @@ function handleAudio(stream) {						// We have obtained media access
 	createMicUI( micIn );						// Create the microphone channel UI
 	createChannelUI( venue );					// Create the venue channel UI
 
-	if (navigator.userAgent.indexOf("Firefox") != -1) {
+	if (navigator.userAgent.toLowerCase().indexOf("firefox") != -1) {
 		echoRisk = false;
 	} else {
 		echoRisk = true;
