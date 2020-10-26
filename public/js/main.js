@@ -1610,7 +1610,7 @@ function runEchoTest(audio) {						// Test audio system in a series of tests
 					winner = true;
 					echoTest.delay = c;		// Store final delay result
 					echoTest.sampleDelay = Math.ceil((echoTest.delay * soundcardSampleRate / 1000)/1024)
-echoTest.sampleDelay = 8;
+echoTest.sampleDelay = 9;
 					trace2("Sample delay is ",echoTest.sampleDelay);
 				}
 			}
