@@ -199,7 +199,7 @@ socketIO.on('d', function (data) {
 			l = (l + shift) % maxGroupSize;			// Move the position to put me at the centre
 			let att = pans[l];				// find the panning position for this location
 			if (c.chatText != "") 				// If there is some chatText from this channel display it
-				chatMessage(c.name, c.text, l);
+				chatMessage(c.name, c.chatText, l);
 			if ((c.socketID != socketIO.id) && (ch != 0)) {	// Don't include my audio or channel 0 in the group mix
 				if (chan.peak < c.peak)			// set the peak for this channel's level display
 					chan.peak = c.peak;		// even if muted
@@ -395,19 +395,20 @@ socketIO.on('d', function (data) {
 						}
 					}
 				}
-				let p = data.perf.packet;		// If the performer was in our group and is chatting
-				if ((myGroup != "noGroup") && (p.group == myGroup) && (p.chatText != "")) {
-					let ch = p.channel;			// Channel number the perf if using
-					let pos = serverLiveChannels[ch];	// Get perf's position in the group
-					let l = groupLayout[pos];		// Get circle location for this group position
-					let myP = serverLiveChannels[myChannel];// Obtain my position in the group
-					let myLoc = groupLayout[myP];		// Find the location in the circle that corresponds to my position
-					let shift = groupCentre - myLoc;	// Find how much everyone has to move to put me in the centre
-					l = (l + shift) % maxGroupSize;		// Move the position to put me at the centre
-					chatMessage(p.name, p.text, l);		// Display the perf's chat message
-				}
 			} else ts = data.perf.packet.timestamp;		// I am the performer so grab timestamp for the rtt 
 			if (loopback) ts = data.perf.packet.timestamp;	// In loopback mode we output perf audio but we still need the rtt
+
+			let p = data.perf.packet;			// If the performer was in our group and is chatting
+			if ((myGroup != "noGroup") && (p.group == myGroup) && (p.chatText != "")) {
+				let ch = p.channel;			// Channel number the perf if using
+				let pos = serverLiveChannels[ch];	// Get perf's position in the group
+				let l = groupLayout[pos];		// Get circle location for this group position
+				let myP = serverLiveChannels[myChannel];// Obtain my position in the group
+				let myLoc = groupLayout[myP];		// Find the location in the circle that corresponds to my position
+				let shift = groupCentre - myLoc;	// Find how much everyone has to move to put me in the centre
+				l = (l + shift) % maxGroupSize;		// Move the position to put me at the centre
+				chatMessage(p.name, p.chatText, l);	// Display the perf's chat message
+			}
 		}
 		// 4. Adjust gain of final mix containing performer and group audio, and send to the speaker buffer
 		let obj;						
