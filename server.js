@@ -662,9 +662,11 @@ function generateMix () {
 	let clientPackets = [];						// Temporary store of all packets to send to all group members
 	let packetCount = 0;						// Keep count of packets that make the mix for monitoring
 	let totalLiveClients = 0;					// Count total clients live downstream of this server
+console.log("scanning channels");
 	channels.forEach( (c, chan) => {				// Review all channels for audio and activity, and build server mix
 		if (c.name != "") {					// Looking for active channels meaning they have a name
 			if (chan != 0) totalLiveClients +=c.liveClients;// Sum all downstream clients under our active channels
+console.log("live clients for ",c.name," is ",c.liveClients;
 			if ((c.group != "") && (clientPackets[c.group] == null)) {	// If this is the first channel for its' group
 				clientPackets[c.group] = [];		// create an empty client packet buffer
 			}
@@ -785,7 +787,6 @@ function generateMix () {
 			sampleRate	: SampleRate,			// Send sample rate to help processing
 			group		: "",				// Venue data doesn't go through group processing
 		}
-console.log(totalLiveClients);
 	} 
 	// 4. Send packets to all clients group by group, adding performer, venue and group audio, plus group live channels and commands
 	if ((loopback) && (channels[perf.chan].socketID != undefined)) {// If we are a loopback server and the performer has a socket ready
