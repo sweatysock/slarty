@@ -302,6 +302,7 @@ socketIO.on('d', function (data) {
 					}
 					sr = 16000;			// This is at the higher sample rate
 				} else v = v8;				// Only low bandwidth venue audio 
+tracef("venue peak is ",maxValue(v));
 				venue.targetGain = 2/venueSize;		// Have to manually set ths to take into account venue size
 				let obj = applyAutoGain(v, venue);	// Amplify venue with auto limiter
 				venue.gain = obj.finalGain;		// Store gain for next time round
@@ -1059,7 +1060,7 @@ trace2("Noise threshold: ",noiseThreshold);
 }
 
 var thresholdBuffer = new Array(20).fill(0);				// Buffer dynamic thresholds here for delayed mic muting
-var gateDelay = 20;							// Amount of samples (time) the gate stays open
+var gateDelay = 10;							// Amount of chunks (time) the gate stays open
 
 function processAudio(e) {						// Main processing loop
 	// There are two activities here (if not performing an echo test that is): 
@@ -1090,7 +1091,7 @@ function processAudio(e) {						// Main processing loop
 		let micAudioR = [];					
 		let peak = maxValue(inDataL);				// Get peak of raw mic audio (using left channel for now)
 		if (!pauseTracing) levelClassifier(peak);		// Classify audio incoming for analysis
-		if ((micIn.gate > 0)  && (peak > noiseThreshold*30))	// If noise gate is open it should stay open for less sound
+		if ((micIn.gate > 0)  && (peak > noiseThreshold))	// If noise gate is open it should stay open for less sound
 			micIn.gate = gateDelay;
 		else if ((peak > micIn.threshold) &&			// if audio is above dynamic threshold
 			(peak > noiseThreshold)) {			// and noise threshold, open gate
