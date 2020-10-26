@@ -307,8 +307,6 @@ socketIO.on('d', function (data) {
 				venue.gain = obj.finalGain;		// Store gain for next time round
 				if (obj.peak > venue.peak) venue.peak = obj.peak;
 				v = reSample(v, vCache, adjMicPacketSize); 
-			} else {
-				trace2("NO VENUE AUDIO");
 			}
 		} 
 		// 3. Process performer audio if there is any, and add it to the mix. This could be stereo audio
@@ -1632,7 +1630,7 @@ function runEchoTest(audio) {						// Test audio system in a series of tests
 				}
 				// Get average factor value
 				echoTest.factor = avgValue(factors) * 3; // boost factor to give echo margin
-				echoTest.factor = 2;			// Force strong factor always
+				echoTest.factor = 3;			// Force strong factor always
 				trace2("Forced factor is ",echoTest.factor);
 			} else {
 				trace2("No clear result");		// No agreement, no result
