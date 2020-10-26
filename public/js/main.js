@@ -1227,6 +1227,7 @@ function processAudio(e) {						// Main processing loop
 		outDataV[i] = outAudioV[i];				// Copy venue audio to it's special output
 	}
 	// 2.2 If there is a risk of echo set the input dynamic threshold level to stop audio feedback
+console.log(echoRisk);
 	if (echoRisk) {
 		let maxL = maxValue(outAudioL);				// Get peak level of this outgoing audio
 		let maxR = maxValue(outAudioR);				// for each channel
@@ -1343,7 +1344,6 @@ function handleAudio(stream) {						// We have obtained media access
 	} else {
 		echoRisk = true;
 	}
-tracef(navigator.userAgent.toLowerCase());
 tracef("echoRisk is ",echoRisk);
 	let liveSource = context.createMediaStreamSource(stream); 	// Create audio source (mic)
 	let node = undefined;
