@@ -1019,19 +1019,15 @@ function fadeDown(audio) {						// Fade sample linearly over length
 }
 
 var talkoverLevel = 0.01;						// Ceiling for mix when mic is active, 0 = half duplex
-if (navigator.userAgent.toLowerCase().indexOf('firefox') > -1) 		// If we are on Firefox echo cancelling is good 
-	talkoverLevel = 1;
-var talkoverLag = 50;							// mS that talkover endures after mic goes quiet
-var talkoverTimer = 0;							// timer used to slow talkover lift off
-function talkover() {							// Suppress mix level while mic is active
-	let now = new Date().getTime();
-	talkoverTimer = now + talkoverLag;			
-	mixOut.ceiling = talkoverLevel;
+var talkover = 0;							// Counter semaphore that blocks audio out. >0 means blocked
+function talkoverOn() {							// Suppress mix level while mic is active
+	talkover = 2;							// Capture the audio channel for the mic. This cuts audio output.
 }
 
-function endTalkover() {
-	let now = new Date().getTime();
-	if (now > talkoverTimer) { 					// Mix ceiling can raise after timeout
+function talkoverOff() {						// Audio output system tries to get control again by calling here
+	if (talkover) 
+		talkover--;
+	else	
 		mixOut.ceiling = 1;
 	}
 }
@@ -1047,7 +1043,7 @@ function levelClassifier( v ) {
 	}
 }
 
-var noiseThreshold = 0.02;							// Base threshold for mic signal
+var noiseThreshold = 0.02;						// Base threshold for mic signal
 function setNoiseThreshold () {						// Set the mic threshold to remove most background noise
 	let max = 0;
 	for (let i=0; i<14; i++)
@@ -1209,10 +1205,11 @@ function processAudio(e) {						// Main processing loop
 			outAudioL.push(...zeros);
 			outAudioR.push(...zeros);
 		}
-		for (let i in outDataL) { 
-			outDataL[i] = outAudioL[i];			// Copy left audio to outputL
-			outDataR[i] = outAudioR[i];			// and right audio to outputR
-		}
+		if ((!echoRisk) || (!micIn.gate))			// If echo is unlikely, or the mic is off, output audio
+			for (let i in outDataL) { 
+				outDataL[i] = outAudioL[i];		// Copy left audio to outputL
+				outDataR[i] = outAudioR[i];		// and right audio to outputR
+			}
 	}
 	// 2.1 Take venue audio from buffer and send to special output
 	let outAudioV = [];
@@ -1223,18 +1220,19 @@ function processAudio(e) {						// Main processing loop
 		let zeros = new Array(ChunkSize-venueBuffer.length).fill(0);
 		outAudioV.push(...zeros);
 	}
+	if ((!echoRisk) || (!micIn.gate))				// If echo is unlikely, or the mic is off, output audio
 	for (let i in outDataV) { 
 		outDataV[i] = outAudioV[i];				// Copy venue audio to it's special output
 	}
-	// 2.2 Get highest level output and use it to set the dynamic threshold level to stop audio feedback
+	// 2.2 If there is a risk of echo set the input dynamic threshold level to stop audio feedback
 	if (echoRisk) {
-		let maxL = maxValue(outAudioL);					// Get peak level of this outgoing audio
-		let maxR = maxValue(outAudioR);					// for each channel
-		let maxV = maxValue(outAudioV);					// and venue audio
-		if (maxL < maxR) maxL = maxR;					// Choose loudest channel
+		let maxL = maxValue(outAudioL);				// Get peak level of this outgoing audio
+		let maxR = maxValue(outAudioR);				// for each channel
+		let maxV = maxValue(outAudioV);				// and venue audio
+		if (maxL < maxR) maxL = maxR;				// Choose loudest channel
 		if (maxL < maxV) maxL = maxV;					
-		thresholdBuffer.unshift( maxL );				// add to start of dynamic threshold queue
-		micIn.threshold = (maxValue([					// Apply most aggressive threshold near current +/-3 chunks
+		thresholdBuffer.unshift( maxL );			// add to start of dynamic threshold queue
+		micIn.threshold = (maxValue([				// Apply most aggressive threshold near current +/-3 chunks
 			thresholdBuffer[echoTest.sampleDelay-3],
 			thresholdBuffer[echoTest.sampleDelay-2],
 			thresholdBuffer[echoTest.sampleDelay-1],
@@ -1242,9 +1240,9 @@ function processAudio(e) {						// Main processing loop
 			thresholdBuffer[echoTest.sampleDelay+1],
 			thresholdBuffer[echoTest.sampleDelay+2],
 			thresholdBuffer[echoTest.sampleDelay+3]
-		])) * echoTest.factor * mixOut.gain * 10;				// multiply by factor and mixOutGain
+		])) * echoTest.factor * mixOut.gain * 10;		// multiply by factor and mixOutGain plus serious exageration factor
 		if (micIn.threshold > 1) micIn.threshold = 1;
-		thresholdBuffer.pop();						// Remove oldest threshold buffer value
+		thresholdBuffer.pop();					// Remove oldest threshold buffer value
 	}
 	let now = new Date().getTime();					// Note time between audio processing loops
 	delta = now - previous;
