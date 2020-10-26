@@ -445,7 +445,6 @@ io.sockets.on('connection', function (socket) {
 			perf.packets.push(packet);			// Store performer audio/video packet
 			if (perf.packets.length > perfMaxBufferSize) {
 				perf.packets.shift();			// Clip the performer buffer removing the oldest packet
-//console.log("PERFORMER OVERflow for channel ",packet.channel);
 			}
 			if ((!perf.streaming) && (perf.packets.length > mixTriggerLevel)) {
 				perf.streaming = true;			// If not streaming but enough now buffered, performer is go!
@@ -458,7 +457,6 @@ io.sockets.on('connection', function (socket) {
 				(channel.recording == false)) {		// If buffer full and we are not recording this channel
 				channel.packets.shift();		// then remove the oldest packet.
 				channel.overflows++;			// Log overflows per channel
-//console.log("OVERflow for channel ",packet.channel);
 				overflows++;				// and also globally for monitoring
 			}
 			if (channel.packets.length >= channel.mixTriggerLevel) {
@@ -591,6 +589,7 @@ function simulateSound() {						// Generate simulated clapping for load testing 
 		channels[1].name = "SIM";
 		channels[1].group = "noGroup";
 		channels[1].newBuf = false;
+		channels[1].liveClients = 1;
 		channels[1].packets.push(emptyPacket);			// Start with a buffer of silence
 		channels[1].packets.push(emptyPacket);			
 		channels[1].packets.push(emptyPacket);			
@@ -662,11 +661,9 @@ function generateMix () {
 	let clientPackets = [];						// Temporary store of all packets to send to all group members
 	let packetCount = 0;						// Keep count of packets that make the mix for monitoring
 	let totalLiveClients = 0;					// Count total clients live downstream of this server
-console.log("scanning channels");
 	channels.forEach( (c, chan) => {				// Review all channels for audio and activity, and build server mix
 		if (c.name != "") {					// Looking for active channels meaning they have a name
 			if (chan != 0) totalLiveClients +=c.liveClients;// Sum all downstream clients under our active channels
-console.log("live clients for ",c.name," is ",c.liveClients);
 			if ((c.group != "") && (clientPackets[c.group] == null)) {	// If this is the first channel for its' group
 				clientPackets[c.group] = [];		// create an empty client packet buffer
 			}
@@ -690,7 +687,7 @@ console.log("live clients for ",c.name," is ",c.liveClients);
 				if (packet.audio.mono8.length > 0) {	// Unpack the MSRE packet of audio and add to server mix
 					someAudio8 = true;
 					if (simulating)
-						for (let i = 0; i < packet.audio.mono8.length; ++i) mono8[i] += packet.audio.mono8[i]*(Math.random()*0.25+0.75);	
+						for (let i = 0; i < packet.audio.mono8.length; ++i) mono8[i] += packet.audio.mono8[i]*(Math.random()*0.5+0.5);	
 					else
 						for (let i = 0; i < packet.audio.mono8.length; ++i) mono8[i] += packet.audio.mono8[i];	
 				}
