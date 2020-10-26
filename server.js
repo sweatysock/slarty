@@ -666,7 +666,7 @@ console.log("scanning channels");
 	channels.forEach( (c, chan) => {				// Review all channels for audio and activity, and build server mix
 		if (c.name != "") {					// Looking for active channels meaning they have a name
 			if (chan != 0) totalLiveClients +=c.liveClients;// Sum all downstream clients under our active channels
-console.log("live clients for ",c.name," is ",c.liveClients;
+console.log("live clients for ",c.name," is ",c.liveClients);
 			if ((c.group != "") && (clientPackets[c.group] == null)) {	// If this is the first channel for its' group
 				clientPackets[c.group] = [];		// create an empty client packet buffer
 			}
