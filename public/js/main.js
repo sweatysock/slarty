@@ -1099,7 +1099,7 @@ function processAudio(e) {						// Main processing loop
 		if (!pauseTracing) levelClassifier(peak);		// Classify audio incoming for analysis
 if (tracecount>0) trace2("micIn.threshold ",micIn.threshold," micIn.gate ",micIn.gate," noiseThreshold ",noiseThreshold," peak ",peak);
 tracecount--;
-		if ((micIn.gate > 0)  && (peak > noiseThreshold/3))	// If noise gate is open it should stay open for less sound
+		if ((micIn.gate > 0)  && (peak > noiseThreshold*30))	// If noise gate is open it should stay open for less sound
 			micIn.gate = gateDelay;
 		else if ((peak > micIn.threshold) &&			// if audio is above dynamic threshold
 			(peak > noiseThreshold)) {			// and noise threshold, open gate
@@ -1632,7 +1632,7 @@ function runEchoTest(audio) {						// Test audio system in a series of tests
 				}
 				// Get average factor value
 				echoTest.factor = avgValue(factors) * 3; // boost factor to give echo margin
-				echoTest.factor = 1;			// Force strong factor always
+				echoTest.factor = 2;			// Force strong factor always
 				trace2("Forced factor is ",echoTest.factor);
 			} else {
 				trace2("No clear result");		// No agreement, no result
