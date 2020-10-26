@@ -1243,7 +1243,7 @@ function processAudio(e) {						// Main processing loop
 			thresholdBuffer[echoTest.sampleDelay+2],
 			thresholdBuffer[echoTest.sampleDelay+3]
 		])) * echoTest.factor * mixOut.gain;				// multiply by factor and mixOutGain
-trace2(micIn.threshold);
+		if (micIn.threshold > 1) micIn.threshold = 1;
 		thresholdBuffer.pop();						// Remove oldest threshold buffer value
 	}
 	let now = new Date().getTime();					// Note time between audio processing loops
@@ -1527,7 +1527,7 @@ var echoTest = {
 	results		: [],						// Samples of each test buffer here
 	delays 		: [],						// Array of final measurements
 	delay		: 129,	// Default value			// Final delay measurement result stored here
-	factor		: 2,	// Default value			// Final sensitivity factor stored here
+	factor		: 4,	// Default value			// Final sensitivity factor stored here
 	sampleDelay	: 6,	// Default value			// Final number of samples to delay dynamic threshold by
 };
 
@@ -1637,7 +1637,7 @@ function runEchoTest(audio) {						// Test audio system in a series of tests
 				}
 				// Get average factor value
 				echoTest.factor = avgValue(factors) * 3; // boost factor to give echo margin
-				echoTest.factor = 5;			// Force strong factor always
+				echoTest.factor = 8;			// Force strong factor always
 				trace2("Forced factor is ",echoTest.factor);
 			} else {
 				trace2("No clear result");		// No agreement, no result
