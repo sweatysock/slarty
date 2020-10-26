@@ -1101,6 +1101,7 @@ function processAudio(e) {						// Main processing loop
 			micIn.gate = gateDelay;
 		else if ((peak > micIn.threshold) &&			// if audio is above dynamic threshold
 			(peak > noiseThreshold)) {			// and noise threshold, open gate
+trace2("peak in of ",peak," beats micIn.threshold of ",micIn.threshold);
 			micIn.gate = gateDelay;			
 		} 
 		if (performer) micIn.gate = 1				// Performer's mic is always open
