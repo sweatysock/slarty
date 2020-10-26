@@ -1344,7 +1344,7 @@ function handleAudio(stream) {						// We have obtained media access
 	} else {
 		echoRisk = true;
 	}
-
+tracef("echoRisk is ",echoRisk);
 	let liveSource = context.createMediaStreamSource(stream); 	// Create audio source (mic)
 	let node = undefined;
 	if (!context.createScriptProcessor) {				// Audio processor node
