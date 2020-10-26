@@ -1610,6 +1610,7 @@ function runEchoTest(audio) {						// Test audio system in a series of tests
 					winner = true;
 					echoTest.delay = c;		// Store final delay result
 					echoTest.sampleDelay = Math.ceil((echoTest.delay * soundcardSampleRate / 1000)/1024)
+echoTest.sampleDelay = 3;
 					trace2("Sample delay is ",echoTest.sampleDelay);
 				}
 			}
@@ -1630,7 +1631,7 @@ function runEchoTest(audio) {						// Test audio system in a series of tests
 				}
 				// Get average factor value
 				echoTest.factor = avgValue(factors) * 3; // boost factor to give echo margin
-				echoTest.factor = 3;			// Force strong factor always
+				echoTest.factor = 4;			// Force strong factor always
 				trace2("Forced factor is ",echoTest.factor);
 			} else {
 				trace2("No clear result");		// No agreement, no result
