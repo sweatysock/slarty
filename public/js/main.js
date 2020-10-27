@@ -1070,7 +1070,7 @@ trace2("Noise threshold: ",noiseThreshold);
 				((levelCategories[i]/max)*100.0);	// Keep old data to obtain slower threshold changes
 }
 
-var thresholdBuffer = new Array(50).fill(0);				// Buffer dynamic thresholds here for delayed mic muting
+var thresholdBuffer = new Array(20).fill(0);				// Buffer dynamic thresholds here for delayed mic muting
 var gateDelay = 10;							// Amount of chunks (time) the gate stays open
 
 function processAudio(e) {						// Main processing loop
@@ -1105,11 +1105,13 @@ function processAudio(e) {						// Main processing loop
 		if (performer) micIn.gate = 1				// Performer's mic is always open
 		if (micIn.muted) micIn.gate = 0;			// but the mute control overrides everything
 		else {							// Not muted. Now control the mic gate
-			if ((micIn.gate > 0) && (peak > noiseThreshold))// If noise gate is open it should stay open for less sound
+			if ((micIn.gate > 0) && (peak > noiseThreshold)){// If noise gate is open it should stay open for less sound
 				micIn.gate = gateDelay;			// noiseThershold can be controlled centrally
-			else if ((peak > micIn.threshold) &&		// Gate shut. If audio is above dynamic threshold
+tracef("Gate open. peak ",peak," > ",noiseThreshold);
+			} else if ((peak > micIn.threshold) &&		// Gate shut. If audio is above dynamic threshold
 				(peak > noiseThreshold)) {		// and noise threshold, open gate
 				micIn.gate = gateDelay;			
+tracef("peak ",peak," > ",micIn.threshold);
 			} 
 		}
 		if (micIn.gate > 0) {					// If gate is open prepare the audio for sending
@@ -1260,11 +1262,11 @@ function processAudio(e) {						// Main processing loop
 //			thresholdBuffer[echoTest.sampleDelay+2],
 //			thresholdBuffer[echoTest.sampleDelay+3]
 //		])) * echoTest.factor * mixOut.gain * 10;		// multiply by factor and mixOutGain plus serious exageration factor
-		let mt = maxValue(thresholdBuffer)		// Set mic dynamic threshold to largest value in previous 10 samples
+		micIn.threshold = maxValue(thresholdBuffer		// Set mic dynamic threshold to largest value in previous 10 samples
+			.slice(echoTest.sampleDelay,
+			echoTest.sampleDelay+10))
 			*echoTest.factor * mixOut.gain * 10;
-		micIn.threshold = mt;
 		if (micIn.threshold > 0.1) micIn.threshold = 1;
-else if (tracecount) {tracef("threshold dropped. buffer is ",JSON.stringify(thresholdBuffer)); tracecount--}
 		thresholdBuffer.pop();					// Remove oldest threshold buffer value
 	}
 	let now = new Date().getTime();					// Note time between audio processing loops
