@@ -1253,7 +1253,7 @@ function processAudio(e) {						// Main processing loop
 		thresholdBuffer.unshift( maxL );			// add to start of dynamic threshold queue
 		let w = 3;						// width of threshold window
 		micIn.threshold = maxValue( thresholdBuffer		// Apply most aggressive threshold near current +/-w chunks
-			.slice(sampleDelay-w,sampleDelay+w)
+			.slice(sampleDelay-w,sampleDelay+w))
 			* echoTest.factor * mixOut.gain;		// multiply by factor and mixOutGain 
 		if (micIn.threshold > 0.3) micIn.threshold = 1.2;	// Values from mic can be > 1!!
 		thresholdBuffer.pop();					// Remove oldest threshold buffer value
