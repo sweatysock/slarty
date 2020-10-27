@@ -1224,7 +1224,7 @@ f2=true;
 			outAudioR.push(...zeros);
 		}
 	}
-	if (((echoRisk) && (micIn.gate > 0)) || (outAudioL == [])) {	// If echo is likely and the mic is on, or out array is empty, output silence
+	if (((echoRisk) && (micIn.gate > 0)) || (outAudioL.length == 0)) {	// If echo is likely and the mic is on, or out array is empty, output silence
 f3=true;
 		outAudioL = new Array(ChunkSize).fill(0); 
 		outAudioR = new Array(ChunkSize).fill(0);
