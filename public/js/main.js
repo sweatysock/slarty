@@ -1107,11 +1107,9 @@ function processAudio(e) {						// Main processing loop
 		else {							// Not muted. Now control the mic gate
 			if ((micIn.gate > 0) && (peak > noiseThreshold)){// If noise gate is open it should stay open for less sound
 				micIn.gate = gateDelay;			// noiseThershold can be controlled centrally
-trace2("Gate open. peak ",peak," > ",noiseThreshold);
 			} else if ((peak > micIn.threshold) &&		// Gate shut. If audio is above dynamic threshold
 				(peak > noiseThreshold)) {		// and noise threshold, open gate
 				micIn.gate = gateDelay;			
-trace2("peak ",peak," > ",micIn.threshold);
 			} 
 		}
 		if (micIn.gate > 0) {					// If gate is open prepare the audio for sending
@@ -1253,21 +1251,19 @@ trace2("peak ",peak," > ",micIn.threshold);
 		if (maxL < maxR) maxL = maxR;				// Choose loudest channel
 		if (maxL < maxV) maxL = maxV;					
 		thresholdBuffer.unshift( maxL );			// add to start of dynamic threshold queue
-//		micIn.threshold = (maxValue([				// Apply most aggressive threshold near current +/-3 chunks
-//			thresholdBuffer[echoTest.sampleDelay-3],
-//			thresholdBuffer[echoTest.sampleDelay-2],
-//			thresholdBuffer[echoTest.sampleDelay-1],
-//			thresholdBuffer[echoTest.sampleDelay],	
-//			thresholdBuffer[echoTest.sampleDelay+1],
-//			thresholdBuffer[echoTest.sampleDelay+2],
-//			thresholdBuffer[echoTest.sampleDelay+3]
-//		])) * echoTest.factor * mixOut.gain * 10;		// multiply by factor and mixOutGain plus serious exageration factor
-		let ml = micIn.threshold;
-		micIn.threshold = maxValue(thresholdBuffer)		// Set mic dynamic threshold to largest value in previous 10 samples
-			*echoTest.factor * mixOut.gain * 1;
-		if (micIn.threshold > 0.1) micIn.threshold = 1.2;
-if ((ml > 0.1) && (micIn.threshold == 0)) trace2("thresh DISengaged");
-if ((thresholdBuffer[0] > 0.1) && (thresholdBuffer[1] == 0)) trace2("threshold engaged");
+		micIn.threshold = (maxValue([				// Apply most aggressive threshold near current +/-3 chunks
+			thresholdBuffer[echoTest.sampleDelay-3],
+			thresholdBuffer[echoTest.sampleDelay-2],
+			thresholdBuffer[echoTest.sampleDelay-1],
+			thresholdBuffer[echoTest.sampleDelay],	
+			thresholdBuffer[echoTest.sampleDelay+1],
+			thresholdBuffer[echoTest.sampleDelay+2],
+			thresholdBuffer[echoTest.sampleDelay+3]
+		])) * echoTest.factor * mixOut.gain;			// multiply by factor and mixOutGain 
+//		let ml = micIn.threshold;
+//		micIn.threshold = maxValue(thresholdBuffer)		// Set mic dynamic threshold to largest value in entire buffer
+//			*echoTest.factor * mixOut.gain;
+		if (micIn.threshold > 0.1) micIn.threshold = 1.2;	// Values from mic can be > 1!!
 		thresholdBuffer.pop();					// Remove oldest threshold buffer value
 	}
 	let now = new Date().getTime();					// Note time between audio processing loops
@@ -1662,7 +1658,7 @@ function runEchoTest(audio) {						// Test audio system in a series of tests
 				}
 				// Get average factor value
 				echoTest.factor = avgValue(factors) * 3; // boost factor to give echo margin
-				echoTest.factor = 3;			// Force strong factor always
+				echoTest.factor = 5;			// Force strong factor always
 				trace2("Forced factor is ",echoTest.factor);
 			} else {
 				trace2("No clear result");		// No agreement, no result
