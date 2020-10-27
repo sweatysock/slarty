@@ -205,35 +205,34 @@ socketIO.on('d', function (data) {
 				if (chan.peak < c.peak)			// set the peak for this channel's level display
 					chan.peak = c.peak;		// even if muted
 				let a = c.audio;			// Get the audio from the packet
-				if (!chan.muted) {			// We skip a muted channel in the mix
-					let m8 = a.mono8;
-					let m16 = a.mono16;
-					let b8 = chan.buffer8;		// Channel delay buffers where delayed audio is held
-					let b16 = chan.buffer16;
-					let g = (chan.agc 		// Apply gain. If AGC use mix gain, else channel gain
-						? mixOut.gain : chan.gain);	
-					chan.gain = g;			// Channel gain level should reflect gain applied here
-					if (m8.length > 0) {		// Only mix if there is audio in channel
-						someAudio = true;	// Flag that there is actually some group audio
-						let al = 0, ar = 0;	// Attenuations for each channel. Default is none
-						if (att < 0) {		// Applying attenuation to right channel
-							ar = att * -1;	// Invert attenuation 
-							for (let i=0; i < m8.length; i++) {L8[i] += m8[i] *g; c8[i] += m8[i]; R8[i] += m8[i]*g/ar;}
-						} else {		// Applying attenuation to left channel
-							al = att;		
-							for (let i=0; i < m8.length; i++) {R8[i] += m8[i] *g; c8[i] += m8[i]; L8[i] += m8[i]*g/al;}
-						}			
-					}				
-					if (m16.length > 0) {		// If there is high frequency content mix it too
-						let al = 0, ar = 0;
-						if (att < 0) {		// Applying attenuation to right channel
-							ar = att * -1;	// Invert attenuation
-							for (let i=0; i < m16.length; i++) {L16[i] += m16[i] *g; c16[i] += m16[i]; R16[i] += m16[i]*g/ar;}
-						} else {		// Applying attenuation to left channel
-							al = att;
-							for (let i=0; i < m16.length; i++) {R16[i] += m16[i] *g; c16[i] += m16[i]; L16[i] += m16[i]*g/al;}
-						}			
-					}
+				let m8 = a.mono8;
+				let m16 = a.mono16;
+				let b8 = chan.buffer8;			// Channel delay buffers where delayed audio is held
+				let b16 = chan.buffer16;
+				let g = (chan.agc 			// Apply gain. If AGC use mix gain, else channel gain
+					? mixOut.gain : chan.gain);	
+				chan.gain = g;				// Channel gain level should reflect gain applied here
+				g = chan.muted ? 0 : g;			// If channel is muted, silence it's output but still cancel it in venue mix
+				if (m8.length > 0) {			// Only mix if there is audio in channel
+					someAudio = true;		// Flag that there is actually some group audio
+					let al = 0, ar = 0;		// Attenuations for each channel. Default is none
+					if (att < 0) {			// Applying attenuation to right channel
+						ar = att * -1;		// Invert attenuation 
+						for (let i=0; i < m8.length; i++) {L8[i] += m8[i] *g; c8[i] += m8[i]; R8[i] += m8[i]*g/ar;}
+					} else {			// Applying attenuation to left channel
+						al = att;		
+						for (let i=0; i < m8.length; i++) {R8[i] += m8[i] *g; c8[i] += m8[i]; L8[i] += m8[i]*g/al;}
+					}			
+				}					
+				if (m16.length > 0) {			// If there is high frequency content mix it too
+					let al = 0, ar = 0;
+					if (att < 0) {			// Applying attenuation to right channel
+						ar = att * -1;		// Invert attenuation
+						for (let i=0; i < m16.length; i++) {L16[i] += m16[i] *g; c16[i] += m16[i]; R16[i] += m16[i]*g/ar;}
+					} else {			// Applying attenuation to left channel
+						al = att;
+						for (let i=0; i < m16.length; i++) {R16[i] += m16[i] *g; c16[i] += m16[i]; L16[i] += m16[i]*g/al;}
+					}			
 				}
 			}
 			if (c.sequence != (chan.seq + 1)) 		// Monitor audio transfer quality for all channels
