@@ -1251,11 +1251,11 @@ function processAudio(e) {						// Main processing loop
 		if (maxL < maxR) maxL = maxR;				// Choose loudest channel
 		if (maxL < maxV) maxL = maxV;					
 		thresholdBuffer.unshift( maxL );			// add to start of dynamic threshold queue
-		let s = echoTest.sampleDelay - 0;			// start of threshold window
-		let e = echoTest.sampleDelay + 0;			// end of threshold window
-		micIn.threshold =  thresholdBuffer[s]		// Apply most aggressive threshold near current +/-w chunks
-			* echoTest.factor * mixOut.gain;	// multiply by factor and mixOutGain 
-		if (micIn.threshold > 0.2) micIn.threshold = 1.2;	// Values from mic can be > 1!!
+		let s = echoTest.sampleDelay - 3;			// start of threshold window
+		let e = echoTest.sampleDelay + 3;			// end of threshold window
+		micIn.threshold = maxValue( thresholdBuffer		// Apply most aggressive threshold near current +/-w chunks
+			.slice(s,e)) * echoTest.factor * mixOut.gain;	// multiply by factor and mixOutGain 
+		if (micIn.threshold > 0.3) micIn.threshold = 1.2;	// Values from mic can be > 1!!
 		thresholdBuffer.pop();					// Remove oldest threshold buffer value
 	} else micIn.threshold = 0;					// No echo risk so no threshold needed
 	let now = new Date().getTime();					// Note time between audio processing loops
@@ -1650,7 +1650,7 @@ function runEchoTest(audio) {						// Test audio system in a series of tests
 				}
 				// Get average factor value
 				echoTest.factor = avgValue(factors) * 3; // boost factor to give echo margin
-				echoTest.factor = 30;			// Force strong factor always
+				echoTest.factor = 10;			// Force strong factor always
 				trace2("Forced factor is ",echoTest.factor);
 			} else {
 				trace2("No clear result");		// No agreement, no result
