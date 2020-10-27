@@ -605,13 +605,13 @@ document.addEventListener('DOMContentLoaded', function(event){		// Add dynamic b
 			micOnMixer.style.visibility = "hidden";
 		}
 	});
-	navigator.mediaDevices.addEventListener('devicechange', () => {
-		navigator.mediaDevices.enumerateDevices()
+	navigator.mediaDevices.addEventListener('devicechange', () => {	// List all input/output devices on device change
+		navigator.mediaDevices.enumerateDevices()		// Testing this to see if we can detect headphones reliably
 		.then(devices => {
 			tracef(JSON.stringify(devices));  
 		});
 	});
-		navigator.mediaDevices.enumerateDevices()
+		navigator.mediaDevices.enumerateDevices()		// List devices at start to help detect changes
 		.then(devices => {
 			tracef(JSON.stringify(devices));  
 		});
@@ -1099,13 +1099,16 @@ function processAudio(e) {						// Main processing loop
 		let micAudioR = [];					
 		let peak = maxValue(inDataL);				// Get peak of raw mic audio (using left channel for now)
 		if (!pauseTracing) levelClassifier(peak);		// Classify audio incoming for analysis
-		if ((micIn.gate > 0)  && (peak > noiseThreshold))	// If noise gate is open it should stay open for less sound
-			micIn.gate = gateDelay;
-		else if ((peak > micIn.threshold) &&			// if audio is above dynamic threshold
-			(peak > noiseThreshold)) {			// and noise threshold, open gate
-			micIn.gate = gateDelay;			
-		} 
 		if (performer) micIn.gate = 1				// Performer's mic is always open
+		if (micIn.muted) micIn.gate = 0;			// but the mute control overrides everything
+		else {							// Not muted. Now control the mic gate
+			if ((micIn.gate > 0) && (peak > noiseThreshold))// If noise gate is open it should stay open for less sound
+				micIn.gate = gateDelay;			// noiseThershold can be controlled centrally
+			else if ((peak > micIn.threshold) &&		// Gate shut. If audio is above dynamic threshold
+				(peak > noiseThreshold)) {		// and noise threshold, open gate
+				micIn.gate = gateDelay;			
+			} 
+		}
 		if (micIn.gate > 0) {					// If gate is open prepare the audio for sending
 			micAudioL = inDataL;
 			micAudioR = inDataR;
@@ -1147,7 +1150,7 @@ function processAudio(e) {						// Main processing loop
 						mono8[j] = s;			// removing high frequencies from audio
 						mono16[j] = d; j++		// just by ignoring data
 					}
-//if (tracecount>0) {console.log("clap");for (i=0;i<mono8.length;i++) console.log(mono8[i]); tracecount--;if (tracecount==0) console.log("DONE");}
+//if (tracecount>0) {console.log("SAMPLE");for (i=0;i<mono8.length;i++) console.log(mono8[i]); tracecount--;if (tracecount==0) console.log("DONE");}
 				}
 //if (tracecount>0) {console.log("-")};
 				audio = {mono8,mono16,mono32,stereo8,stereo16,stereo32};	
@@ -1244,15 +1247,18 @@ function processAudio(e) {						// Main processing loop
 		if (maxL < maxR) maxL = maxR;				// Choose loudest channel
 		if (maxL < maxV) maxL = maxV;					
 		thresholdBuffer.unshift( maxL );			// add to start of dynamic threshold queue
-		micIn.threshold = (maxValue([				// Apply most aggressive threshold near current +/-3 chunks
-			thresholdBuffer[echoTest.sampleDelay-3],
-			thresholdBuffer[echoTest.sampleDelay-2],
-			thresholdBuffer[echoTest.sampleDelay-1],
-			thresholdBuffer[echoTest.sampleDelay],	
-			thresholdBuffer[echoTest.sampleDelay+1],
-			thresholdBuffer[echoTest.sampleDelay+2],
-			thresholdBuffer[echoTest.sampleDelay+3]
-		])) * echoTest.factor * mixOut.gain * 10;		// multiply by factor and mixOutGain plus serious exageration factor
+//		micIn.threshold = (maxValue([				// Apply most aggressive threshold near current +/-3 chunks
+//			thresholdBuffer[echoTest.sampleDelay-3],
+//			thresholdBuffer[echoTest.sampleDelay-2],
+//			thresholdBuffer[echoTest.sampleDelay-1],
+//			thresholdBuffer[echoTest.sampleDelay],	
+//			thresholdBuffer[echoTest.sampleDelay+1],
+//			thresholdBuffer[echoTest.sampleDelay+2],
+//			thresholdBuffer[echoTest.sampleDelay+3]
+//		])) * echoTest.factor * mixOut.gain * 10;		// multiply by factor and mixOutGain plus serious exageration factor
+		micIn.threshold = maxValue(thresholdBuffer		// Set mic dynamic threshold to largest value in previous 10 samples
+			.slice(echoTest.sampleDelay,
+				echoTest.sampleDelay+10));
 		if (micIn.threshold > 1) micIn.threshold = 1;
 		thresholdBuffer.pop();					// Remove oldest threshold buffer value
 	}
