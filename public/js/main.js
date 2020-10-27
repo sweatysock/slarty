@@ -1107,11 +1107,11 @@ function processAudio(e) {						// Main processing loop
 		else {							// Not muted. Now control the mic gate
 			if ((micIn.gate > 0) && (peak > noiseThreshold)){// If noise gate is open it should stay open for less sound
 				micIn.gate = gateDelay;			// noiseThershold can be controlled centrally
-tracef("Gate open. peak ",peak," > ",noiseThreshold);
+trace2("Gate open. peak ",peak," > ",noiseThreshold);
 			} else if ((peak > micIn.threshold) &&		// Gate shut. If audio is above dynamic threshold
 				(peak > noiseThreshold)) {		// and noise threshold, open gate
 				micIn.gate = gateDelay;			
-tracef("peak ",peak," > ",micIn.threshold);
+trace2("peak ",peak," > ",micIn.threshold);
 			} 
 		}
 		if (micIn.gate > 0) {					// If gate is open prepare the audio for sending
@@ -1262,12 +1262,12 @@ tracef("peak ",peak," > ",micIn.threshold);
 //			thresholdBuffer[echoTest.sampleDelay+2],
 //			thresholdBuffer[echoTest.sampleDelay+3]
 //		])) * echoTest.factor * mixOut.gain * 10;		// multiply by factor and mixOutGain plus serious exageration factor
-		micIn.threshold = maxValue(thresholdBuffer		// Set mic dynamic threshold to largest value in previous 10 samples
-			.slice(echoTest.sampleDelay,
-			echoTest.sampleDelay+10))
+		let ml = micIn.threshold;
+		micIn.threshold = maxValue(thresholdBuffer)		// Set mic dynamic threshold to largest value in previous 10 samples
 			*echoTest.factor * mixOut.gain * 10;
 		if (micIn.threshold > 0.1) micIn.threshold = 1;
-else tracef("Threshold low...",micIn.threshold);
+if ((ml > 0.1) && (micIn.threshold == 0)) trace2("thresh DISengaged");
+if ((thresholdBuffer[0] > 0.1) && (thresholdBuffer[1] == 0)) trace2("threshold engaged");
 		thresholdBuffer.pop();					// Remove oldest threshold buffer value
 	}
 	let now = new Date().getTime();					// Note time between audio processing loops
