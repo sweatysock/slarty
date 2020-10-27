@@ -605,6 +605,12 @@ document.addEventListener('DOMContentLoaded', function(event){		// Add dynamic b
 			micOnMixer.style.visibility = "hidden";
 		}
 	});
+	navigator.mediaDevices.addEventListener('devicechange', () => {
+		navigator.mediaDevices.enumerateDevices()
+		.then(devices => {
+			console.log(devices);  
+		});
+	});
 });
 
 function chatMessage(name, text, loc) {					// Display chat message in multiple places for given name and location
@@ -1227,7 +1233,6 @@ function processAudio(e) {						// Main processing loop
 		outDataV[i] = outAudioV[i];				// Copy venue audio to it's special output
 	}
 	// 2.2 If there is a risk of echo set the input dynamic threshold level to stop audio feedback
-console.log(echoRisk);
 	if (echoRisk) {
 		let maxL = maxValue(outAudioL);				// Get peak level of this outgoing audio
 		let maxR = maxValue(outAudioR);				// for each channel
