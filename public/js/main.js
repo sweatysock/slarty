@@ -1264,7 +1264,7 @@ function processAudio(e) {						// Main processing loop
 			*echoTest.factor * mixOut.gain * 10;
 		micIn.threshold = mt;
 		if (micIn.threshold > 0.1) micIn.threshold = 1;
-else tracef("threshold dropped. buffer is ",JSON.stringify(thresholdBuffer));
+else if (tracecount) {tracef("threshold dropped. buffer is ",JSON.stringify(thresholdBuffer)); tracecount--}
 		thresholdBuffer.pop();					// Remove oldest threshold buffer value
 	}
 	let now = new Date().getTime();					// Note time between audio processing loops
