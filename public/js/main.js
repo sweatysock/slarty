@@ -1265,7 +1265,7 @@ trace2("peak ",peak," > ",micIn.threshold);
 		let ml = micIn.threshold;
 		micIn.threshold = maxValue(thresholdBuffer)		// Set mic dynamic threshold to largest value in previous 10 samples
 			*echoTest.factor * mixOut.gain * 10;
-		if (micIn.threshold > 0.1) micIn.threshold = 1;
+		if (micIn.threshold > 0.1) micIn.threshold = 1.5;
 if ((ml > 0.1) && (micIn.threshold == 0)) trace2("thresh DISengaged");
 if ((thresholdBuffer[0] > 0.1) && (thresholdBuffer[1] == 0)) trace2("threshold engaged");
 		thresholdBuffer.pop();					// Remove oldest threshold buffer value
