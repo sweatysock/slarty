@@ -1251,18 +1251,11 @@ function processAudio(e) {						// Main processing loop
 		if (maxL < maxR) maxL = maxR;				// Choose loudest channel
 		if (maxL < maxV) maxL = maxV;					
 		thresholdBuffer.unshift( maxL );			// add to start of dynamic threshold queue
-		micIn.threshold = (maxValue([				// Apply most aggressive threshold near current +/-3 chunks
-			thresholdBuffer[echoTest.sampleDelay-4],
-			thresholdBuffer[echoTest.sampleDelay-3],
-			thresholdBuffer[echoTest.sampleDelay-2],
-			thresholdBuffer[echoTest.sampleDelay-1],
-			thresholdBuffer[echoTest.sampleDelay],	
-			thresholdBuffer[echoTest.sampleDelay+1],
-			thresholdBuffer[echoTest.sampleDelay+2],
-			thresholdBuffer[echoTest.sampleDelay+3],
-			thresholdBuffer[echoTest.sampleDelay+4]
-		])) * echoTest.factor * mixOut.gain;			// multiply by factor and mixOutGain 
-		if (micIn.threshold > 0.4) micIn.threshold = 1.2;	// Values from mic can be > 1!!
+		let w = 3;						// width of threshold window
+		micIn.threshold = maxValue( thresholdBuffer		// Apply most aggressive threshold near current +/-w chunks
+			.slice(sampleDelay-w,sampleDelay+w)
+			* echoTest.factor * mixOut.gain;		// multiply by factor and mixOutGain 
+		if (micIn.threshold > 0.3) micIn.threshold = 1.2;	// Values from mic can be > 1!!
 		thresholdBuffer.pop();					// Remove oldest threshold buffer value
 	} else micIn.threshold = 0;					// No echo risk so no threshold needed
 	let now = new Date().getTime();					// Note time between audio processing loops
