@@ -1260,12 +1260,9 @@ function processAudio(e) {						// Main processing loop
 			thresholdBuffer[echoTest.sampleDelay+2],
 			thresholdBuffer[echoTest.sampleDelay+3]
 		])) * echoTest.factor * mixOut.gain;			// multiply by factor and mixOutGain 
-//		let ml = micIn.threshold;
-//		micIn.threshold = maxValue(thresholdBuffer)		// Set mic dynamic threshold to largest value in entire buffer
-//			*echoTest.factor * mixOut.gain;
 		if (micIn.threshold > 0.01) micIn.threshold = 1.2;	// Values from mic can be > 1!!
 		thresholdBuffer.pop();					// Remove oldest threshold buffer value
-	}
+	} else micIn.threshold = 0;					// No echo risk so no threshold needed
 	let now = new Date().getTime();					// Note time between audio processing loops
 	delta = now - previous;
 	if (delta > deltaMax) deltaMax = delta;				// Keep max and min as this indicates the 
