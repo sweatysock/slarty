@@ -1228,6 +1228,7 @@ function processAudio(e) {						// Main processing loop
 	for (let i in outDataL) { 
 		outDataL[i] = outAudioL[i];				// Copy left audio to outputL
 		outDataR[i] = outAudioR[i];				// and right audio to outputR
+if (isNaN(outAudioL[i])) console.log("NANL");
 	}
 	// 2.1 Take venue audio from buffer and send to special output
 	let outAudioV = [];
@@ -1242,6 +1243,7 @@ function processAudio(e) {						// Main processing loop
 		outAudioV =  new Array(ChunkSize).fill(0);
 	for (let i in outDataV) { 
 		outDataV[i] = outAudioV[i];				// Copy venue audio to it's special output
+if (isNaN(outAudioV[i])) console.log("NAN");
 	}
 	// 2.2 If there is a risk of echo set the input dynamic threshold level to stop audio feedback
 	if (echoRisk) {
