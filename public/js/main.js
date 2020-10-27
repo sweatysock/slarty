@@ -445,7 +445,7 @@ socketIO.on('d', function (data) {
 //			spkrBufferL.splice(0, excess); 	
 //			spkrBufferR.splice(0, excess); 	
 			overflows++;					// Note for monitoring purposes
-			adjMicPacketSize--;				// Decrease amount of data from each packet to reduce overflows
+//			adjMicPacketSize--;				// Decrease amount of data from each packet to reduce overflows
 			bytesOver += excess;
 		}
 		if (spkrBufferL.length > spkrBuffPeak) 			// Monitoring purposes
@@ -455,6 +455,7 @@ socketIO.on('d', function (data) {
 		}
 		if (venueBuffer.length > maxBuffSize) 			// Clip buffer if too full
 			venueBuffer.splice(0, (venueBuffer.length-maxBuffSize)); 	
+//			adjMicPacketSize--;				// Decrease amount of data from each packet to reduce overflows
 		// 5. Calculate RTT 
 		if (ts > 0) {						// If we have timestamp data calcuate rtt
 			let now = new Date().getTime();
@@ -1203,7 +1204,7 @@ function processAudio(e) {						// Main processing loop
 			}
 		} else {						// Not enough audio.
 			shortages++;					// For stats and monitoring
-			adjMicPacketSize++;				// Increase amount of data from each packet to reduce shortages
+//			adjMicPacketSize++;				// Increase amount of data from each packet to reduce shortages
 			let shortfall = ChunkSize-spkrBufferL.length;
 			bytesShort += shortfall;
 			outAudioL = spkrBufferL.splice(0,spkrBufferL.length);	// Take all that remains and complete with 0s
