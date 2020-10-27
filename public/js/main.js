@@ -9,6 +9,7 @@ const LowFilterFreq = 200;						// Mic filter to remove low frequencies before r
 const ChunkSize = 1024;							// Audio chunk size. Fixed by js script processor
 var soundcardSampleRate = null; 					// Get this from context 
 var micAudioPacketSize = 0;						// Calculate this once we have soundcard sample rate
+var adjMicPacketSize = 0;						// We adjust amount of data into and out of packets to optimize flow
 var socketConnected = false; 						// True when socket is up
 var micAccessAllowed = false; 						// Need to get user permission
 var packetBuf = [];							// Buffer of packets sent, subtracted from venue mix later
@@ -444,6 +445,7 @@ socketIO.on('d', function (data) {
 //			spkrBufferL.splice(0, excess); 	
 //			spkrBufferR.splice(0, excess); 	
 			overflows++;					// Note for monitoring purposes
+			adjMicPacketSize--;				// Decrease amount of data from each packet to reduce overflows
 			bytesOver += excess;
 		}
 		if (spkrBufferL.length > spkrBuffPeak) 			// Monitoring purposes
@@ -1201,6 +1203,7 @@ function processAudio(e) {						// Main processing loop
 			}
 		} else {						// Not enough audio.
 			shortages++;					// For stats and monitoring
+			adjMicPacketSize++;				// Increase amount of data from each packet to reduce shortages
 			let shortfall = ChunkSize-spkrBufferL.length;
 			bytesShort += shortfall;
 			outAudioL = spkrBufferL.splice(0,spkrBufferL.length);	// Take all that remains and complete with 0s
@@ -1349,6 +1352,7 @@ function handleAudio(stream) {						// We have obtained media access
 	soundcardSampleRate = context.sampleRate;			// Get HW sample rate... varies per platform
 	micAudioPacketSize = Math.round(PacketSize * 			// How much micAudio is needed to fill a Packet
 		soundcardSampleRate / SampleRate);			// at our standard SampleRate (rounding error is an issue?)
+	adjMicPacketSize = micAudioPacketSize;				// Start with adjusted mic packet size set at normal size
 	micAccessAllowed = true;
 	createOutputUI( mixOut );					// Create the output mix channel UI
 	createMicUI( micIn );						// Create the microphone channel UI
@@ -1787,9 +1791,9 @@ function printReport() {
 	deltaMax = 0;
 	deltaMin = 10000;
 //	pitch = Math.round((maxBuffSize/2 - spkrBufferL.length)/500);	// pitch error is related inversely to buffer over/under middle
-	pitch = (pitch > 12)? 12 : pitch;
-	pitch = (pitch < -12)? -12 : pitch;
-	adjMicPacketSize = micAudioPacketSize + pitch;			// pitch is adjusted to keep things flowing smoothly
+//	pitch = (pitch > 12)? 12 : pitch;
+//	pitch = (pitch < -12)? -12 : pitch;
+//	adjMicPacketSize = micAudioPacketSize + pitch;			// pitch is adjusted to keep things flowing smoothly
 	enterState( idleState );					// Back to Idling
 }
 
