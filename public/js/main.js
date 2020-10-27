@@ -1070,7 +1070,7 @@ trace2("Noise threshold: ",noiseThreshold);
 				((levelCategories[i]/max)*100.0);	// Keep old data to obtain slower threshold changes
 }
 
-var thresholdBuffer = new Array(40).fill(0);				// Buffer dynamic thresholds here for delayed mic muting
+var thresholdBuffer = new Array(50).fill(0);				// Buffer dynamic thresholds here for delayed mic muting
 var gateDelay = 10;							// Amount of chunks (time) the gate stays open
 
 function processAudio(e) {						// Main processing loop
