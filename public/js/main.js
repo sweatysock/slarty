@@ -1191,11 +1191,13 @@ function processAudio(e) {						// Main processing loop
 
 	// 2. Take audio buffered from server and send it to the speaker
 	let outAudioL = [], outAudioR = [];					
+let f1,f2,f3,f4,f5 = false;
 	if ((!smoothingNeeded)||(spkrBufferL.length > maxBuffSize/2)) {	// If no current shortages or buffer now full enough to restart
 		if (spkrBufferL.length > ChunkSize) {			// There is enough audio buffered
 			outAudioL = spkrBufferL.splice(0,ChunkSize);	// Get same amount of audio as came in
 			outAudioR = spkrBufferR.splice(0,ChunkSize);	// for each channel
 			if (smoothingNeeded) {				// We had a shortage so now we need to smooth audio re-entry 
+f1=true;
 				for (let i=0; i<400; i++) {		// Smoothly ramp up from zero to one
 					outAudioL[i] = outAudioL[i]*(1-smooth[i]);
 					outAudioR[i] = outAudioR[i]*(1-smooth[i]);
@@ -1203,6 +1205,7 @@ function processAudio(e) {						// Main processing loop
 				smoothingNeeded = false;
 			}
 		} else {						// Not enough audio.
+f2=true;
 			shortages++;					// For stats and monitoring
 //			adjMicPacketSize++;				// Increase amount of data from each packet to reduce shortages
 			let shortfall = ChunkSize-spkrBufferL.length;
@@ -1222,13 +1225,14 @@ function processAudio(e) {						// Main processing loop
 		}
 	}
 	if (((echoRisk) && (micIn.gate > 0)) || (outAudioL == [])) {	// If echo is likely and the mic is on, or out array is empty, output silence
+f3=true;
 		outAudioL = new Array(ChunkSize).fill(0); 
 		outAudioR = new Array(ChunkSize).fill(0);
 	}
 	for (let i in outDataL) { 
 		outDataL[i] = outAudioL[i];				// Copy left audio to outputL
 		outDataR[i] = outAudioR[i];				// and right audio to outputR
-if (isNaN(outAudioL[i])) tracef("NANL");
+if (isNaN(outAudioL[i])) tracef("NANL ",f1,f2,f3,f4,f5);
 	}
 	// 2.1 Take venue audio from buffer and send to special output
 	let outAudioV = [];
@@ -1243,7 +1247,7 @@ if (isNaN(outAudioL[i])) tracef("NANL");
 		outAudioV =  new Array(ChunkSize).fill(0);
 	for (let i in outDataV) { 
 		outDataV[i] = outAudioV[i];				// Copy venue audio to it's special output
-if (isNaN(outAudioV[i])) tracef("NAN");
+if (isNaN(outAudioV[i])) tracef("NANV");
 	}
 	// 2.2 If there is a risk of echo set the input dynamic threshold level to stop audio feedback
 	if (echoRisk) {
