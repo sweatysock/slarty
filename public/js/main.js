@@ -1251,7 +1251,7 @@ function processAudio(e) {						// Main processing loop
 		if (maxL < maxR) maxL = maxR;				// Choose loudest channel
 		if (maxL < maxV) maxL = maxV;					
 		thresholdBuffer.unshift( maxL );			// add to start of dynamic threshold queue
-		let s = echoTest.sampleDelay - 5;			// start of threshold window
+		let s = 0;			// start of threshold window
 		let e = echoTest.sampleDelay + 3;			// end of threshold window
 		micIn.threshold = maxValue( thresholdBuffer		// Apply most aggressive threshold near current +/-w chunks
 			.slice(s,e)) * echoTest.factor * mixOut.gain;	// multiply by factor and mixOutGain 
