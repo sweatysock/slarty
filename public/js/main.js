@@ -1267,6 +1267,7 @@ tracef("peak ",peak," > ",micIn.threshold);
 			echoTest.sampleDelay+10))
 			*echoTest.factor * mixOut.gain * 10;
 		if (micIn.threshold > 0.1) micIn.threshold = 1;
+else tracef("Threshold low...",micIn.threshold);
 		thresholdBuffer.pop();					// Remove oldest threshold buffer value
 	}
 	let now = new Date().getTime();					// Note time between audio processing loops
