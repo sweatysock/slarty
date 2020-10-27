@@ -1260,7 +1260,7 @@ function processAudio(e) {						// Main processing loop
 			thresholdBuffer[echoTest.sampleDelay+2],
 			thresholdBuffer[echoTest.sampleDelay+3]
 		])) * echoTest.factor * mixOut.gain;			// multiply by factor and mixOutGain 
-		if (micIn.threshold > 0.1) micIn.threshold = 1.2;	// Values from mic can be > 1!!
+		if (micIn.threshold > 0.2) micIn.threshold = 1.2;	// Values from mic can be > 1!!
 		thresholdBuffer.pop();					// Remove oldest threshold buffer value
 	} else micIn.threshold = 0;					// No echo risk so no threshold needed
 	let now = new Date().getTime();					// Note time between audio processing loops
@@ -1655,7 +1655,7 @@ function runEchoTest(audio) {						// Test audio system in a series of tests
 				}
 				// Get average factor value
 				echoTest.factor = avgValue(factors) * 3; // boost factor to give echo margin
-				echoTest.factor = 8;			// Force strong factor always
+				echoTest.factor = 16;			// Force strong factor always
 				trace2("Forced factor is ",echoTest.factor);
 			} else {
 				trace2("No clear result");		// No agreement, no result
