@@ -1191,7 +1191,7 @@ function processAudio(e) {						// Main processing loop
 
 	// 2. Take audio buffered from server and send it to the speaker
 	let outAudioL = [], outAudioR = [];					
-let f1,f2,f3,f4,f5 = false;
+let f1=false,f2=false,f3=false,f4=false,f5 = false;
 	if ((!smoothingNeeded)||(spkrBufferL.length > maxBuffSize/2)) {	// If no current shortages or buffer now full enough to restart
 		if (spkrBufferL.length > ChunkSize) {			// There is enough audio buffered
 			outAudioL = spkrBufferL.splice(0,ChunkSize);	// Get same amount of audio as came in
