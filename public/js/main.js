@@ -1262,7 +1262,8 @@ function processAudio(e) {						// Main processing loop
 //		])) * echoTest.factor * mixOut.gain * 10;		// multiply by factor and mixOutGain plus serious exageration factor
 		micIn.threshold = maxValue(thresholdBuffer		// Set mic dynamic threshold to largest value in previous 10 samples
 			.slice(echoTest.sampleDelay,
-				echoTest.sampleDelay+10));
+			echoTest.sampleDelay+10))
+			*echoTest.factor * mixOut.gain * 10;
 		if (micIn.threshold > 1) micIn.threshold = 1;
 		thresholdBuffer.pop();					// Remove oldest threshold buffer value
 	}
