@@ -613,7 +613,7 @@ document.addEventListener('DOMContentLoaded', function(event){		// Add dynamic b
 	});
 		navigator.mediaDevices.enumerateDevices()
 		.then(devices => {
-			console.log(devices);  
+			console.log(JSON.stringify(devices));  
 		});
 });
 
