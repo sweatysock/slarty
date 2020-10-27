@@ -1277,9 +1277,9 @@ if (isNaN(outAudioV[i])) tracef("NANV");
 		let e = echoTest.sampleDelay + 3;			// end of threshold window
 		micIn.threshold = maxValue( thresholdBuffer		// Apply most aggressive threshold near current +/-w chunks
 			.slice(s,e)) * echoTest.factor * mixOut.gain;	// multiply by factor and mixOutGain 
-		if (micIn.threshold > 0.07) micIn.threshold = 0.9;	// Values from mic can be > 1!!
-		if (micIn.threshold > 0.1) micIn.threshold = 0.95;	// Values from mic can be > 1!!
-		if (micIn.threshold > 0.2) micIn.threshold = 1.0;	// Values from mic can be > 1!!
+		if (micIn.threshold > 0.07) micIn.threshold = 0.7;	// Values from mic can be > 1!!
+		if (micIn.threshold > 0.1) micIn.threshold = 0.8;	// Values from mic can be > 1!!
+		if (micIn.threshold > 0.2) micIn.threshold = 0.9;	// Values from mic can be > 1!!
 		if (micIn.threshold > 0.4) micIn.threshold = 1.2;	// Values from mic can be > 1!!
 		thresholdBuffer.pop();					// Remove oldest threshold buffer value
 	} else micIn.threshold = 0;					// No echo risk so no threshold needed
