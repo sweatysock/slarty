@@ -608,12 +608,12 @@ document.addEventListener('DOMContentLoaded', function(event){		// Add dynamic b
 	navigator.mediaDevices.addEventListener('devicechange', () => {
 		navigator.mediaDevices.enumerateDevices()
 		.then(devices => {
-			console.log(JSON.stringify(devices));  
+			tracef(JSON.stringify(devices));  
 		});
 	});
 		navigator.mediaDevices.enumerateDevices()
 		.then(devices => {
-			console.log(JSON.stringify(devices));  
+			tracef(JSON.stringify(devices));  
 		});
 });
 
