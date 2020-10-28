@@ -1046,19 +1046,6 @@ function fadeDown(audio) {						// Fade sample linearly over length
 		audio[i] = audio[i] * ((audio.length - i)/audio.length);
 }
 
-var talkoverLevel = 0.01;						// Ceiling for mix when mic is active, 0 = half duplex
-var talkover = 0;							// Counter semaphore that blocks audio out. >0 means blocked
-function talkoverOn() {							// Suppress mix level while mic is active
-	talkover = 2;							// Capture the audio channel for the mic. This cuts audio output.
-}
-
-function talkoverOff() {						// Audio output system tries to get control again by calling here
-	if (talkover) 
-		talkover--;
-	else	
-		mixOut.ceiling = 1;
-}
-
 var thresholdBands = [0.0001, 0.0002, 0.0003, 0.0005, 0.0007, 0.001, 0.002, 0.003, 0.005, 0.007, 0.01, 0.02, 0.03, 0.05, 0.07, 0.1, 0.2, 0.3, 0.5, 0.7, 1, 2];
 var levelCategories = new Array(thresholdBands.length).fill(0);		// Categorizer to build histogram of packet levels
 function levelClassifier( v ) {
@@ -1093,7 +1080,6 @@ function processAudio(e) {						// Main processing loop
 	// There are two activities here (if not performing an echo test that is): 
 	// 1. Get Mic audio, down-sample it, buffer it, and, if enough, send to server
 	// 2. Get audio buffered from server and send to speaker
-	
 	enterState( audioInOutState );					// Log time spent here
 
 	var inDataL = e.inputBuffer.getChannelData(0);			// Audio from the left mic
@@ -1114,6 +1100,7 @@ function processAudio(e) {						// Main processing loop
 
 	// 1. Get Mic audio, buffer it, and send it to server if enough buffered
 	if (socketConnected) {						// Need connection to send
+console.time("start");	
 		let micAudioL = [];					// Our objective is to fill this with audio
 		let micAudioR = [];					
 		let peak = maxValue(inDataL);				// Get peak of raw mic audio (using left channel for now)
@@ -1138,19 +1125,25 @@ function processAudio(e) {						// Main processing loop
 		}
 		micBufferL.push(...micAudioL);				// Buffer mic audio L
 		micBufferR.push(...micAudioR);				// Buffer mic audio R
+console.timeEnd("start");	
 		if (micBufferL.length > adjMicPacketSize) {		// If enough audio in buffer 
+console.time("send");	
 			let audioL = micBufferL.splice(0, adjMicPacketSize);		// Get a packet of audio
 			let audioR = micBufferR.splice(0, adjMicPacketSize);		// for each channel
 			let audio = {mono8:[],mono16:[]};		// default empty audio and perf objects to send
 			let perf = false;				// Signal to server we believe we are not the performer
 			let peak = 0;					// Note: no need for perf to set peak
+console.timeEnd("send");	
 			if (performer) {				// If we believe we are the performer 
+console.time("perf");	
 				if (!micIn.muted) {			// & not muted prepare our audio for HQ stereo 
 					let a = prepPerfAudio(audioL, audioR);	
 					perf = zipson.stringify(a);	// and compress audio fully
 				} else 					// send silent perf audio
 					perf = zipson.stringify({mono8:[],mono16:[],mono32:[],stereo8:[],stereo16:[],stereo32:[]});
+console.timeEnd("perf");	
 			} else {					// Standard audio prep - always mono
+console.time("norm");	
 				let mono8 = [], mono16 = [], mono32 = [], stereo8 = [], stereo16 = [], stereo32 = [];
 				audio = reSample(audioL, downCache, PacketSize);	
 				let obj = applyAutoGain(audio, micIn);	// Amplify mic with auto limiter
@@ -1175,7 +1168,9 @@ function processAudio(e) {						// Main processing loop
 				audio = {mono8,mono16,mono32,stereo8,stereo16,stereo32};	
 				let a = zipson.stringify(audio);		// Compressing and uncompressing
 				audio = zipson.parse(a);			// Saves 65% of bandwidth on its own!
+console.timeEnd("norm");	
 			}
+console.time("emit");	
 			let sr = performer ? PerfSampleRate : SampleRate;
 			let now = new Date().getTime();
 			let packet = {
@@ -1195,6 +1190,8 @@ function processAudio(e) {						// Main processing loop
 			};
 			socketIO.emit("u",packet);
 			chatText = "";					// After sending the chat text we clear it out
+console.timeEnd("emit");	
+console.time("end");	
 			let len=JSON.stringify(packet).length/1024;
 			bytesSent += len;
 			if (!performer) {
@@ -1202,10 +1199,12 @@ function processAudio(e) {						// Main processing loop
 			}
 			packetsOut++;					// For stats and monitoring
 			packetSequence++;
+console.timeEnd("end");	
 		}
 	}
 
 	// 2. Take audio buffered from server and send it to the speaker
+console.time("getOutAudio");	
 	let outAudioL = [], outAudioR = [];					
 let f1=false,f2=false,f3=false,f4=false,f5 = false;
 	if ((!smoothingNeeded)||(spkrBufferL.length > maxBuffSize/2)) {	// If no current shortages or buffer now full enough to restart
@@ -1240,6 +1239,8 @@ f2=true;
 			outAudioR.push(...zeros);
 		}
 	}
+console.timeEnd("getOutAudio");	
+console.time("copying LR audio");	
 	if (((echoRisk) && (micIn.gate > 0)) || (outAudioL.length == 0)) {	// If echo is likely and the mic is on, or out array is empty, output silence
 f3=true;
 		outAudioL = new Array(ChunkSize).fill(0); 
@@ -1250,6 +1251,8 @@ f3=true;
 		outDataR[i] = outAudioR[i];				// and right audio to outputR
 if (isNaN(outAudioL[i])) tracef("NANL ",f1,f2,f3,f4,f5);
 	}
+console.timeEnd("copying LR audio");	
+console.time("venue");	
 	// 2.1 Take venue audio from buffer and send to special output
 	let outAudioV = [];
 	if (venueBuffer.length > ChunkSize) {				// There is enough audio buffered
@@ -1265,6 +1268,8 @@ if (isNaN(outAudioL[i])) tracef("NANL ",f1,f2,f3,f4,f5);
 		outDataV[i] = outAudioV[i];				// Copy venue audio to it's special output
 if (isNaN(outAudioV[i])) tracef("NANV");
 	}
+console.timeEnd("venue");	
+console.time("threshold+");	
 	// 2.2 If there is a risk of echo set the input dynamic threshold level to stop audio feedback
 	if (echoRisk) {
 		let maxL = maxValue(outAudioL);				// Get peak level of this outgoing audio
@@ -1288,6 +1293,7 @@ if (isNaN(outAudioV[i])) tracef("NANV");
 	if (delta < deltaMin) deltaMin = delta;				// load the client is enduring. A big difference is bad.
 	previous = now;
 	enterState( idleState );					// We are done. Back to Idling
+console.timeEnd("threshold+");	
 }
 
 function prepPerfAudio( audioL, audioR ) {				// Performer audio is HQ and possibly stereo
