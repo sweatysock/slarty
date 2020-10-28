@@ -1246,11 +1246,12 @@ f3=true;
 		outAudioL = new Array(ChunkSize).fill(0); 
 		outAudioR = new Array(ChunkSize).fill(0);
 	}
-	for (let i in outDataL) { 
-		outDataL[i] = outAudioL[i];				// Copy left audio to outputL
-		outDataR[i] = outAudioR[i];				// and right audio to outputR
-if (isNaN(outAudioL[i])) tracef("NANL ",f1,f2,f3,f4,f5);
-	}
+//	for (let i in outDataL) { 
+//		outDataL[i] = outAudioL[i];				// Copy left audio to outputL
+//		outDataR[i] = outAudioR[i];				// and right audio to outputR
+//	}
+	outDataL = outAudioLslice();				// Copy left audio to outputL
+	outDataR = outAudioR.slice();				// and right audio to outputR
 console.timeEnd("copying LR audio");	
 console.time("venue");	
 	// 2.1 Take venue audio from buffer and send to special output
@@ -1266,7 +1267,6 @@ console.time("venue");
 		outAudioV =  new Array(ChunkSize).fill(0);
 	for (let i in outDataV) { 
 		outDataV[i] = outAudioV[i];				// Copy venue audio to it's special output
-if (isNaN(outAudioV[i])) tracef("NANV");
 	}
 console.timeEnd("venue");	
 console.time("threshold+");	
