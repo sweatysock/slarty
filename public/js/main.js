@@ -1250,7 +1250,7 @@ f3=true;
 //		outDataL[i] = outAudioL[i];				// Copy left audio to outputL
 //		outDataR[i] = outAudioR[i];				// and right audio to outputR
 //	}
-	outDataL = outAudioLslice();				// Copy left audio to outputL
+	outDataL = outAudioL.slice();				// Copy left audio to outputL
 	outDataR = outAudioR.slice();				// and right audio to outputR
 console.timeEnd("copying LR audio");	
 console.time("venue");	
