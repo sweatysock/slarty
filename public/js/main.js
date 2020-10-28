@@ -1100,7 +1100,6 @@ function processAudio(e) {						// Main processing loop
 
 	// 1. Get Mic audio, buffer it, and send it to server if enough buffered
 	if (socketConnected) {						// Need connection to send
-console.time("start");	
 		let micAudioL = [];					// Our objective is to fill this with audio
 		let micAudioR = [];					
 		let peak = maxValue(inDataL);				// Get peak of raw mic audio (using left channel for now)
@@ -1125,25 +1124,19 @@ console.time("start");
 		}
 		micBufferL.push(...micAudioL);				// Buffer mic audio L
 		micBufferR.push(...micAudioR);				// Buffer mic audio R
-console.timeEnd("start");	
 		if (micBufferL.length > adjMicPacketSize) {		// If enough audio in buffer 
-console.time("send");	
 			let audioL = micBufferL.splice(0, adjMicPacketSize);		// Get a packet of audio
 			let audioR = micBufferR.splice(0, adjMicPacketSize);		// for each channel
 			let audio = {mono8:[],mono16:[]};		// default empty audio and perf objects to send
 			let perf = false;				// Signal to server we believe we are not the performer
 			let peak = 0;					// Note: no need for perf to set peak
-console.timeEnd("send");	
 			if (performer) {				// If we believe we are the performer 
-console.time("perf");	
 				if (!micIn.muted) {			// & not muted prepare our audio for HQ stereo 
 					let a = prepPerfAudio(audioL, audioR);	
 					perf = zipson.stringify(a);	// and compress audio fully
 				} else 					// send silent perf audio
 					perf = zipson.stringify({mono8:[],mono16:[],mono32:[],stereo8:[],stereo16:[],stereo32:[]});
-console.timeEnd("perf");	
 			} else {					// Standard audio prep - always mono
-console.time("norm");	
 				let mono8 = [], mono16 = [], mono32 = [], stereo8 = [], stereo16 = [], stereo32 = [];
 				audio = reSample(audioL, downCache, PacketSize);	
 				let obj = applyAutoGain(audio, micIn);	// Amplify mic with auto limiter
@@ -1168,9 +1161,7 @@ console.time("norm");
 				audio = {mono8,mono16,mono32,stereo8,stereo16,stereo32};	
 				let a = zipson.stringify(audio);		// Compressing and uncompressing
 				audio = zipson.parse(a);			// Saves 65% of bandwidth on its own!
-console.timeEnd("norm");	
 			}
-console.time("emit");	
 			let sr = performer ? PerfSampleRate : SampleRate;
 			let now = new Date().getTime();
 			let packet = {
@@ -1190,8 +1181,6 @@ console.time("emit");
 			};
 			socketIO.emit("u",packet);
 			chatText = "";					// After sending the chat text we clear it out
-console.timeEnd("emit");	
-console.time("end");	
 			let len=JSON.stringify(packet).length/1024;
 			bytesSent += len;
 			if (!performer) {
@@ -1199,20 +1188,16 @@ console.time("end");
 			}
 			packetsOut++;					// For stats and monitoring
 			packetSequence++;
-console.timeEnd("end");	
 		}
 	}
 
 	// 2. Take audio buffered from server and send it to the speaker
-console.time("getOutAudio");	
 	let outAudioL = [], outAudioR = [];					
-let f1=false,f2=false,f3=false,f4=false,f5 = false;
 	if ((!smoothingNeeded)||(spkrBufferL.length > maxBuffSize/2)) {	// If no current shortages or buffer now full enough to restart
 		if (spkrBufferL.length > ChunkSize) {			// There is enough audio buffered
 			outAudioL = spkrBufferL.splice(0,ChunkSize);	// Get same amount of audio as came in
 			outAudioR = spkrBufferR.splice(0,ChunkSize);	// for each channel
 			if (smoothingNeeded) {				// We had a shortage so now we need to smooth audio re-entry 
-f1=true;
 				for (let i=0; i<400; i++) {		// Smoothly ramp up from zero to one
 					outAudioL[i] = outAudioL[i]*(1-smooth[i]);
 					outAudioR[i] = outAudioR[i]*(1-smooth[i]);
@@ -1220,7 +1205,6 @@ f1=true;
 				smoothingNeeded = false;
 			}
 		} else {						// Not enough audio.
-f2=true;
 			shortages++;					// For stats and monitoring
 //			adjMicPacketSize++;				// Increase amount of data from each packet to reduce shortages
 			let shortfall = ChunkSize-spkrBufferL.length;
@@ -1239,10 +1223,7 @@ f2=true;
 			outAudioR.push(...zeros);
 		}
 	}
-console.timeEnd("getOutAudio");	
-console.time("copying LR audio");	
 	if (((echoRisk) && (micIn.gate > 0)) || (outAudioL.length == 0)) {	// If echo is likely and the mic is on, or out array is empty, output silence
-f3=true;
 		outAudioL = new Array(ChunkSize).fill(0); 
 		outAudioR = new Array(ChunkSize).fill(0);
 	}
@@ -1252,8 +1233,6 @@ f3=true;
 //	}
 	outDataL = outAudioL.slice();					// Faster way to copy left audio to outputL
 	outDataR = outAudioR.slice();					// and right audio to outputR
-console.timeEnd("copying LR audio");	
-console.time("venue");	
 	// 2.1 Take venue audio from buffer and send to special output
 	let outAudioV = [];
 	if (venueBuffer.length > ChunkSize) {				// There is enough audio buffered
@@ -1269,8 +1248,6 @@ console.time("venue");
 //		outDataV[i] = outAudioV[i];				// Copy venue audio to it's special output
 //	}
 	outDataV = outAudioV.slice();					// Faster way to copy venue audio to it's special output
-console.timeEnd("venue");	
-console.time("threshold+");	
 	// 2.2 If there is a risk of echo set the input dynamic threshold level to stop audio feedback
 	if (echoRisk) {
 		let maxL = maxValue(outAudioL);				// Get peak level of this outgoing audio
@@ -1294,17 +1271,21 @@ console.time("threshold+");
 	if (delta < deltaMin) deltaMin = delta;				// load the client is enduring. A big difference is bad.
 	previous = now;
 	enterState( idleState );					// We are done. Back to Idling
-console.timeEnd("threshold+");	
 }
 
 function prepPerfAudio( audioL, audioR ) {				// Performer audio is HQ and possibly stereo
+console.time("startperf");
 	let stereo = false;						// Start by detecting if there is stereo audio
 	if (stereoOn) for (let i=0; i<audioL.length; i++) 		// If user has enabled stereo 
 		if (audioL[i] != audioR[i]) stereo = true;		// check if the signal is actually stereo
 	audioL = reSample(audioL, downCachePerfL, PerfPacketSize);	
+console.timeEnd("startperf");
+console.time("resampStereo");
 	if (stereo) {							// If stereo the right channel will need processing
 		audioR = reSample(audioR, downCachePerfR, PerfPacketSize);	
 	}
+console.timeEnd("resampStereo");
+console.time("levelset");
 	let obj;
 	if (stereo) {							// Stereo level setting 
 		let peakL = maxValue(audioL);				// Set gain according to loudest channel
@@ -1320,11 +1301,15 @@ function prepPerfAudio( audioL, audioR ) {				// Performer audio is HQ and possi
 	if (obj.peak > micIn.peak) 
 		micIn.peak = obj.peak;					// Note peak for local display
 	micIn.gain = obj.finalGain;					// Store gain for next loop
+console.timeEnd("levelset");
+console.time("stereoDiff");
 	let LplusR = [], LminusR = [];					// Build mono and stereo (difference) data
 	if (stereo) for (let i=0; i<audioL.length; i++) {
 		LplusR[i] = audioL[i] + audioR[i];
 		LminusR[i] = audioL[i] - audioR[i];
 	} else LplusR = audioL;						// Just use the left signal if mono
+console.timeEnd("stereoDiff");
+console.time("MSRE");
 	let mono8 = [], mono16 = [], mono32 = [], stereo8 = [], stereo16 = [], stereo32 = [];
 	let j=0, k=0; 
 	for (let i=0; i<LplusR.length; i+=4) {				// Multiple sample-rate encoding:
@@ -1354,6 +1339,7 @@ function prepPerfAudio( audioL, audioR ) {				// Performer audio is HQ and possi
 		stereo32[k] = d1; k++;
 		stereo32[k] = d2; k++;
 	}
+console.timeEnd("MSRE");
 	if (!HQOn) { mono32=[]; stereo32=[];}				// If user has switched off HQ drop HQ audio bands
 	let audio = {mono8,mono16,mono32,stereo8,stereo16,stereo32};	// Return an object for the audio
 	return audio;
