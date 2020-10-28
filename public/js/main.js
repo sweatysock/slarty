@@ -1250,8 +1250,8 @@ f3=true;
 //		outDataL[i] = outAudioL[i];				// Copy left audio to outputL
 //		outDataR[i] = outAudioR[i];				// and right audio to outputR
 //	}
-	outDataL = outAudioL.slice();				// Copy left audio to outputL
-	outDataR = outAudioR.slice();				// and right audio to outputR
+	outDataL = outAudioL.slice();					// Faster way to copy left audio to outputL
+	outDataR = outAudioR.slice();					// and right audio to outputR
 console.timeEnd("copying LR audio");	
 console.time("venue");	
 	// 2.1 Take venue audio from buffer and send to special output
@@ -1265,9 +1265,10 @@ console.time("venue");
 	}
 	if ((echoRisk) && (micIn.gate > 0))				// If echo is likely and the mic is on, output silence
 		outAudioV =  new Array(ChunkSize).fill(0);
-	for (let i in outDataV) { 
-		outDataV[i] = outAudioV[i];				// Copy venue audio to it's special output
-	}
+//	for (let i in outDataV) { 
+//		outDataV[i] = outAudioV[i];				// Copy venue audio to it's special output
+//	}
+	outDataV = outAudioV.slice();					// Faster way to copy venue audio to it's special output
 console.timeEnd("venue");	
 console.time("threshold+");	
 	// 2.2 If there is a risk of echo set the input dynamic threshold level to stop audio feedback
