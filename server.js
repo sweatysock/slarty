@@ -3,9 +3,13 @@
 var zipson = require('zipson');						// For compressing and decompressing data
 const SampleRate = 16000; 						// All audio in audence runs at this sample rate. 
 const PacketSize = 500;							// Number of samples in the client audio packets
-const maxBufferSize = 4;						// Max number of packets to store per client
-const perfMaxBufferSize = 4;						// Max packets buffered for the performer
-const mixTriggerLevel = 2;						// When all clients have this many packets we create a mix
+var maxBufferSize = process.env.maxbuffersize; 				// Get maxbuffersize from heroku config variable, if present
+if (maxBufferSize == undefined)						// This name is used to identify us upstream ony
+	maxBufferSize = 8;						// Max number of packets to store per client
+var perfMaxBufferSize = process.env.perfmaxbuffersize; 			// Get maxbuffersize from heroku config variable, if present
+if (perfMaxBufferSize == undefined)					// This name is used to identify us upstream ony
+	perfMaxBufferSize = 8;						// Max packets buffered for the performer
+const mixTriggerLevel = maxBufferSize/2;				// When all clients have this many packets we create a mix
 const MaxOutputLevel = 1;						// Max output level for INT16, for auto gain control
 const NumberOfChannels = 21;						// Max number of channels in this server = 20 + channel 0 (now not used)
 var channels = [];							// Each channel's data & buffer held here
@@ -187,7 +191,8 @@ upstreamServer.on('d', function (packet) {
 	}
 	if (perf.packets.length > perfMaxBufferSize)
 		perf.packets.shift();					// Clip the performer buffer removing the oldest packet
-	if ((!perf.streaming) && (perf.packets.length > 5)){		// If not streaming but enough perf data buffered
+	if ((!perf.streaming) && 
+		(perf.packets.length >= perfMaxBufferSize/2)){		// If not streaming but enough perf data buffered
 		perf.streaming = true;					// performer is now streaming from here
 	}
 	// 2. Subtract our buffered audio from venue mix sent from our upstream server
@@ -446,7 +451,7 @@ io.sockets.on('connection', function (socket) {
 			if (perf.packets.length > perfMaxBufferSize) {
 				perf.packets.shift();			// Clip the performer buffer removing the oldest packet
 			}
-			if ((!perf.streaming) && (perf.packets.length > mixTriggerLevel)) {
+			if ((!perf.streaming) && (perf.packets.length >= perfMaxBufferSize/2)) {
 				perf.streaming = true;			// If not streaming but enough now buffered, performer is go!
 				nextMixTimeLimit = 0;			// Reset the mix timer so that it doesn't empty the buffer right away
 			}
@@ -531,19 +536,19 @@ else return false;							// Experimenting with a purely forced mix scenario
 		let c = channels[ch];
 		if ((!c.newBuf) && 					// Only consider buffers that are non-new (have reached trigger level)
 			((perf.chan == 0) || (perf.chan != ch))) {	// Ignore the performer channel (if it is 0 then there is no performer)
-			if (c.packets.length > c.mixTriggerLevel) 	// if there is enough audio buffered
+			if (c.packets.length >= c.mixTriggerLevel) 	// if there is enough audio buffered
 				fullCount++;				// If so then add to count of full channels
 			else allFull = false;				// if not then at least one channel isn't ready to be mixed
 		}
 	}
 	if (perf.live) {						// If we are in performer mode
-		if (perf.packets.length > mixTriggerLevel)		// check if the performer buffer has enough 
+		if (perf.packets.length >= perfMaxBufferSize/2)		// check if the performer buffer has enough 
 			fullCount++;					// If it does then lets go
 		else							// Otherwise lets not mix just yet
 			allFull = false;
 	}
 	if (!venue.newBuf) {						// If the venue has started streaming
-		if (venue.packets.length > mixTriggerLevel)		// check if the venue buffer has enough too
+		if (venue.packets.length >= mixTriggerLevel)		// check if the venue buffer has enough too
 			fullCount++;					// If it does then lets go
 		else							// Otherwise lets not mix just yet
 			allFull = false;
