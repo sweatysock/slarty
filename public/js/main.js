@@ -1683,7 +1683,7 @@ function runEchoTest(audio) {						// Test audio system in a series of tests
 			} else {
 				trace2("No clear result");		// No agreement, no result
 				echoRisk = false;			// Should be ok without feedback control
-				if (max > 3) {				// Not sure... have to be cautious
+				if (max > 4) {				// Not sure... have to be cautious
 					echoRisk = true;
 					trace2("It may be worth repeating the test");
 				}
