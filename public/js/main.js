@@ -174,295 +174,297 @@ socketIO.on('d', function (data) {
 	bytesRcvd += len;						// Accumulate in incoming data total count
 	serverLiveChannels = data.liveChannels;				// Server live channels are for UI updating
 	processCommands(data.commands);					// Process commands from server
-	if (micAccessAllowed) {						// Need access to audio before outputting
-		let v = [];						// Our objective is to get the venue audio (if any) in here,
-		let c8 = new Array(PacketSize/2).fill(0);		// Buffer of group audio to be subtracted from the venue audio 
-		let c16 = new Array(PacketSize/2).fill(0);		// in MSRE format
-		let gL = [], gR = [];					// the group stereo audio (if any) in here
-		let pL = [], pR = [];					// and the performer stereo audio (if any) in here. Then mix and send to speaker
-		let isStereo = false;					// flag to indicate if we have stereo audio
-		// 1. Build a mix of all group channels. For individuals or empty groups no audio will have been sent
-		let L8 = new Array(PacketSize/2).fill(0);		// Temp arrays for MSRE blocks for left channel
-		let L16 = new Array(PacketSize/2).fill(0);		// so that we only do one MSRE decode at the end
-		let R8 = new Array(PacketSize/2).fill(0);		// Temp arrays for MSRE blocks for right channel
-		let R16 = new Array(PacketSize/2).fill(0);		
-		let someAudio = false;					// If no audio this saves us checking
-		let myPosition = serverLiveChannels[myChannel];		// Obtain my position in the group
-		let myLoc = groupLayout[myPosition];			// Find the location in the cicle that corresponds to my position
-		let shift = groupCentre - myLoc;			// Find how much everyone has to move to put me in the centre
-		data.channels.forEach(c => {				// Process all audio channel packets including channel 0
-			let ch = c.channel;				// Channel number the packet belongs to
-			let chan = channels[ch];			// Local data structure for this channel
-			chan.name = c.name;				// Update local structure's channel name
-			chan.channel = ch;				// Keep channel number too. It helps speed lookups
-			let p = serverLiveChannels[ch];			// Get channel's position in the group
-			let l = groupLayout[p];				// Get circle location for this group position
-			l = (l + shift) % maxGroupSize;			// Move the position to put me at the centre
-			let att = pans[l];				// find the panning position for this location
-			if (c.chatText != "") 				// If there is some chatText from this channel display it
-				chatMessage(c.name, c.chatText, l);
-			if ((c.socketID != socketIO.id) && (ch != 0)) {	// Don't include my audio or channel 0 in the group mix
-				if (chan.peak < c.peak)			// set the peak for this channel's level display
-					chan.peak = c.peak;		// even if muted
-				let a = c.audio;			// Get the audio from the packet
-				let m8 = a.mono8;
-				let m16 = a.mono16;
-				let b8 = chan.buffer8;			// Channel delay buffers where delayed audio is held
-				let b16 = chan.buffer16;
-				let g = (chan.agc 			// Apply gain. If AGC use mix gain, else channel gain
-					? mixOut.gain : chan.gain);	
-				chan.gain = g;				// Channel gain level should reflect gain applied here
-				g = chan.muted ? 0 : g;			// If channel is muted, silence it's output but still cancel it in venue mix
-				if (m8.length > 0) {			// Only mix if there is audio in channel
-					someAudio = true;		// Flag that there is actually some group audio
-					let al = 0, ar = 0;		// Attenuations for each channel. Default is none
-					if (att < 0) {			// Applying attenuation to right channel
-						ar = att * -1;		// Invert attenuation 
-						for (let i=0; i < m8.length; i++) {L8[i] += m8[i] *g; c8[i] += m8[i]; R8[i] += m8[i]*g/ar;}
-					} else {			// Applying attenuation to left channel
-						al = att;		
-						for (let i=0; i < m8.length; i++) {R8[i] += m8[i] *g; c8[i] += m8[i]; L8[i] += m8[i]*g/al;}
-					}			
-				}					
-				if (m16.length > 0) {			// If there is high frequency content mix it too
-					let al = 0, ar = 0;
-					if (att < 0) {			// Applying attenuation to right channel
-						ar = att * -1;		// Invert attenuation
-						for (let i=0; i < m16.length; i++) {L16[i] += m16[i] *g; c16[i] += m16[i]; R16[i] += m16[i]*g/ar;}
-					} else {			// Applying attenuation to left channel
-						al = att;
-						for (let i=0; i < m16.length; i++) {R16[i] += m16[i] *g; c16[i] += m16[i]; L16[i] += m16[i]*g/al;}
-					}			
-				}
+	if (!micAccessAllowed) {					// Need access to audio before outputting
+		enterState( idleState );				// Back to Idling
+		return;							// No audio access so do nothing with incoming data
+	}
+	let v = [];							// Our objective is to get the venue audio (if any) in here,
+	let c8 = new Array(PacketSize/2).fill(0);			// Buffer of group audio to be subtracted from the venue audio 
+	let c16 = new Array(PacketSize/2).fill(0);			// in MSRE format
+	let gL = [], gR = [];						// the group stereo audio (if any) in here
+	let pL = [], pR = [];						// and the performer stereo audio (if any) in here. Then mix and send to speaker
+	let isStereo = false;						// flag to indicate if we have stereo audio
+	// 1. Build a mix of all group channels. For individuals or empty groups no audio will have been sent
+	let L8 = new Array(PacketSize/2).fill(0);			// Temp arrays for MSRE blocks for left channel
+	let L16 = new Array(PacketSize/2).fill(0);			// so that we only do one MSRE decode at the end
+	let R8 = new Array(PacketSize/2).fill(0);			// Temp arrays for MSRE blocks for right channel
+	let R16 = new Array(PacketSize/2).fill(0);		
+	let someAudio = false;						// If no audio this saves us checking
+	let myPosition = serverLiveChannels[myChannel];			// Obtain my position in the group
+	let myLoc = groupLayout[myPosition];				// Find the location in the cicle that corresponds to my position
+	let shift = groupCentre - myLoc;				// Find how much everyone has to move to put me in the centre
+	data.channels.forEach(c => {					// Process all audio channel packets including channel 0
+		let ch = c.channel;					// Channel number the packet belongs to
+		let chan = channels[ch];				// Local data structure for this channel
+		chan.name = c.name;					// Update local structure's channel name
+		chan.channel = ch;					// Keep channel number too. It helps speed lookups
+		let p = serverLiveChannels[ch];				// Get channel's position in the group
+		let l = groupLayout[p];					// Get circle location for this group position
+		l = (l + shift) % maxGroupSize;				// Move the position to put me at the centre
+		let att = pans[l];					// find the panning position for this location
+		if (c.chatText != "") 					// If there is some chatText from this channel display it
+			chatMessage(c.name, c.chatText, l);
+		if ((c.socketID != socketIO.id) && (ch != 0)) {		// Don't include my audio or channel 0 in the group mix
+			if (chan.peak < c.peak)				// set the peak for this channel's level display
+				chan.peak = c.peak;			// even if muted
+			let a = c.audio;				// Get the audio from the packet
+			let m8 = a.mono8;
+			let m16 = a.mono16;
+			let b8 = chan.buffer8;				// Channel delay buffers where delayed audio is held
+			let b16 = chan.buffer16;
+			let g = (chan.agc 				// Apply gain. If AGC use mix gain, else channel gain
+				? mixOut.gain : chan.gain);	
+			chan.gain = g;					// Channel gain level should reflect gain applied here
+			g = chan.muted ? 0 : g;				// If channel is muted, silence it's output but still cancel it in venue mix
+			if (m8.length > 0) {				// Only mix if there is audio in channel
+				someAudio = true;			// Flag that there is actually some group audio
+				let al = 0, ar = 0;			// Attenuations for each channel. Default is none
+				if (att < 0) {				// Applying attenuation to right channel
+					ar = att * -1;			// Invert attenuation 
+					for (let i=0; i < m8.length; i++) {L8[i] += m8[i] *g; c8[i] += m8[i]; R8[i] += m8[i]*g/ar;}
+				} else {				// Applying attenuation to left channel
+					al = att;		
+					for (let i=0; i < m8.length; i++) {R8[i] += m8[i] *g; c8[i] += m8[i]; L8[i] += m8[i]*g/al;}
+				}			
+			}					
+			if (m16.length > 0) {				// If there is high frequency content mix it too
+				let al = 0, ar = 0;
+				if (att < 0) {				// Applying attenuation to right channel
+					ar = att * -1;			// Invert attenuation
+					for (let i=0; i < m16.length; i++) {L16[i] += m16[i] *g; c16[i] += m16[i]; R16[i] += m16[i]*g/ar;}
+				} else {				// Applying attenuation to left channel
+					al = att;
+					for (let i=0; i < m16.length; i++) {R16[i] += m16[i] *g; c16[i] += m16[i]; L16[i] += m16[i]*g/al;}
+				}			
 			}
-			if (c.sequence != (chan.seq + 1)) 		// Monitor audio transfer quality for all channels
-				trace("Sequence jump Channel ",ch," jump ",(c.sequence - chan.seq));
-			chan.seq = c.sequence;				// Store seq number for next time a packet comes in
-		});
-		if (someAudio) {					// If there is group audio rebuild and upsample it
-			let k = 0;
-			for (let i=0;i<L8.length;i++) {			// Reconstruct stereo group mix from the MSRE blocks
-				gL[k] = L8[i] + L16[i];
-				gR[k] = R8[i] + R16[i];k++;
-				gL[k] = L8[i] - L16[i];
-				gR[k] = R8[i] - R16[i];k++;
-			}						// Bring sample rate up to HW sample rate
-			gL = reSample(gL, gLCache, adjMicPacketSize); 
-			gR = reSample(gR, gRCache, adjMicPacketSize); 
-			isStereo = true;
-		} 
-		let mixL = [], mixR = [];
-		if (gL.length > 0) {mixL = gL; mixR = gR;}		// Put group audio in the mix if any
-		else {							// If no group mix then fill mix with 0's
-			let s = adjMicPacketSize;			// This is the size of the input/output packet size
-			mixL = new Array(s).fill(0), mixR = new Array(s).fill(0);
 		}
-		// 2. Process venue mix from server 
-		let ts = 0;
-		let vData = data.venue;
-		if (vData != null) {					// If there is venue data find our seq #, subtract it, & correct venue level
-			ts = vData.timestamps[myChannel];		// Venue data also contains timestamps that allow rtt measurement
-			audience = vData.liveClients;			// The server sends us the current audience count for level setting
-			if (venueSizeCmd == 0) venueSize = audience;	// If there is no command setting the venue size we use the audience size
-			else venueSize = venueSizeCmd;			// otherwise the command sets the audience size = attenuation level
-			let a8 = [], a16 = [];				// Temp store for our audio for subtracting (echo cancelling)
-			let s = vData.seqNos[myChannel];		// If the venue mix contains our audio this will be its sequence no.
-			if (s != null) {				// If we are performer or there are network issues our audio won't be in the mix
-				while (packetBuf.length) {		// Scan the packet buffer for the packet with this sequence
-					let p = packetBuf.shift();	// Remove the oldest packet from the buffer until s is found
-					if (p.sequence == s) {		// We have found the right sequence number
-						a8 = p.audio.mono8;	// Get our MSRE blocks from packet buffer
-						a16 = p.audio.mono16;	
-						break;			// Packet found so stop scanning the packet buffer. 
-					}
+		if (c.sequence != (chan.seq + 1)) 			// Monitor audio transfer quality for all channels
+			trace("Sequence jump Channel ",ch," jump ",(c.sequence - chan.seq));
+		chan.seq = c.sequence;					// Store seq number for next time a packet comes in
+	});
+	if (someAudio) {						// If there is group audio rebuild and upsample it
+		let k = 0;
+		for (let i=0;i<L8.length;i++) {				// Reconstruct stereo group mix from the MSRE blocks
+			gL[k] = L8[i] + L16[i];
+			gR[k] = R8[i] + R16[i];k++;
+			gL[k] = L8[i] - L16[i];
+			gR[k] = R8[i] - R16[i];k++;
+		}							// Bring sample rate up to HW sample rate
+		gL = reSample(gL, gLCache, adjMicPacketSize); 
+		gR = reSample(gR, gRCache, adjMicPacketSize); 
+		isStereo = true;
+	} 
+	let mixL = [], mixR = [];
+	if (gL.length > 0) {mixL = gL; mixR = gR;}			// Put group audio in the mix if any
+	else {								// If no group mix then fill mix with 0's
+		let s = adjMicPacketSize;				// This is the size of the input/output packet size
+		mixL = new Array(s).fill(0), mixR = new Array(s).fill(0);
+	}
+	// 2. Process venue mix from server 
+	let ts = 0;
+	let vData = data.venue;
+	if (vData != null) {						// If there is venue data find our seq #, subtract it, & correct venue level
+		ts = vData.timestamps[myChannel];			// Venue data also contains timestamps that allow rtt measurement
+		audience = vData.liveClients;				// The server sends us the current audience count for level setting
+		if (venueSizeCmd == 0) venueSize = audience;		// If there is no command setting the venue size we use the audience size
+		else venueSize = venueSizeCmd;				// otherwise the command sets the audience size = attenuation level
+		let a8 = [], a16 = [];					// Temp store for our audio for subtracting (echo cancelling)
+		let s = vData.seqNos[myChannel];			// If the venue mix contains our audio this will be its sequence no.
+		if (s != null) {					// If we are performer or there are network issues our audio won't be in the mix
+			while (packetBuf.length) {			// Scan the packet buffer for the packet with this sequence
+				let p = packetBuf.shift();		// Remove the oldest packet from the buffer until s is found
+				if (p.sequence == s) {			// We have found the right sequence number
+					a8 = p.audio.mono8;		// Get our MSRE blocks from packet buffer
+					a16 = p.audio.mono16;	
+					break;				// Packet found so stop scanning the packet buffer. 
 				}
 			}
-			let audio = zipson.parse(vData.audio);		// Uncompress venue audio
-			let v8 = audio.mono8, v16 = audio.mono16;	// Shortcuts to the venue MSRE data blocks
-			if ((v8.length > 0) && (!venue.muted)) {	// If there is venue audio & not muted, it will need processing
-				let sr = 8000;				// Minimum sample rate of 8kHz
-				let gn = venue.gain / venueSize;	// Gain adjusts for fader setting and venue size most importantly
-				if ((a8.length > 0) && (c8.length > 0))	// If we have audio and group has audio remove both and set venue level
-					for (let i = 0; i < a8.length; ++i) v8[i] = (v8[i] - a8[i] -c8[i]);
-				if ((a8.length > 0) && (c8.length == 0))// If there is only our audio subtract it and set venue level
-					for (let i = 0; i < a8.length; ++i) v8[i] = (v8[i] - a8[i]);
-				if ((a8.length == 0) && (c8.length > 0))// If there is only group cancelling audio subtract it and set venue level
-					for (let i = 0; i < c8.length; ++i) v8[i] = (v8[i] - c8[i]);
-				if (v16.length > 0) {			// If the venue has higher quality audio repeat the same process
-					if ((a16.length > 0) && (c16.length > 0))
-						for (let i = 0; i < a16.length; ++i) v16[i] = (v16[i] - a16[i] -c16[i]);
-					if ((a16.length > 0) && (c16.length == 0))
-						for (let i = 0; i < a16.length; ++i) v16[i] = (v16[i] - a16[i]);
-					if ((a16.length == 0) && (c16.length > 0))
-						for (let i = 0; i < c16.length; ++i) v16[i] = (v16[i] - c16[i]);
-					let k = 0;			// reconstruct the original venue audio in v[]
-					for (let i=0;i<v8.length;i++) {	
-						v[k] = v8[i] + v16[i];k++;
-						v[k] = v8[i] - v16[i];k++;
-					}
-					sr = 16000;			// This is at the higher sample rate
-				} else v = v8;				// Only low bandwidth venue audio 
-				let obj = applyAutoGain(v, venue);	// Amplify venue with auto limiter
-				venue.gain = obj.finalGain;		// Store gain for next time round
-				if (obj.peak > venue.peak) venue.peak = obj.peak;
-				v = reSample(v, vCache, adjMicPacketSize); 
-			}
-		} 
-		// 3. Process performer audio if there is any, and add it to the mix. This could be stereo audio
-		performer = (data.perf.chan == myChannel);		// Update performer flag just in case
-		liveShow = data.perf.live;				// Update the live show flag to update display
-		if ((data.perf.live) && (data.perf.packet != null)	// If there is a live performer with data
-			&& (data.perf.packet.perfAudio != false)) {	// and audio then process it and audio then process it
-			let audio = zipson.parse(data.perf.packet.perfAudio);	// Uncompress performer audio
-			let m8 = audio.mono8;
-			let m16 = audio.mono16;
-			let m32 = audio.mono32;
-			if ((!performer) || (loopback)) {		// If we are not the performer or we are in loopback play perf audio
-				let mono = [];				// Reconstruct performer mono audio into this array
-				let stereo = [];			// Reconstruct performer stereo difference signal into here
-				let j = 0, k = 0;
-				let sr = 32000;				// Sample rate can vary but it will break this code!
-				if (m8.length == 0) {			// For some reason there is no audio
-					let mono = new Array(250).fill(0);	// so generate silence
-					sr = 8000;			// Set the sample rate and we're done
-				} else if (m16.length == 0) {		// There is only 8kHz perf audio coming from server
-					mono = m8;			// so just pass these 250 bytes through
-					sr = 8000; 			
-				} else if (m32.length == 0) {		// Standard quality audio 16kHz 500 bytes
-					for (let i=0;i<m8.length;i++) {	// Reconstruct the 500 byte packet
-						mono[k] = m8[i] + m16[i];k++;
-						mono[k] = m8[i] - m16[i];k++;
+		}
+		let audio = zipson.parse(vData.audio);			// Uncompress venue audio
+		let v8 = audio.mono8, v16 = audio.mono16;		// Shortcuts to the venue MSRE data blocks
+		if ((v8.length > 0) && (!venue.muted)) {		// If there is venue audio & not muted, it will need processing
+			let sr = 8000;					// Minimum sample rate of 8kHz
+			let gn = venue.gain / venueSize;		// Gain adjusts for fader setting and venue size most importantly
+			if ((a8.length > 0) && (c8.length > 0))		// If we have audio and group has audio remove both and set venue level
+				for (let i = 0; i < a8.length; ++i) v8[i] = (v8[i] - a8[i] -c8[i]);
+			if ((a8.length > 0) && (c8.length == 0))	// If there is only our audio subtract it and set venue level
+				for (let i = 0; i < a8.length; ++i) v8[i] = (v8[i] - a8[i]);
+			if ((a8.length == 0) && (c8.length > 0))	// If there is only group cancelling audio subtract it and set venue level
+				for (let i = 0; i < c8.length; ++i) v8[i] = (v8[i] - c8[i]);
+			if (v16.length > 0) {				// If the venue has higher quality audio repeat the same process
+				if ((a16.length > 0) && (c16.length > 0))
+					for (let i = 0; i < a16.length; ++i) v16[i] = (v16[i] - a16[i] -c16[i]);
+				if ((a16.length > 0) && (c16.length == 0))
+					for (let i = 0; i < a16.length; ++i) v16[i] = (v16[i] - a16[i]);
+				if ((a16.length == 0) && (c16.length > 0))
+					for (let i = 0; i < c16.length; ++i) v16[i] = (v16[i] - c16[i]);
+				let k = 0;				// reconstruct the original venue audio in v[]
+				for (let i=0;i<v8.length;i++) {	
+					v[k] = v8[i] + v16[i];k++;
+					v[k] = v8[i] - v16[i];k++;
+				}
+				sr = 16000;				// This is at the higher sample rate
+			} else v = v8;					// Only low bandwidth venue audio 
+			let obj = applyAutoGain(v, venue);		// Amplify venue with auto limiter
+			venue.gain = obj.finalGain;			// Store gain for next time round
+			if (obj.peak > venue.peak) venue.peak = obj.peak;
+			v = reSample(v, vCache, adjMicPacketSize); 
+		}
+	} 
+	// 3. Process performer audio if there is any, and add it to the mix. This could be stereo audio
+	performer = (data.perf.chan == myChannel);			// Update performer flag just in case
+	liveShow = data.perf.live;					// Update the live show flag to update display
+	if ((data.perf.live) && (data.perf.packet != null)		// If there is a live performer with data
+		&& (data.perf.packet.perfAudio != false)) {		// and audio then process it and audio then process it
+		let audio = zipson.parse(data.perf.packet.perfAudio);	// Uncompress performer audio
+		let m8 = audio.mono8;
+		let m16 = audio.mono16;
+		let m32 = audio.mono32;
+		if ((!performer) || (loopback)) {			// If we are not the performer or we are in loopback play perf audio
+			let mono = [];					// Reconstruct performer mono audio into this array
+			let stereo = [];				// Reconstruct performer stereo difference signal into here
+			let j = 0, k = 0;
+			let sr = 32000;					// Sample rate can vary but it will break this code!
+			if (m8.length == 0) {				// For some reason there is no audio
+				let mono = new Array(250).fill(0);	// so generate silence
+				sr = 8000;				// Set the sample rate and we're done
+			} else if (m16.length == 0) {			// There is only 8kHz perf audio coming from server
+				mono = m8;				// so just pass these 250 bytes through
+				sr = 8000; 			
+			} else if (m32.length == 0) {			// Standard quality audio 16kHz 500 bytes
+				for (let i=0;i<m8.length;i++) {		// Reconstruct the 500 byte packet
+					mono[k] = m8[i] + m16[i];k++;
+					mono[k] = m8[i] - m16[i];k++;
+				}
+				sr = 16000; 
+			} else for (let i=0; i<m8.length; i++) {	// Best rate. 32kHz. Rebuild the 1k packet
+				let s = m8[i] + m16[i];
+				let d = m8[i] - m16[i];
+				mono[k] = s + m32[j]; k++;
+				mono[k] = s - m32[j]; j++; k++;
+				mono[k] = d + m32[j]; k++;
+				mono[k] = d - m32[j]; j++; k++;
+			}						// Mono perf audio ready to upsample
+			mono = reSample(mono, upCachePerfM, adjMicPacketSize);
+			let s8 = audio.stereo8;// Now regenerate the stereo difference signal
+			let s16 = audio.stereo16;
+			let s32 = audio.stereo32;
+			if (s8.length > 0) {				// Is there a stereo signal in the packet?
+				isStereo = true;
+				j = 0, k = 0;
+				if (s16.length == 0) {			// Low quaity stereo signal
+					stereo = s8;
+					sr = 8000;
+				} else if (s32.length == 0) {		// Mid quality stereo signal
+					for (let i=0;i<s8.length;i++) {	
+						stereo[k] = s8[i] + s16[i];k++;
+						stereo[k] = s8[i] - s16[i];k++;
 					}
 					sr = 16000; 
-				} else for (let i=0; i<m8.length; i++) {// Best rate. 32kHz. Rebuild the 1k packet
-					let s = m8[i] + m16[i];
-					let d = m8[i] - m16[i];
-					mono[k] = s + m32[j]; k++;
-					mono[k] = s - m32[j]; j++; k++;
-					mono[k] = d + m32[j]; k++;
-					mono[k] = d - m32[j]; j++; k++;
-				}					// Mono perf audio ready to upsample
-				mono = reSample(mono, upCachePerfM, adjMicPacketSize);
-				let s8 = audio.stereo8;// Now regenerate the stereo difference signal
-				let s16 = audio.stereo16;
-				let s32 = audio.stereo32;
-				if (s8.length > 0) {			// Is there a stereo signal in the packet?
-					isStereo = true;
-					j = 0, k = 0;
-					if (s16.length == 0) {		// Low quaity stereo signal
-						stereo = s8;
-						sr = 8000;
-					} else if (s32.length == 0) {	// Mid quality stereo signal
-						for (let i=0;i<s8.length;i++) {	
-							stereo[k] = s8[i] + s16[i];k++;
-							stereo[k] = s8[i] - s16[i];k++;
-						}
-						sr = 16000; 
-					} else for (let i=0; i<s8.length; i++) {
-						let s = s8[i] + s16[i];	// Best stereo signal. Rebuild the 1k packet
-						let d = s8[i] - s16[i];
-						stereo[k] = s + s32[j]; k++;
-						stereo[k] = s - s32[j]; j++; k++;
-						stereo[k] = d + s32[j]; k++;
-						stereo[k] = d - s32[j]; j++; k++;
-					}				// Stereo difference perf audio upsampling now
-					stereo = reSample(stereo, upCachePerfS, adjMicPacketSize);
-					let left = [], right = [];	// Time to reconstruct the original left and right audio
-					for (let i=0; i<mono.length; i++) {	// Note. Doing this after upsampling because mono
-						left[i] = (mono[i] + stereo[i])/2;	// and stereo may not have same sample rate
-						right[i] = (mono[i] - stereo[i])/2;	// Divide by 2 because output is double input
-					}
-					if (mixL.length == 0) {		// If no group audio just use perf audio directly
-						mixL = left; mixR = right;
-					} else {			// Have to build stereo mix
-						for (let i=0; i < left.length; i++) {
-							mixL[i] += left[i];	
-							mixR[i] += right[i];
-						}
-					}
-				} else { 				// Just mono performer audio
-					if (mixL.length == 0) {		// If no group audio just use perf audio directly
-						mixL = mono; 
-						mixR = mono; 
-					} else {			// Have to build stereo mix with mono perf and potentially stereo group
-						isStereo = true;
-						for (let i=0; i < mono.length; i++) {
-							mixL[i] += mono[i];	
-							mixR[i] += mono[i];
-						}
+				} else for (let i=0; i<s8.length; i++) {
+					let s = s8[i] + s16[i];		// Best stereo signal. Rebuild the 1k packet
+					let d = s8[i] - s16[i];
+					stereo[k] = s + s32[j]; k++;
+					stereo[k] = s - s32[j]; j++; k++;
+					stereo[k] = d + s32[j]; k++;
+					stereo[k] = d - s32[j]; j++; k++;
+				}					// Stereo difference perf audio upsampling now
+				stereo = reSample(stereo, upCachePerfS, adjMicPacketSize);
+				let left = [], right = [];		// Time to reconstruct the original left and right audio
+				for (let i=0; i<mono.length; i++) {	// Note. Doing this after upsampling because mono
+					left[i] = (mono[i] + stereo[i])/2;	// and stereo may not have same sample rate
+					right[i] = (mono[i] - stereo[i])/2;	// Divide by 2 because output is double input
+				}
+				if (mixL.length == 0) {			// If no group audio just use perf audio directly
+					mixL = left; mixR = right;
+				} else {				// Have to build stereo mix
+					for (let i=0; i < left.length; i++) {
+						mixL[i] += left[i];	
+						mixR[i] += right[i];
 					}
 				}
-			} else ts = data.perf.packet.timestamp;		// I am the performer so grab timestamp for the rtt 
-			if (loopback) ts = data.perf.packet.timestamp;	// In loopback mode we output perf audio but we still need the rtt
+			} else { 					// Just mono performer audio
+				if (mixL.length == 0) {			// If no group audio just use perf audio directly
+					mixL = mono; 
+					mixR = mono; 
+				} else {				// Have to build stereo mix with mono perf and potentially stereo group
+					isStereo = true;
+					for (let i=0; i < mono.length; i++) {
+						mixL[i] += mono[i];	
+						mixR[i] += mono[i];
+					}
+				}
+			}
+		} else ts = data.perf.packet.timestamp;			// I am the performer so grab timestamp for the rtt 
+		if (loopback) ts = data.perf.packet.timestamp;		// In loopback mode we output perf audio but we still need the rtt
 
-			let p = data.perf.packet;			// If the performer was in our group and is chatting
-			if ((myGroup != "noGroup") && (p.group == myGroup) && (p.chatText != "")) {
-				let ch = p.channel;			// Channel number the perf if using
-				let pos = serverLiveChannels[ch];	// Get perf's position in the group
-				let l = groupLayout[pos];		// Get circle location for this group position
-				let myP = serverLiveChannels[myChannel];// Obtain my position in the group
-				let myLoc = groupLayout[myP];		// Find the location in the circle that corresponds to my position
-				let shift = groupCentre - myLoc;	// Find how much everyone has to move to put me in the centre
-				l = (l + shift) % maxGroupSize;		// Move the position to put me at the centre
-				chatMessage(p.name, p.chatText, l);	// Display the perf's chat message
-			}
+		let p = data.perf.packet;				// If the performer was in our group and is chatting
+		if ((myGroup != "noGroup") && (p.group == myGroup) && (p.chatText != "")) {
+			let ch = p.channel;				// Channel number the perf if using
+			let pos = serverLiveChannels[ch];		// Get perf's position in the group
+			let l = groupLayout[pos];			// Get circle location for this group position
+			let myP = serverLiveChannels[myChannel];	// Obtain my position in the group
+			let myLoc = groupLayout[myP];			// Find the location in the circle that corresponds to my position
+			let shift = groupCentre - myLoc;		// Find how much everyone has to move to put me in the centre
+			l = (l + shift) % maxGroupSize;			// Move the position to put me at the centre
+			chatMessage(p.name, p.chatText, l);		// Display the perf's chat message
 		}
-		// 4. Adjust gain of final mix containing performer and group audio, and send to the speaker buffer
-		let obj;						
-		if (isStereo) {
-			let peakL = maxValue(mixL);			// Set gain according to loudest channel
-			let peakR = maxValue(mixR);
-			if (peakL > peakR) {
-				obj = applyAutoGain(mixL, mixOut);	// Left sets the gain
-				applyGain(mixR, obj.finalGain);		// and right follows
-			} else {
-				obj = applyAutoGain(mixR, mixOut);	// Right sets the gain
-				applyGain(mixL, obj.finalGain);		// and left follows
-			}
-		} else obj = applyAutoGain(mixL, mixOut);		// For mono just use left channel
-		mixOut.gain= obj.finalGain;				// Store gain for next loop
-		obj.peak += venue.peak;					// Display the venue level mixed with the main output
-		if (obj.peak > mixOut.peak) mixOut.peak = obj.peak;	// Note peak for display purposes
-		if (spkrBufferL.length < spkrBuffTrough) 		// Monitoring purposes
-			spkrBuffTrough = spkrBufferL.length;
-		spkrBufferL.push(...mixL);				// put left mix in the left speaker buffer
-		if (isStereo)
-			spkrBufferR.push(...mixR);			// and the right in the right if stereo
-		else
-			spkrBufferR.push(...mixL);			// otherwise use the left
-		if (spkrBufferL.length > maxBuffSize) {			// If too full merge final 400 samples
-//			for (let i=0; i<400; i++) {			// so that we end with the latest waveform
-//				let p = maxBuffSize-i-1;		// Points to end of audio being kept
-//				let q = spkrBufferL.length-i-1;		// Points to end of audio being trimmed
-//				let f = smooth[i];			// Transition blending factor. From 1 to 0 for INCREASING i
-//				spkrBufferL[p] = spkrBufferL[p]*(1-f) + spkrBufferL[q]*f;
-//				spkrBufferR[p] = spkrBufferR[p]*(1-f) + spkrBufferR[q]*f;
-//			}
-			let excess = spkrBufferL.length-maxBuffSize;
-			spkrBufferL.splice(maxBuffSize/2,maxBuffSize/2);// Chop buffer in half
-			spkrBufferR.splice(maxBuffSize/2,maxBuffSize/2);// Chop buffer in half
-//			spkrBufferL.splice(0, excess); 	
-//			spkrBufferR.splice(0, excess); 	
-			overflows++;					// Note for monitoring purposes
-//			adjMicPacketSize--;				// Decrease amount of data from each packet to reduce overflows
-			bytesOver += excess;
+	}
+	// 4. Adjust gain of final mix containing performer and group audio, and send to the speaker buffer
+	let obj;						
+	if (isStereo) {
+		let peakL = maxValue(mixL);				// Set gain according to loudest channel
+		let peakR = maxValue(mixR);
+		if (peakL > peakR) {
+			obj = applyAutoGain(mixL, mixOut);		// Left sets the gain
+			applyGain(mixR, obj.finalGain);			// and right follows
+		} else {
+			obj = applyAutoGain(mixR, mixOut);		// Right sets the gain
+			applyGain(mixL, obj.finalGain);			// and left follows
 		}
-		if (spkrBufferL.length > spkrBuffPeak) 			// Monitoring purposes
-			spkrBuffPeak = spkrBufferL.length;
-		if (v.length > 0) {					// Add the venue audio to its own buffer
-			venueBuffer.push(...v);				// Add any venue audio to the venue buffer
-		}
-		if (venueBuffer.length > maxBuffSize) 			// Clip buffer if too full
-			venueBuffer.splice(0, (venueBuffer.length-maxBuffSize)); 	
-//			adjMicPacketSize--;				// Decrease amount of data from each packet to reduce overflows
-		// 5. Calculate RTT 
-		if (ts > 0) {						// If we have timestamp data calcuate rtt
-			let now = new Date().getTime();
-			rtt = now - ts;					// Measure round trip time using a rolling average
-			if (rtt1 == 0) rtt1 = rtt;
-			else rtt1 = (9 * rtt1 + rtt)/10;
-			rtt5 = (49 * rtt5 + rtt)/50;
-		}
+	} else obj = applyAutoGain(mixL, mixOut);			// For mono just use left channel
+	mixOut.gain= obj.finalGain;					// Store gain for next loop
+	obj.peak += venue.peak;						// Display the venue level mixed with the main output
+	if (obj.peak > mixOut.peak) mixOut.peak = obj.peak;		// Note peak for display purposes
+	if (spkrBufferL.length < spkrBuffTrough) 			// Monitoring purposes
+		spkrBuffTrough = spkrBufferL.length;
+	spkrBufferL.push(...mixL);					// put left mix in the left speaker buffer
+	if (isStereo)
+		spkrBufferR.push(...mixR);				// and the right in the right if stereo
+	else
+		spkrBufferR.push(...mixL);				// otherwise use the left
+	if (spkrBufferL.length > maxBuffSize) {				// If too full merge final 400 samples
+//		for (let i=0; i<400; i++) {				// so that we end with the latest waveform
+//			let p = maxBuffSize-i-1;			// Points to end of audio being kept
+//			let q = spkrBufferL.length-i-1;			// Points to end of audio being trimmed
+//			let f = smooth[i];				// Transition blending factor. From 1 to 0 for INCREASING i
+//			spkrBufferL[p] = spkrBufferL[p]*(1-f) + spkrBufferL[q]*f;
+//			spkrBufferR[p] = spkrBufferR[p]*(1-f) + spkrBufferR[q]*f;
+//		}
+		let excess = spkrBufferL.length-maxBuffSize;
+		spkrBufferL.splice(maxBuffSize/2,maxBuffSize/2);	// Chop buffer in half
+		spkrBufferR.splice(maxBuffSize/2,maxBuffSize/2);	// Chop buffer in half
+//		spkrBufferL.splice(0, excess); 	
+//		spkrBufferR.splice(0, excess); 	
+		overflows++;						// Note for monitoring purposes
+//		pitch--;						// Decrease amount of data from each packet to reduce overflows
+		bytesOver += excess;
+	}
+	if (spkrBufferL.length > spkrBuffPeak) 				// Monitoring purposes
+		spkrBuffPeak = spkrBufferL.length;
+	if (v.length > 0) {						// Add the venue audio to its own buffer
+		venueBuffer.push(...v);					// Add any venue audio to the venue buffer
+	}
+	if (venueBuffer.length > maxBuffSize) 				// Clip buffer if too full
+		venueBuffer.splice(0, (venueBuffer.length-maxBuffSize)); 	
+//		pitch--;						// Decrease amount of data from each packet to reduce overflows
+	// 5. Calculate RTT 
+	if (ts > 0) {							// If we have timestamp data calcuate rtt
+		let now = new Date().getTime();
+		rtt = now - ts;						// Measure round trip time using a rolling average
+		if (rtt1 == 0) rtt1 = rtt;
+		else rtt1 = (9 * rtt1 + rtt)/10;
+		rtt5 = (49 * rtt5 + rtt)/50;
 	}
 	enterState( idleState );					// Back to Idling
 });
@@ -487,7 +489,7 @@ document.addEventListener('DOMContentLoaded', function(event){		// Add dynamic b
 	let chatWin = document.getElementById('chatWin');		// The div that contains the chat history window. Not sure why 2 divs!
 	let nameBadge = document.getElementById('nameBadge');		// Div that contains the nickname entry field. Don't need two divs either!
 	let chatInput = document.getElementById('chatInput');		// Div containing the input text. 2 divs not needed here either.
-	bubbleArea = document.getElementById('chatBubbleArea');		// Div where chat bublesa are animated
+	bubbleArea = document.getElementById('chatBubbleArea');		// Div where chat bubbles are animated
 	chatHistory = document.getElementById('chatHistory');		// The chat history window itself. Again, 2 divs not needed.
 	groupBtn.onclick = ( (e) => {
 		groupNameEntry.style.visibility = "visible";		// Make the group entry field visible
@@ -1119,8 +1121,8 @@ function processAudio(e) {						// Main processing loop
 			micAudioR = inDataR;
 			micIn.gate--;					// Gate slowly closes
 		} else {						// Gate closed. Fill with silence.
-			micAudioL = new Array(inDataL.length).fill(0);
-			micAudioR = new Array(inDataL.length).fill(0);
+			micAudioL = new Array(ChunkSize).fill(0);
+			micAudioR = new Array(ChunkSize).fill(0);
 		}
 		micBufferL.push(...micAudioL);				// Buffer mic audio L
 		micBufferR.push(...micAudioR);				// Buffer mic audio R
@@ -1206,7 +1208,7 @@ function processAudio(e) {						// Main processing loop
 			}
 		} else {						// Not enough audio.
 			shortages++;					// For stats and monitoring
-//			adjMicPacketSize++;				// Increase amount of data from each packet to reduce shortages
+			pitch++;					// Increase amount of data from each packet to reduce shortages
 			let shortfall = ChunkSize-spkrBufferL.length;
 			bytesShort += shortfall;
 			outAudioL = spkrBufferL.splice(0,spkrBufferL.length);	// Take all that remains and complete with 0s
@@ -1238,6 +1240,8 @@ function processAudio(e) {						// Main processing loop
 	if (venueBuffer.length > ChunkSize) {				// There is enough audio buffered
 		outAudioV = venueBuffer.splice(0,ChunkSize);		// Get same amount of audio as came in
 	} else {							// Not enough audio.
+		shortages++;						// For stats and monitoring
+		pitch++;						// Increase amount of data from each packet to reduce shortages
 		outAudioV = venueBuffer.splice(0,venueBuffer.length);	// Take all that remains and complete with 0s
 		let zeros = new Array(ChunkSize-venueBuffer.length).fill(0);
 		outAudioV.push(...zeros);
@@ -1274,18 +1278,13 @@ function processAudio(e) {						// Main processing loop
 }
 
 function prepPerfAudio( audioL, audioR ) {				// Performer audio is HQ and possibly stereo
-console.time("startperf");
 	let stereo = false;						// Start by detecting if there is stereo audio
 	if (stereoOn) for (let i=0; i<audioL.length; i++) 		// If user has enabled stereo 
 		if (audioL[i] != audioR[i]) stereo = true;		// check if the signal is actually stereo
 	audioL = reSample(audioL, downCachePerfL, PerfPacketSize);	
-console.timeEnd("startperf");
-console.time("resampStereo");
 	if (stereo) {							// If stereo the right channel will need processing
 		audioR = reSample(audioR, downCachePerfR, PerfPacketSize);	
 	}
-console.timeEnd("resampStereo");
-console.time("levelset");
 	let obj;
 	if (stereo) {							// Stereo level setting 
 		let peakL = maxValue(audioL);				// Set gain according to loudest channel
@@ -1301,15 +1300,11 @@ console.time("levelset");
 	if (obj.peak > micIn.peak) 
 		micIn.peak = obj.peak;					// Note peak for local display
 	micIn.gain = obj.finalGain;					// Store gain for next loop
-console.timeEnd("levelset");
-console.time("stereoDiff");
 	let LplusR = [], LminusR = [];					// Build mono and stereo (difference) data
 	if (stereo) for (let i=0; i<audioL.length; i++) {
 		LplusR[i] = audioL[i] + audioR[i];
 		LminusR[i] = audioL[i] - audioR[i];
 	} else LplusR = audioL;						// Just use the left signal if mono
-console.timeEnd("stereoDiff");
-console.time("MSRE");
 	let mono8 = [], mono16 = [], mono32 = [], stereo8 = [], stereo16 = [], stereo32 = [];
 	let j=0, k=0; 
 	for (let i=0; i<LplusR.length; i+=4) {				// Multiple sample-rate encoding:
@@ -1339,7 +1334,6 @@ console.time("MSRE");
 		stereo32[k] = d1; k++;
 		stereo32[k] = d2; k++;
 	}
-console.timeEnd("MSRE");
 	if (!HQOn) { mono32=[]; stereo32=[];}				// If user has switched off HQ drop HQ audio bands
 	let audio = {mono8,mono16,mono32,stereo8,stereo16,stereo32};	// Return an object for the audio
 	return audio;
@@ -1745,7 +1739,7 @@ var delta;
 var previous;
 var deltaMax = 0;
 var deltaMin = 10000;
-var pitch = 0;
+var pitch = 0;								// Adjustment to stretch/shrink audio data to avoid shortages & overflows
 function printReport() {
 	enterState( UIState );						// Measure time spent updating UI even for reporting!
 	let netState = ((((rtt1-rtt5)/rtt5)>0.1) && (rtt5>400)) ? "UNSTABLE":"stable";
@@ -1801,9 +1795,9 @@ function printReport() {
 	deltaMax = 0;
 	deltaMin = 10000;
 //	pitch = Math.round((maxBuffSize/2 - spkrBufferL.length)/500);	// pitch error is related inversely to buffer over/under middle
-//	pitch = (pitch > 12)? 12 : pitch;
-//	pitch = (pitch < -12)? -12 : pitch;
-//	adjMicPacketSize = micAudioPacketSize + pitch;			// pitch is adjusted to keep things flowing smoothly
+	pitch = (pitch > 12)? 12 : pitch;
+	pitch = (pitch < -12)? -12 : pitch;
+	adjMicPacketSize = micAudioPacketSize + pitch;			// pitch is adjusted to keep things flowing smoothly
 	enterState( idleState );					// Back to Idling
 }
 
