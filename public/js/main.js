@@ -457,6 +457,7 @@ socketIO.on('d', function (data) {
 	}
 	if (venueBuffer.length > maxBuffSize) {				// Clip buffer if too full
 		venueBuffer.splice(maxBuffSize/2, maxBuffSize/2); 	
+		overflows++;						// Note for monitoring purposes
 		pitch--;						// Decrease amount of data from each packet to reduce overflows
 	}
 	// 5. Calculate RTT 
@@ -1747,7 +1748,7 @@ function printReport() {
 	if (!pauseTracing) {
 //		trace("Idle=", idleState.total, " data in=", dataInState.total, " audio in/out=", audioInOutState.total," UI work=",UIState.total);
 		trace(packetsOut,"/",packetsIn," over:",overflows,"(",bytesOver,") short:",shortages,"(",bytesShort,") RTT=",rtt.toFixed(1)," ",rtt1.toFixed(1)," ",rtt5.toFixed(1)," ",netState," a:",audience," sent:",bytesSent.toFixed(1)," rcvd:",bytesRcvd.toFixed(1));
-		trace("Venue buffer:",venueBuffer.length,"speaker buff:",spkrBufferL.length,"(",spkrBuffTrough," - ",spkrBuffPeak,") Delta max/min:",deltaMax,"/",deltaMin," pitch:",pitch);
+		trace("Venue buffer:",venueBuffer.length," speaker buff:",spkrBufferL.length,"(",spkrBuffTrough," - ",spkrBuffPeak,") Delta max/min:",deltaMax,"/",deltaMin," pitch:",pitch);
 		trace2("sent:",bytesSent.toFixed(1)," rcvd:",bytesRcvd.toFixed(1));
 	}
 	if (performer == true) {
@@ -1799,7 +1800,6 @@ function printReport() {
 	pitch = (pitch > 12)? 12 : pitch;
 	pitch = (pitch < -12)? -12 : pitch;
 	adjMicPacketSize = micAudioPacketSize + pitch;			// pitch is adjusted to keep things flowing smoothly
-trace("adjMicPacketSize: ",adjMicPacketSize);
 	enterState( idleState );					// Back to Idling
 }
 
