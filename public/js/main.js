@@ -457,6 +457,7 @@ socketIO.on('d', function (data) {
 	}
 	if (venueBuffer.length > maxBuffSize) 				// Clip buffer if too full
 		venueBuffer.splice(0, (venueBuffer.length-maxBuffSize)); 	
+trace("venueover");
 		pitch--;						// Decrease amount of data from each packet to reduce overflows
 	// 5. Calculate RTT 
 	if (ts > 0) {							// If we have timestamp data calcuate rtt
