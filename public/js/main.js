@@ -623,23 +623,6 @@ document.addEventListener('DOMContentLoaded', function(event){		// Add dynamic b
 		.then(devices => {
 			tracef(JSON.stringify(devices));  
 		});
-
-	let Util={};
-	Util.base64 = function(mimeType, base64) {
-		  return 'data:' + mimeType + ';base64,' + base64;
-	};
-
-	let video = document.createElement('video');			// Code to keep screen on which helps keep CPU running
-	video.setAttribute('loop', '');
-	function addSourceToVideo(element, type, dataURI) {
-		var source = document.createElement('source');
-		source.src = dataURI;
-		source.type = 'video/' + type;
-		element.appendChild(source);
-	}
-	addSourceToVideo(video,'webm', Util.base64('video/webm', 'GkXfo0AgQoaBAUL3gQFC8oEEQvOBCEKCQAR3ZWJtQoeBAkKFgQIYU4BnQI0VSalmQCgq17FAAw9CQE2AQAZ3aGFtbXlXQUAGd2hhbW15RIlACECPQAAAAAAAFlSua0AxrkAu14EBY8WBAZyBACK1nEADdW5khkAFVl9WUDglhohAA1ZQOIOBAeBABrCBCLqBCB9DtnVAIueBAKNAHIEAAIAwAQCdASoIAAgAAUAmJaQAA3AA/vz0AAA='));
-	addSourceToVideo(video, 'mp4', Util.base64('video/mp4', 'AAAAHGZ0eXBpc29tAAACAGlzb21pc28ybXA0MQAAAAhmcmVlAAAAG21kYXQAAAGzABAHAAABthADAowdbb9/AAAC6W1vb3YAAABsbXZoZAAAAAB8JbCAfCWwgAAAA+gAAAAAAAEAAAEAAAAAAAAAAAAAAAABAAAAAAAAAAAAAAAAAAAAAQAAAAAAAAAAAAAAAAAAQAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAIAAAIVdHJhawAAAFx0a2hkAAAAD3wlsIB8JbCAAAAAAQAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAABAAAAAAAAAAAAAAAAAAAAAQAAAAAAAAAAAAAAAAAAQAAAAAAIAAAACAAAAAABsW1kaWEAAAAgbWRoZAAAAAB8JbCAfCWwgAAAA+gAAAAAVcQAAAAAAC1oZGxyAAAAAAAAAAB2aWRlAAAAAAAAAAAAAAAAVmlkZW9IYW5kbGVyAAAAAVxtaW5mAAAAFHZtaGQAAAABAAAAAAAAAAAAAAAkZGluZgAAABxkcmVmAAAAAAAAAAEAAAAMdXJsIAAAAAEAAAEcc3RibAAAALhzdHNkAAAAAAAAAAEAAACobXA0dgAAAAAAAAABAAAAAAAAAAAAAAAAAAAAAAAIAAgASAAAAEgAAAAAAAAAAQAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAABj//wAAAFJlc2RzAAAAAANEAAEABDwgEQAAAAADDUAAAAAABS0AAAGwAQAAAbWJEwAAAQAAAAEgAMSNiB9FAEQBFGMAAAGyTGF2YzUyLjg3LjQGAQIAAAAYc3R0cwAAAAAAAAABAAAAAQAAAAAAAAAcc3RzYwAAAAAAAAABAAAAAQAAAAEAAAABAAAAFHN0c3oAAAAAAAAAEwAAAAEAAAAUc3RjbwAAAAAAAAABAAAALAAAAGB1ZHRhAAAAWG1ldGEAAAAAAAAAIWhkbHIAAAAAAAAAAG1kaXJhcHBsAAAAAAAAAAAAAAAAK2lsc3QAAAAjqXRvbwAAABtkYXRhAAAAAQAAAABMYXZmNTIuNzguMw=='));
-	video.play();
 });
 
 function chatMessage(name, text, loc) {					// Display chat message in multiple places for given name and location
@@ -1134,9 +1117,9 @@ function processAudio(e) {						// Main processing loop
 			let audioL = micBufferL.splice(0, adjMicPacketSize);		// Get a packet of audio
 			let audioR = micBufferR.splice(0, adjMicPacketSize);		// for each channel
 			let audio = {mono8:[],mono16:[]};		// default empty audio and perf objects to send
-			let perf = false;				// Signal to server we believe we are not the performer
+			let perf = false;				// By default we believe we are not the performer
 			let peak = 0;					// Note: no need for perf to set peak
-			if (performer) {				// If we believe we are the performer 
+			if (performer) {				// If we actually are the performer 
 				if (!micIn.muted) {			// & not muted prepare our audio for HQ stereo 
 					let a = prepPerfAudio(audioL, audioR);	
 					perf = zipson.stringify(a);	// and compress audio fully
@@ -1801,7 +1784,7 @@ function printReport() {
 //	pitch = Math.round((maxBuffSize/2 - spkrBufferL.length)/500);	// pitch error is related inversely to buffer over/under middle
 	pitch = (pitch > 12)? 12 : pitch;
 	pitch = (pitch < -12)? -12 : pitch;
-	adjMicPacketSize = micAudioPacketSize + pitch;			// pitch is adjusted to keep things flowing smoothly
+//	adjMicPacketSize = micAudioPacketSize + pitch;			// pitch is adjusted to keep things flowing smoothly
 	enterState( idleState );					// Back to Idling
 }
 
