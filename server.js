@@ -3,9 +3,9 @@
 var zipson = require('zipson');						// For compressing and decompressing data
 const SampleRate = 16000; 						// All audio in audence runs at this sample rate. 
 const PacketSize = 500;							// Number of samples in the client audio packets
-const maxBufferSize = 10;						// Max number of packets to store per client
-const perfMaxBufferSize = 10;						// Max packets buffered for the performer
-const mixTriggerLevel = 5;						// When all clients have this many packets we create a mix
+const maxBufferSize = 4;						// Max number of packets to store per client
+const perfMaxBufferSize = 4;						// Max packets buffered for the performer
+const mixTriggerLevel = 2;						// When all clients have this many packets we create a mix
 const MaxOutputLevel = 1;						// Max output level for INT16, for auto gain control
 const NumberOfChannels = 21;						// Max number of channels in this server = 20 + channel 0 (now not used)
 var channels = [];							// Each channel's data & buffer held here
