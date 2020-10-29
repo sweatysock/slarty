@@ -447,7 +447,7 @@ socketIO.on('d', function (data) {
 //		spkrBufferL.splice(0, excess); 	
 //		spkrBufferR.splice(0, excess); 	
 		overflows++;						// Note for monitoring purposes
-//		pitch--;						// Decrease amount of data from each packet to reduce overflows
+		pitch--;						// Decrease amount of data from each packet to reduce overflows
 		bytesOver += excess;
 	}
 	if (spkrBufferL.length > spkrBuffPeak) 				// Monitoring purposes
@@ -457,7 +457,7 @@ socketIO.on('d', function (data) {
 	}
 	if (venueBuffer.length > maxBuffSize) 				// Clip buffer if too full
 		venueBuffer.splice(0, (venueBuffer.length-maxBuffSize)); 	
-//		pitch--;						// Decrease amount of data from each packet to reduce overflows
+		pitch--;						// Decrease amount of data from each packet to reduce overflows
 	// 5. Calculate RTT 
 	if (ts > 0) {							// If we have timestamp data calcuate rtt
 		let now = new Date().getTime();
