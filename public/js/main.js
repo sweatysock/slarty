@@ -1785,7 +1785,7 @@ function printReport() {
 	pitch = (pitch > 12)? 12 : pitch;
 	pitch = (pitch < -12)? -12 : pitch;
 //	adjMicPacketSize = micAudioPacketSize + pitch;			// pitch is adjusted to keep things flowing smoothly
-	adjMicPacketSize = micAudioPacketSize + 2;			// pitch is adjusted to keep things flowing smoothly
+	adjMicPacketSize = micAudioPacketSize + 9;			// pitch is adjusted to keep things flowing smoothly
 	enterState( idleState );					// Back to Idling
 }
 
