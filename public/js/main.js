@@ -73,7 +73,7 @@ var micIn = {								// and for microphone input
 	peak	: 0,
 	channel	: "micIn",
 	threshold:0.000,						// Level below which we don't send audio
-	gate	: 1,							// Threshold gate. >0 means open.
+	gate	: 0,							// Threshold gate. >0 means open.
 };
 var venue = {								// Similar structure for the venue channel
 	name 	: "Venue",
@@ -595,25 +595,28 @@ document.addEventListener('DOMContentLoaded', function(event){		// Add dynamic b
 		else
 			helpp.style.visibility = "hidden";
 	});
-	let micBtn = document.getElementById('micBtn');			// mic button mutes/unmutes the mic
 	let micMuted = document.getElementById('micMuted');
 	let micOpen = document.getElementById('micOpen');
-	micBtn.onclick = ( (e) => {
+	micMuted.onclick = ( (e) => {
 		let micOnMixer = document.getElementById('IDmicInOn');
-		if (micIn.muted) {
-			micIn.muted = false;
-			micMuted.style.visibility = "hidden";
-			micOpen.style.visibility = "visible";
-			micOnMixer.style.visibility = "inherit";
-
-		} else {
-			micIn.muted = true;
-			micMuted.style.visibility = "visible";
-			micOpen.style.visibility = "hidden";
-			micOnMixer.style.visibility = "hidden";
+		micIn.muted = false;
+		micMuted.style.visibility = "hidden";
+		micOpen.style.visibility = "visible";
+		micOnMixer.style.visibility = "inherit";
+		if (forcedMute) {					// If UI mute state was forced due to high threshold force mic open
+			micIn.gate = 40;				// for about 1 second
+			forcedMute = false;				// Not strictly necessary, but as we are clearly unmuted may as well unforce too
 		}
 	});
+	micOpen.onclick = ( (e) => {
+		let micOnMixer = document.getElementById('IDmicInOn');
+		micIn.muted = true;
+		micMuted.style.visibility = "visible";
+		micOpen.style.visibility = "hidden";
+		micOnMixer.style.visibility = "hidden";
+	});
 	navigator.mediaDevices.addEventListener('devicechange', () => {	// List all input/output devices on device change
+		// MARK CONSIDER REPEATING ECHO TEST HERE IF THIS TRIGGERS WITH HEADPHONES
 		navigator.mediaDevices.enumerateDevices()		// Testing this to see if we can detect headphones reliably
 		.then(devices => {
 			tracef(JSON.stringify(devices));  
