@@ -1784,8 +1784,8 @@ function printReport() {
 //	pitch = Math.round((maxBuffSize/2 - spkrBufferL.length)/500);	// pitch error is related inversely to buffer over/under middle
 	pitch = (pitch > 12)? 12 : pitch;
 	pitch = (pitch < -12)? -12 : pitch;
-//	adjMicPacketSize = micAudioPacketSize + pitch;			// pitch is adjusted to keep things flowing smoothly
-	adjMicPacketSize = micAudioPacketSize + 9;			// pitch is adjusted to keep things flowing smoothly
+if (adjMicPacketSize != micAudioPacketSize + pitch) trace("PITCH CHANGE");
+	adjMicPacketSize = micAudioPacketSize + pitch;			// pitch is adjusted to keep things flowing smoothly
 	enterState( idleState );					// Back to Idling
 }
 
