@@ -178,7 +178,7 @@ socketIO.on('d', function (data) {
 		enterState( idleState );				// Back to Idling
 		return;							// No audio access so do nothing with incoming data
 	}
-	let v = [];							// Our objective is to get the venue audio (if any) in here,
+	let v = new Array(adjMicPacketSize).fill(0);			// Our objective is to get the venue audio (if any) in here,
 	let c8 = new Array(PacketSize/2).fill(0);			// Buffer of group audio to be subtracted from the venue audio 
 	let c16 = new Array(PacketSize/2).fill(0);			// in MSRE format
 	let gL = [], gR = [];						// the group stereo audio (if any) in here
@@ -1233,8 +1233,8 @@ function processAudio(e) {						// Main processing loop
 		outDataL[i] = outAudioL[i];				// Copy left audio to outputL
 		outDataR[i] = outAudioR[i];				// and right audio to outputR
 	}
-//	outDataL = outAudioL.slice(0,outAudioL.length);					// Faster way to copy left audio to outputL
-//	outDataR = outAudioR.slice(0,outAudioR.length);					// and right audio to outputR
+//	outDataL = outAudioL.slice();					// Faster way to copy left audio to outputL
+//	outDataR = outAudioR.slice();					// and right audio to outputR
 	// 2.1 Take venue audio from buffer and send to special output
 	let outAudioV = [];
 	if (venueBuffer.length > ChunkSize) {				// There is enough audio buffered
@@ -1251,7 +1251,7 @@ function processAudio(e) {						// Main processing loop
 	for (let i in outDataV) { 
 		outDataV[i] = outAudioV[i];				// Copy venue audio to it's special output
 	}
-//	outDataV = outAudioV.slice(0, outAudioV.length);					// Faster way to copy venue audio to it's special output
+//	outDataV = outAudioV.slice();					// Faster way to copy venue audio to it's special output
 	// 2.2 If there is a risk of echo set the input dynamic threshold level to stop audio feedback
 	if (echoRisk) {
 		let maxL = maxValue(outAudioL);				// Get peak level of this outgoing audio
