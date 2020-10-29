@@ -5,10 +5,10 @@ const SampleRate = 16000; 						// All audio in audence runs at this sample rate
 const PacketSize = 500;							// Number of samples in the client audio packets
 var maxBufferSize = process.env.maxbuffersize; 				// Get maxbuffersize from heroku config variable, if present
 if (maxBufferSize == undefined)						// This name is used to identify us upstream ony
-	maxBufferSize = 8;						// Max number of packets to store per client
+	maxBufferSize = 10;						// Max number of packets to store per client
 var perfMaxBufferSize = process.env.perfmaxbuffersize; 			// Get maxbuffersize from heroku config variable, if present
 if (perfMaxBufferSize == undefined)					// This name is used to identify us upstream ony
-	perfMaxBufferSize = 8;						// Max packets buffered for the performer
+	perfMaxBufferSize = 10;						// Max packets buffered for the performer
 const mixTriggerLevel = maxBufferSize/2;				// When all clients have this many packets we create a mix
 const MaxOutputLevel = 1;						// Max output level for INT16, for auto gain control
 const NumberOfChannels = 21;						// Max number of channels in this server = 20 + channel 0 (now not used)
