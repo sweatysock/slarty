@@ -1229,12 +1229,12 @@ function processAudio(e) {						// Main processing loop
 		outAudioL = new Array(ChunkSize).fill(0); 
 		outAudioR = new Array(ChunkSize).fill(0);
 	}
-//	for (let i in outDataL) { 
-//		outDataL[i] = outAudioL[i];				// Copy left audio to outputL
-//		outDataR[i] = outAudioR[i];				// and right audio to outputR
-//	}
-	outDataL = outAudioL.slice(0,outAudioL.length);					// Faster way to copy left audio to outputL
-	outDataR = outAudioR.slice(0,outAudioR.length);					// and right audio to outputR
+	for (let i in outDataL) { 
+		outDataL[i] = outAudioL[i];				// Copy left audio to outputL
+		outDataR[i] = outAudioR[i];				// and right audio to outputR
+	}
+//	outDataL = outAudioL.slice(0,outAudioL.length);					// Faster way to copy left audio to outputL
+//	outDataR = outAudioR.slice(0,outAudioR.length);					// and right audio to outputR
 	// 2.1 Take venue audio from buffer and send to special output
 	let outAudioV = [];
 	if (venueBuffer.length > ChunkSize) {				// There is enough audio buffered
@@ -1248,10 +1248,10 @@ function processAudio(e) {						// Main processing loop
 	}
 	if ((echoRisk) && (micIn.gate > 0))				// If echo is likely and the mic is on, output silence
 		outAudioV =  new Array(ChunkSize).fill(0);
-//	for (let i in outDataV) { 
-//		outDataV[i] = outAudioV[i];				// Copy venue audio to it's special output
-//	}
-	outDataV = outAudioV.slice(0, outAudioV.length);					// Faster way to copy venue audio to it's special output
+	for (let i in outDataV) { 
+		outDataV[i] = outAudioV[i];				// Copy venue audio to it's special output
+	}
+//	outDataV = outAudioV.slice(0, outAudioV.length);					// Faster way to copy venue audio to it's special output
 	// 2.2 If there is a risk of echo set the input dynamic threshold level to stop audio feedback
 	if (echoRisk) {
 		let maxL = maxValue(outAudioL);				// Get peak level of this outgoing audio
