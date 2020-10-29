@@ -881,6 +881,10 @@ function unmuteButton(e) {
 	if (!micIn.muted) {						// Sync up UI mute buttons with mute state (mixer can de-sync them)
 		document.getElementById('micMuted').style.visibility = "hidden";
 		document.getElementById('micOpen').style.visibility = "visible";
+		if (forcedMute) {					// If UI mute state was forced due to high threshold force mic open
+			micIn.gate = 40;				// for about 1 second
+			forcedMute = false;				// Not strictly necessary, but as we are clearly unmuted may as well unforce too
+		}
 	}
 }
 
