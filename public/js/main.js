@@ -1233,8 +1233,8 @@ function processAudio(e) {						// Main processing loop
 //		outDataL[i] = outAudioL[i];				// Copy left audio to outputL
 //		outDataR[i] = outAudioR[i];				// and right audio to outputR
 //	}
-	outDataL = outAudioL.slice();					// Faster way to copy left audio to outputL
-	outDataR = outAudioR.slice();					// and right audio to outputR
+	outDataL = outAudioL.slice(0,outAudioL.length);					// Faster way to copy left audio to outputL
+	outDataR = outAudioR.slice(0,outAudioR.length);					// and right audio to outputR
 	// 2.1 Take venue audio from buffer and send to special output
 	let outAudioV = [];
 	if (venueBuffer.length > ChunkSize) {				// There is enough audio buffered
@@ -1251,13 +1251,12 @@ function processAudio(e) {						// Main processing loop
 //	for (let i in outDataV) { 
 //		outDataV[i] = outAudioV[i];				// Copy venue audio to it's special output
 //	}
-	outDataV = outAudioV.slice();					// Faster way to copy venue audio to it's special output
+	outDataV = outAudioV.slice(0, outAudioV.length);					// Faster way to copy venue audio to it's special output
 	// 2.2 If there is a risk of echo set the input dynamic threshold level to stop audio feedback
 	if (echoRisk) {
 		let maxL = maxValue(outAudioL);				// Get peak level of this outgoing audio
 		let maxR = maxValue(outAudioR);				// for each channel
 		let maxV = maxValue(outAudioV);				// and venue audio
-tracef(maxL,maxR,maxV);
 		if (maxL < maxR) maxL = maxR;				// Choose loudest channel
 		if (maxL < maxV) maxL = maxV;					
 		thresholdBuffer.unshift( maxL );			// add to start of dynamic threshold queue
