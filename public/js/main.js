@@ -1681,12 +1681,8 @@ function runEchoTest(audio) {						// Test audio system in a series of tests
 				echoTest.factor = 3;			// Force strong factor always
 				trace2("Forced factor is ",echoTest.factor);
 			} else {
-				trace2("No clear result");		// No agreement, no result
+				trace2("No clear result. Echo risk should be low.");		// No agreement, no result
 				echoRisk = false;			// Should be ok without feedback control
-				if (max > 4) {				// Not sure... have to be cautious
-					echoRisk = true;
-					trace2("It may be worth repeating the test");
-				}
 			}
 			echoTest.running = false;			// Stop test 
 		}
