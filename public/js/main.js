@@ -648,6 +648,7 @@ function displayAnimation() { 						// called 100mS to animate audio displays
 		micIn.peak = micIn.peak * rate; 			// drop mic peak level a little for smooth drops
 		setLevelDisplay( micIn );				// Update LED display for mic.peak
 		setSliderPos( micIn );					// Update slider position for mic gain
+		updateUIMute();						// Mute buttons are dynamic depending on thresholds and user commands
 		if (!loopback) setThresholdPos( micIn );		// In loopback the threshold display is not needed
 		venue.peak = venue.peak * rate; 			// drop venue peak level a little for smooth drops
 		setLevelDisplay( venue );				// Update LED display for venue.peak
@@ -674,6 +675,23 @@ function displayAnimation() { 						// called 100mS to animate audio displays
 	if (displayRefresh <= 1000)					// If CPU really struggling stop animating UI completely
 		setTimeout(displayAnimation, displayRefresh);		// Call animated display again. 
 	enterState( idleState );					// Back to Idling
+}
+
+var forcedMute = false;							// Flag used to avoid unecessary work. Detect changes in state.
+function updateUIMute() {						// Set UI mute appearance according to mic threshold if appropriate
+	if ((echoRisk) && (!micIn.muted)) {				// If there is an echo risk and the mic has not been manually muted
+		if ((forcedMute) && (micIn.threshold <= 1.0)) {		// If a forced mute state has been previously set, but is no longer necessary
+			document.getElementById('IDmicInOn').style.visibility = "inherit";	// Un mute the UI
+			document.getElementById('micMuted').style.visibility = "hidden";
+			document.getElementById('micOpen').style.visibility = "visible";
+			forcedMute = false;				// Flag that UI mute has been unforced
+		} else if ((!forcedMute) && (micIn.threshold > 1.0)) {	// If we haven't already forced UI mute and the mic threshold has imposed muting
+			document.getElementById('IDmicInOn').style.visibility = "hidden";		// Show the UI as muted
+			document.getElementById('micMuted').style.visibility = "visible";
+			document.getElementById('micOpen').style.visibility = "hidden";
+			forcedMute = true;				// Flag that UI mute has been forced
+		}
+	}
 }
 
 function toggleSettings() {						// Hide/show settings = mixing desk
@@ -845,6 +863,10 @@ function muteButton(e) {
 	b.style.visibility = "hidden";
 	id = convertIdToObj(id);
 	id.muted = true;
+	if (micIn.muted) {						// Sync up UI mute buttons with mute state (mixer can de-sync them)
+		document.getElementById('micMuted').style.visibility = "visible";
+		document.getElementById('micOpen').style.visibility = "hidden";
+	}
 }
 
 function unmuteButton(e) {
@@ -853,6 +875,10 @@ function unmuteButton(e) {
 	b.style.visibility = "inherit";
 	id = convertIdToObj(id);
 	id.muted = false;
+	if (!micIn.muted) {						// Sync up UI mute buttons with mute state (mixer can de-sync them)
+		document.getElementById('micMuted').style.visibility = "hidden";
+		document.getElementById('micOpen').style.visibility = "visible";
+	}
 }
 
 function agcButton(e) {
@@ -1251,9 +1277,10 @@ function processAudio(e) {						// Main processing loop
 		let e = echoTest.sampleDelay + 3;			// end of threshold window
 		micIn.threshold = maxValue( thresholdBuffer		// Apply most aggressive threshold near current +/-w chunks
 			.slice(s,e)) * echoTest.factor * mixOut.gain;	// multiply by factor and mixOutGain 
-		if (micIn.threshold > 0.05) micIn.threshold = 0.8;	// Values from mic can be > 1!!
-		if (micIn.threshold > 0.1) micIn.threshold = 0.9;	// Values from mic can be > 1!!
-		if (micIn.threshold > 0.5) micIn.threshold = 1.2;	// Values from mic can be > 1!!
+		if (micIn.threshold > 0.05) micIn.threshold = 0.8;	// Factor 16
+		if (micIn.threshold > 0.1) micIn.threshold = 0.9;	// Factor tapers off to 9
+		if (micIn.threshold > 0.2) micIn.threshold = 1.0;	// And if you shout you'll get control here with factor 5
+		if (micIn.threshold > 0.5) micIn.threshold = 1.2;	// Above 0.5 there's no chance of getting control without muting output
 		thresholdBuffer.pop();					// Remove oldest threshold buffer value
 	} else micIn.threshold = 0;					// No echo risk so no threshold needed
 	let now = new Date().getTime();					// Note time between audio processing loops
