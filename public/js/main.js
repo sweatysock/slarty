@@ -1257,6 +1257,7 @@ function processAudio(e) {						// Main processing loop
 		let maxL = maxValue(outAudioL);				// Get peak level of this outgoing audio
 		let maxR = maxValue(outAudioR);				// for each channel
 		let maxV = maxValue(outAudioV);				// and venue audio
+tracef(maxL,maxR,maxV);
 		if (maxL < maxR) maxL = maxR;				// Choose loudest channel
 		if (maxL < maxV) maxL = maxV;					
 		thresholdBuffer.unshift( maxL );			// add to start of dynamic threshold queue
