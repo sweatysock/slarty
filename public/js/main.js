@@ -132,6 +132,7 @@ socketIO.on('channel', function (data) {				// Message assigning us a channel
 		if (id != null) id.innerHTML = micIn.name;		// Update onscreen name if created
 		trace('Channel assigned: ',myChannel);
 		socketConnected = true;					// The socket can be used once we have a channel
+		pitch = 0;						// Pitch adjustment resets now
 		if (data.loopback) {					// We have connected to a lopback server
 			loopback = true;				// Flag we are in loopback mode to enable self-monitoring
 			performer = true;				// Go into performer mode
@@ -474,6 +475,7 @@ socketIO.on('d', function (data) {
 socketIO.on('disconnect', function () {
 	trace('socket disconnected!');
 	socketConnected = false;
+	pitch = 0;							// reset pitch adjustment as connection is reseting
 });
 
 
