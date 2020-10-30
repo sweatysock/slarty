@@ -1139,7 +1139,6 @@ console.log("one");
 				micIn.gate = gateDelay;			
 			} 
 		}
-console.log("two");
 		if (micIn.gate > 0) {					// If gate is open prepare the audio for sending
 			micAudioL = inDataL;
 			micAudioR = inDataR;
@@ -1150,14 +1149,12 @@ console.log("two");
 		}
 		micBufferL.push(...micAudioL);				// Buffer mic audio L
 		micBufferR.push(...micAudioR);				// Buffer mic audio R
-console.log("three");
 		if (micBufferL.length > adjMicPacketSize) {		// If enough audio in buffer 
 			let audioL = micBufferL.splice(0, adjMicPacketSize);		// Get a packet of audio
 			let audioR = micBufferR.splice(0, adjMicPacketSize);		// for each channel
 			let audio = {mono8:[],mono16:[]};		// default empty audio and perf objects to send
 			let perf = false;				// By default we believe we are not the performer
 			let peak = 0;					// Note: no need for perf to set peak
-console.log("four");
 			if (performer) {				// If we actually are the performer 
 				if (!micIn.muted) {			// & not muted prepare our audio for HQ stereo 
 					let a = prepPerfAudio(audioL, audioR);	
@@ -1166,7 +1163,6 @@ console.log("four");
 					perf = zipson.stringify({mono8:[],mono16:[],mono32:[],stereo8:[],stereo16:[],stereo32:[]});
 			} else {					// Standard audio prep - always mono
 				let mono8 = [], mono16 = [], mono32 = [], stereo8 = [], stereo16 = [], stereo32 = [];
-console.log("five");
 				audio = reSample(audioL, downCache, PacketSize);	
 				let obj = applyAutoGain(audio, micIn);	// Amplify mic with auto limiter
 				if (obj.peak > micIn.peak) 
@@ -1192,7 +1188,6 @@ console.log("five");
 				audio = zipson.parse(a);			// Saves 65% of bandwidth on its own!
 			}
 			let sr = performer ? PerfSampleRate : SampleRate;
-console.log("six");
 			let now = new Date().getTime();
 			let packet = {
 				name		: myName,		// Send the name we have chosen 
@@ -1220,7 +1215,6 @@ console.log("six");
 			packetSequence++;
 		}
 	}
-console.log("seven");
 
 	// 2. Take audio buffered from server and send it to the speaker
 	let outAudioL = [], outAudioR = [];					
