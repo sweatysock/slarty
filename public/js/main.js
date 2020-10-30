@@ -1134,6 +1134,7 @@ function processAudio(e) {						// Main processing loop
 				micIn.gate = gateDelay;			// noiseThershold can be controlled centrally
 			} else if ((peak > micIn.threshold) &&		// Gate shut. If audio is above dynamic threshold
 				(peak > noiseThreshold)) {		// and noise threshold, open gate
+trace2("CUT ",peak,">",micIn.threshold");
 				micIn.gate = gateDelay;			
 			} 
 		}
@@ -1292,22 +1293,27 @@ function processAudio(e) {						// Main processing loop
 		else if (tempThresh > gap*0.5) tempThresh = 0.5;	// and for slightly lower levels there is a slightly more tolerant gap kept open
 		thresholdBuffer.pop();					// Remove oldest threshold buffer value
 		if (blocked == 0) {  					// If blocked flag is reset we have passed a silent period and we need to watch for raising output
+trace2("LOOKING for raising level");
 			if (thresholdBuffer[0] > thresholdBuffer[1]) {	// If our output level is climbing thre's a risk of feedback due to mic over amplification
+trace2("got it");
 				blocked = 20;				// so block the threshold for N chunks at the level at which no sound can get through
 				micIn.threshold = 1.2;
 			} else micIn.threshold = tempThresh;		// Meanwhile set threshold to allow interruptions but avoid feedback
 		}
 		if (blocked > 0) {
 			blocked--;					// Threshold is blocked at max to completely stop feedback. Count back until unblocked.
-			if (blocked == 0) blocked = -20;		// After the blocked period we have to look for a prolonged quiet period
+			if (blocked == 0) {
+trace2("Block finished. Now looking for quiet");
+				blocked = -20;		// After the blocked period we have to look for a prolonged quiet period
+			}
 		}
 		if (blocked < 0) {					// Searching for prolonged quiet in output
-			if (maxL < noiseThreshold) blocked++;		// Our output is low enough that mic may increase in sensitivity
-			else blocked = -20;				// otherwise start counting silence again because mic will have reset too
+			if (maxL < noiseThreshold) {
+trace2("quiet enough");
+				blocked++;		// Our output is low enough that mic may increase in sensitivity
+			} else blocked = -20;				// otherwise start counting silence again because mic will have reset too
 			micIn.threshold = tempThresh;			// Set mic threshold according to output level to allow interruptions but avoid feedback
 		}
-if (tracecount > 0) trace2("max ",maxL," tempThresh ",tempThresh," blocked ",blocked," micTh ",micIn.threshold);
-tracecount--;
 	} else micIn.threshold = 0;					// No echo risk so no threshold needed
 	let now = new Date().getTime();					// Note time between audio processing loops
 	delta = now - previous;
@@ -1701,7 +1707,7 @@ function runEchoTest(audio) {						// Test audio system in a series of tests
 				}
 				// Get average factor value
 				echoTest.factor = avgValue(factors) * 3; // boost factor to give echo margin
-				echoTest.factor = 1;			// Force strong factor always
+				echoTest.factor = 8;			// Force strong factor always
 				trace2("Forced factor is ",echoTest.factor);
 			} else {
 				trace2("No clear result. Echo risk should be low.");		// No agreement, no result
