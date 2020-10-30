@@ -86,6 +86,7 @@ var venue = {								// Similar structure for the venue channel
 	peak	: 0,
 	channel	: "venue",
 };
+var blocked = 0;							// Counter used to block mic input to avoid feedback cutting output
 var recording = false;							// Used for testing purposes
 var serverMuted = false;
 var venueSize = 1;							// Number of people in the venue. Used for adjusting venue audio.
@@ -1274,30 +1275,28 @@ function processAudio(e) {						// Main processing loop
 //	outDataV = outAudioV.slice();					// Faster way to copy venue audio to it's special output
 	// 2.2 If there is a risk of echo set the input dynamic threshold level to stop audio feedback
 	if (echoRisk) {
-		if (blocked > 0) blocked--;				// Threshold is blocked at max to completely stop feedback 
-		else {
-			let maxL = maxValue(outAudioL);			// Get peak level of this outgoing audio
-			let maxR = maxValue(outAudioR);			// for each channel
-			let maxV = maxValue(outAudioV);			// and venue audio
-			if (maxL < maxR) maxL = maxR;			// Choose loudest channel
-			if (maxL < maxV) maxL = maxV;				
-			thresholdBuffer.unshift( maxL );		// add to start of dynamic threshold queue
-			let s = echoTest.sampleDelay - 3;		// start of threshold window
-			let e = echoTest.sampleDelay + 3;		// end of threshold window
-			let tempThresh;
-			tempThresh = maxValue( thresholdBuffer		// Apply most aggressive threshold near current +/-w chunks
+		let maxL = maxValue(outAudioL);				// Get peak level of this outgoing audio
+		let maxR = maxValue(outAudioR);				// for each channel
+		let maxV = maxValue(outAudioV);				// and venue audio
+		if (maxL < maxR) maxL = maxR;				// Choose loudest channel
+		if (maxL < maxV) maxL = maxV;				
+		thresholdBuffer.unshift( maxL );			// add to start of dynamic threshold queue
+		let s = echoTest.sampleDelay - 3;			// start of threshold window
+		let e = echoTest.sampleDelay + 3;			// end of threshold window
+		let tempThresh;
+		tempThresh = maxValue( thresholdBuffer			// Apply most aggressive threshold near current +/-w chunks
 			.slice(s,e)) * echoTest.factor * mixOut.gain;	// multiply by factor and mixOutGain 
-			let gap = 0.9/echoTest.factor;			// The factor keeps threshold high stopping feedback. But to allow interruptions we reserve this gap
-			if (tempThresh > gap) tempThresh = 0.9;		// Leave a small gap to allow mic to interrupt
-			gap = 1/echoTest.factor;			// The final gap that will let only a shout or clap through
-			if (tempThresh > gap) tempThresh = 1.0;		// At this level only if you shout you'll interrupt
-			if (tempThresh > 0.5) tempThresh = 1.2;		// Above 0.5 there's no chance of getting control without muting output
-			thresholdBuffer.pop();				// Remove oldest threshold buffer value
-			if (thresholdBuffer[0] > thresholdBuffer[1]) {	// If our output level is climbing thre's a risk of feedback due to mic over amplification
-				blocked = 20;				// so block the threshold for N chunks at the level at which no sound can get through
-				micIn.threshold = 1.2;
-			} else micIn.threshold = tempThresh;		// otherwise set the threshold to the calculated level based on current peak output levels
+		let gap = 1/echoTest.factor;				// The factor keeps threshold high stopping feedback. 
+		if (tempThresh > 0.5) tempThresh = 1.2;			// Above output of 0.5 there's no chance of getting control without muting output
+		else if (tempThresh > gap) tempThresh = 1.0;		// Between gap and 0.5 there is a chance of interrupting if you shout or clap
+		else if (tempThresh > gap*0.9) tempThresh = 0.9;	// and for slightly lower levels there is a slightly more tolerant gap kept open
+		thresholdBuffer.pop();					// Remove oldest threshold buffer value
+		if (thresholdBuffer[0] > thresholdBuffer[1]) {		// If our output level is climbing thre's a risk of feedback due to mic over amplification
+			blocked = 20;					// so block the threshold for N chunks at the level at which no sound can get through
+			micIn.threshold = 1.2;
 		}
+		if (blocked > 0) blocked--;				// Threshold is blocked at max to completely stop feedback. Count back until unblocked.
+		else micIn.threshold = tempThresh;			// otherwise set the threshold to the calculated level based on current peak output levels
 	} else micIn.threshold = 0;					// No echo risk so no threshold needed
 	let now = new Date().getTime();					// Note time between audio processing loops
 	delta = now - previous;
