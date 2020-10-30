@@ -1289,7 +1289,7 @@ function processAudio(e) {						// Main processing loop
 		let gap = 1/echoTest.factor;				// The factor keeps threshold high stopping feedback. 
 		if (tempThresh > 0.5) tempThresh = 1.2;			// Above output of 0.5 there's no chance of getting control without muting output
 		else if (tempThresh > gap) tempThresh = 1.0;		// Between gap and 0.5 there is a chance of interrupting if you shout or clap
-		else if (tempThresh > gap*0.9) tempThresh = 0.9;	// and for slightly lower levels there is a slightly more tolerant gap kept open
+		else if (tempThresh > gap*0.5) tempThresh = 0.5;	// and for slightly lower levels there is a slightly more tolerant gap kept open
 		thresholdBuffer.pop();					// Remove oldest threshold buffer value
 		if (thresholdBuffer[0] > thresholdBuffer[1]) {		// If our output level is climbing thre's a risk of feedback due to mic over amplification
 			blocked = 20;					// so block the threshold for N chunks at the level at which no sound can get through
