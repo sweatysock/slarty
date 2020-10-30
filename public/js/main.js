@@ -1316,9 +1316,9 @@ for (let j=0; j<conv.length; j++)			// Find max = edge of pulse
 		edge = j;
 	}
 let fact = 0;
-for (let i=edge; i<tlen; i++) factor += micPeaks[i]/thresholdBuffer[i+edge];
-factor = factor / (tlen-edge);
-trace2("delay ",edge," factor ",factor);
+for (let i=edge; i<tlen; i++) fact += micPeaks[i]/thresholdBuffer[i+edge];
+fact = fact / (tlen-edge);
+trace2("delay ",edge," factor ",fact);
 		if (blocked == 0) {  					// If blocked flag is reset we have passed a silent period and we need to watch for raising output
 			if ((thresholdBuffer[0] > thresholdBuffer[1])
 			&& (thresholdBuffer[0] > noiseThreshold)) {	// If our output level is up & climbing there's a risk of feedback due to mic over amplification
