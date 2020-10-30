@@ -1283,7 +1283,7 @@ function processAudio(e) {						// Main processing loop
 		thresholdBuffer.unshift( maxL );			// add to start of dynamic threshold queue
 		let s = echoTest.sampleDelay - 3;			// start of threshold window
 		let e = echoTest.sampleDelay + 3;			// end of threshold window
-		let tempThresh;
+		let tempThresh;						// Adjusted threshold level 
 		tempThresh = maxValue( thresholdBuffer			// Apply most aggressive threshold near current +/-w chunks
 			.slice(s,e)) * echoTest.factor * mixOut.gain;	// multiply by factor and mixOutGain 
 		let gap = 1/echoTest.factor;				// The factor keeps threshold high stopping feedback. 
@@ -1291,12 +1291,21 @@ function processAudio(e) {						// Main processing loop
 		else if (tempThresh > gap) tempThresh = 1.0;		// Between gap and 0.5 there is a chance of interrupting if you shout or clap
 		else if (tempThresh > gap*0.5) tempThresh = 0.5;	// and for slightly lower levels there is a slightly more tolerant gap kept open
 		thresholdBuffer.pop();					// Remove oldest threshold buffer value
-		if (thresholdBuffer[0] > thresholdBuffer[1]) {		// If our output level is climbing thre's a risk of feedback due to mic over amplification
-			blocked = 20;					// so block the threshold for N chunks at the level at which no sound can get through
-			micIn.threshold = 1.2;
+		if (blocked == 0) {  					// If blocked flag is reset we have passed a silent period and we need to watch for raising output
+			if (thresholdBuffer[0] > thresholdBuffer[1]) {	// If our output level is climbing thre's a risk of feedback due to mic over amplification
+				blocked = 20;				// so block the threshold for N chunks at the level at which no sound can get through
+				micIn.threshold = 1.2;
+			} else micIn.threshold = tempThresh;		// Meanwhile set threshold to allow interruptions but avoid feedback
 		}
-		if (blocked > 0) blocked--;				// Threshold is blocked at max to completely stop feedback. Count back until unblocked.
-		else micIn.threshold = tempThresh;			// otherwise set the threshold to the calculated level based on current peak output levels
+		if (blocked > 0) {
+			blocked--;					// Threshold is blocked at max to completely stop feedback. Count back until unblocked.
+			if (blocked == 0) blocked = -20;		// After the blocked period we have to look for a prolonged quiet period
+		}
+		if (blocked < 0) {					// Searching for prolonged quiet in output
+			if (maxL < noiseThreshold) blocked++;		// Our output is low enough that mic may increase in sensitivity
+			else blocked = -20;				// otherwise start counting silence again because mic will have reset too
+			micIn.threshold = tempThresh;			// Set mic threshold according to output level to allow interruptions but avoid feedback
+		}
 if (tracecount > 0) trace2("max ",maxL," tempThresh ",tempThresh," blocked ",blocked," micTh ",micIn.threshold);
 tracecount--;
 	} else micIn.threshold = 0;					// No echo risk so no threshold needed
