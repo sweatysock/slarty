@@ -1294,7 +1294,8 @@ trace2("CUT ",peak,">",micIn.threshold);
 		else if (tempThresh > gap*0.6) tempThresh = 0.6;	// and for slightly lower levels there is a slightly more tolerant gap kept open
 		thresholdBuffer.pop();					// Remove oldest threshold buffer value
 		if (blocked == 0) {  					// If blocked flag is reset we have passed a silent period and we need to watch for raising output
-			if (thresholdBuffer[0] > thresholdBuffer[1]) {	// If our output level is climbing thre's a risk of feedback due to mic over amplification
+			if ((thresholdBuffer[0] > thresholdBuffer[1])
+			&& (thresholdBuffer[0] > noiseThreshold)) {	// If our output level is up & climbing there's a risk of feedback due to mic over amplification
 trace2("FOUND rise ",thresholdBuffer[0],">",thresholdBuffer[1]);
 				blocked = 40;				// so block the threshold for N chunks at the level at which no sound can get through
 				micIn.threshold = 1.2;
