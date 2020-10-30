@@ -1299,7 +1299,7 @@ micPeaks.unshift( ppp );
 		thresholdBuffer.pop();					// Remove oldest threshold buffer value
 micPeaks.pop();
 trace2(JSON.stringify(thresholdBuffer));
-trace2(JSON.stringify(thresholdBuffer));
+trace2(JSON.stringify(micPeaks));
 let tlen = thresholdBuffer.length;
 let mlen = micPeaks.length;
 let conv = [];
