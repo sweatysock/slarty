@@ -1304,11 +1304,10 @@ let conv = [];
 for (let t=0; t<tlen; t++) {
 	let sum = 0;
 	for (let x=0; x<mlen; x++) {
-		sum += thresholdBuffer[t]*micPeaks[x];
+		sum += thresholdBuffer[(t+x)%tlen]*micPeaks[x];
 	}
 	conv.push(sum);				// push each result to output
 }
-trace2(JSON.stringify(conv));
 let max = 0;
 let edge = 0;
 for (let j=0; j<conv.length; j++)			// Find max = edge of pulse
@@ -1319,7 +1318,7 @@ for (let j=0; j<conv.length; j++)			// Find max = edge of pulse
 let fact = 0;
 for (let i=edge; i<tlen; i++) fact += micPeaks[i]/thresholdBuffer[i+edge];
 fact = fact / (tlen-edge);
-//trace2("delay ",edge," factor ",fact);
+trace2("delay ",edge," factor ",fact);
 		if (blocked == 0) {  					// If blocked flag is reset we have passed a silent period and we need to watch for raising output
 			if ((thresholdBuffer[0] > thresholdBuffer[1])
 			&& (thresholdBuffer[0] > noiseThreshold)) {	// If our output level is up & climbing there's a risk of feedback due to mic over amplification
