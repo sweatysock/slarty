@@ -1122,7 +1122,7 @@ function processAudio(e) {						// Main processing loop
 		enterState( idleState );				// This test stage is done. Back to Idling
 		return;							// Don't do anything else while testing
 	} 
-console.log("one");
+
 	// 1. Get Mic audio, buffer it, and send it to server if enough buffered
 	if (socketConnected) {						// Need connection to send
 		let micAudioL = [];					// Our objective is to fill this with audio
