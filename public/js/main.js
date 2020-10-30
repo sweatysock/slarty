@@ -1250,6 +1250,7 @@ trace2("CUT ",peak,">",micIn.threshold);
 	if (((echoRisk) && (micIn.gate > 0)) || (outAudioL.length == 0)) {	// If echo is likely and the mic is on, or out array is empty, output silence
 		outAudioL = new Array(ChunkSize).fill(0); 
 		outAudioR = new Array(ChunkSize).fill(0);
+trace2("Mic open. Forced LR silence");
 	}
 	for (let i in outDataL) { 
 		outDataL[i] = outAudioL[i];				// Copy left audio to outputL
@@ -1268,8 +1269,10 @@ trace2("CUT ",peak,">",micIn.threshold);
 		let zeros = new Array(ChunkSize-venueBuffer.length).fill(0);
 		outAudioV.push(...zeros);
 	}
-	if ((echoRisk) && (micIn.gate > 0))				// If echo is likely and the mic is on, output silence
+	if ((echoRisk) && (micIn.gate > 0)) {				// If echo is likely and the mic is on, output silence
 		outAudioV =  new Array(ChunkSize).fill(0);
+trace2("Mic open. Forced V silence");
+	}
 	for (let i in outDataV) { 
 		outDataV[i] = outAudioV[i];				// Copy venue audio to it's special output
 	}
@@ -1293,7 +1296,7 @@ trace2("CUT ",peak,">",micIn.threshold);
 		else if (tempThresh > gap*0.5) tempThresh = 0.5;	// and for slightly lower levels there is a slightly more tolerant gap kept open
 		thresholdBuffer.pop();					// Remove oldest threshold buffer value
 		if (blocked == 0) {  					// If blocked flag is reset we have passed a silent period and we need to watch for raising output
-trace2("LOOKING for raising level");
+trace2("LOOKING for raising level",thresholdBuffer[0],">",thresholdBuffer[1]);
 			if (thresholdBuffer[0] > thresholdBuffer[1]) {	// If our output level is climbing thre's a risk of feedback due to mic over amplification
 trace2("got it");
 				blocked = 20;				// so block the threshold for N chunks at the level at which no sound can get through
