@@ -1303,14 +1303,14 @@ trace2("FOUND rise ",thresholdBuffer[0],">",thresholdBuffer[1]);
 		if (blocked > 0) {
 			blocked--;					// Threshold is blocked at max to completely stop feedback. Count back until unblocked.
 			if (blocked == 0) {
-trace2("Finished. Look for quiet");
+trace2("Block Finished");
 				blocked = -40;		// After the blocked period we have to look for a prolonged quiet period
 			}
 		}
 		if (blocked < 0) {					// Searching for prolonged quiet in output
 			if (maxL < noiseThreshold) {
-trace2("quiet ",maxL,"<",noiseThreshold);
 				blocked++;		// Our output is low enough that mic may increase in sensitivity
+if (blocked == 0) trace2("enough quiet");
 			} else {
 				blocked = -40;				// otherwise start counting silence again because mic will have reset too
 trace2("NOISE. Quiet reset");
@@ -1710,7 +1710,7 @@ function runEchoTest(audio) {						// Test audio system in a series of tests
 				}
 				// Get average factor value
 				echoTest.factor = avgValue(factors) * 3; // boost factor to give echo margin
-				echoTest.factor = 20;			// Force strong factor always
+				echoTest.factor = 30;			// Force strong factor always
 				trace2("Forced factor is ",echoTest.factor);
 			} else {
 				trace2("No clear result. Echo risk should be low.");		// No agreement, no result
