@@ -1297,7 +1297,7 @@ trace2("CUT ",peak,">",micIn.threshold);
 trace2("LOOKING for raising level",thresholdBuffer[0],">",thresholdBuffer[1]);
 			if (thresholdBuffer[0] > thresholdBuffer[1]) {	// If our output level is climbing thre's a risk of feedback due to mic over amplification
 trace2("got it");
-				blocked = 20;				// so block the threshold for N chunks at the level at which no sound can get through
+				blocked = 40;				// so block the threshold for N chunks at the level at which no sound can get through
 				micIn.threshold = 1.2;
 			} else micIn.threshold = tempThresh;		// Meanwhile set threshold to allow interruptions but avoid feedback
 		}
@@ -1305,7 +1305,7 @@ trace2("got it");
 			blocked--;					// Threshold is blocked at max to completely stop feedback. Count back until unblocked.
 			if (blocked == 0) {
 trace2("Finished. Look for quiet");
-				blocked = -20;		// After the blocked period we have to look for a prolonged quiet period
+				blocked = -40;		// After the blocked period we have to look for a prolonged quiet period
 			}
 		}
 		if (blocked < 0) {					// Searching for prolonged quiet in output
