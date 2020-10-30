@@ -1298,8 +1298,6 @@ micPeaks.unshift( ppp );
 		else if (tempThresh > gap*0.6) tempThresh = 0.6;	// and for slightly lower levels there is a slightly more tolerant gap kept open
 		thresholdBuffer.pop();					// Remove oldest threshold buffer value
 micPeaks.pop();
-trace2(JSON.stringify(thresholdBuffer));
-trace2(JSON.stringify(micPeaks));
 let tlen = thresholdBuffer.length;
 let mlen = micPeaks.length;
 let conv = [];
@@ -1310,6 +1308,7 @@ for (let t=0; t<tlen; t++) {
 	}
 	conv.push(sum);				// push each result to output
 }
+trace2(JSON.stringify(conv));
 let max = 0;
 let edge = 0;
 for (let j=0; j<conv.length; j++)			// Find max = edge of pulse
