@@ -1134,7 +1134,7 @@ function processAudio(e) {						// Main processing loop
 				micIn.gate = gateDelay;			// noiseThershold can be controlled centrally
 			} else if ((peak > micIn.threshold) &&		// Gate shut. If audio is above dynamic threshold
 				(peak > noiseThreshold)) {		// and noise threshold, open gate
-trace2("CUT ",peak,">",micIn.threshold");
+trace2("CUT ",peak,">",micIn.threshold);
 				micIn.gate = gateDelay;			
 			} 
 		}
