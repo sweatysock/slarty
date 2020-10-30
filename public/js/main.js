@@ -1298,6 +1298,8 @@ micPeaks.unshift( ppp );
 		else if (tempThresh > gap*0.6) tempThresh = 0.6;	// and for slightly lower levels there is a slightly more tolerant gap kept open
 		thresholdBuffer.pop();					// Remove oldest threshold buffer value
 micPeaks.pop();
+trace2(JSON.stringify(thresholdBuffer));
+trace2(JSON.stringify(thresholdBuffer));
 let tlen = thresholdBuffer.length;
 let mlen = micPeaks.length;
 let conv = [];
@@ -1318,7 +1320,7 @@ for (let j=0; j<conv.length; j++)			// Find max = edge of pulse
 let fact = 0;
 for (let i=edge; i<tlen; i++) fact += micPeaks[i]/thresholdBuffer[i+edge];
 fact = fact / (tlen-edge);
-trace2("delay ",edge," factor ",fact);
+//trace2("delay ",edge," factor ",fact);
 		if (blocked == 0) {  					// If blocked flag is reset we have passed a silent period and we need to watch for raising output
 			if ((thresholdBuffer[0] > thresholdBuffer[1])
 			&& (thresholdBuffer[0] > noiseThreshold)) {	// If our output level is up & climbing there's a risk of feedback due to mic over amplification
