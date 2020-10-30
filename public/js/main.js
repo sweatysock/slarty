@@ -1111,8 +1111,7 @@ function processAudio(e) {						// Main processing loop
 	var outDataL = e.outputBuffer.getChannelData(0);		// Audio going to the left speaker
 	var outDataR = e.outputBuffer.getChannelData(1);		// Audio going to the right speaker
 	var outDataV = e.outputBuffer.getChannelData(2);		// Venue audio going to be processed
-
-let ppp;
+	let mP;								// Peak raw mic input for this chunk
 
 	if (echoTest.running == true) {					// The echo test takes over all audio
 		let output = runEchoTest(inDataL);			// Send the mic audio to the tester
@@ -1128,16 +1127,15 @@ let ppp;
 	if (socketConnected) {						// Need connection to send
 		let micAudioL = [];					// Our objective is to fill this with audio
 		let micAudioR = [];					
-		let peak = maxValue(inDataL);				// Get peak of raw mic audio (using left channel for now)
-ppp=peak;
-		if (!pauseTracing) levelClassifier(peak);		// Classify audio incoming for analysis
+		mP = maxValue(inDataL);					// Get peak of raw mic audio (using left channel for now)
+		if (!pauseTracing) levelClassifier(mP);			// Classify audio incoming for analysis
 		if (performer) micIn.gate = 1				// Performer's mic is always open
 		if (micIn.muted) micIn.gate = 0;			// but the mute control overrides everything
 		else {							// Not muted. Now control the mic gate
-			if ((micIn.gate > 0) && (peak > noiseThreshold)){// If noise gate is open it should stay open for less sound
-				micIn.gate = gateDelay;			// noiseThershold can be controlled centrally
-			} else if ((peak > micIn.threshold) &&		// Gate shut. If audio is above dynamic threshold
-				(peak > noiseThreshold)) {		// and noise threshold, open gate
+			if ((micIn.gate > 0) && (mP > noiseThreshold)){	// If noise gate is open it should stay open for less sound
+				micIn.gate = gateDelay;			// noiseThreshold can be controlled centrally
+			} else if ((mP > micIn.threshold) &&		// Gate shut. If audio is above dynamic threshold
+				(mP > noiseThreshold)) {		// and noise threshold, open gate
 				micIn.gate = gateDelay;			
 			} 
 		}
@@ -1286,7 +1284,31 @@ ppp=peak;
 		if (maxL < maxR) maxL = maxR;				// Choose loudest channel
 		if (maxL < maxV) maxL = maxV;				
 		thresholdBuffer.unshift( maxL );			// add to start of dynamic threshold queue
-micPeaks.unshift( ppp );
+		thresholdBuffer.pop();					// Remove oldest threshold buffer value
+		micPeaks.unshift( mP );					// Also keep buffer of mic peaks to 
+		micPeaks.pop();						// understand relationship between output and input
+		let tlen = thresholdBuffer.length;			// Perform a convolution between the threshold and mic peak buffers
+		let mlen = micPeaks.length;				// This will indicate the delay between emitting a sound and it coming through the mic
+		let conv = [];						// and this will allow us to calculate the amplification factor output to input
+		for (let t=3; t<12; t++) {				// Delays are really only going to be in the 3 to 12 chunk range so no need to try other values
+			let sum = 0;
+			for (let x=0; x<mlen; x++) {
+				sum += thresholdBuffer[(t+x)%tlen]*micPeaks[x];
+			}
+			conv.push(sum);					// The convolution output is an array of values that should have a clear peak
+		}
+		let max = 0;
+		let peak = 0;
+		for (let j=0; j<conv.length; j++)			// Find max = peak of pulse
+			if (conv[j] > max) {
+				max = conv[j];
+				peak = j;
+			}
+		let fact = 0;						// And with the delay we can now calculate the average amplification factor
+		for (let i=0; i<(tlen-peak); i++) fact += micPeaks[i]/thresholdBuffer[i+peak];
+		fact = fact / (tlen-peak);
+		echoTest.factor = (echoTest.factor*9 + fact)/10;	// Incorporate this new factor into the rolling echoTest.factor value used to adjust thresholds
+trace2("d ",peak," f ",fact," ",echoTest.factor);
 		let s = echoTest.sampleDelay - 3;			// start of threshold window
 		let e = echoTest.sampleDelay + 3;			// end of threshold window
 		let tempThresh;						// Adjusted threshold level 
@@ -1296,29 +1318,6 @@ micPeaks.unshift( ppp );
 		if (tempThresh > 0.5) tempThresh = 1.2;			// Above output of 0.5 there's no chance of getting control without muting output
 		else if (tempThresh > gap) tempThresh = 0.9;		// Between gap and 0.5 there is a chance of interrupting if you shout or clap
 		else if (tempThresh > gap*0.6) tempThresh = 0.6;	// and for slightly lower levels there is a slightly more tolerant gap kept open
-		thresholdBuffer.pop();					// Remove oldest threshold buffer value
-micPeaks.pop();
-let tlen = thresholdBuffer.length;
-let mlen = micPeaks.length;
-let conv = [];
-for (let t=0; t<tlen; t++) {
-	let sum = 0;
-	for (let x=0; x<mlen; x++) {
-		sum += thresholdBuffer[(t+x)%tlen]*micPeaks[x];
-	}
-	conv.push(sum);				// push each result to output
-}
-let max = 0;
-let edge = 0;
-for (let j=0; j<conv.length; j++)			// Find max = edge of pulse
-	if (conv[j] > max) {
-		max = conv[j];
-		edge = j;
-	}
-let fact = 0;
-for (let i=0; i<(tlen-edge); i++) fact += micPeaks[i]/thresholdBuffer[i+edge];
-fact = fact / (tlen-edge);
-trace2("delay ",edge," factor ",fact);
 		if (blocked == 0) {  					// If blocked flag is reset we have passed a silent period and we need to watch for raising output
 			if ((thresholdBuffer[0] > thresholdBuffer[1])
 			&& (thresholdBuffer[0] > noiseThreshold)) {	// If our output level is up & climbing there's a risk of feedback due to mic over amplification
