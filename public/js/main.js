@@ -1111,6 +1111,8 @@ function processAudio(e) {						// Main processing loop
 	var outDataR = e.outputBuffer.getChannelData(1);		// Audio going to the right speaker
 	var outDataV = e.outputBuffer.getChannelData(2);		// Venue audio going to be processed
 
+let ppp;
+
 	if (echoTest.running == true) {					// The echo test takes over all audio
 		let output = runEchoTest(inDataL);			// Send the mic audio to the tester
 		for (let i in output) {					// and get back audio to reproduce
@@ -1126,6 +1128,7 @@ function processAudio(e) {						// Main processing loop
 		let micAudioL = [];					// Our objective is to fill this with audio
 		let micAudioR = [];					
 		let peak = maxValue(inDataL);				// Get peak of raw mic audio (using left channel for now)
+ppp=peak;
 		if (!pauseTracing) levelClassifier(peak);		// Classify audio incoming for analysis
 		if (performer) micIn.gate = 1				// Performer's mic is always open
 		if (micIn.muted) micIn.gate = 0;			// but the mute control overrides everything
@@ -1314,7 +1317,7 @@ trace2("Block Finished");
 if (blocked == 0) trace2("enough quiet");
 			} else {
 				blocked = -40;				// otherwise start counting silence again because mic will have reset too
-trace2("NOISE. Quiet reset");
+trace2("NOISE ",maxL," Mic ",ppp);
 			}
 			micIn.threshold = tempThresh;			// Set mic threshold according to output level to allow interruptions but avoid feedback
 		}
