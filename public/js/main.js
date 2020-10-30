@@ -1250,7 +1250,6 @@ trace2("CUT ",peak,">",micIn.threshold);
 	if (((echoRisk) && (micIn.gate > 0)) || (outAudioL.length == 0)) {	// If echo is likely and the mic is on, or out array is empty, output silence
 		outAudioL = new Array(ChunkSize).fill(0); 
 		outAudioR = new Array(ChunkSize).fill(0);
-trace2("Mic open. Forced LR silence");
 	}
 	for (let i in outDataL) { 
 		outDataL[i] = outAudioL[i];				// Copy left audio to outputL
@@ -1271,7 +1270,6 @@ trace2("Mic open. Forced LR silence");
 	}
 	if ((echoRisk) && (micIn.gate > 0)) {				// If echo is likely and the mic is on, output silence
 		outAudioV =  new Array(ChunkSize).fill(0);
-trace2("Mic open. Forced V silence");
 	}
 	for (let i in outDataV) { 
 		outDataV[i] = outAudioV[i];				// Copy venue audio to it's special output
@@ -1306,13 +1304,13 @@ trace2("got it");
 		if (blocked > 0) {
 			blocked--;					// Threshold is blocked at max to completely stop feedback. Count back until unblocked.
 			if (blocked == 0) {
-trace2("Block finished. Now looking for quiet");
+trace2("Finished. Look for quiet");
 				blocked = -20;		// After the blocked period we have to look for a prolonged quiet period
 			}
 		}
 		if (blocked < 0) {					// Searching for prolonged quiet in output
 			if (maxL < noiseThreshold) {
-trace2("quiet enough");
+trace2("quiet ",maxL,"<",noiseThreshold);
 				blocked++;		// Our output is low enough that mic may increase in sensitivity
 			} else blocked = -20;				// otherwise start counting silence again because mic will have reset too
 			micIn.threshold = tempThresh;			// Set mic threshold according to output level to allow interruptions but avoid feedback
