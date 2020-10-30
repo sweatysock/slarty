@@ -1106,11 +1106,11 @@ function processAudio(e) {						// Main processing loop
 	// 2. Get audio buffered from server and send to speaker
 	enterState( audioInOutState );					// Log time spent here
 
-	var inDataL = e.inputBuffer.getChannelData(0);			// Audio from the left mic
-	var inDataR = e.inputBuffer.getChannelData(1);			// Audio from the right mic
-	var outDataL = e.outputBuffer.getChannelData(0);		// Audio going to the left speaker
-	var outDataR = e.outputBuffer.getChannelData(1);		// Audio going to the right speaker
-	var outDataV = e.outputBuffer.getChannelData(2);		// Venue audio going to be processed
+	let inDataL = e.inputBuffer.getChannelData(0);			// Audio from the left mic
+	let inDataR = e.inputBuffer.getChannelData(1);			// Audio from the right mic
+	let outDataL = e.outputBuffer.getChannelData(0);		// Audio going to the left speaker
+	let outDataR = e.outputBuffer.getChannelData(1);		// Audio going to the right speaker
+	let outDataV = e.outputBuffer.getChannelData(2);		// Venue audio going to be processed
 	let mP;								// Peak raw mic input for this chunk
 
 	if (echoTest.running == true) {					// The echo test takes over all audio
@@ -1277,7 +1277,7 @@ function processAudio(e) {						// Main processing loop
 	}
 //	outDataV = outAudioV.slice();					// Faster way to copy venue audio to it's special output
 	// 2.2 If there is a risk of echo set the input dynamic threshold level to stop audio feedback
-	if (echoRisk) {
+	if (!echoRisk) {
 		let maxL = maxValue(outAudioL);				// Get peak level of this outgoing audio
 		let maxR = maxValue(outAudioR);				// for each channel
 		let maxV = maxValue(outAudioV);				// and venue audio
