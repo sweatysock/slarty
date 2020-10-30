@@ -1097,6 +1097,7 @@ trace2("Noise threshold: ",noiseThreshold);
 }
 
 var thresholdBuffer = new Array(20).fill(0);				// Buffer dynamic thresholds here for delayed mic muting
+var micPeaks = new Array(20).fill(0);					// Buffer mic peaks for correlation analysis
 var gateDelay = 10;							// Amount of chunks (time) the gate stays open
 
 function processAudio(e) {						// Main processing loop
@@ -1137,7 +1138,6 @@ ppp=peak;
 				micIn.gate = gateDelay;			// noiseThershold can be controlled centrally
 			} else if ((peak > micIn.threshold) &&		// Gate shut. If audio is above dynamic threshold
 				(peak > noiseThreshold)) {		// and noise threshold, open gate
-trace2("CUT ",peak,">",micIn.threshold);
 				micIn.gate = gateDelay;			
 			} 
 		}
@@ -1286,6 +1286,7 @@ trace2("CUT ",peak,">",micIn.threshold);
 		if (maxL < maxR) maxL = maxR;				// Choose loudest channel
 		if (maxL < maxV) maxL = maxV;				
 		thresholdBuffer.unshift( maxL );			// add to start of dynamic threshold queue
+micPeaks.unshift( ppp );
 		let s = echoTest.sampleDelay - 3;			// start of threshold window
 		let e = echoTest.sampleDelay + 3;			// end of threshold window
 		let tempThresh;						// Adjusted threshold level 
@@ -1296,10 +1297,31 @@ trace2("CUT ",peak,">",micIn.threshold);
 		else if (tempThresh > gap) tempThresh = 0.9;		// Between gap and 0.5 there is a chance of interrupting if you shout or clap
 		else if (tempThresh > gap*0.6) tempThresh = 0.6;	// and for slightly lower levels there is a slightly more tolerant gap kept open
 		thresholdBuffer.pop();					// Remove oldest threshold buffer value
+micPeaks.pop();
+let tlen = thresholdBuffer.length;
+let mlen = micPeaks.length;
+let conv = [];
+for (let t=0; t<tlen; t++) {
+	let sum = 0;
+	for (let x=0; x<mlen; x++) {
+		sum += thresholdBuffer[t]*micPeaks[x];
+	}
+	conv.push(sum);				// push each result to output
+}
+let max = 0;
+let edge = 0;
+for (let j=0; j<conv.length; j++)			// Find max = edge of pulse
+	if (conv[j] > max) {
+		max = conv[j];
+		edge = j;
+	}
+let fact = 0;
+for (let i=edge; i<tlen; i++) factor += micPeaks[i]/thresholdBuffer[i+edge];
+factor = factor / (tlen-edge);
+trace2("delay ",edge," factor ",factor);
 		if (blocked == 0) {  					// If blocked flag is reset we have passed a silent period and we need to watch for raising output
 			if ((thresholdBuffer[0] > thresholdBuffer[1])
 			&& (thresholdBuffer[0] > noiseThreshold)) {	// If our output level is up & climbing there's a risk of feedback due to mic over amplification
-trace2("FOUND rise ",thresholdBuffer[0],">",thresholdBuffer[1]);
 				blocked = 40;				// so block the threshold for N chunks at the level at which no sound can get through
 				micIn.threshold = 1.2;
 			} else micIn.threshold = tempThresh;		// Meanwhile set threshold to allow interruptions but avoid feedback
@@ -1307,17 +1329,14 @@ trace2("FOUND rise ",thresholdBuffer[0],">",thresholdBuffer[1]);
 		if (blocked > 0) {
 			blocked--;					// Threshold is blocked at max to completely stop feedback. Count back until unblocked.
 			if (blocked == 0) {
-trace2("Block Finished");
 				blocked = -40;		// After the blocked period we have to look for a prolonged quiet period
 			}
 		}
 		if (blocked < 0) {					// Searching for prolonged quiet in output
 			if (maxL < noiseThreshold) {
 				blocked++;		// Our output is low enough that mic may increase in sensitivity
-if (blocked == 0) trace2("enough quiet");
 			} else {
 				blocked = -40;				// otherwise start counting silence again because mic will have reset too
-trace2("NOISE ",maxL," Mic ",ppp);
 			}
 			micIn.threshold = tempThresh;			// Set mic threshold according to output level to allow interruptions but avoid feedback
 		}
