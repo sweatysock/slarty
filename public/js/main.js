@@ -1311,7 +1311,10 @@ trace2("Finished. Look for quiet");
 			if (maxL < noiseThreshold) {
 trace2("quiet ",maxL,"<",noiseThreshold);
 				blocked++;		// Our output is low enough that mic may increase in sensitivity
-			} else blocked = -20;				// otherwise start counting silence again because mic will have reset too
+			} else {
+				blocked = -40;				// otherwise start counting silence again because mic will have reset too
+trace2("NOISE. Quiet reset");
+			}
 			micIn.threshold = tempThresh;			// Set mic threshold according to output level to allow interruptions but avoid feedback
 		}
 	} else micIn.threshold = 0;					// No echo risk so no threshold needed
@@ -1707,7 +1710,7 @@ function runEchoTest(audio) {						// Test audio system in a series of tests
 				}
 				// Get average factor value
 				echoTest.factor = avgValue(factors) * 3; // boost factor to give echo margin
-				echoTest.factor = 12;			// Force strong factor always
+				echoTest.factor = 16;			// Force strong factor always
 				trace2("Forced factor is ",echoTest.factor);
 			} else {
 				trace2("No clear result. Echo risk should be low.");		// No agreement, no result
