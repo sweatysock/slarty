@@ -1297,6 +1297,8 @@ function processAudio(e) {						// Main processing loop
 		}
 		if (blocked > 0) blocked--;				// Threshold is blocked at max to completely stop feedback. Count back until unblocked.
 		else micIn.threshold = tempThresh;			// otherwise set the threshold to the calculated level based on current peak output levels
+if (tracecount > 0) trace2("max ",maxL," tempThresh ",tempThresh," blocked ",blocked," micTh ",micIn.threshold);
+tracecount--;
 	} else micIn.threshold = 0;					// No echo risk so no threshold needed
 	let now = new Date().getTime();					// Note time between audio processing loops
 	delta = now - previous;
