@@ -1122,7 +1122,7 @@ function processAudio(e) {						// Main processing loop
 		enterState( idleState );				// This test stage is done. Back to Idling
 		return;							// Don't do anything else while testing
 	} 
-
+console.log("one");
 	// 1. Get Mic audio, buffer it, and send it to server if enough buffered
 	if (socketConnected) {						// Need connection to send
 		let micAudioL = [];					// Our objective is to fill this with audio
@@ -1139,6 +1139,7 @@ function processAudio(e) {						// Main processing loop
 				micIn.gate = gateDelay;			
 			} 
 		}
+console.log("two");
 		if (micIn.gate > 0) {					// If gate is open prepare the audio for sending
 			micAudioL = inDataL;
 			micAudioR = inDataR;
@@ -1149,12 +1150,14 @@ function processAudio(e) {						// Main processing loop
 		}
 		micBufferL.push(...micAudioL);				// Buffer mic audio L
 		micBufferR.push(...micAudioR);				// Buffer mic audio R
+console.log("three");
 		if (micBufferL.length > adjMicPacketSize) {		// If enough audio in buffer 
 			let audioL = micBufferL.splice(0, adjMicPacketSize);		// Get a packet of audio
 			let audioR = micBufferR.splice(0, adjMicPacketSize);		// for each channel
 			let audio = {mono8:[],mono16:[]};		// default empty audio and perf objects to send
 			let perf = false;				// By default we believe we are not the performer
 			let peak = 0;					// Note: no need for perf to set peak
+console.log("four");
 			if (performer) {				// If we actually are the performer 
 				if (!micIn.muted) {			// & not muted prepare our audio for HQ stereo 
 					let a = prepPerfAudio(audioL, audioR);	
@@ -1163,6 +1166,7 @@ function processAudio(e) {						// Main processing loop
 					perf = zipson.stringify({mono8:[],mono16:[],mono32:[],stereo8:[],stereo16:[],stereo32:[]});
 			} else {					// Standard audio prep - always mono
 				let mono8 = [], mono16 = [], mono32 = [], stereo8 = [], stereo16 = [], stereo32 = [];
+console.log("five");
 				audio = reSample(audioL, downCache, PacketSize);	
 				let obj = applyAutoGain(audio, micIn);	// Amplify mic with auto limiter
 				if (obj.peak > micIn.peak) 
@@ -1188,6 +1192,7 @@ function processAudio(e) {						// Main processing loop
 				audio = zipson.parse(a);			// Saves 65% of bandwidth on its own!
 			}
 			let sr = performer ? PerfSampleRate : SampleRate;
+console.log("six");
 			let now = new Date().getTime();
 			let packet = {
 				name		: myName,		// Send the name we have chosen 
@@ -1215,6 +1220,7 @@ function processAudio(e) {						// Main processing loop
 			packetSequence++;
 		}
 	}
+console.log("seven");
 
 	// 2. Take audio buffered from server and send it to the speaker
 	let outAudioL = [], outAudioR = [];					
@@ -1277,7 +1283,7 @@ function processAudio(e) {						// Main processing loop
 	}
 //	outDataV = outAudioV.slice();					// Faster way to copy venue audio to it's special output
 	// 2.2 If there is a risk of echo set the input dynamic threshold level to stop audio feedback
-	if (!echoRisk) {
+	if (echoRisk) {
 		let maxL = maxValue(outAudioL);				// Get peak level of this outgoing audio
 		let maxR = maxValue(outAudioR);				// for each channel
 		let maxV = maxValue(outAudioV);				// and venue audio
