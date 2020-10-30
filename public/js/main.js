@@ -1288,8 +1288,8 @@ trace2("CUT ",peak,">",micIn.threshold);
 		let tempThresh;						// Adjusted threshold level 
 		tempThresh = maxValue( thresholdBuffer			// Apply most aggressive threshold near current +/-w chunks
 			.slice(s,e)) * echoTest.factor * mixOut.gain;	// multiply by factor and mixOutGain 
-		let gap = 0.8/echoTest.factor;				// The factor keeps threshold high stopping feedback. 
-		if (tempThresh > 0.7) tempThresh = 1.2;			// Above output of 0.5 there's no chance of getting control without muting output
+		let gap = 0.7/echoTest.factor;				// The factor keeps threshold high stopping feedback. 
+		if (tempThresh > 0.5) tempThresh = 1.2;			// Above output of 0.5 there's no chance of getting control without muting output
 		else if (tempThresh > gap) tempThresh = 0.7;		// Between gap and 0.5 there is a chance of interrupting if you shout or clap
 		else if (tempThresh > gap*0.2) tempThresh = 0.2;	// and for slightly lower levels there is a slightly more tolerant gap kept open
 		thresholdBuffer.pop();					// Remove oldest threshold buffer value
