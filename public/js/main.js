@@ -1315,14 +1315,13 @@ function processAudio(e) {						// Main processing loop
 				min2p = j;
 			}
 		}
-let st="";
-for (let i=0;i<conv.length;i++) st+=conv[i].toFixed(1)+" ";
-trace2(st);
-trace2("conv ",min1p," ", min1," ", maxp," ", max," ", min2p," ", min2);
 		if (	(min1p < (maxp-1)) 				// If we have the positions in the right order
 			&& (maxp < (min2p-2)) 				// and sufficiently well spaced out
 			&& (((max - min1)/max) > 0.05)			// and both minima are > 0.1 of overall peak
 			&& (((max - min2)/max) > 0.05) ) {		// then we have a good convolution
+let st="";
+for (let i=0;i<conv.length;i++) st+=conv[i].toFixed(1)+" ";
+trace2(st);
 trace2("GOOD ",min1p," ", min1," ", maxp," ", max," ", min2p," ", min2);
 			let ratio = 0;					// Calculate the average ratio of input to output
 			for (let i=0; i<(tlen); i++) 
