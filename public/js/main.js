@@ -1324,7 +1324,7 @@ for (let i=0;i<conv.length;i++) st+=conv[i].toFixed(1)+" ";
 trace2(st);
 trace2("GOOD ",min1p," ", min1," ", maxp," ", max," ", min2p," ", min2);
 			let ratio = 0;					// Calculate the average ratio of input to output
-			for (let i=0; i<(tlen); i++) 
+			for (let i=0; i<(tlen-maxp); i++) 
 				ratio += micPeaks[i]/thresholdBuffer[i+maxp];
 			ratio = ratio / (tlen-maxp);
 trace2("Ratio ",ratio);
