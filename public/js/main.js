@@ -1305,8 +1305,8 @@ function processAudio(e) {						// Main processing loop
 				min1 = conv[j];				// this could be a new first minimum
 				min1p = j;
 			}
-			if (conv[j] > max) {
-				max = conv[j];
+			if ((min2p <= maxp) && (conv[j] > max)) {	// If the 2nd minimum isn't being searched for, and this is a maximum
+				max = conv[j];				// this could be a new maximum
 				maxp = j;
 			}
 			if ((maxp < j) && (min1p < maxp) 		// If the max point has been found and it is ahead of the first min
