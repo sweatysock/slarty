@@ -1315,10 +1315,10 @@ function processAudio(e) {						// Main processing loop
 				min2p = j;
 			}
 		}
-		if (	(min1p < (maxp-4)) 				// If we have the positions in the right order
-			&& (maxp < (min2p-4)) 				// and sufficiently well spaced out
-			&& (((max - min1)/max) > 0.3)			// and both minima are > 0.3 of overall peak
-			&& (((max - min2)/max) > 0.3) ) {		// then we have a good convolution
+		if (	(min1p < (maxp-2)) 				// If we have the positions in the right order
+			&& (maxp < (min2p-2)) 				// and sufficiently well spaced out
+			&& (((max - min1)/max) > 0.1)			// and both minima are > 0.3 of overall peak
+			&& (((max - min2)/max) > 0.1) ) {		// then we have a good convolution
 let st="";
 for (let i=0;i<conv.length;i++) st+=conv[i].toFixed(1)+" ";
 trace2(st);
@@ -1330,6 +1330,7 @@ trace2("GOOD ",min1p," ", min1," ", maxp," ", max," ", min2p," ", min2);
 trace2("Ratio ",ratio);
 //			echoTest.factor = (echoTest.factor*39+ratio)/40;// Apply ratio gently to the threshold factor
 		} 
+else trace2("no good");
 		let s = echoTest.sampleDelay - 3;			// start of threshold window
 		let e = echoTest.sampleDelay + 3;			// end of threshold window
 		let tempThresh;						// Adjusted threshold level 
