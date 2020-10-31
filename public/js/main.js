@@ -1290,7 +1290,7 @@ function processAudio(e) {						// Main processing loop
 		let tlen = thresholdBuffer.length;			// Perform a convolution between the threshold and mic peak buffers
 		let mlen = micPeaks.length;				// This will indicate the delay between emitting a sound and it coming through the mic
 		let conv = [];						// and this will allow us to calculate the amplification factor output to input
-		for (let t=3; t<12; t++) {				// Delays are really only going to be in the 3 to 12 chunk range so no need to try other values
+		for (let t=3; t<18; t++) {				// Delays are really only going to be in the 3 to 12 chunk range so no need to try other values
 			let sum = 0;
 			for (let x=0; x<mlen; x++) {
 				sum += thresholdBuffer[(t+x)%tlen]*micPeaks[x];
