@@ -1299,16 +1299,20 @@ function processAudio(e) {						// Main processing loop
 		}
 		let max = 0;
 		let peak = 0;
+		let avg = 0;
 		for (let j=0; j<conv.length; j++)			// Find max = peak of pulse
 			if (conv[j] > max) {
 				max = conv[j];
 				peak = j;
+				avg += conv[j];
 			}
+		avg = avg/conv.length;					// Get average convolution level in order to judge quality of result
 		let fact = 0;						// And with the delay we can now calculate the average amplification factor
 		for (let i=0; i<(tlen-peak); i++) fact += micPeaks[i]/thresholdBuffer[i+peak];
 		fact = fact / (tlen-peak);
+// SOMETIMES FACT IS NaN so ignore it. ALSO when we make noise fact should be ignored (when gate is open) as it goes way up (obviously)
 //		echoTest.factor = (echoTest.factor*9 + fact)/10;	// Incorporate this new factor into the rolling echoTest.factor value used to adjust thresholds
-trace2("d ",peak," f ",fact," ",echoTest.factor);
+trace2("d ",peak," f ",fact," ",(max/avg));
 		let s = echoTest.sampleDelay - 3;			// start of threshold window
 		let e = echoTest.sampleDelay + 3;			// end of threshold window
 		let tempThresh;						// Adjusted threshold level 
