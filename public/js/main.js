@@ -1292,6 +1292,7 @@ function processAudio(e) {						// Main processing loop
 		fact = fact/thresholdBuffer.length;			
 		if (isFinite(fact)) 
 			echoTest.factor = (echoTest.factor*9 + fact)/10;// Incorporate this new factor into the rolling echoTest.factor value used to adjust thresholds
+trace2("f ",fact," factor ",echoTest.factor);
 		let s = echoTest.sampleDelay - 3;			// start of threshold window
 		let e = echoTest.sampleDelay + 3;			// end of threshold window
 		let tempThresh;						// Adjusted threshold level 
