@@ -1277,7 +1277,7 @@ function processAudio(e) {						// Main processing loop
 	}
 //	outDataV = outAudioV.slice();					// Faster way to copy venue audio to it's special output
 	// 2.2 If there is a risk of echo set the input dynamic threshold level to stop audio feedback
-	if (!echoRisk) {
+	if (echoRisk) {
 		let maxL = maxValue(outAudioL);				// Get peak level of this outgoing audio
 		let maxR = maxValue(outAudioR);				// for each channel
 		let maxV = maxValue(outAudioV);				// and venue audio
