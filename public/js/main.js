@@ -1305,7 +1305,7 @@ function processAudio(e) {						// Main processing loop
 				min1 = conv[j];				// this could be a new first minimum
 				min1p = j;
 			}
-			if ((min2p <= maxp) && (conv[j] > max)) {	// If the 2nd minimum isn't being searched for, and this is a maximum
+			if (conv[j] > max) {				// If the 2nd minimum isn't being searched for, and this is a maximum
 				max = conv[j];				// this could be a new maximum
 				maxp = j;
 			}
@@ -1321,7 +1321,7 @@ trace2(st);
 trace2("conv ",min1p," ", min1," ", maxp," ", max," ", min2p," ", min2);
 		if (	(min1p < (maxp-1)) 				// If we have the positions in the right order
 			&& (maxp < (min2p-2)) 				// and sufficiently well spaced out
-			&& (((max - min1)/max) > 0.1)			// and both minima are > 0.3 of overall peak
+			&& (((max - min1)/max) > 0.1)			// and both minima are > 0.1 of overall peak
 			&& (((max - min2)/max) > 0.1) ) {		// then we have a good convolution
 trace2("GOOD ",min1p," ", min1," ", maxp," ", max," ", min2p," ", min2);
 			let ratio = 0;					// Calculate the average ratio of input to output
