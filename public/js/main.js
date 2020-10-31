@@ -1325,8 +1325,8 @@ trace2(st);
 trace2("GOOD ",min1p," ", min1," ", maxp," ", max," ", min2p," ", min2);
 			let ratio = 0;					// Calculate the average ratio of input to output
 			for (let i=0; i<(tlen); i++) 
-				ratio += micPeaks[i]/thresholdBuffer[i+peak];
-			ratio = ratio / (tlen-peak);
+				ratio += micPeaks[i]/thresholdBuffer[i+maxp];
+			ratio = ratio / (tlen-maxp);
 trace2("Ratio ",ratio);
 //			echoTest.factor = (echoTest.factor*39+ratio)/40;// Apply ratio gently to the threshold factor
 		} 
