@@ -1306,9 +1306,9 @@ function processAudio(e) {						// Main processing loop
 				peak = j;
 				avg += conv[j];
 			}
-let s="";
-for (let i=0;i<conv.length;i++) s=s+conv[i].toFixed(1)+" ";
-trace2(s);
+let st="";
+for (let i=0;i<conv.length;i++) st+=conv[i].toFixed(1)+" ";
+trace2(st);
 //		avg = avg/conv.length;					// Get average convolution level in order to judge quality of result
 //		let q = max/avg;					// Quality of result determined by how strong the peak is relative to the average
 //		let fact = 0;						// And with the delay we can now calculate the average amplification factor
