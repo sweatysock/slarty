@@ -1301,8 +1301,8 @@ function processAudio(e) {						// Main processing loop
 		let min1 = 100; max = 0, min2 = 100;			// Find the first minimum, the maximum, and the second minimum
 		let min1p = 0, maxp = 0, min2p = 0;			// also note the positions where they occur in the conv array 
 		for (let j=0; j<conv.length; j++) {
-			if (conv[j] < min1) {
-				min1 = conv[j];
+			if ((conv[j] < min1) && (maxp <= min1p)) {	// If this is a minimum and the max is still behind us
+				min1 = conv[j];				// this can be a new first minimum
 				min1p = j;
 			}
 			if (conv[j] > max) {
