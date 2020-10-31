@@ -1277,9 +1277,7 @@ function processAudio(e) {						// Main processing loop
 	}
 //	outDataV = outAudioV.slice();					// Faster way to copy venue audio to it's special output
 	// 2.2 If there is a risk of echo set the input dynamic threshold level to stop audio feedback
-trace2("audio");
 	if (echoRisk) {
-trace2("echo risk");
 		let maxL = maxValue(outAudioL);				// Get peak level of this outgoing audio
 		let maxR = maxValue(outAudioR);				// for each channel
 		let maxV = maxValue(outAudioV);				// and venue audio
@@ -1317,7 +1315,7 @@ let fact = 0;
 for (let i=0; i<thresholdBuffer.length;i++) fact += micPeaks[i]/thresholdBuffer[i+peak];
 fact = fact/thresholdBuffer.length;
 //if ((!isNaN(fact)) && (peak > 0) && (q > 3)) trace2("d ",peak," f ",fact.toFixed(1)," ",(max/avg).toFixed(1));
-if (fact.isFinite()) trace2("fact ",fact.toFixed(1));
+if (isFinite(fact)) trace2("fact ",fact.toFixed(1));
 //		echoTest.factor = (echoTest.factor*9 + fact)/10;	// Incorporate this new factor into the rolling echoTest.factor value used to adjust thresholds
 		let s = echoTest.sampleDelay - 3;			// start of threshold window
 		let e = echoTest.sampleDelay + 3;			// end of threshold window
