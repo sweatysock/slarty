@@ -1309,7 +1309,8 @@ function processAudio(e) {						// Main processing loop
 				max = conv[j];
 				maxp = j;
 			}
-			if ((maxp < j) && (conv[j] < min2)) {		// If the max point has been found and this is a minimum
+			if ((maxp < j) && (min1p < maxp) 		// If the max point has been found and it is ahead of the first min
+				&& (conv[j] < min2)) {			// and this is a minimum value
 				min2 = conv[j];				// this could be the second minimum
 				min2p = j;
 			}
@@ -1318,7 +1319,7 @@ let st="";
 for (let i=0;i<conv.length;i++) st+=conv[i].toFixed(1)+" ";
 trace2(st);
 trace2("conv ",min1p," ", min1," ", maxp," ", max," ", min2p," ", min2);
-		if (	(min1p < (maxp-2)) 				// If we have the positions in the right order
+		if (	(min1p < (maxp-1)) 				// If we have the positions in the right order
 			&& (maxp < (min2p-2)) 				// and sufficiently well spaced out
 			&& (((max - min1)/max) > 0.1)			// and both minima are > 0.3 of overall peak
 			&& (((max - min2)/max) > 0.1) ) {		// then we have a good convolution
