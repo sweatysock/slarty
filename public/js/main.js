@@ -1311,11 +1311,11 @@ function processAudio(e) {						// Main processing loop
 //		let fact = 0;						// And with the delay we can now calculate the average amplification factor
 //		for (let i=0; i<(tlen); i++) fact += micPeaks[i]/thresholdBuffer[i+peak];
 //		fact = fact / (tlen-peak);
-let fact = 0;
-for (let i=0; i<thresholdBuffer.length;i++) fact += micPeaks[i]/thresholdBuffer[i+peak];
-fact = fact/thresholdBuffer.length;
+//let fact = 0;
+//for (let i=0; i<thresholdBuffer.length;i++) fact += micPeaks[i]/thresholdBuffer[i+peak];
+//fact = fact/thresholdBuffer.length;
 //if ((!isNaN(fact)) && (peak > 0) && (q > 3)) trace2("d ",peak," f ",fact.toFixed(1)," ",(max/avg).toFixed(1));
-trace2("fact ",fact.toFixed(1));
+//trace2("fact ",fact.toFixed(1));
 //		echoTest.factor = (echoTest.factor*9 + fact)/10;	// Incorporate this new factor into the rolling echoTest.factor value used to adjust thresholds
 		let s = echoTest.sampleDelay - 3;			// start of threshold window
 		let e = echoTest.sampleDelay + 3;			// end of threshold window
