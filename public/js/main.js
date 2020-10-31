@@ -1287,36 +1287,38 @@ function processAudio(e) {						// Main processing loop
 		thresholdBuffer.pop();					// Remove oldest threshold buffer value
 		micPeaks.unshift( mP );					// Also keep buffer of mic peaks to 
 		micPeaks.pop();						// understand relationship between output and input
-//		let tlen = thresholdBuffer.length;			// Perform a convolution between the threshold and mic peak buffers
-//		let mlen = micPeaks.length;				// This will indicate the delay between emitting a sound and it coming through the mic
-//		let conv = [];						// and this will allow us to calculate the amplification factor output to input
-//		for (let t=3; t<12; t++) {				// Delays are really only going to be in the 3 to 12 chunk range so no need to try other values
-//			let sum = 0;
-//			for (let x=0; x<mlen; x++) {
-//				sum += thresholdBuffer[(t+x)%tlen]*micPeaks[x];
-//			}
-//			conv.push(sum);					// The convolution output is an array of values that should have a clear peak
-//		}
-//		let max = 0;
-//		let peak = 0;
-//		let avg = 0;
-//		for (let j=0; j<conv.length; j++)			// Find max = peak of pulse
-//			if (conv[j] > max) {
-//				max = conv[j];
-//				peak = j;
-//				avg += conv[j];
-//			}
+		let tlen = thresholdBuffer.length;			// Perform a convolution between the threshold and mic peak buffers
+		let mlen = micPeaks.length;				// This will indicate the delay between emitting a sound and it coming through the mic
+		let conv = [];						// and this will allow us to calculate the amplification factor output to input
+		for (let t=3; t<12; t++) {				// Delays are really only going to be in the 3 to 12 chunk range so no need to try other values
+			let sum = 0;
+			for (let x=0; x<mlen; x++) {
+				sum += thresholdBuffer[(t+x)%tlen]*micPeaks[x];
+			}
+			conv.push(sum);					// The convolution output is an array of values that should have a clear peak
+		}
+		let max = 0;
+		let peak = 0;
+		let avg = 0;
+		for (let j=0; j<conv.length; j++)			// Find max = peak of pulse
+			if (conv[j] > max) {
+				max = conv[j];
+				peak = j;
+				avg += conv[j];
+			}
+let s="";
+for (let i=0;i<conv.length;i++) s=s+conv[i].toFixed(1)+" ";
+trace2(s);
 //		avg = avg/conv.length;					// Get average convolution level in order to judge quality of result
 //		let q = max/avg;					// Quality of result determined by how strong the peak is relative to the average
 //		let fact = 0;						// And with the delay we can now calculate the average amplification factor
 //		for (let i=0; i<(tlen); i++) fact += micPeaks[i]/thresholdBuffer[i+peak];
 //		fact = fact / (tlen-peak);
-                let fact = 0;                                           // Derive current feedback factor by comparing output level to input level
-                for (let i=0; i<thresholdBuffer.length;i++) fact += micPeaks[i]/thresholdBuffer[i];
-                fact = fact/thresholdBuffer.length;
-                if (isFinite(fact))
-	                        echoTest.factor = (echoTest.factor*9 + fact)/10;// Incorporate this new factor into the rolling echoTest.factor value used to adjust thresholds
-trace2("f ",fact," factor ",echoTest.factor);
+//                for (let i=0; i<thresholdBuffer.length;i++) fact += micPeaks[i]/thresholdBuffer[i];
+//                fact = fact/thresholdBuffer.length;
+//                if (isFinite(fact))
+//	                        echoTest.factor = (echoTest.factor*9 + fact)/10;// Incorporate this new factor into the rolling echoTest.factor value used to adjust thresholds
+//trace2("f ",fact," factor ",echoTest.factor);
 		let s = echoTest.sampleDelay - 3;			// start of threshold window
 		let e = echoTest.sampleDelay + 3;			// end of threshold window
 		let tempThresh;						// Adjusted threshold level 
