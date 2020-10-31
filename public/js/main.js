@@ -1277,7 +1277,7 @@ function processAudio(e) {						// Main processing loop
 	}
 //	outDataV = outAudioV.slice();					// Faster way to copy venue audio to it's special output
 	// 2.2 If there is a risk of echo set the input dynamic threshold level to stop audio feedback
-	if (echoRisk) {
+	if (!echoRisk) {
 		let maxL = maxValue(outAudioL);				// Get peak level of this outgoing audio
 		let maxR = maxValue(outAudioR);				// for each channel
 		let maxV = maxValue(outAudioV);				// and venue audio
@@ -1287,38 +1287,49 @@ function processAudio(e) {						// Main processing loop
 		thresholdBuffer.pop();					// Remove oldest threshold buffer value
 		micPeaks.unshift( mP );					// Also keep buffer of mic peaks to 
 		micPeaks.pop();						// understand relationship between output and input
-		let tlen = thresholdBuffer.length;			// Perform a convolution between the threshold and mic peak buffers
-		let mlen = micPeaks.length;				// This will indicate the delay between emitting a sound and it coming through the mic
-		let conv = [];						// and this will allow us to calculate the amplification factor output to input
-		for (let t=0; t<tlen; t++) {				// Delays are really only going to be in the 3 to 12 chunk range so no need to try other values
+		// 2.2.1 Convolve input and output peaks to find how correleated they are
+		let tlen = thresholdBuffer.length;
+		let mlen = micPeaks.length;			
+		let conv = [];					
+		for (let t=0; t<tlen; t++) {
 			let sum = 0;
 			for (let x=0; x<mlen; x++) {
 				sum += thresholdBuffer[(t+x)%tlen]*micPeaks[x];
 			}
-			conv.push(sum);					// The convolution output is an array of values that should have a clear peak
-		}
-		let max = 0;
-		let peak = 0;
-		let avg = 0;
-		for (let j=0; j<conv.length; j++)			// Find max = peak of pulse
+			conv.push(sum);					// Convolution goes here
+		}							// Now analyze the convolution
+		let min1 = 100; max = 0, min2 = 100;			// Find the first minimum, the maximum, and the second minimum
+		let min1p = 0, maxp = 0, min2p = 0;			// also note the positions where they occur in the conv array 
+		for (let j=0; j<conv.length; j++) {
+			if (conv[j] < min1) {
+				min1 = conv[j];
+				min1p = j;
+			}
 			if (conv[j] > max) {
 				max = conv[j];
-				peak = j;
-				avg += conv[j];
+				maxp = j;
 			}
+			if ((min1p > 0) && (maxp > min1p) 		// If we have min1 and max in the right order
+				&& (min2 < conv[j])) {			// look for min2
+				min2 = conv[j];
+				min2p = j;
+			}
+		}
+		if (	(min1p < (maxp-4)) 				// If we have the positions in the right order
+			&& (maxp < (min2p-4)) 				// and sufficiently well spaced out
+			&& (((max - min1)/max) > 0.3)			// and both minima are > 0.3 of overall peak
+			&& (((max - min2)/max) > 0.3) ) {		// then we have a good convolution
 let st="";
 for (let i=0;i<conv.length;i++) st+=conv[i].toFixed(1)+" ";
 trace2(st);
-//		avg = avg/conv.length;					// Get average convolution level in order to judge quality of result
-//		let q = max/avg;					// Quality of result determined by how strong the peak is relative to the average
-//		let fact = 0;						// And with the delay we can now calculate the average amplification factor
-//		for (let i=0; i<(tlen); i++) fact += micPeaks[i]/thresholdBuffer[i+peak];
-//		fact = fact / (tlen-peak);
-//                for (let i=0; i<thresholdBuffer.length;i++) fact += micPeaks[i]/thresholdBuffer[i];
-//                fact = fact/thresholdBuffer.length;
-//                if (isFinite(fact))
-//	                        echoTest.factor = (echoTest.factor*9 + fact)/10;// Incorporate this new factor into the rolling echoTest.factor value used to adjust thresholds
-//trace2("f ",fact," factor ",echoTest.factor);
+trace2("GOOD ",min1p," ", min1," ", maxp," ", max," ", min2p," ", min2);
+			let ratio = 0;					// Calculate the average ratio of input to output
+			for (let i=0; i<(tlen); i++) 
+				ratio += micPeaks[i]/thresholdBuffer[i+peak];
+			ratio = ratio / (tlen-peak);
+trace2("Ratio ",ratio);
+//			echoTest.factor = (echoTest.factor*39+ratio)/40;// Apply ratio gently to the threshold factor
+		} 
 		let s = echoTest.sampleDelay - 3;			// start of threshold window
 		let e = echoTest.sampleDelay + 3;			// end of threshold window
 		let tempThresh;						// Adjusted threshold level 
