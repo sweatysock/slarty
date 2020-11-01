@@ -1327,7 +1327,7 @@ function processAudio(e) {						// Main processing loop
 			for (let i=0; i<(tlen-maxp); i++) 
 				ratio += micPeaks[i]/thresholdBuffer[i+maxp];
 			ratio = ratio / (tlen-maxp);
-			if (isFinite(ratio)) {
+			if ((isFinite(ratio)) && (ratio < 80)) {	// Check ratio is sensible (for small to silent outputs it can go huge)
 				echoTest.factor = 
 					(echoTest.factor*39+ratio)/40;	// Apply ratio gently to the threshold factor
 trace2("Ratio ",ratio," factor ",echoTest.factor);
