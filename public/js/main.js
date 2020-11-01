@@ -1345,7 +1345,7 @@ trace2(st);
 trace2("GOOD ",min1p," ", min1," ", maxp," ", max," ", min2p," ", min2);
 trace2("Ratio ",ratio.toFixed(1)," factor ",echoTest.factor.toFixed(1)," d ",echoTest.sampleDelay.toFixed(1));
 			}
-		} else echoTest.factor = echoTest.factor/2;		// Without correlating input and output audio we assume there is no echo risk
+		} else echoTest.factor = echoTest.factor/1.2;		// Without correlating input and output audio we assume there is no echo risk
 		let d = Math.round(echoTest.sampleDelay);
 		let s = d - 3;						// start of threshold window
 		if (s < 0) s = 0;
