@@ -1330,16 +1330,17 @@ trace2("OPEN ",mP.toFixed(2)," > ",micIn.threshold.toFixed(2));
 			&& (((max - min2)/max) > 0.1) 			// and the actual peak is big enough to mean something
 			&& (max > 0.5) ) {				// then we have a good convolution
 			let ratio = 0;					// Calculate the average ratio of input to output
-			let sumM = 0, sumT = 0, sumM2 = 0, sumT2 = 0;	// and the correlation coeficient to decide to use it or not
+			let sumM = 0, sumT = 0, sumMT = 0, sumM2 = 0, sumT2 = 0;	// and the correlation coeficient to decide to use it or not
 			for (let i=0; i<(tlen-maxp); i++) {
 				let mp = micPeaks[i], tb = thresholdBuffer[i+maxp];
 				ratio += mp/tb;
 				sumM += mp;
 				sumT += tb;
+				sumMT += mp * tb;
 				sumM2 += mp * mp;
 				sumT2 += tb * tb;
 			}
-			let sumMT = conv[maxp];				// Already did this more or less
+//			let sumMT = conv[maxp];				// Already did this more or less
 			let step1 = ((tlen-maxp)*sumMT) - (sumM * sumT);
 			let step2 = ((tlen-maxp)*sumM2) - (sumM * sumM);
 			let step3 = ((tlen-maxp)*sumT2) - (sumT * sumT);
