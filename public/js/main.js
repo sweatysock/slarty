@@ -1327,7 +1327,7 @@ trace2("OPEN ",mP," > ",micIn.threshold);
 			let ratio = 0;					// Calculate the average ratio of input to output
 			for (let i=0; i<(tlen-maxp); i++) 
 				ratio += micPeaks[i]/thresholdBuffer[i+maxp];
-			ratio = ratio * 1.2 / (tlen-maxp);
+			ratio = ratio * 1.4 / (tlen-maxp);
 			if ((isFinite(ratio)) && (ratio < 80)) {	// Check ratio is sensible (for small to silent outputs it can go huge)
 				echoTest.factor = 
 					(echoTest.factor*39+ratio)/40;	// Apply ratio gently to the threshold factor
