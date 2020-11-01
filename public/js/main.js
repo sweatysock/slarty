@@ -1327,7 +1327,8 @@ trace2("OPEN ",mP.toFixed(2)," > ",micIn.threshold.toFixed(2));
 		if (	(min1p < (maxp-3)) 				// If we have the positions in the right order
 			&& (maxp < (min2p-4)) 				// and sufficiently well spaced out
 			&& (((max - min1)/max) > 0.3)			// and both minima are > 0.1 of overall peak
-			&& (((max - min2)/max) > 0.3) ) {		// then we have a good convolution
+			&& (((max - min2)/max) > 0.3) 			// and the actual peak is big enough to mean something
+			&& (max > 0.01) ) {				// then we have a good convolution
 			let ratio = 0;					// Calculate the average ratio of input to output
 			for (let i=0; i<(tlen-maxp); i++) 
 				ratio += micPeaks[i]/thresholdBuffer[i+maxp];
@@ -1344,7 +1345,7 @@ trace2(st);
 trace2("GOOD ",min1p," ", min1," ", maxp," ", max," ", min2p," ", min2);
 trace2("Ratio ",ratio.toFixed(1)," factor ",echoTest.factor.toFixed(1)," d ",echoTest.sampleDelay.toFixed(1));
 			}
-		} 
+		} else echoTest.factor = echoTest.factor/2;		// Without correlating input and output audio we assume there is no echo risk
 		let d = Math.round(echoTest.sampleDelay);
 		let s = d - 3;						// start of threshold window
 		if (s < 0) s = 0;
@@ -1853,7 +1854,7 @@ function printReport() {
 //		trace("Idle=", idleState.total, " data in=", dataInState.total, " audio in/out=", audioInOutState.total," UI work=",UIState.total);
 		trace(packetsOut,"/",packetsIn," over:",overflows,"(",bytesOver,") short:",shortages,"(",bytesShort,") RTT=",rtt.toFixed(1)," ",rtt1.toFixed(1)," ",rtt5.toFixed(1)," ",netState," a:",audience," sent:",bytesSent.toFixed(1)," rcvd:",bytesRcvd.toFixed(1));
 		trace("Venue buffer:",venueBuffer.length," speaker buff:",spkrBufferL.length,"(",spkrBuffTrough," - ",spkrBuffPeak,") Delta max/min:",deltaMax,"/",deltaMin," pitch:",pitch);
-		trace2("sent:",bytesSent.toFixed(1)," rcvd:",bytesRcvd.toFixed(1));
+//		trace2("sent:",bytesSent.toFixed(1)," rcvd:",bytesRcvd.toFixed(1));
 	}
 	if (performer == true) {
 		document.getElementById("onair").style.visibility = "visible";
