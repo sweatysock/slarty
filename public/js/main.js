@@ -1342,7 +1342,9 @@ trace2("Ratio ",ratio.toFixed(1)," factor ",echoTest.factor.toFixed(1)," d ",ech
 			}
 		} 
 		let s = echoTest.sampleDelay - 3;			// start of threshold window
+		if (s < 0) s = 0;
 		let e = echoTest.sampleDelay + 3;			// end of threshold window
+		if (e > thresholdBuffer.length) e = thresholdBuffer.length;
 		let tempThresh;						// Adjusted threshold level 
 		tempThresh = maxValue( thresholdBuffer			// Apply most aggressive threshold near current +/-w chunks
 			.slice(s,e)) * echoTest.factor * mixOut.gain;	// multiply by factor and mixOutGain 
