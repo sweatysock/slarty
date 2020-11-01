@@ -1328,7 +1328,7 @@ trace2("OPEN ",mP.toFixed(2)," > ",micIn.threshold.toFixed(2));
 			&& (maxp < (min2p-4)) 				// and sufficiently well spaced out
 			&& (((max - min1)/max) > 0.1)			// and both minima are > 0.1 of overall peak
 			&& (((max - min2)/max) > 0.1) 			// and the actual peak is big enough to mean something
-			&& (max > 0.5) ) {				// then we have a good convolution
+			&& (max > 1) ) {				// then we have a good convolution
 			let ratio = 0;					// Calculate the average ratio of input to output
 			let sumM = 0, sumT = 0, sumMT = 0, sumM2 = 0, sumT2 = 0;	// and the correlation coeficient to decide to use it or not
 			for (let i=0; i<(tlen-maxp); i++) {
@@ -1347,7 +1347,7 @@ trace2("OPEN ",mP.toFixed(2)," > ",micIn.threshold.toFixed(2));
 			let step4 = Math.sqrt(step2 * step3);
 			let coef = step1 / step4;
 			ratio = ratio * 2.5 / (tlen-maxp);		// Get average ratio and boost it by 2.5 to err on the side of caution
-			if ((isFinite(ratio)) && (ratio < 80)) {	// Check ratio is sensible (for small to silent outputs it can go huge)
+			if ((coef > 0.9) && (isFinite(ratio)) && (ratio < 80)) {	// Check ratio is sensible (for small to silent outputs it can go huge)
 				if (ratio > echoTest.factor) 		// Apply ratio to echoTest.factor. Quickly going up. Slowly going down.
 					echoTest.factor = (echoTest.factor*3+ratio)/4;	
 				else
