@@ -1339,10 +1339,10 @@ trace2("Ratio ",ratio," factor ",echoTest.factor);
 		let tempThresh;						// Adjusted threshold level 
 		tempThresh = maxValue( thresholdBuffer			// Apply most aggressive threshold near current +/-w chunks
 			.slice(s,e)) * echoTest.factor * mixOut.gain;	// multiply by factor and mixOutGain 
-		let gap = 0.9/echoTest.factor;				// The factor keeps threshold high stopping feedback. 
-		if (tempThresh > 0.5) tempThresh = 1.2;			// Above output of 0.5 there's no chance of getting control without muting output
-		else if (tempThresh > gap) tempThresh = 0.9;		// Between gap and 0.5 there is a chance of interrupting if you shout or clap
-		else if (tempThresh > gap*0.6) tempThresh = 0.6;	// and for slightly lower levels there is a slightly more tolerant gap kept open
+//		let gap = 0.9/echoTest.factor;				// The factor keeps threshold high stopping feedback. 
+//		if (tempThresh > 0.5) tempThresh = 1.2;			// Above output of 0.5 there's no chance of getting control without muting output
+//		else if (tempThresh > gap) tempThresh = 0.9;		// Between gap and 0.5 there is a chance of interrupting if you shout or clap
+//		else if (tempThresh > gap*0.6) tempThresh = 0.6;	// and for slightly lower levels there is a slightly more tolerant gap kept open
 		if (blocked == 0) {  					// If blocked flag is reset we have passed a silent period and we need to watch for raising output
 			if ((thresholdBuffer[0] > thresholdBuffer[1])
 			&& (thresholdBuffer[0] > noiseThreshold)) {	// If our output level is up & climbing there's a risk of feedback due to mic over amplification
