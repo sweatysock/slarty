@@ -1342,10 +1342,10 @@ trace2("OPEN ",mP.toFixed(2)," > ",micIn.threshold.toFixed(2));
 let st="";
 for (let i=0;i<conv.length;i++) st+=conv[i].toFixed(1)+" ";
 trace2(st);
-trace2("GOOD ",min1p," ", min1," ", maxp," ", max," ", min2p," ", min2);
+trace2("GOOD ",min1p," ", min1.toFixed(2)," ", maxp," ", max.toFixed(2)," ", min2p," ", min2.toFixed(2));
 trace2("Ratio ",ratio.toFixed(1)," factor ",echoTest.factor.toFixed(1)," d ",echoTest.sampleDelay.toFixed(1));
 			}
-		} else echoTest.factor = echoTest.factor/1.02;		// Without correlating input and output audio we assume there is no echo risk
+		} else echoTest.factor = echoTest.factor/1.002;		// Without correlating input and output audio we assume there is no echo risk
 		let d = Math.round(echoTest.sampleDelay);
 		let s = d - 3;						// start of threshold window
 		if (s < 0) s = 0;
@@ -1354,10 +1354,7 @@ trace2("Ratio ",ratio.toFixed(1)," factor ",echoTest.factor.toFixed(1)," d ",ech
 		let tempThresh;						// Adjusted threshold level 
 		tempThresh = maxValue( thresholdBuffer			// Apply most aggressive threshold near current +/-w chunks
 			.slice(s,e)) * echoTest.factor * mixOut.gain;	// multiply by factor and mixOutGain 
-//		let gap = 0.9/echoTest.factor;				// The factor keeps threshold high stopping feedback. 
-//		if (tempThresh > 0.5) tempThresh = 1.2;			// Above output of 0.5 there's no chance of getting control without muting output
-//		else if (tempThresh > gap) tempThresh = 0.9;		// Between gap and 0.5 there is a chance of interrupting if you shout or clap
-//		else if (tempThresh > gap*0.6) tempThresh = 0.6;	// and for slightly lower levels there is a slightly more tolerant gap kept open
+		if (tempThresh > 1.2) tempThresh = 1.2;			// Mic input can be higher than 1 (amaxingly) but never as high as 1.2
 		if (blocked == 0) {  					// If blocked flag is reset we have passed a silent period and we need to watch for raising output
 			if ((thresholdBuffer[0] > thresholdBuffer[1])
 			&& (thresholdBuffer[0] > noiseThreshold)) {	// If our output level is up & climbing there's a risk of feedback due to mic over amplification
