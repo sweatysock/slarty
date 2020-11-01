@@ -1137,6 +1137,7 @@ function processAudio(e) {						// Main processing loop
 			} else if ((mP > micIn.threshold) &&		// Gate shut. If audio is above dynamic threshold
 				(mP > noiseThreshold)) {		// and noise threshold, open gate
 				micIn.gate = gateDelay;			
+trace2("OPEN ",mP," > ",micIn.threshold);
 			} 
 		}
 		if (micIn.gate > 0) {					// If gate is open prepare the audio for sending
@@ -1364,6 +1365,7 @@ trace2("Ratio ",ratio," factor ",echoTest.factor);
 			micIn.threshold = tempThresh;			// Set mic threshold according to output level to allow interruptions but avoid feedback
 		}
 	} else micIn.threshold = 0;					// No echo risk so no threshold needed
+trace2("th ",micIn.threshold);
 	let now = new Date().getTime();					// Note time between audio processing loops
 	delta = now - previous;
 	if (delta > deltaMax) deltaMax = delta;				// Keep max and min as this indicates the 
