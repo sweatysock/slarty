@@ -1138,10 +1138,10 @@ function processAudio(e) {						// Main processing loop
 				(mP > noiseThreshold)) {		// and noise threshold, open gate
 				micIn.gate = gateDelay;			
 trace2("OPEN ",mP.toFixed(2)," > ",micIn.threshold.toFixed(2));
-let st="m ";
+let st="mic ";
 for (let i=0;i<micPeaks.length;i++) st+=micPeaks[i].toFixed(1)+" ";
 trace2(st);
-st="o ";
+st="out ";
 for (let i=0;i<thresholdBuffer.length;i++) st+=thresholdBuffer[i].toFixed(1)+" ";
 trace2(st);
 			} 
@@ -1346,6 +1346,7 @@ trace2("Ratio ",ratio.toFixed(1)," factor ",echoTest.factor.toFixed(1)," d ",ech
 		let e = echoTest.sampleDelay + 3;			// end of threshold window
 		if (e > thresholdBuffer.length) e = thresholdBuffer.length;
 		let tempThresh;						// Adjusted threshold level 
+trace2("th ",thresholdBuffer.slice(s,e));
 		tempThresh = maxValue( thresholdBuffer			// Apply most aggressive threshold near current +/-w chunks
 			.slice(s,e)) * echoTest.factor * mixOut.gain;	// multiply by factor and mixOutGain 
 //		let gap = 0.9/echoTest.factor;				// The factor keeps threshold high stopping feedback. 
@@ -1374,7 +1375,6 @@ trace2("Ratio ",ratio.toFixed(1)," factor ",echoTest.factor.toFixed(1)," d ",ech
 			micIn.threshold = tempThresh;			// Set mic threshold according to output level to allow interruptions but avoid feedback
 		}
 	} else micIn.threshold = 0;					// No echo risk so no threshold needed
-trace2("th ",micIn.threshold);
 	let now = new Date().getTime();					// Note time between audio processing loops
 	delta = now - previous;
 	if (delta > deltaMax) deltaMax = delta;				// Keep max and min as this indicates the 
@@ -1913,7 +1913,7 @@ var traceDiv = null;
 var traceDiv2 = null;
 var traceArray = [];
 var traceArray2 = [];
-var maxTraces = 500;
+var maxTraces = 100;
 document.addEventListener('DOMContentLoaded', function(event){
 	traceDiv = document.getElementById('Trace');
 	traceDiv2 = document.getElementById('Trace2');
