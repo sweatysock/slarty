@@ -1348,7 +1348,6 @@ trace2("Ratio ",ratio.toFixed(1)," factor ",echoTest.factor.toFixed(1)," d ",ech
 		let e = d + 3;						// end of threshold window
 		if (e > thresholdBuffer.length) e = thresholdBuffer.length;
 		let tempThresh;						// Adjusted threshold level 
-trace2("th ",thresholdBuffer.slice(s,e));
 		tempThresh = maxValue( thresholdBuffer			// Apply most aggressive threshold near current +/-w chunks
 			.slice(s,e)) * echoTest.factor * mixOut.gain;	// multiply by factor and mixOutGain 
 //		let gap = 0.9/echoTest.factor;				// The factor keeps threshold high stopping feedback. 
