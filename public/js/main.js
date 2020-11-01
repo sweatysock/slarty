@@ -1144,6 +1144,7 @@ trace2(st);
 st="out ";
 for (let i=0;i<thresholdBuffer.length;i++) st+=thresholdBuffer[i].toFixed(1)+" ";
 trace2(st);
+pauseTracing = true;
 			} 
 		}
 		if (micIn.gate > 0) {					// If gate is open prepare the audio for sending
