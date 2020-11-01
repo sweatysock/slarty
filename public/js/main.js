@@ -1138,6 +1138,12 @@ function processAudio(e) {						// Main processing loop
 				(mP > noiseThreshold)) {		// and noise threshold, open gate
 				micIn.gate = gateDelay;			
 trace2("OPEN ",mP.toFixed(2)," > ",micIn.threshold.toFixed(2));
+let st="m ";
+for (let i=0;i<micPeaks.length;i++) st+=micPeaks[i].toFixed(1)+" ";
+trace2(st);
+let st="o ";
+for (let i=0;i<thresholdBuffer.length;i++) st+=thresholdBuffer[i].toFixed(1)+" ";
+trace2(st);
 			} 
 		}
 		if (micIn.gate > 0) {					// If gate is open prepare the audio for sending
@@ -1905,7 +1911,7 @@ var traceDiv = null;
 var traceDiv2 = null;
 var traceArray = [];
 var traceArray2 = [];
-var maxTraces = 100;
+var maxTraces = 500;
 document.addEventListener('DOMContentLoaded', function(event){
 	traceDiv = document.getElementById('Trace');
 	traceDiv2 = document.getElementById('Trace2');
