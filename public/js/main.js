@@ -1137,7 +1137,7 @@ function processAudio(e) {						// Main processing loop
 			} else if ((mP > micIn.threshold) &&		// Gate shut. If audio is above dynamic threshold
 				(mP > noiseThreshold)) {		// and noise threshold, open gate
 				micIn.gate = gateDelay;			
-trace2("OPEN ",mP," > ",micIn.threshold);
+trace2("OPEN ",mP.toFixed(2)," > ",micIn.threshold.toFixed(2));
 			} 
 		}
 		if (micIn.gate > 0) {					// If gate is open prepare the audio for sending
@@ -1331,7 +1331,8 @@ trace2("OPEN ",mP," > ",micIn.threshold);
 			if ((isFinite(ratio)) && (ratio < 80)) {	// Check ratio is sensible (for small to silent outputs it can go huge)
 				echoTest.factor = 
 					(echoTest.factor*39+ratio)/40;	// Apply ratio gently to the threshold factor
-trace2("Ratio ",ratio," factor ",echoTest.factor);
+echoTest.sampleDelay = maxp;
+trace2("Ratio ",ratio.toFixed(1)," factor ",echoTest.factor.toFixed(1)," d ",echoTest.sampleDelay);
 			}
 		} 
 		let s = echoTest.sampleDelay - 3;			// start of threshold window
