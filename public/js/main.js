@@ -1334,17 +1334,18 @@ pauseTracing = true;
 			let ratio = 0;					// Calculate the average ratio of input to output
 			for (let i=0; i<(tlen-maxp); i++) 
 				ratio += micPeaks[i]/thresholdBuffer[i+maxp];
-			ratio = ratio * 2 / (tlen-maxp);
+			ratio = ratio * 2.5 / (tlen-maxp);
 			if ((isFinite(ratio)) && (ratio < 80)) {	// Check ratio is sensible (for small to silent outputs it can go huge)
 				echoTest.factor = 
 					(echoTest.factor*3+ratio)/4;	// Apply ratio gently to the threshold factor
-echoTest.sampleDelay = maxp;
-trace2("Ratio ",ratio.toFixed(1)," factor ",echoTest.factor.toFixed(1)," d ",echoTest.sampleDelay);
+echoTest.sampleDelay = (echoTest.sampleDelay*3 + maxp)/4;
+trace2("Ratio ",ratio.toFixed(1)," factor ",echoTest.factor.toFixed(1)," d ",echoTest.sampleDelay.toFixed(1));
 			}
 		} 
-		let s = echoTest.sampleDelay - 3;			// start of threshold window
+		let d = Math.round(echoTest.sampleDelay);
+		let s = d - 3;						// start of threshold window
 		if (s < 0) s = 0;
-		let e = echoTest.sampleDelay + 3;			// end of threshold window
+		let e = d + 3;						// end of threshold window
 		if (e > thresholdBuffer.length) e = thresholdBuffer.length;
 		let tempThresh;						// Adjusted threshold level 
 trace2("th ",thresholdBuffer.slice(s,e));
