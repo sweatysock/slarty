@@ -1324,10 +1324,10 @@ trace2("OPEN ",mP.toFixed(2)," > ",micIn.threshold.toFixed(2));
 				min2p = j;
 			}
 		}
-		if (	(min1p < (maxp-1)) 				// If we have the positions in the right order
-			&& (maxp < (min2p-2)) 				// and sufficiently well spaced out
-			&& (((max - min1)/max) > 0.05)			// and both minima are > 0.1 of overall peak
-			&& (((max - min2)/max) > 0.05) ) {		// then we have a good convolution
+		if (	(min1p < (maxp-3)) 				// If we have the positions in the right order
+			&& (maxp < (min2p-4)) 				// and sufficiently well spaced out
+			&& (((max - min1)/max) > 0.1)			// and both minima are > 0.1 of overall peak
+			&& (((max - min2)/max) > 0.1) ) {		// then we have a good convolution
 //let st="";
 //for (let i=0;i<conv.length;i++) st+=conv[i].toFixed(1)+" ";
 //trace2(st);
@@ -1335,7 +1335,7 @@ trace2("OPEN ",mP.toFixed(2)," > ",micIn.threshold.toFixed(2));
 			let ratio = 0;					// Calculate the average ratio of input to output
 			for (let i=0; i<(tlen-maxp); i++) 
 				ratio += micPeaks[i]/thresholdBuffer[i+maxp];
-			ratio = ratio * 2.5 / (tlen-maxp);
+			ratio = ratio * 2.5 / (tlen-maxp);		// Get average ratio and boost it by 2.5 to err on the side of caution
 			if ((isFinite(ratio)) && (ratio < 80)) {	// Check ratio is sensible (for small to silent outputs it can go huge)
 				if (ratio > echoTest.factor) 		// Apply ratio to echoTest.factor. Quickly going up. Slowly going down.
 					echoTest.factor = (echoTest.factor*3+ratio)/4;	
