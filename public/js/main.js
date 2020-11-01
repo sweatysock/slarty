@@ -1330,7 +1330,7 @@ trace2("OPEN ",mP.toFixed(2)," > ",micIn.threshold.toFixed(2));
 			ratio = ratio * 1.4 / (tlen-maxp);
 			if ((isFinite(ratio)) && (ratio < 80)) {	// Check ratio is sensible (for small to silent outputs it can go huge)
 				echoTest.factor = 
-					(echoTest.factor*39+ratio)/40;	// Apply ratio gently to the threshold factor
+					(echoTest.factor*3+ratio)/4;	// Apply ratio gently to the threshold factor
 echoTest.sampleDelay = maxp;
 trace2("Ratio ",ratio.toFixed(1)," factor ",echoTest.factor.toFixed(1)," d ",echoTest.sampleDelay);
 			}
