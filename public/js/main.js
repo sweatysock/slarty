@@ -1328,10 +1328,6 @@ trace2("OPEN ",mP.toFixed(2)," > ",micIn.threshold.toFixed(2));
 			&& (maxp < (min2p-4)) 				// and sufficiently well spaced out
 			&& (((max - min1)/max) > 0.3)			// and both minima are > 0.1 of overall peak
 			&& (((max - min2)/max) > 0.3) ) {		// then we have a good convolution
-//let st="";
-//for (let i=0;i<conv.length;i++) st+=conv[i].toFixed(1)+" ";
-//trace2(st);
-//trace2("GOOD ",min1p," ", min1," ", maxp," ", max," ", min2p," ", min2);
 			let ratio = 0;					// Calculate the average ratio of input to output
 			for (let i=0; i<(tlen-maxp); i++) 
 				ratio += micPeaks[i]/thresholdBuffer[i+maxp];
@@ -1342,6 +1338,10 @@ trace2("OPEN ",mP.toFixed(2)," > ",micIn.threshold.toFixed(2));
 				else
 					echoTest.factor = (echoTest.factor*39+ratio)/40;	
 				echoTest.sampleDelay = (echoTest.sampleDelay*39 + maxp)/40;
+let st="";
+for (let i=0;i<conv.length;i++) st+=conv[i].toFixed(1)+" ";
+trace2(st);
+trace2("GOOD ",min1p," ", min1," ", maxp," ", max," ", min2p," ", min2);
 trace2("Ratio ",ratio.toFixed(1)," factor ",echoTest.factor.toFixed(1)," d ",echoTest.sampleDelay.toFixed(1));
 			}
 		} 
