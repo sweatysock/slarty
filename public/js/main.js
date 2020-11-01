@@ -1256,7 +1256,7 @@ trace2("OPEN ",mP.toFixed(2)," > ",micIn.threshold.toFixed(2));
 			outAudioR.push(...zeros);
 		}
 	}
-	if (((echoRisk) && (micIn.gate > 0) && (echoTest.factor > 0.5)) // If echo is likely and the mic is on and our echo factor is appreciable
+	if (((echoRisk) && (micIn.gate > 0) && (echoTest.factor > 1)) // If echo is likely and the mic is on and our echo factor is appreciable
 		|| (outAudioL.length == 0)) 			{	// or out array is empty, output silence
 		outAudioL = new Array(ChunkSize).fill(0); 
 		outAudioR = new Array(ChunkSize).fill(0);
@@ -1278,7 +1278,7 @@ trace2("OPEN ",mP.toFixed(2)," > ",micIn.threshold.toFixed(2));
 		let zeros = new Array(ChunkSize-venueBuffer.length).fill(0);
 		outAudioV.push(...zeros);
 	}
-	if ((echoRisk) && (micIn.gate > 0) && (echoTest.factor > 0.5)) {// If echo is likely and the mic is on, output silence
+	if ((echoRisk) && (micIn.gate > 0) && (echoTest.factor > 1)) {// If echo is likely and the mic is on, output silence
 		outAudioV =  new Array(ChunkSize).fill(0);
 	}
 	for (let i in outDataV) { 
