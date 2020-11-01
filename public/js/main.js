@@ -1141,7 +1141,7 @@ trace2("OPEN ",mP.toFixed(2)," > ",micIn.threshold.toFixed(2));
 let st="m ";
 for (let i=0;i<micPeaks.length;i++) st+=micPeaks[i].toFixed(1)+" ";
 trace2(st);
-let st="o ";
+st="o ";
 for (let i=0;i<thresholdBuffer.length;i++) st+=thresholdBuffer[i].toFixed(1)+" ";
 trace2(st);
 			} 
