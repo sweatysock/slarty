@@ -1336,9 +1336,11 @@ pauseTracing = true;
 				ratio += micPeaks[i]/thresholdBuffer[i+maxp];
 			ratio = ratio * 2.5 / (tlen-maxp);
 			if ((isFinite(ratio)) && (ratio < 80)) {	// Check ratio is sensible (for small to silent outputs it can go huge)
-				echoTest.factor = 
-					(echoTest.factor*3+ratio)/4;	// Apply ratio gently to the threshold factor
-echoTest.sampleDelay = (echoTest.sampleDelay*3 + maxp)/4;
+				if (ratio > echoTest.factor) 		// Apply ratio to echoTest.factor. Quickly going up. Slowly going down.
+					echoTest.factor = (echoTest.factor*3+ratio)/4;	
+				else
+					echoTest.factor = (echoTest.factor*39+ratio)/40;	
+				echoTest.sampleDelay = (echoTest.sampleDelay*39 + maxp)/40;
 trace2("Ratio ",ratio.toFixed(1)," factor ",echoTest.factor.toFixed(1)," d ",echoTest.sampleDelay.toFixed(1));
 			}
 		} 
