@@ -1328,7 +1328,7 @@ trace2("OPEN ",mP.toFixed(2)," > ",micIn.threshold.toFixed(2));
 			&& (maxp < (min2p-4)) 				// and sufficiently well spaced out
 			&& (((max - min1)/max) > 0.3)			// and both minima are > 0.1 of overall peak
 			&& (((max - min2)/max) > 0.3) 			// and the actual peak is big enough to mean something
-			&& (max > 0.01) ) {				// then we have a good convolution
+			&& (max > 1) ) {				// then we have a good convolution
 			let ratio = 0;					// Calculate the average ratio of input to output
 			for (let i=0; i<(tlen-maxp); i++) 
 				ratio += micPeaks[i]/thresholdBuffer[i+maxp];
