@@ -1326,8 +1326,8 @@ trace2("OPEN ",mP.toFixed(2)," > ",micIn.threshold.toFixed(2));
 		}
 		if (	(min1p < (maxp-3)) 				// If we have the positions in the right order
 			&& (maxp < (min2p-4)) 				// and sufficiently well spaced out
-			&& (((max - min1)/max) > 0.1)			// and both minima are > 0.1 of overall peak
-			&& (((max - min2)/max) > 0.1) ) {		// then we have a good convolution
+			&& (((max - min1)/max) > 0.3)			// and both minima are > 0.1 of overall peak
+			&& (((max - min2)/max) > 0.3) ) {		// then we have a good convolution
 //let st="";
 //for (let i=0;i<conv.length;i++) st+=conv[i].toFixed(1)+" ";
 //trace2(st);
