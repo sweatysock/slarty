@@ -1301,11 +1301,11 @@ function processAudio(e) {						// Main processing loop
 		let min1 = 100; max = 0, min2 = 100;			// Find the first minimum, the maximum, and the second minimum
 		let min1p = 0, maxp = 0, min2p = 0;			// also note the positions where they occur in the conv array 
 		for (let j=0; j<conv.length; j++) {
-			if ((maxp <= min1p) && (conv[j] < min1)) {	// If the max is still withus or behind us and this is a minimum
+			if ((maxp <= min1p) && (conv[j] < min1)) {	// If the max is still with us or behind us and this is a minimum
 				min1 = conv[j];				// this could be a new first minimum
 				min1p = j;
 			}
-			if (conv[j] > max) {				// If the 2nd minimum isn't being searched for, and this is a maximum
+			if (conv[j] > max) {				// If this is a maximum
 				max = conv[j];				// this could be a new maximum
 				maxp = j;
 			}
@@ -1319,18 +1319,20 @@ function processAudio(e) {						// Main processing loop
 			&& (maxp < (min2p-2)) 				// and sufficiently well spaced out
 			&& (((max - min1)/max) > 0.05)			// and both minima are > 0.1 of overall peak
 			&& (((max - min2)/max) > 0.05) ) {		// then we have a good convolution
-let st="";
-for (let i=0;i<conv.length;i++) st+=conv[i].toFixed(1)+" ";
-trace2(st);
-trace2("GOOD ",min1p," ", min1," ", maxp," ", max," ", min2p," ", min2);
+//let st="";
+//for (let i=0;i<conv.length;i++) st+=conv[i].toFixed(1)+" ";
+//trace2(st);
+//trace2("GOOD ",min1p," ", min1," ", maxp," ", max," ", min2p," ", min2);
 			let ratio = 0;					// Calculate the average ratio of input to output
 			for (let i=0; i<(tlen-maxp); i++) 
 				ratio += micPeaks[i]/thresholdBuffer[i+maxp];
 			ratio = ratio / (tlen-maxp);
-trace2("Ratio ",ratio);
-//			echoTest.factor = (echoTest.factor*39+ratio)/40;// Apply ratio gently to the threshold factor
+			if (isFinite(ratio)) {
+				echoTest.factor = 
+					(echoTest.factor*39+ratio)/40;	// Apply ratio gently to the threshold factor
+trace2("Ratio ",ratio," factor ",echoTest.factor);
+			}
 		} 
-//else trace2("no good");
 		let s = echoTest.sampleDelay - 3;			// start of threshold window
 		let e = echoTest.sampleDelay + 3;			// end of threshold window
 		let tempThresh;						// Adjusted threshold level 
@@ -1350,12 +1352,12 @@ trace2("Ratio ",ratio);
 		if (blocked > 0) {
 			blocked--;					// Threshold is blocked at max to completely stop feedback. Count back until unblocked.
 			if (blocked == 0) {
-				blocked = -40;		// After the blocked period we have to look for a prolonged quiet period
+				blocked = -40;				// After the blocked period we have to look for a prolonged quiet period
 			}
 		}
 		if (blocked < 0) {					// Searching for prolonged quiet in output
 			if (maxL < noiseThreshold) {
-				blocked++;		// Our output is low enough that mic may increase in sensitivity
+				blocked++;				// Our output is low enough that mic may increase in sensitivity
 			} else {
 				blocked = -40;				// otherwise start counting silence again because mic will have reset too
 			}
