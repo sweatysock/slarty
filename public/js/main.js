@@ -1326,12 +1326,25 @@ trace2("OPEN ",mP.toFixed(2)," > ",micIn.threshold.toFixed(2));
 		}
 		if (	(min1p < (maxp-3)) 				// If we have the positions in the right order
 			&& (maxp < (min2p-4)) 				// and sufficiently well spaced out
-			&& (((max - min1)/max) > 0.3)			// and both minima are > 0.1 of overall peak
-			&& (((max - min2)/max) > 0.3) 			// and the actual peak is big enough to mean something
-			&& (max > 1) ) {				// then we have a good convolution
+			&& (((max - min1)/max) > 0.1)			// and both minima are > 0.1 of overall peak
+			&& (((max - min2)/max) > 0.1) 			// and the actual peak is big enough to mean something
+			&& (max > 0.5) ) {				// then we have a good convolution
 			let ratio = 0;					// Calculate the average ratio of input to output
-			for (let i=0; i<(tlen-maxp); i++) 
-				ratio += micPeaks[i]/thresholdBuffer[i+maxp];
+			let sumM = 0, sumT = 0, sumM2 = 0, sumT2 = 0;	// and the correlation coeficient to decide to use it or not
+			for (let i=0; i<(tlen-maxp); i++) {
+				let mp = micPeaks[i], tb = thresholdBuffer[i+maxp];
+				ratio += mp/tb;
+				sumM += mp;
+				sumT += tb;
+				sumM2 += mp * mp;
+				sumT2 += tb * tb;
+			}
+			let sumMT = conv[maxp];				// Already did this more or less
+			let step1 = ((tlen-maxp)*sumMT) - (sumM * sumT);
+			let step2 = ((tlen-maxp)*sumM2) - (sumM * sumM);
+			let step3 = ((tlen-maxp)*sumT2) - (sumT * sumT);
+			let step4 = Math.sqrt(step2 * step3);
+			let coef = step1 / step4;
 			ratio = ratio * 2.5 / (tlen-maxp);		// Get average ratio and boost it by 2.5 to err on the side of caution
 			if ((isFinite(ratio)) && (ratio < 80)) {	// Check ratio is sensible (for small to silent outputs it can go huge)
 				if (ratio > echoTest.factor) 		// Apply ratio to echoTest.factor. Quickly going up. Slowly going down.
@@ -1339,10 +1352,11 @@ trace2("OPEN ",mP.toFixed(2)," > ",micIn.threshold.toFixed(2));
 				else
 					echoTest.factor = (echoTest.factor*39+ratio)/40;	
 				echoTest.sampleDelay = (echoTest.sampleDelay*39 + maxp)/40;
-let st="";
-for (let i=0;i<conv.length;i++) st+=conv[i].toFixed(1)+" ";
-trace2(st);
+//let st="";
+//for (let i=0;i<conv.length;i++) st+=conv[i].toFixed(1)+" ";
+//trace2(st);
 trace2("GOOD ",min1p," ", min1.toFixed(2)," ", maxp," ", max.toFixed(2)," ", min2p," ", min2.toFixed(2));
+trace2("coef ",coef.toFixed(1));
 trace2("Ratio ",ratio.toFixed(1)," factor ",echoTest.factor.toFixed(1)," d ",echoTest.sampleDelay.toFixed(1));
 			}
 		} else echoTest.factor = echoTest.factor/1.002;		// Without correlating input and output audio we assume there is no echo risk
