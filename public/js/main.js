@@ -1308,6 +1308,7 @@ trace2("OPEN ",mP.toFixed(2)," > ",micIn.threshold.toFixed(2));
 	if (maxL < maxV) maxL = maxV;				
 	outputPeaks.unshift( maxL );					// add to start of output peak buffer
 	outputPeaks.pop();						// Remove oldest output peak buffer value
+trace2("quick test");
 	let del = Math.round(echoTest.sampleDelay);			// Get latest output to input delay rounded to a whole number of chunks
 	for (let i=del;i<outputPeaks.length;i++)			// Add up all the peaks of output that
 		sumOP += outputPeaks[i];				// Should register on the input channel
@@ -1327,6 +1328,7 @@ trace2(st);
 		enterState( idleState );                                // We are done. Back to Idling
 		return;
 	}
+trace2("correlating");
 	// 2.2.2 There is audio coming in and audio going out so there could be echo feedback. Convolve input and output peaks and then find how correleated they are
 	let tlen = outputPeaks.length;
 	let mlen = micPeaks.length;			
