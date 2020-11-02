@@ -1311,6 +1311,7 @@ trace2("OPEN ",mP.toFixed(2)," > ",micIn.threshold.toFixed(2));
 	let sumOP = outputPeaks.reduce((a,b) => a+b, 0);		// Get the sum of all output peaks
 	let sumMP = micPeaks.reduce((a,b) => a+b, 0);			// and the same for the input peaks to make a quick decision
 	if ((sumOP > 4) && (sumMP < 1)) {		 		// If our input is way lower than our output
+trace2("ECHO risk gone");
                 micIn.threshold = 0;                                    // echo risk is clearly low so no threshold needed
 		echoTest.factor = 0;					// and the echo factor can drop too
 		enterState( idleState );                                // We are done. Back to Idling
@@ -1381,7 +1382,6 @@ trace2("coef ",coef.toFixed(1));
 trace2("Ratio ",ratio.toFixed(1)," factor ",echoTest.factor.toFixed(1)," d ",echoTest.sampleDelay.toFixed(1));
 		}
 	} else echoTest.factor = echoTest.factor/1.002;			// Without correlating input and output audio we assume there is litte echo risk
-trace2("2PRE Checking for block ",outputPeaks[0]," > ",outputPeaks[1]," ?");
 	// 2.2.3 We now have a new factor that relates output to input plus the delay from output to input. Use these to set a safe input threshold
 	let del = Math.round(echoTest.sampleDelay);			// Get latest ouptut to input delay rounded to a whole number of chunks
 	let sta = del - 3;						// start of threshold window in output peaks array
@@ -1394,7 +1394,6 @@ trace2("2PRE Checking for block ",outputPeaks[0]," > ",outputPeaks[1]," ?");
 	if (tempThresh > 1.2) tempThresh = 1.2;				// Mic input can be higher than 1 (amaxingly) but never as high as 1.2
 	// When output suddenly climbs after silence, on mobiles especially, over-compression can lead to input breaching the threshold. Stop this by blocking temporarily
 	if (blocked == 0) {  						// If blocked flag is reset we have passed a silent period and we need to watch for raising output
-trace2("Checking for block ",outputPeaks[0]," > ",outputPeaks[1]," ?");
 		if ((outputPeaks[0] > outputPeaks[1])
 		&& (outputPeaks[0] > noiseThreshold)) {			// If our output level is up & climbing there's a risk of feedback due to mic over amplification
 trace2("BLOCKING");
