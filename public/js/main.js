@@ -1312,10 +1312,10 @@ trace2("quick test");
 	let del = Math.round(echoTest.sampleDelay);			// Get latest output to input delay rounded to a whole number of chunks
 	for (let i=del;i<outputPeaks.length;i++)			// Add up all the peaks of output that
 		sumOP += outputPeaks[i];				// Should register on the input channel
+trace2("ready");
 	for (let i=0;i<(micPeaks.length-del);i++)			// Add up all the input channel peaks
 		sumMP += micPeaks[i];					// that may have been influenced by output
 	let aLot = 0.2 * (outputPeaks.length - del);			// An amount of sound that is non-trivial
-trace2("ready");
 	if ((sumOP > aLot) && (sumMP < (aLot/4))) {	 		// If our output is significant and our input small
 trace2("ECHO risk gone! mic & out:");
 let st="";
