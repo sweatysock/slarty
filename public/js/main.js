@@ -87,6 +87,7 @@ var venue = {								// Similar structure for the venue channel
 	channel	: "venue",
 };
 var blocked = 0;							// Counter used to block mic input to avoid feedback cutting output
+var goodCount = 0;							// Counter used to decide echo is no longer a risk
 var recording = false;							// Used for testing purposes
 var serverMuted = false;
 var venueSize = 1;							// Number of people in the venue. Used for adjusting venue audio.
@@ -1315,7 +1316,9 @@ trace2("OPEN ",mP.toFixed(2)," > ",micIn.threshold.toFixed(2));
 	for (let i=0;i<(micPeaks.length-del);i++)			// Add up all the input channel peaks
 		sumMP += micPeaks[i];					// that may have been influenced by output
 	let aLot = 0.2 * (outputPeaks.length - del);			// An amount of sound that is non-trivial
-	if ((sumOP > aLot) && (sumMP < (aLot/4))) {	 		// If our output is significant and our input small
+	if ((sumOP > aLot) && (sumMP < (aLot/4))) goodCount++; 		// If our output is significant and our input small count it
+	else goodCount = 0;
+	if (goodCount > 10)						// If we have had a run of 10 clear non-echo results in a row
 trace2("ECHO risk gone! mic & out:");
 let st="";
 for (let i=del;i<micPeaks.length;i++) st+=micPeaks[i].toFixed(1)+" ";
