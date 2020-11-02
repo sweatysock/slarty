@@ -1366,6 +1366,7 @@ trace2("ECHO risk gone");
 		let step3 = ((tlen-maxp)*sumT2) - (sumT * sumT);
 		let step4 = Math.sqrt(step2 * step3);
 		let coef = step1 / step4;				// This correlation coeficient (r) is the key figure. > 0.9 is significant
+trace2("coef ",coef.toFixed(1));
 		ratio = ratio / (tlen-maxp);				// Get average input/output ratio needed to set a safe echo supression threshold
 		if ((coef > 0.9) && (isFinite(ratio)) && (ratio < 80)) {// Is there correlation between input & output, and is the ratio sensible?
 			if (ratio > echoTest.factor) 			// Apply boosted ratio to echoTest.factor. Quickly going up. Slowly going down.
