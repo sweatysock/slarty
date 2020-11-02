@@ -1308,12 +1308,12 @@ trace2("OPEN ",mP.toFixed(2)," > ",micIn.threshold.toFixed(2));
 	if (maxL < maxV) maxL = maxV;				
 	outputPeaks.unshift( maxL );					// add to start of output peak buffer
 	outputPeaks.pop();						// Remove oldest output peak buffer value
-	let del = Math.round(echoTest.sampleDelay);			// Get latest ouptut to input delay rounded to a whole number of chunks
+	let del = Math.round(echoTest.sampleDelay);			// Get latest output to input delay rounded to a whole number of chunks
 	for (let i=del;i<outputPeaks.length;i++)			// Add up all the peaks of output that
 		sumOP += outputPeaks[i];				// Should register on the input channel
 	for (let i=0;i<(micPeaks.length-del);i++)			// Add up all the input channel peaks
-		sumMP += outputPeaks[i];				// that may have been influenced by output
-	let aLot = 0.2 * (ouputPeaks.length - del);			// An amount of sound that is non-trivial
+		sumMP += micPeaks[i];					// that may have been influenced by output
+	let aLot = 0.2 * (outputPeaks.length - del);			// An amount of sound that is non-trivial
 	if ((sumOP > aLot) && (sumMP < aLot/4)) {	 		// If our output is significant and our input small
 trace2("ECHO risk gone! mic & out:");
 let st="";
