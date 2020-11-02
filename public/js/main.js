@@ -1311,7 +1311,13 @@ trace2("OPEN ",mP.toFixed(2)," > ",micIn.threshold.toFixed(2));
 	let sumOP = outputPeaks.reduce((a,b) => a+b, 0);		// Get the sum of all output peaks
 	let sumMP = micPeaks.reduce((a,b) => a+b, 0);			// and the same for the input peaks to make a quick decision
 	if ((sumOP > 4) && (sumMP < 1)) {		 		// If our input is way lower than our output
-trace2("ECHO risk gone");
+trace2("ECHO risk gone! mic & out:");
+let st="";
+for (let i=0;i<micPeaks.length;i++) st+=micPeaks[i].toFixed(1)+" ";
+trace2(st);
+let st="";
+for (let i=0;i<outputPeaks.length;i++) st+=outputPeaks[i].toFixed(1)+" ";
+trace2(st);
                 micIn.threshold = 0;                                    // echo risk is clearly low so no threshold needed
 		echoTest.factor = 0;					// and the echo factor can drop too
 		enterState( idleState );                                // We are done. Back to Idling
@@ -1367,6 +1373,7 @@ trace2("ECHO risk gone");
 		let step4 = Math.sqrt(step2 * step3);
 		let coef = step1 / step4;				// This correlation coeficient (r) is the key figure. > 0.9 is significant
 		ratio = ratio / (tlen-maxp);				// Get average input/output ratio needed to set a safe echo supression threshold
+trace2("OK ",min1p," ", min1.toFixed(2)," ", maxp," ", max.toFixed(2)," ", min2p," ", min2.toFixed(2));
 trace2("coef ",coef.toFixed(1)," ratio ",ratio.toFixed(1));
 		if ((coef > 0.9) && (isFinite(ratio)) && (ratio < 80)) {// Is there correlation between input & output, and is the ratio sensible?
 			if (ratio > echoTest.factor) 			// Apply boosted ratio to echoTest.factor. Quickly going up. Slowly going down.
