@@ -1310,6 +1310,7 @@ trace2("OPEN ",mP.toFixed(2)," > ",micIn.threshold.toFixed(2));
 	outputPeaks.pop();						// Remove oldest output peak buffer value
 	let maxOP = maxValue(outputPeaks);				// Get the peak of the peaks for output and input
 	let maxMP = maxValue(micPeaks)					// signals in order to take some quick decisions
+if (outputPeaks[0] > outputPeaks[1]) trace2("blocking should happen");
 	if ((maxOP > 4*maxMP) || (maxMP < noiseThreshold) 		// If our input is way lower than our output, or our input
 		|| (maxOP < noiseThreshold)) {				// or output is very low, then 
                 micIn.threshold = 0;                                    // echo risk is clearly low so no threshold needed
@@ -1396,6 +1397,7 @@ trace2("Checking for block");
 	if (blocked == 0) {  						// If blocked flag is reset we have passed a silent period and we need to watch for raising output
 		if ((outputPeaks[0] > outputPeaks[1])
 		&& (outputPeakoutputPeaks[0] > noiseThreshold)) {	// If our output level is up & climbing there's a risk of feedback due to mic over amplification
+trace2("BLOCKING");
 			blocked = 40;					// block the threshold for N chunks at the level at which no sound can get through
 			micIn.threshold = 1.2;
 		} else micIn.threshold = tempThresh;			// Otherwise set threshold to allow interruptions but avoid feedback
