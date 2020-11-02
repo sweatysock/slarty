@@ -1315,7 +1315,7 @@ trace2("ECHO risk gone! mic & out:");
 let st="";
 for (let i=0;i<micPeaks.length;i++) st+=micPeaks[i].toFixed(1)+" ";
 trace2(st);
-let st="";
+st="";
 for (let i=0;i<outputPeaks.length;i++) st+=outputPeaks[i].toFixed(1)+" ";
 trace2(st);
                 micIn.threshold = 0;                                    // echo risk is clearly low so no threshold needed
