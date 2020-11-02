@@ -1331,7 +1331,6 @@ trace2(st);
 		enterState( idleState );                                // We are done. Back to Idling
 		return;
 	}
-trace2("convoluting");
 	// 2.2.2 There is audio coming in and audio going out so there could be echo feedback. Convolve input and output peaks and then find how correleated they are
 	let tlen = outputPeaks.length;
 	let mlen = micPeaks.length;			
@@ -1406,7 +1405,6 @@ pauseTraces = true;
 }
 		}
 	} 
-trace2("thresholding");
 	// 2.2.3 We now have a new factor that relates output to input plus the delay from output to input. Use these to set a safe input threshold
 	del = Math.round(echoTest.sampleDelay);				// Update latest ouptut to input delay rounded to a whole number of chunks
 	let sta = del - 3;						// start of threshold window in output peaks array
