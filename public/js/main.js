@@ -72,7 +72,7 @@ var micIn = {								// and for microphone input
 	muted	: false,
 	peak	: 0,
 	channel	: "micIn",
-	threshold:0.000,						// Level below which we don't send audio
+	threshold:0,							// Start with mic blocked so that initially no audio gets through until analysis complete
 	gate	: 0,							// Threshold gate. >0 means open.
 };
 var venue = {								// Similar structure for the venue channel
@@ -1308,15 +1308,14 @@ trace2("OPEN ",mP.toFixed(2)," > ",micIn.threshold.toFixed(2));
 	if (maxL < maxV) maxL = maxV;				
 	outputPeaks.unshift( maxL );					// add to start of output peak buffer
 	outputPeaks.pop();						// Remove oldest output peak buffer value
-	let maxOP = maxValue(outputPeaks);				// Get the peak of the peaks for output and input
-	let maxMP = maxValue(micPeaks)					// signals in order to take some quick decisions
-if (outputPeaks[0] > outputPeaks[1]) trace2("block? ",outputPeaks[0]," > ",outputPeaks[1]);
-	if ((maxOP > 4*maxMP) || (maxOP < noiseThreshold)) { 		// If our input is way lower than our output, or our output is low
+	let sumOP = outputPeaks.reduce((a,b) => a+b, 0);		// Get the sum of all output peaks
+	let sumMP = micPeaks.reduce((a,b) => a+b, 0);			// and the same for the input peaks to make a quick decision
+	if ((sumOP > 4) && (sumMP < 1)) {		 		// If our input is way lower than our output
                 micIn.threshold = 0;                                    // echo risk is clearly low so no threshold needed
+		echoTest.factor = 0;					// and the echo factor can drop too
 		enterState( idleState );                                // We are done. Back to Idling
 		return;
 	}
-trace2("PRE Checking for block ",outputPeaks[0]," > ",outputPeaks[1]," ?");
 	// 2.2.2 There is audio coming in and audio going out so there could be echo feedback. Convolve input and output peaks and then find how correleated they are
 	let tlen = outputPeaks.length;
 	let mlen = micPeaks.length;			
