@@ -1416,9 +1416,9 @@ pauseTraces = true;
 		.slice(sta,end)) * echoTest.factor * mixOut.gain;	// multiply by input/output gain factor as well as mixOutGain 
 	if (tempThresh > 1.2) tempThresh = 1.2;				// Mic input can be higher than 1 (amaxingly) but never as high as 1.2
 	// When output suddenly climbs after silence, on mobiles especially, over-compression can lead to input breaching the threshold. Stop this by blocking temporarily
-	if (blocked == 0) {  						// If blocked flag is reset we have passed a silent period and we need to watch for raising output
+	if ((blocked == 0) && (tempThresh > 0)) {			// If blocked flag is reset and there is some risk of echo watch out for rising output
 		if ((outputPeaks[0] > outputPeaks[1])
-		&& (outputPeaks[0] > noiseThreshold)) {			// If our output level is up & climbing there's a risk of feedback due to mic over amplification
+		&& (outputPeaks[0] > noiseThreshold)) {			// If our output is climbing there's a risk of feedback due to mic over amplification after silence
 trace2("BLOCKING");
 			blocked = 40;					// block the threshold for N chunks at the level at which no sound can get through
 			micIn.threshold = 1.2;
