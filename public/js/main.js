@@ -1401,7 +1401,7 @@ trace2(st);
 st="in ";
 for (let i=0;i<(micPeaks.length-maxp);i++) st+=micPeaks[i].toFixed(2)+" ";
 trace2(st);
-paudeTraces = true;
+pauseTraces = true;
 }
 		}
 	} 
