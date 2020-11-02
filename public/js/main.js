@@ -1394,12 +1394,15 @@ trace2(st);
 trace2("GOOD ",min1p," ", min1.toFixed(2)," ", maxp," ", max.toFixed(2)," ", min2p," ", min2.toFixed(2));
 trace2("coef ",coef.toFixed(1));
 trace2("Ratio ",ratio.toFixed(1)," factor ",echoTest.factor.toFixed(1)," d ",echoTest.sampleDelay.toFixed(1));
+if (goodCount > 10) {
 let st="out ";
 for (let i=maxp;i<outputPeaks.length;i++) st+=outputPeaks[i].toFixed(2)+" ";
 trace2(st);
 st="in ";
 for (let i=0;i<(micPeaks.length-maxp);i++) st+=micPeaks[i].toFixed(2)+" ";
 trace2(st);
+paudeTraces = true;
+}
 		}
 	} 
 	// 2.2.3 We now have a new factor that relates output to input plus the delay from output to input. Use these to set a safe input threshold
