@@ -1308,15 +1308,19 @@ trace2("OPEN ",mP.toFixed(2)," > ",micIn.threshold.toFixed(2));
 	if (maxL < maxV) maxL = maxV;				
 	outputPeaks.unshift( maxL );					// add to start of output peak buffer
 	outputPeaks.pop();						// Remove oldest output peak buffer value
-	let sumOP = outputPeaks.reduce((a,b) => a+b, 0);		// Get the sum of all output peaks
-	let sumMP = micPeaks.reduce((a,b) => a+b, 0);			// and the same for the input peaks to make a quick decision
-	if ((sumOP > 4) && (sumMP < 1)) {		 		// If our input is way lower than our output
+	let del = Math.round(echoTest.sampleDelay);			// Get latest ouptut to input delay rounded to a whole number of chunks
+	for (let i=del;i<outputPeaks.length;i++)			// Add up all the peaks of output that
+		sumOP += outputPeaks[i];				// Should register on the input channel
+	for (let i=0;i<(micPeaks.length-del);i++)			// Add up all the input channel peaks
+		sumMP += outputPeaks[i];				// that may have been influenced by output
+	let aLot = 0.2 * (ouputPeaks.length - del);			// An amount of sound that is non-trivial
+	if ((sumOP > aLot) && (sumMP < aLot/4)) {	 		// If our output is significant and our input small
 trace2("ECHO risk gone! mic & out:");
 let st="";
-for (let i=0;i<micPeaks.length;i++) st+=micPeaks[i].toFixed(1)+" ";
+for (let i=del;i<micPeaks.length;i++) st+=micPeaks[i].toFixed(1)+" ";
 trace2(st);
 st="";
-for (let i=0;i<outputPeaks.length;i++) st+=outputPeaks[i].toFixed(1)+" ";
+for (let i=0;i<(outputPeaks.length-del);i++) st+=outputPeaks[i].toFixed(1)+" ";
 trace2(st);
                 micIn.threshold = 0;                                    // echo risk is clearly low so no threshold needed
 		echoTest.factor = 0;					// and the echo factor can drop too
@@ -1387,15 +1391,15 @@ trace2("GOOD ",min1p," ", min1.toFixed(2)," ", maxp," ", max.toFixed(2)," ", min
 trace2("coef ",coef.toFixed(1));
 trace2("Ratio ",ratio.toFixed(1)," factor ",echoTest.factor.toFixed(1)," d ",echoTest.sampleDelay.toFixed(1));
 let st="out ";
-for (let i=0;i<outputPeaks.length;i++) st+=outputPeaks[i].toFixed(2)+" ";
+for (let i=maxp;i<outputPeaks.length;i++) st+=outputPeaks[i].toFixed(2)+" ";
 trace2(st);
 st="in ";
-for (let i=0;i<micPeaks.length;i++) st+=micPeaks[i].toFixed(2)+" ";
+for (let i=0;i<(micPeaks.length-maxp);i++) st+=micPeaks[i].toFixed(2)+" ";
 trace2(st);
 		}
 	} 
 	// 2.2.3 We now have a new factor that relates output to input plus the delay from output to input. Use these to set a safe input threshold
-	let del = Math.round(echoTest.sampleDelay);			// Get latest ouptut to input delay rounded to a whole number of chunks
+	del = Math.round(echoTest.sampleDelay);				// Update latest ouptut to input delay rounded to a whole number of chunks
 	let sta = del - 3;						// start of threshold window in output peaks array
 	if (sta < 0) sta = 0;						// trim to start of array
 	let end = del + 3;						// end of threshold window in output peaks array
