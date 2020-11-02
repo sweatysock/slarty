@@ -1318,7 +1318,7 @@ trace2("OPEN ",mP.toFixed(2)," > ",micIn.threshold.toFixed(2));
 	let aLot = 0.2 * (outputPeaks.length - del);			// An amount of sound that is non-trivial
 	if ((sumOP > aLot) && (sumMP < (aLot/4))) goodCount++; 		// If our output is significant and our input small count it
 	else goodCount = 0;
-	if (goodCount > 10)						// If we have had a run of 10 clear non-echo results in a row
+	if (goodCount > 10) {						// If we have had a run of 10 clear non-echo results in a row
 trace2("ECHO risk gone! mic & out:");
 let st="";
 for (let i=del;i<micPeaks.length;i++) st+=micPeaks[i].toFixed(1)+" ";
