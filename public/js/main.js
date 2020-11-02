@@ -1382,10 +1382,10 @@ trace2(st);
 		let coef = step1 / step4;				// This correlation coeficient (r) is the key figure. > 0.9 is significant
 		ratio = ratio / num;					// Get average input/output ratio needed to set a safe echo supression threshold
 		if ((coef > 0.9) && (isFinite(ratio)) && (ratio < 80)) {// Is there correlation between input & output, and is the ratio sensible?
-			if (ratio > echoTest.factor) 			// Apply boosted ratio to echoTest.factor. Quickly going up. Slowly going down.
-				echoTest.factor = (echoTest.factor*3+ratio*2.5)/4;	
+			if (ratio > echoTest.factor) 			// Apply x3 ratio to echoTest.factor. Quickly going up. Slowly going down.
+				echoTest.factor = (echoTest.factor*3+ratio*3)/4;	
 			else
-				echoTest.factor = (echoTest.factor*39+ratio*2.5)/40;	
+				echoTest.factor = (echoTest.factor*39+ratio*3)/40;	
 			echoTest.sampleDelay = 				// An accurate estimate of feedback delay is important for setting the correct threshold 
 				(echoTest.sampleDelay*39 + maxp)/40;
 //let st="";
