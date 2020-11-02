@@ -1096,7 +1096,7 @@ trace2("Noise threshold: ",noiseThreshold);
 				((levelCategories[i]/max)*100.0);	// Keep old data to obtain slower threshold changes
 }
 
-var thresholdBuffer = new Array(20).fill(0);				// Buffer dynamic thresholds here for delayed mic muting
+var outputPeaks = new Array(20).fill(0);				// Buffer dynamic thresholds here for delayed mic muting
 var micPeaks = new Array(20).fill(0);					// Buffer mic peaks for correlation analysis
 var gateDelay = 10;							// Amount of chunks (time) the gate stays open
 
@@ -1128,6 +1128,8 @@ function processAudio(e) {						// Main processing loop
 		let micAudioL = [];					// Our objective is to fill this with audio
 		let micAudioR = [];					
 		mP = maxValue(inDataL);					// Get peak of raw mic audio (using left channel for now)
+		micPeaks.unshift( mP );					// Keep buffer of mic peaks to understand and analyze
+		micPeaks.pop();						// relationship between output and input for feedback control
 		if (!pauseTracing) levelClassifier(mP);			// Classify audio incoming for analysis
 		if (performer) micIn.gate = 1				// Performer's mic is always open
 		if (micIn.muted) micIn.gate = 0;			// but the mute control overrides everything
@@ -1142,7 +1144,7 @@ trace2("OPEN ",mP.toFixed(2)," > ",micIn.threshold.toFixed(2));
 //for (let i=0;i<micPeaks.length;i++) st+=micPeaks[i].toFixed(1)+" ";
 //trace2(st);
 //st="out ";
-//for (let i=0;i<thresholdBuffer.length;i++) st+=thresholdBuffer[i].toFixed(1)+" ";
+//for (let i=0;i<outputPeaks.length;i++) st+=outputPeaks[i].toFixed(1)+" ";
 //trace2(st);
 //pauseTracing = true;
 			} 
@@ -1256,7 +1258,7 @@ trace2("OPEN ",mP.toFixed(2)," > ",micIn.threshold.toFixed(2));
 			outAudioR.push(...zeros);
 		}
 	}
-	if (((echoRisk) && (micIn.gate > 0) && (echoTest.factor > 1)) // If echo is likely and the mic is on and our echo factor is appreciable
+	if (((echoRisk) && (micIn.gate > 0) && (echoTest.factor > 0.5)) // If echo is likely and the mic is on and our echo factor is appreciable
 		|| (outAudioL.length == 0)) 			{	// or out array is empty, output silence
 		outAudioL = new Array(ChunkSize).fill(0); 
 		outAudioR = new Array(ChunkSize).fill(0);
@@ -1278,125 +1280,139 @@ trace2("OPEN ",mP.toFixed(2)," > ",micIn.threshold.toFixed(2));
 		let zeros = new Array(ChunkSize-venueBuffer.length).fill(0);
 		outAudioV.push(...zeros);
 	}
-	if ((echoRisk) && (micIn.gate > 0) && (echoTest.factor > 1)) {// If echo is likely and the mic is on, output silence
+	if ((echoRisk) && (micIn.gate > 0) && (echoTest.factor > 0.5)) {// If echo is likely and the mic is on, output silence
 		outAudioV =  new Array(ChunkSize).fill(0);
 	}
 	for (let i in outDataV) { 
 		outDataV[i] = outAudioV[i];				// Copy venue audio to it's special output
 	}
 //	outDataV = outAudioV.slice();					// Faster way to copy venue audio to it's special output
-	// 2.2 If there is a risk of echo set the input dynamic threshold level to stop audio feedback
-	if (echoRisk) {
-		let maxL = maxValue(outAudioL);				// Get peak level of this outgoing audio
-		let maxR = maxValue(outAudioR);				// for each channel
-		let maxV = maxValue(outAudioV);				// and venue audio
-		if (maxL < maxR) maxL = maxR;				// Choose loudest channel
-		if (maxL < maxV) maxL = maxV;				
-		thresholdBuffer.unshift( maxL );			// add to start of dynamic threshold queue
-		thresholdBuffer.pop();					// Remove oldest threshold buffer value
-		micPeaks.unshift( mP );					// Also keep buffer of mic peaks to 
-		micPeaks.pop();						// understand relationship between output and input
-		// 2.2.1 Convolve input and output peaks to find how correleated they are
-		let tlen = thresholdBuffer.length;
-		let mlen = micPeaks.length;			
-		let conv = [];					
-		for (let t=0; t<tlen; t++) {
-			let sum = 0;
-			for (let x=0; x<mlen; x++) {
-				sum += thresholdBuffer[(t+x)%tlen]*micPeaks[x];
-			}
-			conv.push(sum);					// Convolution goes here
-		}							// Now analyze the convolution
-		let min1 = 100; max = 0, min2 = 100;			// Find the first minimum, the maximum, and the second minimum
-		let min1p = 0, maxp = 0, min2p = 0;			// also note the positions where they occur in the conv array 
-		for (let j=0; j<conv.length; j++) {
-			if ((maxp <= min1p) && (conv[j] < min1)) {	// If the max is still with us or behind us and this is a minimum
-				min1 = conv[j];				// this could be a new first minimum
-				min1p = j;
-			}
-			if (conv[j] > max) {				// If this is a maximum
-				max = conv[j];				// this could be a new maximum
-				maxp = j;
-			}
-			if ((maxp < j) && (min1p < maxp) 		// If the max point has been found and it is ahead of the first min
-				&& (conv[j] < min2)) {			// and this is a minimum value
-				min2 = conv[j];				// this could be the second minimum
-				min2p = j;
-			}
+	
+	let now = new Date().getTime();					// Note time between audio processing loops
+	delta = now - previous;
+	if (delta > deltaMax) deltaMax = delta;				// Keep max and min as this indicates the 
+	if (delta < deltaMin) deltaMin = delta;				// load the client is enduring. A big difference is bad.
+	previous = now;
+
+	// 2.2 Handle feedback and echo. 
+	// 2.2.1 First decide if there is any actual risk of echo feedback ...
+	if (!echoRisk) {						// The echo test has concluded there is no risk of echo
+		micIn.threshold = 0;					// No echo risk so no threshold needed
+		enterState( idleState );				// We are done. Back to Idling
+		return;
+	}								// Keep a profile of audio output to help decision making
+	let maxL = maxValue(outAudioL);					// Get peak level of this outgoing audio
+	let maxR = maxValue(outAudioR);					// for each channel
+	let maxV = maxValue(outAudioV);					// and venue audio
+	if (maxL < maxR) maxL = maxR;					// Choose loudest channel
+	if (maxL < maxV) maxL = maxV;				
+	outputPeaks.unshift( maxL );					// add to start of output peak buffer
+	outputPeaks.pop();						// Remove oldest output peak buffer value
+	let maxOP = maxValue(outputPeaks);				// Get the peak of the peaks for output and input
+	let maxMP = maxValue(micPeaks)					// signals in order to take some quick decisions
+	if ((maxOP > 4*maxMP) || (maxMP < noiseThreshold) 		// If our input is way lower than our output, or our input
+		|| (maxOP < noiseThreshold)) {				// or output is very low, then 
+                micIn.threshold = 0;                                    // echo risk is clearly low so no threshold needed
+		enterState( idleState );                                // We are done. Back to Idling
+		return;
+	}
+	// 2.2.2 There is audio coming in and audio going out so there could be echo feedback. Convolve input and output peaks and then find how correleated they are
+	let tlen = outputPeaks.length;
+	let mlen = micPeaks.length;			
+	let conv = [];					
+	for (let t=0; t<tlen; t++) {					// The convolution will determine the most likely output to input delay
+		let sum = 0;
+		for (let x=0; x<mlen; x++) {
+			sum += outputPeaks[(t+x)%tlen]*micPeaks[x];
 		}
-		if (	(min1p < (maxp-3)) 				// If we have the positions in the right order
-			&& (maxp < (min2p-4)) 				// and sufficiently well spaced out
-			&& (((max - min1)/max) > 0.1)			// and both minima are > 0.1 of overall peak
-			&& (((max - min2)/max) > 0.1) 			// and the actual peak is big enough to mean something
-			&& (max > 1) ) {				// then we have a good convolution
-			let ratio = 0;					// Calculate the average ratio of input to output
-			let sumM = 0, sumT = 0, sumMT = 0, sumM2 = 0, sumT2 = 0;	// and the correlation coeficient to decide to use it or not
-			for (let i=0; i<(tlen-maxp); i++) {
-				let mp = micPeaks[i], tb = thresholdBuffer[i+maxp];
-				ratio += mp/tb;
-				sumM += mp;
-				sumT += tb;
-				sumMT += mp * tb;
-				sumM2 += mp * mp;
-				sumT2 += tb * tb;
-			}
-//			let sumMT = conv[maxp];				// Already did this more or less
-			let step1 = ((tlen-maxp)*sumMT) - (sumM * sumT);
-			let step2 = ((tlen-maxp)*sumM2) - (sumM * sumM);
-			let step3 = ((tlen-maxp)*sumT2) - (sumT * sumT);
-			let step4 = Math.sqrt(step2 * step3);
-			let coef = step1 / step4;
-			ratio = ratio * 2.5 / (tlen-maxp);		// Get average ratio and boost it by 2.5 to err on the side of caution
-			if ((coef > 0.9) && (isFinite(ratio)) && (ratio < 80)) {	// Check ratio is sensible (for small to silent outputs it can go huge)
-				if (ratio > echoTest.factor) 		// Apply ratio to echoTest.factor. Quickly going up. Slowly going down.
-					echoTest.factor = (echoTest.factor*3+ratio)/4;	
-				else
-					echoTest.factor = (echoTest.factor*39+ratio)/40;	
-				echoTest.sampleDelay = (echoTest.sampleDelay*39 + maxp)/40;
+		conv.push(sum);						// Convolution results accumulate here. We are looking for a triangular peak ideally
+	}							
+	let min1 = 100; max = 0, min2 = 100;				// Find the first minimum, the maximum, and the second minimum
+	let min1p = 0, maxp = 0, min2p = 0;				// also note the positions where they occur in the conv array 
+	for (let j=0; j<conv.length; j++) {
+		if ((maxp <= min1p) && (conv[j] < min1)) {		// If the max is still with us or behind us and this is a minimum
+			min1 = conv[j];					// this could be a new first minimum
+			min1p = j;
+		}
+		if (conv[j] > max) {					// If this is a maximum
+			max = conv[j];					// this could be a new maximum
+			maxp = j;
+		}
+		if ((maxp < j) && (min1p < maxp) 			// If the max point has been found and it is ahead of the first min
+			&& (conv[j] < min2)) {				// and this is a minimum value
+			min2 = conv[j];					// this could be the second minimum
+			min2p = j;
+		}							// Convolution and analysis complete. Do we have a clear maxima (most likely output to input delay)?
+	}								
+	if (	(min1p < (maxp-3)) 					// If we have the positions in the right order
+		&& (maxp < (min2p-4)) 					// and sufficiently well spaced out
+		&& (((max - min1)/max) > 0.1)				// and both minima are < 90% of highest peak
+		&& (((max - min2)/max) > 0.1) 				// and the actual peak is big enough to mean something
+		&& (max > 1) ) {					// then we have a good convolution
+		let ratio = 0;						// Calculate the average ratio of input to output for this delay
+		let sumM = 0, sumT = 0, sumMT = 0, sumM2 = 0, sumT2 = 0;
+		for (let i=0; i<(tlen-maxp); i++) {			// Figure if there is a strong correlation between input and output
+			let mp = micPeaks[i], tb = outputPeaks[i+maxp];	// as this will indicate if there is echo feedback or not
+			ratio += mp/tb;
+			sumM += mp;
+			sumT += tb;
+			sumMT += mp * tb;
+			sumM2 += mp * mp;
+			sumT2 += tb * tb;
+		}
+		let step1 = ((tlen-maxp)*sumMT) - (sumM * sumT);
+		let step2 = ((tlen-maxp)*sumM2) - (sumM * sumM);
+		let step3 = ((tlen-maxp)*sumT2) - (sumT * sumT);
+		let step4 = Math.sqrt(step2 * step3);
+		let coef = step1 / step4;				// This correlation coeficient (r) is the key figure. > 0.9 is significant
+		ratio = ratio / (tlen-maxp);				// Get average input/output ratio needed to set a safe echo supression threshold
+		if ((coef > 0.9) && (isFinite(ratio)) && (ratio < 80)) {// Is there correlation between input & output, and is the ratio sensible?
+			if (ratio > echoTest.factor) 			// Apply boosted ratio to echoTest.factor. Quickly going up. Slowly going down.
+				echoTest.factor = (echoTest.factor*3+ratio*2.5)/4;	
+			else
+				echoTest.factor = (echoTest.factor*39+ratio*2.5)/40;	
+			echoTest.sampleDelay = 				// An accurate estimate of feedback delay is important for setting the correct threshold 
+				(echoTest.sampleDelay*39 + maxp)/40;
 //let st="";
 //for (let i=0;i<conv.length;i++) st+=conv[i].toFixed(1)+" ";
 //trace2(st);
 trace2("GOOD ",min1p," ", min1.toFixed(2)," ", maxp," ", max.toFixed(2)," ", min2p," ", min2.toFixed(2));
 trace2("coef ",coef.toFixed(1));
 trace2("Ratio ",ratio.toFixed(1)," factor ",echoTest.factor.toFixed(1)," d ",echoTest.sampleDelay.toFixed(1));
-			}
-		} else echoTest.factor = echoTest.factor/1.002;		// Without correlating input and output audio we assume there is no echo risk
-		let d = Math.round(echoTest.sampleDelay);
-		let s = d - 3;						// start of threshold window
-		if (s < 0) s = 0;
-		let e = d + 3;						// end of threshold window
-		if (e > thresholdBuffer.length) e = thresholdBuffer.length;
-		let tempThresh;						// Adjusted threshold level 
-		tempThresh = maxValue( thresholdBuffer			// Apply most aggressive threshold near current +/-w chunks
-			.slice(s,e)) * echoTest.factor * mixOut.gain;	// multiply by factor and mixOutGain 
-		if (tempThresh > 1.2) tempThresh = 1.2;			// Mic input can be higher than 1 (amaxingly) but never as high as 1.2
-		if (blocked == 0) {  					// If blocked flag is reset we have passed a silent period and we need to watch for raising output
-			if ((thresholdBuffer[0] > thresholdBuffer[1])
-			&& (thresholdBuffer[0] > noiseThreshold)) {	// If our output level is up & climbing there's a risk of feedback due to mic over amplification
-				blocked = 40;				// so block the threshold for N chunks at the level at which no sound can get through
-				micIn.threshold = 1.2;
-			} else micIn.threshold = tempThresh;		// Meanwhile set threshold to allow interruptions but avoid feedback
 		}
-		if (blocked > 0) {
-			blocked--;					// Threshold is blocked at max to completely stop feedback. Count back until unblocked.
-			if (blocked == 0) {
-				blocked = -40;				// After the blocked period we have to look for a prolonged quiet period
-			}
+	} else echoTest.factor = echoTest.factor/1.002;			// Without correlating input and output audio we assume there is litte echo risk
+	// 2.2.3 We now have a new factor that relates output to input plus the delay from output to input. Use these to set a safe input threshold
+	let d = Math.round(echoTest.sampleDelay);			// Get latest ouptut to input delay rounded to a whole number of chunks
+	let s = d - 3;							// start of threshold window in output peaks array
+	if (s < 0) s = 0;						// trim to start of array
+	let e = d + 3;							// end of threshold window in output peaks array
+	if (e > outputPeaks.length) e = outputPeaks.length;		// trim to end of array
+	let tempThresh;							// Adjusted threshold level temporary value
+	tempThresh = maxValue( outputPeaks				// Apply most aggressive threshold in window around current delay 
+		.slice(s,e)) * echoTest.factor * mixOut.gain;		// multiply by input/output gain factor as well as mixOutGain 
+	if (tempThresh > 1.2) tempThresh = 1.2;				// Mic input can be higher than 1 (amaxingly) but never as high as 1.2
+	// When output suddenly climbs after silence, on mobiles especially, over-compression can lead to input breaching the threshold. Stop this by blocking temporarily
+	if (blocked == 0) {  						// If blocked flag is reset we have passed a silent period and we need to watch for raising output
+		if ((outputPeaks[0] > outputPeaks[1])
+		&& (outputPeakoutputPeaks[0] > noiseThreshold)) {	// If our output level is up & climbing there's a risk of feedback due to mic over amplification
+			blocked = 40;					// block the threshold for N chunks at the level at which no sound can get through
+			micIn.threshold = 1.2;
+		} else micIn.threshold = tempThresh;			// Otherwise set threshold to allow interruptions but avoid feedback
+	}
+	if (blocked > 0) {
+		blocked--;						// Threshold is blocked at max to completely stop feedback. Count back until unblocked.
+		if (blocked == 0) {
+			blocked = -40;					// After the blocked period we have to look for a prolonged quiet period
 		}
-		if (blocked < 0) {					// Searching for prolonged quiet in output
-			if (maxL < noiseThreshold) {
-				blocked++;				// Our output is low enough that mic may increase in sensitivity
-			} else {
-				blocked = -40;				// otherwise start counting silence again because mic will have reset too
-			}
-			micIn.threshold = tempThresh;			// Set mic threshold according to output level to allow interruptions but avoid feedback
+	}
+	if (blocked < 0) {						// Searching for prolonged quiet in output
+		if (maxL < noiseThreshold) {
+			blocked++;					// Our output is low enough that mic may increase in sensitivity
+		} else {
+			blocked = -40;					// otherwise start counting silence again because mic will have reset too
 		}
-	} else micIn.threshold = 0;					// No echo risk so no threshold needed
-	let now = new Date().getTime();					// Note time between audio processing loops
-	delta = now - previous;
-	if (delta > deltaMax) deltaMax = delta;				// Keep max and min as this indicates the 
-	if (delta < deltaMin) deltaMin = delta;				// load the client is enduring. A big difference is bad.
-	previous = now;
+		micIn.threshold = tempThresh;				// Set mic threshold according to output level to allow interruptions but avoid feedback
+	}
 	enterState( idleState );					// We are done. Back to Idling
 }
 
