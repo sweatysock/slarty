@@ -1382,14 +1382,14 @@ trace2("Ratio ",ratio.toFixed(1)," factor ",echoTest.factor.toFixed(1)," d ",ech
 		}
 	} else echoTest.factor = echoTest.factor/1.002;			// Without correlating input and output audio we assume there is litte echo risk
 	// 2.2.3 We now have a new factor that relates output to input plus the delay from output to input. Use these to set a safe input threshold
-	let d = Math.round(echoTest.sampleDelay);			// Get latest ouptut to input delay rounded to a whole number of chunks
-	let s = d - 3;							// start of threshold window in output peaks array
-	if (s < 0) s = 0;						// trim to start of array
-	let e = d + 3;							// end of threshold window in output peaks array
-	if (e > outputPeaks.length) e = outputPeaks.length;		// trim to end of array
+	let del = Math.round(echoTest.sampleDelay);			// Get latest ouptut to input delay rounded to a whole number of chunks
+	let sta = del - 3;						// start of threshold window in output peaks array
+	if (sta < 0) sta = 0;						// trim to start of array
+	let end = del + 3;						// end of threshold window in output peaks array
+	if (end > outputPeaks.length) end = outputPeaks.length;		// trim to end of array
 	let tempThresh;							// Adjusted threshold level temporary value
 	tempThresh = maxValue( outputPeaks				// Apply most aggressive threshold in window around current delay 
-		.slice(s,e)) * echoTest.factor * mixOut.gain;		// multiply by input/output gain factor as well as mixOutGain 
+		.slice(sta,end)) * echoTest.factor * mixOut.gain;	// multiply by input/output gain factor as well as mixOutGain 
 	if (tempThresh > 1.2) tempThresh = 1.2;				// Mic input can be higher than 1 (amaxingly) but never as high as 1.2
 	// When output suddenly climbs after silence, on mobiles especially, over-compression can lead to input breaching the threshold. Stop this by blocking temporarily
 	if (blocked == 0) {  						// If blocked flag is reset we have passed a silent period and we need to watch for raising output
