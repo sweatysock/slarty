@@ -1396,7 +1396,7 @@ trace2("Ratio ",ratio.toFixed(1)," factor ",echoTest.factor.toFixed(1)," d ",ech
 	if (blocked == 0) {  						// If blocked flag is reset we have passed a silent period and we need to watch for raising output
 trace2("Checking for block ",outputPeaks[0]," > ",outputPeaks[1]," ?");
 		if ((outputPeaks[0] > outputPeaks[1])
-		&& (outputPeakoutputPeaks[0] > noiseThreshold)) {	// If our output level is up & climbing there's a risk of feedback due to mic over amplification
+		&& (outputPeaks[0] > noiseThreshold)) {			// If our output level is up & climbing there's a risk of feedback due to mic over amplification
 trace2("BLOCKING");
 			blocked = 40;					// block the threshold for N chunks at the level at which no sound can get through
 			micIn.threshold = 1.2;
