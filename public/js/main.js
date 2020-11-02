@@ -1315,7 +1315,7 @@ trace2("quick test");
 	for (let i=0;i<(micPeaks.length-del);i++)			// Add up all the input channel peaks
 		sumMP += micPeaks[i];					// that may have been influenced by output
 	let aLot = 0.2 * (outputPeaks.length - del);			// An amount of sound that is non-trivial
-	if ((sumOP > aLot) && (sumMP < aLot/4)) {	 		// If our output is significant and our input small
+	if ((sumOP > aLot) && (sumMP < (aLot/4))) {	 		// If our output is significant and our input small
 trace2("ECHO risk gone! mic & out:");
 let st="";
 for (let i=del;i<micPeaks.length;i++) st+=micPeaks[i].toFixed(1)+" ";
