@@ -1356,11 +1356,11 @@ trace2(st);
 		&& (((max - min1)/max) > 0.1)				// and both minima are < 90% of highest peak
 		&& (((max - min2)/max) > 0.1) 				// and the actual peak is big enough to mean something
 		&& (max > 1) ) {					// then we have a good convolution
-		let ratio = 0;						// Calculate the average ratio of input to output for this delay
+		let ratio = 0, num = 0;					// Calculate the average ratio of input to output for this delay
 		let sumM = 0, sumT = 0, sumMT = 0, sumM2 = 0, sumT2 = 0;
 		for (let i=0; i<(tlen-maxp); i++) {			// Figure if there is a strong correlation between input and output
 			let mp = micPeaks[i], tb = outputPeaks[i+maxp];	// as this will indicate if there is echo feedback or not
-			ratio += mp/tb;
+			if (tb >0) {ratio += mp/tb; num++;}
 			sumM += mp;
 			sumT += tb;
 			sumMT += mp * tb;
@@ -1372,7 +1372,7 @@ trace2(st);
 		let step3 = ((tlen-maxp)*sumT2) - (sumT * sumT);
 		let step4 = Math.sqrt(step2 * step3);
 		let coef = step1 / step4;				// This correlation coeficient (r) is the key figure. > 0.9 is significant
-		ratio = ratio / (tlen-maxp);				// Get average input/output ratio needed to set a safe echo supression threshold
+		ratio = ratio / num;					// Get average input/output ratio needed to set a safe echo supression threshold
 trace2("OK ",min1p," ", min1.toFixed(2)," ", maxp," ", max.toFixed(2)," ", min2p," ", min2.toFixed(2));
 trace2("coef ",coef.toFixed(1)," ratio ",ratio.toFixed(1));
 		if ((coef > 0.9) && (isFinite(ratio)) && (ratio < 80)) {// Is there correlation between input & output, and is the ratio sensible?
