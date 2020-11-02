@@ -1310,6 +1310,7 @@ trace2("OPEN ",mP.toFixed(2)," > ",micIn.threshold.toFixed(2));
 	outputPeaks.pop();						// Remove oldest output peak buffer value
 trace2("quick test");
 	let del = Math.round(echoTest.sampleDelay);			// Get latest output to input delay rounded to a whole number of chunks
+	let sumOP = 0, sumMP = 0;
 	for (let i=del;i<outputPeaks.length;i++)			// Add up all the peaks of output that
 		sumOP += outputPeaks[i];				// Should register on the input channel
 trace2("ready");
