@@ -1373,8 +1373,6 @@ trace2(st);
 		let step4 = Math.sqrt(step2 * step3);
 		let coef = step1 / step4;				// This correlation coeficient (r) is the key figure. > 0.9 is significant
 		ratio = ratio / num;					// Get average input/output ratio needed to set a safe echo supression threshold
-trace2("OK ",min1p," ", min1.toFixed(2)," ", maxp," ", max.toFixed(2)," ", min2p," ", min2.toFixed(2));
-trace2("coef ",coef.toFixed(1)," ratio ",ratio.toFixed(1));
 		if ((coef > 0.9) && (isFinite(ratio)) && (ratio < 80)) {// Is there correlation between input & output, and is the ratio sensible?
 			if (ratio > echoTest.factor) 			// Apply boosted ratio to echoTest.factor. Quickly going up. Slowly going down.
 				echoTest.factor = (echoTest.factor*3+ratio*2.5)/4;	
@@ -1388,6 +1386,12 @@ trace2("coef ",coef.toFixed(1)," ratio ",ratio.toFixed(1));
 trace2("GOOD ",min1p," ", min1.toFixed(2)," ", maxp," ", max.toFixed(2)," ", min2p," ", min2.toFixed(2));
 trace2("coef ",coef.toFixed(1));
 trace2("Ratio ",ratio.toFixed(1)," factor ",echoTest.factor.toFixed(1)," d ",echoTest.sampleDelay.toFixed(1));
+let st="";
+for (let i=0;i<micPeaks.length;i++) st+=micPeaks[i].toFixed(1)+" ";
+trace2(st);
+st="";
+for (let i=0;i<outputPeaks.length;i++) st+=outputPeaks[i].toFixed(1)+" ";
+trace2(st);
 		}
 	} 
 	// 2.2.3 We now have a new factor that relates output to input plus the delay from output to input. Use these to set a safe input threshold
