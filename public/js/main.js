@@ -1311,12 +1311,12 @@ trace2("OPEN ",mP.toFixed(2)," > ",micIn.threshold.toFixed(2));
 	let maxOP = maxValue(outputPeaks);				// Get the peak of the peaks for output and input
 	let maxMP = maxValue(micPeaks)					// signals in order to take some quick decisions
 if (outputPeaks[0] > outputPeaks[1]) trace2("block? ",outputPeaks[0]," > ",outputPeaks[1]);
-	if ((maxOP > 4*maxMP) || (maxMP < noiseThreshold) 		// If our input is way lower than our output, or our input
-		|| (maxOP < noiseThreshold)) {				// or output is very low, then 
+	if ((maxOP > 4*maxMP) || (maxOP < noiseThreshold)) { 		// If our input is way lower than our output, or our output is low
                 micIn.threshold = 0;                                    // echo risk is clearly low so no threshold needed
 		enterState( idleState );                                // We are done. Back to Idling
 		return;
 	}
+trace2("PRE Checking for block ",outputPeaks[0]," > ",outputPeaks[1]," ?");
 	// 2.2.2 There is audio coming in and audio going out so there could be echo feedback. Convolve input and output peaks and then find how correleated they are
 	let tlen = outputPeaks.length;
 	let mlen = micPeaks.length;			
@@ -1382,6 +1382,7 @@ trace2("coef ",coef.toFixed(1));
 trace2("Ratio ",ratio.toFixed(1)," factor ",echoTest.factor.toFixed(1)," d ",echoTest.sampleDelay.toFixed(1));
 		}
 	} else echoTest.factor = echoTest.factor/1.002;			// Without correlating input and output audio we assume there is litte echo risk
+trace2("2PRE Checking for block ",outputPeaks[0]," > ",outputPeaks[1]," ?");
 	// 2.2.3 We now have a new factor that relates output to input plus the delay from output to input. Use these to set a safe input threshold
 	let del = Math.round(echoTest.sampleDelay);			// Get latest ouptut to input delay rounded to a whole number of chunks
 	let sta = del - 3;						// start of threshold window in output peaks array
