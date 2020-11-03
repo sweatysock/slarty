@@ -1407,12 +1407,12 @@ trace2(str);
 trace2("DATA ",min1p," ", min1.toFixed(2)," ", maxp," ", max.toFixed(2)," ", min2p," ", min2.toFixed(2));
 //trace2("coef ",coef.toFixed(1)," ratio ",ratio.toFixed(1));
 }
-tracecount--;
 	if (	(min1p < (maxp-3)) 					// If we have the positions in the right order
 		&& (maxp < (min2p-4)) 					// and sufficiently well spaced out
 		&& (((max - min1)/max) > 0.1)				// and both minima are < 90% of highest peak
 		&& (((max - min2)/max) > 0.1) 				// and the actual peak is big enough to mean something
 		&& (max > 1) ) {					// then we have a good convolution
+if (tracecount > 0) trace2("PASSED FIRST TEST");
 		let ratio = 0, num = 0;					// Calculate the average ratio of input to output for this delay
 		let sumM = 0, sumT = 0, sumMT = 0, sumM2 = 0, sumT2 = 0;
 		for (let i=0; i<(tlen-maxp); i++) {			// Figure if there is a strong correlation between input and output
@@ -1457,7 +1457,9 @@ trace2("Breach detected. Extra ",extra);
 				extra++;				// Increase the factor multiplier to reduce the chances of future breaches
 			}
 		}
-	} 
+	} else
+if (tracecount > 0) trace2("fail");
+tracecount--;
 	// 2.2.3 We now have a new factor that relates output to input plus the delay from output to input. Use these to set a safe input threshold
 	del = Math.round(echoTest.sampleDelay);				// Update latest ouptut to input delay rounded to a whole number of chunks
 	let sta = del - 3;						// start of threshold window in output peaks array
