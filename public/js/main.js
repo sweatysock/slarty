@@ -609,6 +609,7 @@ document.addEventListener('DOMContentLoaded', function(event){		// Add dynamic b
 		micOpen.style.visibility = "visible";
 		micOnMixer.style.visibility = "inherit";
 		if (forcedMute) {					// If UI mute state was forced due to high threshold force mic open
+trace2("FORCE UNmute");
 			micIn.gate = 40;				// for about 1 second
 			forcedMute = false;				// Not strictly necessary, but as we are clearly unmuted may as well unforce too
 		}
@@ -887,6 +888,7 @@ function unmuteButton(e) {
 		document.getElementById('micMuted').style.visibility = "hidden";
 		document.getElementById('micOpen').style.visibility = "visible";
 		if (forcedMute) {					// If UI mute state was forced due to high threshold force mic open
+trace2("FORCE UNmute");
 			micIn.gate = 40;				// for about 1 second
 			forcedMute = false;				// Not strictly necessary, but as we are clearly unmuted may as well unforce too
 		}
@@ -1164,7 +1166,8 @@ trace2("OPEN ",mP.toFixed(2)," > ",micIn.threshold.toFixed(2));
 			if (initialNoiseMeasure == 0) 			// which is important for cutting unwanted mic input
 				gateJustClosed = true;			// Once enough levels are in the micPeaks buffer trigger a measurement of noise
 		}
-		if ((!micIn.muted) && (micIn.gate > 0)) {		// If not muted and gate is open prepare the audio for sending
+		if (micIn.muted) micIn.gate = 0;			// Mute means the gate is shut. No questions asked.
+		if ((micIn.gate > 0)) {					// If the gate is open prepare audio for sending
 			micAudioL = inDataL;
 			micAudioR = inDataR;
 			micIn.gate--;					// Gate slowly closes
@@ -1312,10 +1315,9 @@ trace2("OPEN ",mP.toFixed(2)," > ",micIn.threshold.toFixed(2));
 			outAudioV.push(...zeros);
 		}
 	}
-	if (((echoRisk) && (micIn.gate > 0) && (echoTest.factor > 0.5)) // If echo is likely and the mic is on, output silence
-		|| (outAudioV.length == 0)) {
+	if (((echoRisk) && (micIn.gate > 0) && (echoTest.factor > 0.5)) // If echo is likely and the mic is on, and the echo factor is appreciable
+		|| (outAudioV.length == 0)) {				// or our venue array is empty (due to a shortage), output silence
 		outAudioV =  new Array(ChunkSize).fill(0);
-trace2("venue silenced ",micIn.gate," ",echoTest.factor," ",outAudioV.length);
 	}
 	for (let i in outDataV) { 
 		outDataV[i] = outAudioV[i];				// Copy venue audio to it's special output
