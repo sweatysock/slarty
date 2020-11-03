@@ -1316,9 +1316,9 @@ trace2("OPEN ",mP.toFixed(2)," > ",micIn.threshold.toFixed(2));
 	for (let i=0;i<(micPeaks.length-del);i++)			// Add up all the input channel peaks
 		sumMP += micPeaks[i];					// that may have been influenced by output
 	let aLot = 0.2 * (outputPeaks.length - del);			// An amount of sound that is non-trivial
+if (sumOP > aLot) trace2("sumOP ok sumMP ",sumMP);
 	if ((sumOP > aLot) && (sumMP < (aLot/4))) goodCount++; 		// If our output is significant and our input small count it
 	else goodCount = 0;
-if (goodCount > 0) trace2("gc ",goodCount);
 	if (goodCount > 10) {						// If we have had a run of 10 clear non-echo results in a row
 trace2("ECHO risk gone! mic & out:");
 let st="";
@@ -1417,7 +1417,6 @@ pauseTraces = true;
 		.slice(sta,end)) * echoTest.factor * mixOut.gain;	// multiply by input/output gain factor as well as mixOutGain 
 	if (tempThresh > 1.2) tempThresh = 1.2;				// Mic input can be higher than 1 (amaxingly) but never as high as 1.2
 	// When output suddenly climbs after silence, on mobiles especially, over-compression can lead to input breaching the threshold. Stop this by blocking temporarily
-trace2("temp th ",tempThresh);
 	if ((blocked == 0) && (tempThresh > 0)) {			// If blocked flag is reset and there is some risk of echo watch out for rising output
 		if ((outputPeaks[0] > outputPeaks[1])
 		&& (outputPeaks[0] > noiseThreshold)) {			// If our output is climbing there's a risk of feedback due to mic over amplification after silence
