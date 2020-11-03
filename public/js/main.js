@@ -1394,6 +1394,17 @@ trace2("ECHO risk gone");
 			min2p = j;
 		}							// Convolution and analysis complete. Do we have a clear maxima (most likely output to input delay)?
 	}								
+if (tracecount > 0) {
+st="out ";
+for (let i=0;i<(outputPeaks.length-maxp);i++) st+=outputPeaks[i].toFixed(2)+" ";
+trace2(st);
+let st="in ";
+for (let i=maxp;i<micPeaks.length;i++) st+=micPeaks[i].toFixed(2)+" ";
+trace2(st);
+trace2("DATA ",min1p," ", min1.toFixed(2)," ", maxp," ", max.toFixed(2)," ", min2p," ", min2.toFixed(2));
+//trace2("coef ",coef.toFixed(1)," ratio ",ratio.toFixed(1));
+}
+tracecount--;
 	if (	(min1p < (maxp-3)) 					// If we have the positions in the right order
 		&& (maxp < (min2p-4)) 					// and sufficiently well spaced out
 		&& (((max - min1)/max) > 0.1)				// and both minima are < 90% of highest peak
@@ -1443,17 +1454,6 @@ trace2("Breach detected. Extra ",extra);
 				extra++;				// Increase the factor multiplier to reduce the chances of future breaches
 			}
 		}
-if (tracecount > 0) {
-st="out ";
-for (let i=0;i<(outputPeaks.length-maxp);i++) st+=outputPeaks[i].toFixed(2)+" ";
-trace2(st);
-let st="in ";
-for (let i=maxp;i<micPeaks.length;i++) st+=micPeaks[i].toFixed(2)+" ";
-trace2(st);
-trace2("DATA ",min1p," ", min1.toFixed(2)," ", maxp," ", max.toFixed(2)," ", min2p," ", min2.toFixed(2));
-trace2("coef ",coef.toFixed(1)," ratio ",ratio.toFixed(1));
-}
-tracecount--;
 	} 
 	// 2.2.3 We now have a new factor that relates output to input plus the delay from output to input. Use these to set a safe input threshold
 	del = Math.round(echoTest.sampleDelay);				// Update latest ouptut to input delay rounded to a whole number of chunks
