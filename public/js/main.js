@@ -1315,11 +1315,11 @@ trace2("OPEN ",mP.toFixed(2)," > ",micIn.threshold.toFixed(2));
 		sumOP += outputPeaks[i];				// Should register on the input channel
 	for (let i=0;i<(micPeaks.length-del);i++)			// Add up all the input channel peaks
 		sumMP += micPeaks[i];					// that may have been influenced by output
-	let aLot = 0.2 * (outputPeaks.length - del);			// An amount of sound that is non-trivial
+	let aLot = 0.1 * (outputPeaks.length - del);			// An amount of sound that is non-trivial
 if (sumOP > aLot) trace2("sumOP ok sumMP ",sumMP);
 	if ((sumOP > aLot) && (sumMP < (aLot/4))) goodCount++; 		// If our output is significant and our input small count it
 	else goodCount = 0;
-	if (goodCount > 10) {						// If we have had a run of 10 clear non-echo results in a row
+	if (goodCount > 5) {						// If we have had a run of 10 clear non-echo results in a row
 trace2("ECHO risk gone! mic & out:");
 let st="";
 for (let i=del;i<micPeaks.length;i++) st+=micPeaks[i].toFixed(1)+" ";
