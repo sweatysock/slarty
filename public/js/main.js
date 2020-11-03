@@ -1373,7 +1373,7 @@ trace2("ECHO risk gone");
 	let tlen = outputPeaks.length;
 	let mlen = micPeaks.length;			
 	let conv = [];					
-	for (let t=0; t<tlen; t++) {					// The convolution will determine the most likely output to input delay
+	for (let t=0; t<15; t++) {					// The convolution will determine the most likely output to input delay
 		let sum = 0;
 		for (let x=0; x<mlen; x++) {
 			sum += outputPeaks[(t+x)%tlen]*micPeaks[x];
@@ -1408,7 +1408,7 @@ trace2("DATA ",min1p," ", min1.toFixed(2)," ", maxp," ", max.toFixed(2)," ", min
 //trace2("coef ",coef.toFixed(1)," ratio ",ratio.toFixed(1));
 }
 	if (	(min1p < (maxp-3)) 					// If we have the positions in the right order
-		&& (maxp < (min2p-4)) 					// and sufficiently well spaced out
+		&& (maxp < (min2p-3)) 					// and sufficiently well spaced out
 		&& (((max - min1)/max) > 0.3)				// and both minima are < 90% of highest peak
 		&& (((max - min2)/max) > 0.3)) {				// and the actual peak is big enough to mean something
 //		&& (max > 1) ) {					// then we have a good convolution
