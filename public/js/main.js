@@ -1318,6 +1318,7 @@ trace2("OPEN ",mP.toFixed(2)," > ",micIn.threshold.toFixed(2));
 	let aLot = 0.2 * (outputPeaks.length - del);			// An amount of sound that is non-trivial
 	if ((sumOP > aLot) && (sumMP < (aLot/4))) goodCount++; 		// If our output is significant and our input small count it
 	else goodCount = 0;
+if (goodCount > 0) trace2("gc ",goodCount);
 	if (goodCount > 10) {						// If we have had a run of 10 clear non-echo results in a row
 trace2("ECHO risk gone! mic & out:");
 let st="";
@@ -1830,7 +1831,7 @@ function runEchoTest(audio) {						// Test audio system in a series of tests
 				trace2("Forced factor is ",echoTest.factor);
 			} else {
 				trace2("No clear result. Echo risk should be low.");		// No agreement, no result
-				echoRisk = false;			// Should be ok without feedback control
+				echoTest.factor = 0;			// A non-permanent result. Headphones can be unplugged!
 			}
 			echoTest.running = false;			// Stop test 
 		}
