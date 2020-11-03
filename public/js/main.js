@@ -17,9 +17,12 @@ var spkrBufferL = []; 							// Audio buffer going to speaker (left)
 var spkrBufferR = []; 							// (right)
 var smoothingNeeded = false;						// Flag to indicate if output smoothing needed after a shortage
 var venueBuffer = []; 							// Buffer for venue audio
+var smoothingNeededV = false;						// Flag to indicate if venue output smoothing needed after a shortage
 var maxBuffSize = 20000;						// Max audio buffer chunks for playback. 
 var micBufferL = [];							// Buffer mic audio before sending
 var micBufferR = [];							
+var noiseThreshold = 0.02;						// Default value for centrally controlled noise floor used to reduce noise if needed
+var myNoiseFloor = 0.02;						// Locally calculated noise level derived from moments of venue and user silence
 var myChannel = -1;							// The server assigns us an audio channel
 var myName = "";							// Name assigned to my audio channel
 var MaxNameLength = 15;							// User name max length
@@ -1081,7 +1084,6 @@ function levelClassifier( v ) {
 	}
 }
 
-var noiseThreshold = 0.02;						// Base threshold for mic signal
 function setNoiseThreshold () {						// Set the mic threshold to remove most background noise
 	let max = 0;
 	for (let i=0; i<14; i++)
@@ -1100,6 +1102,10 @@ trace2("Noise threshold: ",noiseThreshold);
 var outputPeaks = new Array(20).fill(0);				// Buffer dynamic thresholds here for delayed mic muting
 var micPeaks = new Array(20).fill(0);					// Buffer mic peaks for correlation analysis
 var gateDelay = 10;							// Amount of chunks (time) the gate stays open
+var openCount = 0;							// Count how long the gate is open to deal with steadily higher bg noise
+var gateJustClosed = false;						// Flag to trigger bg noise measurement. 
+var initialNoiseMeasure = gateDelay;					// Want to get an inital sample of bg noise right after the echo test
+var extra = 3;								// A multiplier used to increase threshold factor. This grows with every breach
 
 function processAudio(e) {						// Main processing loop
 	// There are two activities here (if not performing an echo test that is): 
@@ -1131,14 +1137,17 @@ function processAudio(e) {						// Main processing loop
 		mP = maxValue(inDataL);					// Get peak of raw mic audio (using left channel for now)
 		micPeaks.unshift( mP );					// Keep buffer of mic peaks to understand and analyze
 		micPeaks.pop();						// relationship between output and input for feedback control
-		if (!pauseTracing) levelClassifier(mP);			// Classify audio incoming for analysis
-		if (performer) micIn.gate = 1				// Performer's mic is always open
-		if (micIn.muted) micIn.gate = 0;			// but the mute control overrides everything
-		else {							// Not muted. Now control the mic gate
-			if ((micIn.gate > 0) && (mP > noiseThreshold)){	// If noise gate is open it should stay open for less sound
-				micIn.gate = gateDelay;			// noiseThreshold can be controlled centrally
-			} else if ((mP > micIn.threshold) &&		// Gate shut. If audio is above dynamic threshold
-				(mP > noiseThreshold)) {		// and noise threshold, open gate
+		if (performer) micIn.gate = 1				// Performer's mic has no gate
+		else {							// Everyone else has to fight to keep the gate open
+			let adjNoiseFloor = (openCount < 100)?		// The gate gets harder to keep open
+				myNoiseFloor : myNoiseFloor * 1.5;	// after being open a time (roughly 2 seconds)
+			if ((micIn.gate > 0) && (mP > noiseThreshold)	// Keep gate open for anything above centrally controlled venue noise floor
+				&& (mP > adjNoiseFloor)) {		// and above my background noise floor that increases after a period
+				micIn.gate = gateDelay;			
+				openCount++;				// Count how long the gate is open to make it harder to stay open
+			} else if ((mP > micIn.threshold) 		// Gate shut. Open if audio is above dynamic threshold
+				&& (mP > noiseThreshold)		// and above centrally controlled venue noise floor
+				&& (mP > myNoiseFloor)) {		// and above my background noise floor
 				micIn.gate = gateDelay;			
 trace2("OPEN ",mP.toFixed(2)," > ",micIn.threshold.toFixed(2));
 //let st="mic ";
@@ -1150,10 +1159,19 @@ trace2("OPEN ",mP.toFixed(2)," > ",micIn.threshold.toFixed(2));
 //pauseTracing = true;
 			} 
 		}
-		if (micIn.gate > 0) {					// If gate is open prepare the audio for sending
+		if (initialNoiseMeasure > 0) {				// Right at the start the user is probably quiet
+			initialNoiseMeasure--;				// so this is a good time to measure their bg noise level
+			if (initialNoiseMeasure == 0) 			// which is important for cutting unwanted mic input
+				gateJustClosed = true;			// Once enough levels are in the micPeaks buffer trigger a measurement of noise
+		}
+		if ((!micIn.muted) && (micIn.gate > 0)) {		// If not muted and gate is open prepare the audio for sending
 			micAudioL = inDataL;
 			micAudioR = inDataR;
 			micIn.gate--;					// Gate slowly closes
+			if (micIn.gate == 0) {
+				gateJustClosed = true;			// If the gate just closed flag so that bg noise can be measured
+				openCount = 0;				// Reset gate open counter resetting thresholds to initial levels
+			}
 		} else {						// Gate closed. Fill with silence.
 			micAudioL = new Array(ChunkSize).fill(0);
 			micAudioR = new Array(ChunkSize).fill(0);
@@ -1260,34 +1278,47 @@ trace2("OPEN ",mP.toFixed(2)," > ",micIn.threshold.toFixed(2));
 		}
 	}
 	if (((echoRisk) && (micIn.gate > 0) && (echoTest.factor > 0.5)) // If echo is likely and the mic is on and our echo factor is appreciable
-		|| (outAudioL.length == 0)) 			{	// or out array is empty, output silence
+		|| (outAudioL.length == 0)) {				// or out array is empty, output silence
 		outAudioL = new Array(ChunkSize).fill(0); 
 		outAudioR = new Array(ChunkSize).fill(0);
 	}
 	for (let i in outDataL) { 
-		outDataL[i] = outAudioL[i];				// Copy left audio to outputL
+		outDataL[i] = outAudioL[i];				// Copy left audio to outputL   TRY .slice() again... should be faster
 		outDataR[i] = outAudioR[i];				// and right audio to outputR
 	}
-//	outDataL = outAudioL.slice();					// Faster way to copy left audio to outputL
-//	outDataR = outAudioR.slice();					// and right audio to outputR
-	// 2.1 Take venue audio from buffer and send to special output
+	// 2.1 Take venue audio from buffer and send to special output (identical to stereo performer and group audio)
 	let outAudioV = [];
-	if (venueBuffer.length > ChunkSize) {				// There is enough audio buffered
-		outAudioV = venueBuffer.splice(0,ChunkSize);		// Get same amount of audio as came in
-	} else {							// Not enough audio.
-		shortages++;						// For stats and monitoring
-		pitch++;						// Increase amount of data from each packet to reduce shortages
-		outAudioV = venueBuffer.splice(0,venueBuffer.length);	// Take all that remains and complete with 0s
-		let zeros = new Array(ChunkSize-venueBuffer.length).fill(0);
-		outAudioV.push(...zeros);
+	if ((!smoothingNeededV)||(venueBuffer.length > maxBuffSize/2)) {// If no current shortages or venue buffer now full enough to restart
+		if (venueBuffer.length > ChunkSize) {			// There is enough audio buffered
+			outAudioV = venueBuffer.splice(0,ChunkSize);	// Get same amount of audio as came in
+			if (smoothingNeeded) {				// We had a shortage so now we need to smooth audio re-entry 
+				for (let i=0; i<400; i++) {		// Smoothly ramp up from zero to one
+					outAudioL[i] = outAudioL[i]*(1-smooth[i]);
+					outAudioR[i] = outAudioR[i]*(1-smooth[i]);
+				}
+				smoothingNeededV = false;
+			}
+		} else {						// Not enough audio.
+			shortages++;					// For stats and monitoring
+			pitch++;					// Increase amount of data from each packet to reduce shortages
+			outAudioV = venueBuffer.splice(0,venueBuffer.length);	// Take all that remains and complete with 0s
+			let t = (venueBuffer.length < 400)? 			// Transition to zero is as long as remaining audio
+				venueBuffer.length : 400;			// up to a maximum of 400 samples
+			for (let i=0; i<t; i++) {				// Smoothly drop to zero to reduce harsh clicks
+				outAudioV[i] = outAudioV[i]*smooth[Math.round(i*400/t)];
+			}
+			smoothingNeededV = true;
+			let zeros = new Array(ChunkSize-venueBuffer.length).fill(0);
+			outAudioV.push(...zeros);
+		}
 	}
-	if ((echoRisk) && (micIn.gate > 0) && (echoTest.factor > 0.5)) {// If echo is likely and the mic is on, output silence
+	if (((echoRisk) && (micIn.gate > 0) && (echoTest.factor > 0.5)) // If echo is likely and the mic is on, output silence
+		|| (outAudioV.length == 0)) {
 		outAudioV =  new Array(ChunkSize).fill(0);
 	}
 	for (let i in outDataV) { 
 		outDataV[i] = outAudioV[i];				// Copy venue audio to it's special output
 	}
-//	outDataV = outAudioV.slice();					// Faster way to copy venue audio to it's special output
 	
 	let now = new Date().getTime();					// Note time between audio processing loops
 	delta = now - previous;
@@ -1296,12 +1327,7 @@ trace2("OPEN ",mP.toFixed(2)," > ",micIn.threshold.toFixed(2));
 	previous = now;
 
 	// 2.2 Handle feedback and echo. 
-	// 2.2.1 First decide if there is any actual risk of echo feedback ...
-	if (!echoRisk) {						// The echo test has concluded there is no risk of echo
-		micIn.threshold = 0;					// No echo risk so no threshold needed
-		enterState( idleState );				// We are done. Back to Idling
-		return;
-	}								// Keep a profile of audio output to help decision making
+	// 2.2.1 First analyze audio out and in to determine background noise level for general mic noise thresholding (all clients need this)
 	let maxL = maxValue(outAudioL);					// Get peak level of this outgoing audio
 	let maxR = maxValue(outAudioR);					// for each channel
 	let maxV = maxValue(outAudioV);					// and venue audio
@@ -1309,17 +1335,31 @@ trace2("OPEN ",mP.toFixed(2)," > ",micIn.threshold.toFixed(2));
 	if (maxL < maxV) maxL = maxV;				
 	outputPeaks.unshift( maxL );					// add to start of output peak buffer
 	outputPeaks.pop();						// Remove oldest output peak buffer value
+//	if ((maxL < 0.01) && (micIn.gate == 0)) {			// If output is low and mic gate is closed we are hearing background noise
+//		levelClassifier(mP);					// Classify noise incoming for noise floor analysis
+//	}
+	if (gateJustClosed) {						// When mic gate has just closed there are 10 chunks of bg noise levels we can use
+		myNoiseFloor = maxValue(micPeaks.slice(0,9));		// Get the highest value in the last 10 mic peaks. This is as loud as bg noise has gotten
+		gateJustClosed = false;
+	}
+	if (!echoRisk) {						// We are running on a noise cancelling browser that has passed the echo test
+		micIn.threshold = 0;					// No echo risk so no threshold needed
+		enterState( idleState );				// We are done here. No need to analyze audio further for this browser
+		return;
+	}								// Build a rapid profile of audio output and input to help quick decision making
 	let del = Math.round(echoTest.sampleDelay);			// Get latest output to input delay rounded to a whole number of chunks
 	let sumOP = 0, sumMP = 0;
 	for (let i=del;i<outputPeaks.length;i++)			// Add up all the peaks of output that
-		sumOP += outputPeaks[i];				// Should register on the input channel
+		sumOP += outputPeaks[i];				// should register on the input channel (given the output to input delay)
 	for (let i=0;i<(micPeaks.length-del);i++)			// Add up all the input channel peaks
-		sumMP += micPeaks[i];					// that may have been influenced by output
-	let aLot = 0.1 * (outputPeaks.length - del);			// An amount of sound that is non-trivial
-if (sumOP > aLot) trace2("sumOP ok sumMP ",sumMP);
-	if ((sumOP > aLot) && (sumMP < (aLot/4))) goodCount++; 		// If our output is significant and our input small count it
+		sumMP += micPeaks[i];					// that may have been influenced by output as a result of audio feedback
+	let aLot = myNoiseFloor * 4;					// Enough output that can't be confused for noise is, say, 4x local bg noise
+	if (aLot > 1) aLot = 1;						// Can't ouput more than 1 however!
+	let nVs = (micPeaks.length-del);				// Number of values that correspond to each other in the mic and output peak buffers
+	if ((sumOP/nVs > aLot) && (sumMP/nVs < myNoiseFloor*1.2)) 	// If our output is significant and our input is little more than background noise
+		goodCount++; 						// this would suggest we are no longer getting feedback (perhaps headphones are connected?)
 	else goodCount = 0;
-	if (goodCount > 5) {						// If we have had a run of 10 clear non-echo results in a row
+	if (goodCount > 5) {						// If we have had a run of clear non-echo results in a row
 trace2("ECHO risk gone! mic & out:");
 let st="";
 for (let i=del;i<micPeaks.length;i++) st+=micPeaks[i].toFixed(1)+" ";
@@ -1327,7 +1367,7 @@ trace2(st);
 st="";
 for (let i=0;i<(outputPeaks.length-del);i++) st+=outputPeaks[i].toFixed(1)+" ";
 trace2(st);
-                micIn.threshold = 0;                                    // echo risk is clearly low so no threshold needed
+                micIn.threshold = 0;                                    // echo risk is now low so no threshold needed
 		echoTest.factor = 0;					// and the echo factor can drop too
 		enterState( idleState );                                // We are done. Back to Idling
 		return;
@@ -1383,10 +1423,10 @@ trace2(st);
 		let coef = step1 / step4;				// This correlation coeficient (r) is the key figure. > 0.9 is significant
 		ratio = ratio / num;					// Get average input/output ratio needed to set a safe echo supression threshold
 		if ((coef > 0.9) && (isFinite(ratio)) && (ratio < 80)) {// Is there correlation between input & output, and is the ratio sensible?
-			if (ratio > echoTest.factor) 			// Apply x3 ratio to echoTest.factor. Quickly going up. Slowly going down.
-				echoTest.factor = (echoTest.factor*3+ratio*3)/4;	
+			if (ratio > echoTest.factor) 			// Apply ratio to echoTest.factor. Quickly going up. Slowly going down.
+				echoTest.factor = (echoTest.factor*3+ratio*extra)/4;	// extra factor is used to increase factor to stop breaches
 			else
-				echoTest.factor = (echoTest.factor*39+ratio*3)/40;	
+				echoTest.factor = (echoTest.factor*39+ratio*extra)/40;	// extra factor same as above
 			echoTest.sampleDelay = 				// An accurate estimate of feedback delay is important for setting the correct threshold 
 				(echoTest.sampleDelay*39 + maxp)/40;
 //let st="";
@@ -1404,6 +1444,9 @@ for (let i=0;i<(micPeaks.length-maxp);i++) st+=micPeaks[i].toFixed(2)+" ";
 trace2(st);
 pauseTraces = true;
 }
+			if (micIn.gate > 0) {				// Worst case... we have correlated feedback and the mic is open! 
+trace2("Breach detected. Extra ",extra);
+				extra++;				// Increase the factor multiplier to reduce the chances of future breaches
 		}
 	} 
 	// 2.2.3 We now have a new factor that relates output to input plus the delay from output to input. Use these to set a safe input threshold
