@@ -1405,6 +1405,9 @@ str="in ";
 for (let i=0;i<micPeaks.length;i++) str+=micPeaks[i].toFixed(2)+" ";
 trace2(str);
 trace2("DATA ",min1p," ", min1.toFixed(2)," ", maxp," ", max.toFixed(2)," ", min2p," ", min2.toFixed(2));
+str="conv ";
+for (let i=0;i<conv.length;i++) str+=conv[i].toFixed(1)+" ";
+trace2(str);
 //trace2("coef ",coef.toFixed(1)," ratio ",ratio.toFixed(1));
 }
 	if (	(min1p < (maxp-3)) 					// If we have the positions in the right order
