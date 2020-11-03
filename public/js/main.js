@@ -1339,8 +1339,7 @@ trace2("OPEN ",mP.toFixed(2)," > ",micIn.threshold.toFixed(2));
 //		levelClassifier(mP);					// Classify noise incoming for noise floor analysis
 //	}
 	if (gateJustClosed) {						// When mic gate has just closed there are 10 chunks of bg noise levels we can use
-		myNoiseFloor = maxValue(micPeaks.slice(0,9));		// Get the highest value in the last 10 mic peaks. This is as loud as bg noise has gotten
-trace2("noise floor ",myNoiseFloor);
+		myNoiseFloor = maxValue(micPeaks.slice(0,9)) * 1.2;	// Get max value in last 10 mic peaks. Consider as new bg noise. Boost by 20% for margin.
 		gateJustClosed = false;
 	}
 	if (!echoRisk) {						// We are running on a noise cancelling browser that has passed the echo test
@@ -1357,17 +1356,11 @@ trace2("noise floor ",myNoiseFloor);
 	let aLot = myNoiseFloor * 4;					// Enough output that can't be confused for noise is, say, 4x local bg noise
 	if (aLot > 1) aLot = 1;						// Can't ouput more than 1 however!
 	let nVs = (micPeaks.length-del);				// Number of values that correspond to each other in the mic and output peak buffers
-	if ((sumOP/nVs > aLot) && (sumMP/nVs < myNoiseFloor*1.2)) 	// If our output is significant and our input is little more than background noise
+	if ((sumOP/nVs > aLot) && (sumMP/nVs < myNoiseFloor)) 		// If our output is significant and our input is little more than background noise
 		goodCount++; 						// this would suggest we are no longer getting feedback (perhaps headphones are connected?)
 	else goodCount = 0;
 	if (goodCount > 5) {						// If we have had a run of clear non-echo results in a row
-trace2("ECHO risk gone! mic & out:");
-let st="";
-for (let i=del;i<micPeaks.length;i++) st+=micPeaks[i].toFixed(1)+" ";
-trace2(st);
-st="";
-for (let i=0;i<(outputPeaks.length-del);i++) st+=outputPeaks[i].toFixed(1)+" ";
-trace2(st);
+trace2("ECHO risk gone");
                 micIn.threshold = 0;                                    // echo risk is now low so no threshold needed
 		echoTest.factor = 0;					// and the echo factor can drop too
 		enterState( idleState );                                // We are done. Back to Idling
@@ -1450,6 +1443,17 @@ trace2("Breach detected. Extra ",extra);
 				extra++;				// Increase the factor multiplier to reduce the chances of future breaches
 			}
 		}
+if (tracecount > 0) {
+st="out ";
+for (let i=0;i<(outputPeaks.length-maxp);i++) st+=outputPeaks[i].toFixed(2)+" ";
+trace2(st);
+let st="in ";
+for (let i=maxp;i<micPeaks.length;i++) st+=micPeaks[i].toFixed(2)+" ";
+trace2(st);
+trace2("DATA ",min1p," ", min1.toFixed(2)," ", maxp," ", max.toFixed(2)," ", min2p," ", min2.toFixed(2));
+trace2("coef ",coef.toFixed(1)," ratio ",ratio.toFixed(1));
+}
+tracecount--;
 	} 
 	// 2.2.3 We now have a new factor that relates output to input plus the delay from output to input. Use these to set a safe input threshold
 	del = Math.round(echoTest.sampleDelay);				// Update latest ouptut to input delay rounded to a whole number of chunks
@@ -1461,32 +1465,26 @@ trace2("Breach detected. Extra ",extra);
 	tempThresh = maxValue( outputPeaks				// Apply most aggressive threshold in window around current delay 
 		.slice(sta,end)) * echoTest.factor * mixOut.gain;	// multiply by input/output gain factor as well as mixOutGain 
 	if (tempThresh > 1.2) tempThresh = 1.2;				// Mic input can be higher than 1 (amaxingly) but never as high as 1.2
+	micIn.threshold = tempThresh;					// Set mic threshold according to output level to allow interruptions but avoid feedback
 	// When output suddenly climbs after silence, on mobiles especially, over-compression can lead to input breaching the threshold. Stop this by blocking temporarily
 	if ((blocked == 0) && (tempThresh > 0)) {			// If blocked flag is reset and there is some risk of echo watch out for rising output
 		if ((outputPeaks[0] > outputPeaks[1])
 		&& (outputPeaks[0] > noiseThreshold)) {			// If our output is climbing there's a risk of feedback due to mic over amplification after silence
-trace2("BLOCKING");
 			blocked = 40;					// block the threshold for N chunks at the level at which no sound can get through
-			micIn.threshold = 1.2;
-		} else micIn.threshold = tempThresh;			// Otherwise set threshold to allow interruptions but avoid feedback
+			micIn.threshold = 1.2;				// Override the mic threshold with a forced blocking value while we are blocked
+		} 
 	}
 	if (blocked > 0) {
 		blocked--;						// Threshold is blocked at max to completely stop feedback. Count back until unblocked.
 		if (blocked == 0) {
 			blocked = -40;					// After the blocked period we have to look for a prolonged quiet period
-trace2("waiting for silence");
 		}
 	}
 	if (blocked < 0) {						// Searching for prolonged quiet in output
-		if (maxL < noiseThreshold) {
-			blocked++;					// Our output is low enough that mic may increase in sensitivity
-		} else {
-			blocked = -40;					// otherwise start counting silence again because mic will have reset too
-		}
-		micIn.threshold = tempThresh;				// Set mic threshold according to output level to allow interruptions but avoid feedback
+		if (maxL < myNoiseFloor) blocked++;			// Our output is low enough that mic may increase in sensitivity
+		else blocked = -40;					// otherwise start counting silence again because mic will have reset too
 	}
 	enterState( idleState );					// We are done. Back to Idling
-trace2("mth ",micIn.threshold," tth ",tempThresh);
 }
 
 function prepPerfAudio( audioL, audioR ) {				// Performer audio is HQ and possibly stereo
