@@ -1340,6 +1340,7 @@ trace2("OPEN ",mP.toFixed(2)," > ",micIn.threshold.toFixed(2));
 //	}
 	if (gateJustClosed) {						// When mic gate has just closed there are 10 chunks of bg noise levels we can use
 		myNoiseFloor = maxValue(micPeaks.slice(0,9));		// Get the highest value in the last 10 mic peaks. This is as loud as bg noise has gotten
+trace2("noise floor ",myNoiseFloor);
 		gateJustClosed = false;
 	}
 	if (!echoRisk) {						// We are running on a noise cancelling browser that has passed the echo test
