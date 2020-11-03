@@ -1409,9 +1409,9 @@ trace2("DATA ",min1p," ", min1.toFixed(2)," ", maxp," ", max.toFixed(2)," ", min
 }
 	if (	(min1p < (maxp-3)) 					// If we have the positions in the right order
 		&& (maxp < (min2p-4)) 					// and sufficiently well spaced out
-		&& (((max - min1)/max) > 0.1)				// and both minima are < 90% of highest peak
-		&& (((max - min2)/max) > 0.1) 				// and the actual peak is big enough to mean something
-		&& (max > 1) ) {					// then we have a good convolution
+		&& (((max - min1)/max) > 0.3)				// and both minima are < 90% of highest peak
+		&& (((max - min2)/max) > 0.3)) {				// and the actual peak is big enough to mean something
+//		&& (max > 1) ) {					// then we have a good convolution
 if (tracecount > 0) trace2("PASSED FIRST TEST");
 		let ratio = 0, num = 0;					// Calculate the average ratio of input to output for this delay
 		let sumM = 0, sumT = 0, sumMT = 0, sumM2 = 0, sumT2 = 0;
