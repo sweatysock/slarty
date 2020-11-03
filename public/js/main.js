@@ -1486,6 +1486,7 @@ trace2("waiting for silence");
 		micIn.threshold = tempThresh;				// Set mic threshold according to output level to allow interruptions but avoid feedback
 	}
 	enterState( idleState );					// We are done. Back to Idling
+trace2("mth ",micIn.threshold," tth ",tempThresh);
 }
 
 function prepPerfAudio( audioL, audioR ) {				// Performer audio is HQ and possibly stereo
