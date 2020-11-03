@@ -1101,8 +1101,8 @@ trace2("Noise threshold: ",noiseThreshold);
 				((levelCategories[i]/max)*100.0);	// Keep old data to obtain slower threshold changes
 }
 
-var outputPeaks = new Array(20).fill(0);				// Buffer dynamic thresholds here for delayed mic muting
-var micPeaks = new Array(20).fill(0);					// Buffer mic peaks for correlation analysis
+var outputPeaks = new Array(30).fill(0);				// Buffer dynamic thresholds here for delayed mic muting
+var micPeaks = new Array(30).fill(0);					// Buffer mic peaks for correlation analysis
 var gateDelay = 10;							// Amount of chunks (time) the gate stays open
 var openCount = 0;							// Count how long the gate is open to deal with steadily higher bg noise
 var gateJustClosed = false;						// Flag to trigger bg noise measurement. 
