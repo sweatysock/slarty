@@ -1396,10 +1396,10 @@ trace2("ECHO risk gone");
 	}								
 if (tracecount > 0) {
 let str="out ";
-for (let i=0;i<(outputPeaks.length-maxp);i++) str+=outputPeaks[i].toFixed(2)+" ";
+for (let i=0;i<outputPeaks.length;i++) str+=outputPeaks[i].toFixed(2)+" ";
 trace2(str);
 str="in ";
-for (let i=maxp;i<micPeaks.length;i++) str+=micPeaks[i].toFixed(2)+" ";
+for (let i=0;i<micPeaks.length;i++) str+=micPeaks[i].toFixed(2)+" ";
 trace2(str);
 trace2("DATA ",min1p," ", min1.toFixed(2)," ", maxp," ", max.toFixed(2)," ", min2p," ", min2.toFixed(2));
 //trace2("coef ",coef.toFixed(1)," ratio ",ratio.toFixed(1));
