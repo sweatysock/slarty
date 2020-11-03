@@ -1315,6 +1315,7 @@ trace2("OPEN ",mP.toFixed(2)," > ",micIn.threshold.toFixed(2));
 	if (((echoRisk) && (micIn.gate > 0) && (echoTest.factor > 0.5)) // If echo is likely and the mic is on, output silence
 		|| (outAudioV.length == 0)) {
 		outAudioV =  new Array(ChunkSize).fill(0);
+trace2("venue silenced ",micIn.gate," ",echoTest.factor," ",outAudioV.length);
 	}
 	for (let i in outDataV) { 
 		outDataV[i] = outAudioV[i];				// Copy venue audio to it's special output
