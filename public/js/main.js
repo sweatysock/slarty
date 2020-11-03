@@ -1448,6 +1448,7 @@ pauseTraces = true;
 			if (micIn.gate > 0) {				// Worst case... we have correlated feedback and the mic is open! 
 trace2("Breach detected. Extra ",extra);
 				extra++;				// Increase the factor multiplier to reduce the chances of future breaches
+			}
 		}
 	} 
 	// 2.2.3 We now have a new factor that relates output to input plus the delay from output to input. Use these to set a safe input threshold
