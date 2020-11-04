@@ -1285,6 +1285,8 @@ trace2("OPEN ",mP.toFixed(2)," > ",micIn.threshold.toFixed(2));
 		|| (outAudioL.length == 0)) {				// or out array is empty, output silence
 		outAudioL = new Array(ChunkSize).fill(0); 
 		outAudioR = new Array(ChunkSize).fill(0);
+trace2("MAIN OUTPUT CUT");
+outputCut = true;
 	}
 	for (let i in outDataL) { 
 		outDataL[i] = outAudioL[i];				// Copy left audio to outputL   TRY .slice() again... should be faster
@@ -1319,7 +1321,7 @@ trace2("OPEN ",mP.toFixed(2)," > ",micIn.threshold.toFixed(2));
 	if (((echoRisk) && (micIn.gate > 0) && (echoTest.factor > 0.5)) // If echo is likely and the mic is on, and the echo factor is appreciable
 		|| (outAudioV.length == 0)) {				// or our venue array is empty (due to a shortage), output silence
 		outAudioV =  new Array(ChunkSize).fill(0);
-trace2("OUTPUT CUT");
+trace2("VENUE OUTPUT CUT");
 outputCut = true;
 	}
 	for (let i in outDataV) { 
@@ -1340,6 +1342,7 @@ outputCut = true;
 	if (maxL < maxR) maxL = maxR;					// Choose loudest channel
 	if (maxL < maxV) maxL = maxV;				
 	outputPeaks.unshift( maxL );					// add to start of output peak buffer
+if (outputCut) trace2("maxs.. ",maxL," ",maxR," ",maxV);
 	outputPeaks.pop();						// Remove oldest output peak buffer value
 //	if ((maxL < 0.01) && (micIn.gate == 0)) {			// If output is low and mic gate is closed we are hearing background noise
 //		levelClassifier(mP);					// Classify noise incoming for noise floor analysis
