@@ -1319,6 +1319,7 @@ trace2("OPEN ",mP.toFixed(2)," > ",micIn.threshold.toFixed(2));
 	if (((echoRisk) && (micIn.gate > 0) && (echoTest.factor > 0.5)) // If echo is likely and the mic is on, and the echo factor is appreciable
 		|| (outAudioV.length == 0)) {				// or our venue array is empty (due to a shortage), output silence
 		outAudioV =  new Array(ChunkSize).fill(0);
+trace2("OUTPUT CUT");
 outputCut = true;
 	}
 	for (let i in outDataV) { 
@@ -1361,8 +1362,6 @@ outputCut = true;
 	let aLot = myNoiseFloor * 4;					// Enough output that can't be confused for noise is, say, 4x local bg noise
 	if (aLot > 1) aLot = 1;						// Can't ouput more than 1 however!
 	let nVs = (micPeaks.length-del);				// Number of values that correspond to each other in the mic and output peak buffers
-if (sumMP/nVs < myNoiseFloor) traceount--;
-if (tracecount == 0) outputCut = false;
 	if ((sumOP/nVs > aLot) && (sumMP/nVs < myNoiseFloor)) 		// If our output is significant and our input is little more than background noise
 		goodCount++; 						// this would suggest we are no longer getting feedback (perhaps headphones are connected?)
 	else goodCount = 0;
@@ -1402,6 +1401,8 @@ trace2("ECHO risk gone");
 		}							// Convolution and analysis complete. Do we have a clear maxima (most likely output to input delay)?
 	}								
 if (outputCut) {
+tracecount--;
+if (tracecount == 0) outputCut = false;
 let str="out ";
 for (let i=0;i<outputPeaks.length;i++) str+=outputPeaks[i].toFixed(2)+" ";
 trace2(str);
