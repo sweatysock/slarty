@@ -1332,7 +1332,7 @@ trace2("OPEN ",mP.toFixed(2)," > ",micIn.threshold.toFixed(2));
 	if (maxL < maxR) maxL = maxR;					// Choose loudest channel
 	if (maxL < maxV) maxL = maxV;				
 	outputPeaks.unshift( maxL );					// add to start of output peak buffer
-if (outputCut) trace2("maxs.. ",maxL," ",maxR," ",maxV);
+//if (outputCut) trace2("maxs.. ",maxL," ",maxR," ",maxV);
 	outputPeaks.pop();						// Remove oldest output peak buffer value
 //	if ((maxL < 0.01) && (micIn.gate == 0)) {			// If output is low and mic gate is closed we are hearing background noise
 //		levelClassifier(mP);					// Classify noise incoming for noise floor analysis
@@ -1406,7 +1406,7 @@ trace2("ECHO risk gone");
 //str="conv ";
 //for (let i=0;i<conv.length;i++) str+=conv[i].toFixed(1)+" ";
 //trace2(str);
-}
+//}
 	if (	(min1p < (maxp-3)) 					// If we have the positions in the right order
 		&& (maxp < (min2p-3)) 					// and sufficiently well spaced out
 		&& (((max - min1)/max) > 0.3)				// and both minima are < 90% of highest peak
