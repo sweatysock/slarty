@@ -1153,13 +1153,7 @@ function processAudio(e) {						// Main processing loop
 				&& (mP > myNoiseFloor)) {		// and above my background noise floor
 				micIn.gate = gateDelay;			
 trace2("OPEN ",mP.toFixed(2)," > ",micIn.threshold.toFixed(2));
-//let st="mic ";
-//for (let i=0;i<micPeaks.length;i++) st+=micPeaks[i].toFixed(1)+" ";
-//trace2(st);
-//st="out ";
-//for (let i=0;i<outputPeaks.length;i++) st+=outputPeaks[i].toFixed(1)+" ";
-//trace2(st);
-//pauseTracing = true;
+outputCut = true;
 			} 
 		}
 		if (initialNoiseMeasure > 0) {				// Right at the start the user is probably quiet
@@ -1285,8 +1279,6 @@ trace2("OPEN ",mP.toFixed(2)," > ",micIn.threshold.toFixed(2));
 		|| (outAudioL.length == 0)) {				// or out array is empty, output silence
 		outAudioL = new Array(ChunkSize).fill(0); 
 		outAudioR = new Array(ChunkSize).fill(0);
-trace2("MAIN OUTPUT CUT ",micIn.gate," ",echoTest.factor," ",outAudioL.length);
-outputCut = true;
 	}
 	for (let i in outDataL) { 
 		outDataL[i] = outAudioL[i];				// Copy left audio to outputL   TRY .slice() again... should be faster
@@ -1321,8 +1313,6 @@ outputCut = true;
 	if (((echoRisk) && (micIn.gate > 0) && (echoTest.factor > 0.5)) // If echo is likely and the mic is on, and the echo factor is appreciable
 		|| (outAudioV.length == 0)) {				// or our venue array is empty (due to a shortage), output silence
 		outAudioV =  new Array(ChunkSize).fill(0);
-trace2("VENUE OUTPUT CUT",micIn.gate," ",echoTest.factor," ",outAudioV.length);
-outputCut = true;
 	}
 	for (let i in outDataV) { 
 		outDataV[i] = outAudioV[i];				// Copy venue audio to it's special output
