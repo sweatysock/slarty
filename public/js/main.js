@@ -1153,7 +1153,7 @@ function processAudio(e) {						// Main processing loop
 				&& (mP > myNoiseFloor)) {		// and above my background noise floor
 				micIn.gate = gateDelay;			
 trace2("OPEN ",mP.toFixed(2)," > ",micIn.threshold.toFixed(2));
-outputCut = true;
+if (micIn.threshold > 0.1) outputCut = true;
 			} 
 		}
 		if (initialNoiseMeasure > 0) {				// Right at the start the user is probably quiet
@@ -1395,7 +1395,7 @@ trace2("ECHO risk gone");
 	}								
 if (outputCut) {
 tracecount--;
-if (tracecount == 0) outputCut = false;
+if (tracecount == 0) {outputCut = false; pauseTraces = true}
 let str="out ";
 for (let i=0;i<outputPeaks.length;i++) str+=outputPeaks[i].toFixed(2)+" ";
 trace2(str);
