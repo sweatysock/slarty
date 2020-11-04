@@ -1153,7 +1153,7 @@ function processAudio(e) {						// Main processing loop
 				&& (mP > myNoiseFloor)) {		// and above my background noise floor
 				micIn.gate = gateDelay;			
 trace2("OPEN ",mP.toFixed(2)," > ",micIn.threshold.toFixed(2));
-if (micIn.threshold > 0.1) outputCut = true;
+//if (micIn.threshold > 0.1) outputCut = true;
 			} 
 		}
 		if (initialNoiseMeasure > 0) {				// Right at the start the user is probably quiet
@@ -1393,27 +1393,26 @@ trace2("ECHO risk gone");
 			min2p = j;
 		}							// Convolution and analysis complete. Do we have a clear maxima (most likely output to input delay)?
 	}								
-if (outputCut) {
-tracecount--;
-if (tracecount == 0) {outputCut = false; pauseTraces = true}
-let str="out ";
-for (let i=0;i<outputPeaks.length;i++) str+=outputPeaks[i].toFixed(2)+" ";
-trace2(str);
-str="in ";
-for (let i=0;i<micPeaks.length;i++) str+=micPeaks[i].toFixed(2)+" ";
-trace2(str);
-trace2("DATA ",min1p," ", min1.toFixed(2)," ", maxp," ", max.toFixed(2)," ", min2p," ", min2.toFixed(2));
-str="conv ";
-for (let i=0;i<conv.length;i++) str+=conv[i].toFixed(1)+" ";
-trace2(str);
-//trace2("coef ",coef.toFixed(1)," ratio ",ratio.toFixed(1));
+//if (outputCut) {
+//tracecount--;
+//if (tracecount == 0) {outputCut = false; pauseTraces = true}
+//let str="out ";
+//for (let i=0;i<outputPeaks.length;i++) str+=outputPeaks[i].toFixed(2)+" ";
+//trace2(str);
+//str="in ";
+//for (let i=0;i<micPeaks.length;i++) str+=micPeaks[i].toFixed(2)+" ";
+//trace2(str);
+//trace2("DATA ",min1p," ", min1.toFixed(2)," ", maxp," ", max.toFixed(2)," ", min2p," ", min2.toFixed(2));
+//str="conv ";
+//for (let i=0;i<conv.length;i++) str+=conv[i].toFixed(1)+" ";
+//trace2(str);
 }
 	if (	(min1p < (maxp-3)) 					// If we have the positions in the right order
 		&& (maxp < (min2p-3)) 					// and sufficiently well spaced out
 		&& (((max - min1)/max) > 0.3)				// and both minima are < 90% of highest peak
 		&& (((max - min2)/max) > 0.3)) {				// and the actual peak is big enough to mean something
 //		&& (max > 1) ) {					// then we have a good convolution
-if (outputCut) trace2("PASSED FIRST TEST");
+//if (outputCut) trace2("PASSED FIRST TEST");
 		let ratio = 0, num = 0;					// Calculate the average ratio of input to output for this delay
 		let sumM = 0, sumT = 0, sumMT = 0, sumM2 = 0, sumT2 = 0;
 		for (let i=0; i<(tlen-maxp); i++) {			// Figure if there is a strong correlation between input and output
@@ -1459,7 +1458,7 @@ trace2("Breach detected. Extra ",extra);
 			}
 		}
 	} else
-if (outputCut) trace2("fail");
+//if (outputCut) trace2("fail");
 	// 2.2.3 We now have a new factor that relates output to input plus the delay from output to input. Use these to set a safe input threshold
 	del = Math.round(echoTest.sampleDelay);				// Update latest ouptut to input delay rounded to a whole number of chunks
 	let sta = del - 3;						// start of threshold window in output peaks array
@@ -1469,7 +1468,7 @@ if (outputCut) trace2("fail");
 	let tempThresh;							// Adjusted threshold level temporary value
 	tempThresh = maxValue( outputPeaks				// Apply most aggressive threshold in window around current delay 
 		.slice(sta,end)) * echoTest.factor * mixOut.gain;	// multiply by input/output gain factor as well as mixOutGain 
-	if (tempThresh > 1.2) tempThresh = 1.2;				// Mic input can be higher than 1 (amaxingly) but never as high as 1.2
+	if (tempThresh > 1.5) tempThresh = 1.5;				// Mic input can be higher than 1 (amaxingly) but never as high as 1.5
 	micIn.threshold = tempThresh;					// Set mic threshold according to output level to allow interruptions but avoid feedback
 	// When output suddenly climbs after silence, on mobiles especially, over-compression can lead to input breaching the threshold. Stop this by blocking temporarily
 	if ((blocked == 0) && (tempThresh > 0)) {			// If blocked flag is reset and there is some risk of echo watch out for rising output
