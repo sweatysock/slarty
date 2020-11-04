@@ -1108,6 +1108,7 @@ var openCount = 0;							// Count how long the gate is open to deal with steadil
 var gateJustClosed = false;						// Flag to trigger bg noise measurement. 
 var initialNoiseMeasure = gateDelay;					// Want to get an inital sample of bg noise right after the echo test
 var extra = 3;								// A multiplier used to increase threshold factor. This grows with every breach
+var outputCut = false;
 
 function processAudio(e) {						// Main processing loop
 	// There are two activities here (if not performing an echo test that is): 
@@ -1318,6 +1319,7 @@ trace2("OPEN ",mP.toFixed(2)," > ",micIn.threshold.toFixed(2));
 	if (((echoRisk) && (micIn.gate > 0) && (echoTest.factor > 0.5)) // If echo is likely and the mic is on, and the echo factor is appreciable
 		|| (outAudioV.length == 0)) {				// or our venue array is empty (due to a shortage), output silence
 		outAudioV =  new Array(ChunkSize).fill(0);
+outputCut = true;
 	}
 	for (let i in outDataV) { 
 		outDataV[i] = outAudioV[i];				// Copy venue audio to it's special output
@@ -1359,6 +1361,8 @@ trace2("OPEN ",mP.toFixed(2)," > ",micIn.threshold.toFixed(2));
 	let aLot = myNoiseFloor * 4;					// Enough output that can't be confused for noise is, say, 4x local bg noise
 	if (aLot > 1) aLot = 1;						// Can't ouput more than 1 however!
 	let nVs = (micPeaks.length-del);				// Number of values that correspond to each other in the mic and output peak buffers
+if (sumMP/nVs < myNoiseFloor) traceount--;
+if (tracecount == 0) outputCut = false;
 	if ((sumOP/nVs > aLot) && (sumMP/nVs < myNoiseFloor)) 		// If our output is significant and our input is little more than background noise
 		goodCount++; 						// this would suggest we are no longer getting feedback (perhaps headphones are connected?)
 	else goodCount = 0;
@@ -1397,7 +1401,7 @@ trace2("ECHO risk gone");
 			min2p = j;
 		}							// Convolution and analysis complete. Do we have a clear maxima (most likely output to input delay)?
 	}								
-if (tracecount > 0) {
+if (outputCut) {
 let str="out ";
 for (let i=0;i<outputPeaks.length;i++) str+=outputPeaks[i].toFixed(2)+" ";
 trace2(str);
@@ -1415,7 +1419,7 @@ trace2(str);
 		&& (((max - min1)/max) > 0.3)				// and both minima are < 90% of highest peak
 		&& (((max - min2)/max) > 0.3)) {				// and the actual peak is big enough to mean something
 //		&& (max > 1) ) {					// then we have a good convolution
-if (tracecount > 0) trace2("PASSED FIRST TEST");
+if (outputCut) trace2("PASSED FIRST TEST");
 		let ratio = 0, num = 0;					// Calculate the average ratio of input to output for this delay
 		let sumM = 0, sumT = 0, sumMT = 0, sumM2 = 0, sumT2 = 0;
 		for (let i=0; i<(tlen-maxp); i++) {			// Figure if there is a strong correlation between input and output
@@ -1461,8 +1465,7 @@ trace2("Breach detected. Extra ",extra);
 			}
 		}
 	} else
-if (tracecount > 0) trace2("fail");
-tracecount--;
+if (outputCut) trace2("fail");
 	// 2.2.3 We now have a new factor that relates output to input plus the delay from output to input. Use these to set a safe input threshold
 	del = Math.round(echoTest.sampleDelay);				// Update latest ouptut to input delay rounded to a whole number of chunks
 	let sta = del - 3;						// start of threshold window in output peaks array
@@ -2003,7 +2006,7 @@ function printReport() {
 	bytesOver = 0;
 	bytesShort = 0;
 	rtt = 0;
-	tracecount = 1;
+	tracecount = 15;
 	spkrBuffPeak = 0;
 	spkrBuffTrough = maxBuffSize;
 	deltaMax = 0;
