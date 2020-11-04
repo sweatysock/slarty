@@ -1455,7 +1455,7 @@ pauseTraces = true;
 }
 			if (micIn.gate > 0) {				// Worst case... we have correlated feedback and the mic is open! 
 trace2("Breach detected. Extra ",extra);
-				extra++;				// Increase the factor multiplier to reduce the chances of future breaches
+//				extra++;				// Increase the factor multiplier to reduce the chances of future breaches
 			}
 		}
 	} else
