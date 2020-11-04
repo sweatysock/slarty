@@ -1285,7 +1285,7 @@ trace2("OPEN ",mP.toFixed(2)," > ",micIn.threshold.toFixed(2));
 		|| (outAudioL.length == 0)) {				// or out array is empty, output silence
 		outAudioL = new Array(ChunkSize).fill(0); 
 		outAudioR = new Array(ChunkSize).fill(0);
-trace2("MAIN OUTPUT CUT");
+trace2("MAIN OUTPUT CUT ",micIn.gate," ",echoTest.factor," ",outAudioL.length);
 outputCut = true;
 	}
 	for (let i in outDataL) { 
@@ -1321,7 +1321,7 @@ outputCut = true;
 	if (((echoRisk) && (micIn.gate > 0) && (echoTest.factor > 0.5)) // If echo is likely and the mic is on, and the echo factor is appreciable
 		|| (outAudioV.length == 0)) {				// or our venue array is empty (due to a shortage), output silence
 		outAudioV =  new Array(ChunkSize).fill(0);
-trace2("VENUE OUTPUT CUT");
+trace2("VENUE OUTPUT CUT",micIn.gate," ",echoTest.factor," ",outAudioV.length);
 outputCut = true;
 	}
 	for (let i in outDataV) { 
