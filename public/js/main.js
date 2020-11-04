@@ -2010,7 +2010,7 @@ function printReport() {
 	bytesOver = 0;
 	bytesShort = 0;
 	rtt = 0;
-	tracecount = 15;
+	tracecount = 5;
 	spkrBuffPeak = 0;
 	spkrBuffTrough = maxBuffSize;
 	deltaMax = 0;
