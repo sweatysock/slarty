@@ -1332,7 +1332,6 @@ trace2("OPEN ",mP.toFixed(2)," > ",micIn.threshold.toFixed(2));
 	if (maxL < maxR) maxL = maxR;					// Choose loudest channel
 	if (maxL < maxV) maxL = maxV;				
 	outputPeaks.unshift( maxL );					// add to start of output peak buffer
-//if (outputCut) trace2("maxs.. ",maxL," ",maxR," ",maxV);
 	outputPeaks.pop();						// Remove oldest output peak buffer value
 //	if ((maxL < 0.01) && (micIn.gate == 0)) {			// If output is low and mic gate is closed we are hearing background noise
 //		levelClassifier(mP);					// Classify noise incoming for noise floor analysis
@@ -1409,13 +1408,13 @@ trace2("ECHO risk gone");
 //}
 	if (	(min1p < (maxp-3)) 					// If we have the positions in the right order
 		&& (maxp < (min2p-3)) 					// and sufficiently well spaced out
-		&& (((max - min1)/max) > 0.3)				// and both minima are < 90% of highest peak
-		&& (((max - min2)/max) > 0.3)) {				// and the actual peak is big enough to mean something
-//		&& (max > 1) ) {					// then we have a good convolution
+		&& (((max - min1)/max) > 0.2)				// and both minima are < 80% of highest peak
+		&& (((max - min2)/max) > 0.2)) {			// then we have a good convolution	
+//		&& (max > 1) ) {					
 //if (outputCut) trace2("PASSED FIRST TEST");
 		let ratio = 0, num = 0;					// Calculate the average ratio of input to output for this delay
 		let sumM = 0, sumT = 0, sumMT = 0, sumM2 = 0, sumT2 = 0;
-		for (let i=0; i<(tlen-maxp); i++) {			// Figure if there is a strong correlation between input and output
+		for (let i=0; i<(tlen-maxp); i++) {			// Find if there is a strong correlation between input and output
 			let mp = micPeaks[i], tb = outputPeaks[i+maxp];	// as this will indicate if there is echo feedback or not
 			if (tb >0) {ratio += mp/tb; num++;}
 			sumM += mp;
