@@ -1109,6 +1109,7 @@ var gateJustClosed = false;						// Flag to trigger bg noise measurement.
 var initialNoiseMeasure = gateDelay;					// Want to get an inital sample of bg noise right after the echo test
 var extra = 3;								// A multiplier used to increase threshold factor. This grows with every breach
 var outputCut = false;
+var oldFactor = 30;							// Factor before conencting headphones. Starts at default high value just in case.
 
 function processAudio(e) {						// Main processing loop
 	// There are two activities here (if not performing an echo test that is): 
