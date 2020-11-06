@@ -1361,10 +1361,12 @@ trace2("OPEN ",mP.toFixed(2)," > ",micIn.threshold.toFixed(2));
 trace2("ECHO risk gone");
 //		headphones = true;					// Flag that 
                 micIn.threshold = 0;                                    // echo risk is now low so no threshold needed
+		oldFactor = echoTest.factor;				// Keep current factor because if headphones are unplugged we need to get back on the case
 		echoTest.factor = 0;					// and the echo factor can drop too
 		enterState( idleState );                                // We are done. Back to Idling
 		return;
 	}
+	if ((sumOP*oldFactor) < (sumMP)) trace("UNPLUGGED???");
 	// 2.2.2 There is audio coming in and audio going out so there could be echo feedback. Convolve input and output peaks and then find how correleated they are
 	let tlen = outputPeaks.length;
 	let mlen = micPeaks.length;			
@@ -1442,7 +1444,7 @@ trace2("ECHO risk gone");
 //trace2(st);
 //trace2("GOOD ",min1p," ", min1.toFixed(2)," ", maxp," ", max.toFixed(2)," ", min2p," ", min2.toFixed(2));
 //trace2("coef ",coef.toFixed(1));
-trace2("Ratio ",ratio.toFixed(1)," factor ",echoTest.factor.toFixed(1)," d ",echoTest.sampleDelay.toFixed(1)," c ",coef.toFixed(1));
+trace2("R ",ratio.toFixed(1)," f ",echoTest.factor.toFixed(1)," d ",echoTest.sampleDelay.toFixed(1)," c ",coef.toFixed(1));
 //if (micIn.threshold == 0) {
 //let st="out ";
 //for (let i=maxp;i<outputPeaks.length;i++) st+=outputPeaks[i].toFixed(2)+" ";
@@ -1453,8 +1455,7 @@ trace2("Ratio ",ratio.toFixed(1)," factor ",echoTest.factor.toFixed(1)," d ",ech
 //pauseTraces = true;
 //}
 			if (micIn.gate > 0) {				// Worst case... we have correlated feedback and the mic is open! 
-trace2("Breach detected. Extra ",extra);
-//				extra++;				// Increase the factor multiplier to reduce the chances of future breaches
+trace2("Breach detected. ");
 			}
 		}
 	} else
