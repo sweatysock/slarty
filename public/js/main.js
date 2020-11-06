@@ -1359,6 +1359,7 @@ trace2("OPEN ",mP.toFixed(2)," > ",micIn.threshold.toFixed(2));
 	else goodCount = 0;
 	if (goodCount > 5) {						// If we have had a run of clear non-echo results in a row
 trace2("ECHO risk gone");
+//		headphones = true;					// Flag that 
                 micIn.threshold = 0;                                    // echo risk is now low so no threshold needed
 		echoTest.factor = 0;					// and the echo factor can drop too
 		enterState( idleState );                                // We are done. Back to Idling
@@ -1439,18 +1440,18 @@ trace2("ECHO risk gone");
 //let st="";
 //for (let i=0;i<conv.length;i++) st+=conv[i].toFixed(1)+" ";
 //trace2(st);
-trace2("GOOD ",min1p," ", min1.toFixed(2)," ", maxp," ", max.toFixed(2)," ", min2p," ", min2.toFixed(2));
-trace2("coef ",coef.toFixed(1));
-trace2("Ratio ",ratio.toFixed(1)," factor ",echoTest.factor.toFixed(1)," d ",echoTest.sampleDelay.toFixed(1));
-if (micIn.threshold == 0) {
-let st="out ";
-for (let i=maxp;i<outputPeaks.length;i++) st+=outputPeaks[i].toFixed(2)+" ";
-trace2(st);
-st="in ";
-for (let i=0;i<(micPeaks.length-maxp);i++) st+=micPeaks[i].toFixed(2)+" ";
-trace2(st);
-pauseTraces = true;
-}
+//trace2("GOOD ",min1p," ", min1.toFixed(2)," ", maxp," ", max.toFixed(2)," ", min2p," ", min2.toFixed(2));
+//trace2("coef ",coef.toFixed(1));
+trace2("Ratio ",ratio.toFixed(1)," factor ",echoTest.factor.toFixed(1)," d ",echoTest.sampleDelay.toFixed(1)," c ",coef.toFixed(1));
+//if (micIn.threshold == 0) {
+//let st="out ";
+//for (let i=maxp;i<outputPeaks.length;i++) st+=outputPeaks[i].toFixed(2)+" ";
+//trace2(st);
+//st="in ";
+//for (let i=0;i<(micPeaks.length-maxp);i++) st+=micPeaks[i].toFixed(2)+" ";
+//trace2(st);
+//pauseTraces = true;
+//}
 			if (micIn.gate > 0) {				// Worst case... we have correlated feedback and the mic is open! 
 trace2("Breach detected. Extra ",extra);
 //				extra++;				// Increase the factor multiplier to reduce the chances of future breaches
