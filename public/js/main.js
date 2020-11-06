@@ -1352,10 +1352,12 @@ trace2("OPEN ",mP.toFixed(2)," > ",micIn.threshold.toFixed(2));
 		sumOP += outputPeaks[i];				// should register on the input channel (given the output to input delay)
 	for (let i=0;i<(micPeaks.length-del);i++)			// Add up all the input channel peaks
 		sumMP += micPeaks[i];					// that may have been influenced by output as a result of audio feedback
+	let nVs = (micPeaks.length-del);				// Number of values that correspond to each other in the mic and output peak buffers
+	sumOP = sumOP/nVs; 
+	sumMP = sumMP/nVs;
 	let aLot = myNoiseFloor * 4;					// Enough output that can't be confused for noise is, say, 4x local bg noise
 	if (aLot > 1) aLot = 1;						// Can't ouput more than 1 however!
-	let nVs = (micPeaks.length-del);				// Number of values that correspond to each other in the mic and output peak buffers
-	if ((sumOP/nVs > aLot) && (sumMP/nVs < myNoiseFloor)) 		// If our output is significant and our input is little more than background noise
+	if ((sumOP > aLot) && (sumMP < myNoiseFloor)) 			// If our output is significant and our input is little more than background noise
 		goodCount++; 						// this would suggest we are no longer getting feedback (perhaps headphones are connected?)
 	else goodCount = 0;
 	if (goodCount > 5) {						// If we have had a run of clear non-echo results in a row
@@ -1367,7 +1369,7 @@ trace2("ECHO risk gone");
 		enterState( idleState );                                // We are done. Back to Idling
 		return;
 	}
-	if ((sumOP) < (sumMP)) trace("UNPLUGGED???");
+	if (sumMP > sumOP/2) trace("UNPLUGGED??? ",sumMP," ",sumOP);
 	// 2.2.2 There is audio coming in and audio going out so there could be echo feedback. Convolve input and output peaks and then find how correleated they are
 	let tlen = outputPeaks.length;
 	let mlen = micPeaks.length;			
