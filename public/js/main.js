@@ -415,7 +415,7 @@ socketIO.on('d', function (data) {
 			l = (l + shift) % maxGroupSize;			// Move the position to put me at the centre
 			chatMessage(p.name, p.chatText, l);		// Display the perf's chat message
 		}
-	} else trace2("No perf data");
+	} else trace2("No perf data ",JSON.stringify(data));
 	// 4. Adjust gain of final mix containing performer and group audio, and send to the speaker buffer
 	let obj;						
 	if (isStereo) {
