@@ -352,8 +352,6 @@ socketIO.on('d', function (data) {
 				mono[k] = d - m32[j]; j++; k++;
 			}						// Mono perf audio ready to upsample
 			mono = reSample(mono, upCachePerfM, adjMicPacketSize);
-accumIn+=mono.length;
-accumDiff=accumIn - accumOut;
 			let s8 = audio.stereo8;				// Now regenerate the stereo difference signal
 			let s16 = audio.stereo16;
 			let s32 = audio.stereo32;
@@ -437,6 +435,8 @@ accumDiff=accumIn - accumOut;
 	if (spkrBufferL.length < spkrBuffTrough) 			// Monitoring purposes
 		spkrBuffTrough = spkrBufferL.length;
 	spkrBufferL.push(...mixL);					// put left mix in the left speaker buffer
+accumIn+=mixL.length;
+accumDiff=accumIn - accumOut;
 	if (isStereo)
 		spkrBufferR.push(...mixR);				// and the right in the right if stereo
 	else
