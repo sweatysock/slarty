@@ -1152,7 +1152,7 @@ function processAudio(e) {						// Main processing loop
 				&& (mP > myNoiseFloor)) {		// and above my background noise floor
 				micIn.gate = gateDelay;			
 trace2("OPEN ",mP.toFixed(2)," > ",micIn.threshold.toFixed(2));
-			} else 
+			} 
 		}
 		if (initialNoiseMeasure > 0) {				// Right at the start the user is probably quiet
 			initialNoiseMeasure--;				// so this is a good time to measure their bg noise level
