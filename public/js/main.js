@@ -352,7 +352,11 @@ socketIO.on('d', function (data) {
 				mono[k] = d - m32[j]; j++; k++;
 			}						// Mono perf audio ready to upsample
 			mono = reSample(mono, upCachePerfM, adjMicPacketSize);
-			let s8 = audio.stereo8;// Now regenerate the stereo difference signal
+accumIn+=mono.length;
+if (accumDiff != (accumIn - accumOut))
+trace2("Jump");
+accumDiff=accumIn - accumOut;
+			let s8 = audio.stereo8;				// Now regenerate the stereo difference signal
 			let s16 = audio.stereo16;
 			let s32 = audio.stereo32;
 			if (s8.length > 0) {				// Is there a stereo signal in the packet?
@@ -435,7 +439,6 @@ socketIO.on('d', function (data) {
 	if (spkrBufferL.length < spkrBuffTrough) 			// Monitoring purposes
 		spkrBuffTrough = spkrBufferL.length;
 	spkrBufferL.push(...mixL);					// put left mix in the left speaker buffer
-accumIn+=mixL.length;
 	if (isStereo)
 		spkrBufferR.push(...mixR);				// and the right in the right if stereo
 	else
@@ -1111,6 +1114,7 @@ var extra = 3;								// A multiplier used to increase threshold factor. This gr
 var oldFactor = 30;							// Factor before conencting headphones. Starts at default high value just in case.
 var accumOut = 0;
 var accumIn = 0;
+var accumDiff = 0;
 
 function processAudio(e) {						// Main processing loop
 	// There are two activities here (if not performing an echo test that is): 
@@ -1938,7 +1942,7 @@ function everySecond() {
 //		trace("Idle=", idleState.total, " data in=", dataInState.total, " audio in/out=", audioInOutState.total," UI work=",UIState.total);
 		trace(packetsOut,"/",packetsIn," over:",overflows,"(",bytesOver,") short:",shortages,"(",bytesShort,") RTT=",rtt.toFixed(1)," ",rtt1.toFixed(1)," ",rtt5.toFixed(1)," ",netState," a:",audience," sent:",bytesSent.toFixed(1)," rcvd:",bytesRcvd.toFixed(1));
 		trace("Venue buffer:",venueBuffer.length," speaker buff:",spkrBufferL.length,"(",spkrBuffTrough," - ",spkrBuffPeak,") Delta max/min:",deltaMax,"/",deltaMin," pitch:",pitch);
-		trace2("out:",accumOut," in:",accumIn," diff:",(accumOut - accumIn));
+		trace2("out:",accumOut," in:",accumIn," diff:",accumDiff);
 	}
 	if (performer == true) {
 		document.getElementById("onair").style.visibility = "visible";
