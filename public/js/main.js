@@ -1330,7 +1330,10 @@ traceString+=" outV "+outAudioV.length;
 	let now = new Date().getTime();					// Note time between audio processing loops
 	delta = now - previous;
 	if (delta > deltaMax) deltaMax = delta;				// Keep max and min as this indicates the 
-	if (delta < deltaMin) deltaMin = delta;				// load the client is enduring. A big difference is bad.
+	if (delta < deltaMin) {
+		deltaMin = delta;				// load the client is enduring. A big difference is bad.
+if (delta < 3) trace2(traceString);
+	}
 	previous = now;
 traceString="Delta "+delta;
 
