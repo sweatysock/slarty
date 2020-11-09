@@ -1154,6 +1154,7 @@ if (openCount > 100) trace2("OC ",openCount," myNF ",myNoiseFloor," mp ",mP);
 				micIn.gate = gateDelay;			
 trace2("OPEN ",mP.toFixed(2)," > ",micIn.threshold.toFixed(2));
 			} else 
+		}
 trace2("Closed OC ",openCount," myNF ",myNoiseFloor," mp ",mP);
 		if (initialNoiseMeasure > 0) {				// Right at the start the user is probably quiet
 			initialNoiseMeasure--;				// so this is a good time to measure their bg noise level
