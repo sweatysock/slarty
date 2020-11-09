@@ -1107,7 +1107,6 @@ var openCount = 0;							// Count how long the gate is open to deal with steadil
 var gateJustClosed = false;						// Flag to trigger bg noise measurement. 
 var initialNoiseMeasure = gateDelay;					// Want to get an inital sample of bg noise right after the echo test
 var extra = 3;								// A multiplier used to increase threshold factor. This grows with every breach
-var outputCut = false;
 var oldFactor = 30;							// Factor before conencting headphones. Starts at default high value just in case.
 
 function processAudio(e) {						// Main processing loop
@@ -1154,9 +1153,8 @@ if (openCount > 100) trace2("OC ",openCount," myNF ",myNoiseFloor," mp ",mP);
 				&& (mP > myNoiseFloor)) {		// and above my background noise floor
 				micIn.gate = gateDelay;			
 trace2("OPEN ",mP.toFixed(2)," > ",micIn.threshold.toFixed(2));
-//if (micIn.threshold > 0.1) outputCut = true;
-			} 
-		}
+			} else 
+trace2("Closed OC ",openCount," myNF ",myNoiseFloor," mp ",mP);
 		if (initialNoiseMeasure > 0) {				// Right at the start the user is probably quiet
 			initialNoiseMeasure--;				// so this is a good time to measure their bg noise level
 			if (initialNoiseMeasure == 0) 			// which is important for cutting unwanted mic input
@@ -1400,26 +1398,10 @@ trace2("OPEN ",mP.toFixed(2)," > ",micIn.threshold.toFixed(2));
 			min2p = j;
 		}							// Convolution and analysis complete. Do we have a clear maxima (most likely output to input delay)?
 	}								
-//if (outputCut) {
-//tracecount--;
-//if (tracecount == 0) {outputCut = false; pauseTraces = true}
-//let str="out ";
-//for (let i=0;i<outputPeaks.length;i++) str+=outputPeaks[i].toFixed(2)+" ";
-//trace2(str);
-//str="in ";
-//for (let i=0;i<micPeaks.length;i++) str+=micPeaks[i].toFixed(2)+" ";
-//trace2(str);
-//trace2("DATA ",min1p," ", min1.toFixed(2)," ", maxp," ", max.toFixed(2)," ", min2p," ", min2.toFixed(2));
-//str="conv ";
-//for (let i=0;i<conv.length;i++) str+=conv[i].toFixed(1)+" ";
-//trace2(str);
-//}
 	if (	(min1p < (maxp-3)) 					// If we have the positions in the right order
 		&& (maxp < (min2p-3)) 					// and sufficiently well spaced out
 		&& (((max - min1)/max) > 0.2)				// and both minima are < 80% of highest peak
 		&& (((max - min2)/max) > 0.2)) {			// then we have a good convolution	
-//		&& (max > 1) ) {					
-//if (outputCut) trace2("PASSED FIRST TEST");
 		let ratio = 0, num = 0;					// Calculate the average ratio of input to output for this delay
 		let sumM = 0, sumT = 0, sumMT = 0, sumM2 = 0, sumT2 = 0;
 		for (let i=0; i<(tlen-maxp); i++) {			// Find if there is a strong correlation between input and output
@@ -1444,27 +1426,12 @@ trace2("OPEN ",mP.toFixed(2)," > ",micIn.threshold.toFixed(2));
 				echoTest.factor = (echoTest.factor*39+ratio*extra)/40;	// extra factor same as above
 			echoTest.sampleDelay = 				// An accurate estimate of feedback delay is important for setting the correct threshold 
 				(echoTest.sampleDelay*39 + maxp)/40;
-//let st="";
-//for (let i=0;i<conv.length;i++) st+=conv[i].toFixed(1)+" ";
-//trace2(st);
-//trace2("GOOD ",min1p," ", min1.toFixed(2)," ", maxp," ", max.toFixed(2)," ", min2p," ", min2.toFixed(2));
-//trace2("coef ",coef.toFixed(1));
 trace2("R ",ratio.toFixed(1)," f ",echoTest.factor.toFixed(1)," d ",echoTest.sampleDelay.toFixed(1)," c ",coef.toFixed(1));
-//if (micIn.threshold == 0) {
-//let st="out ";
-//for (let i=maxp;i<outputPeaks.length;i++) st+=outputPeaks[i].toFixed(2)+" ";
-//trace2(st);
-//st="in ";
-//for (let i=0;i<(micPeaks.length-maxp);i++) st+=micPeaks[i].toFixed(2)+" ";
-//trace2(st);
-//pauseTraces = true;
-//}
 			if (micIn.gate > 0) {				// Worst case... we have correlated feedback and the mic is open! 
 trace2("Breach detected. ");
 			}
 		}
 	} else
-//if (outputCut) trace2("fail");
 	// 2.2.3 We now have a new factor that relates output to input plus the delay from output to input. Use these to set a safe input threshold
 	del = Math.round(echoTest.sampleDelay);				// Update latest ouptut to input delay rounded to a whole number of chunks
 	let sta = del - 3;						// start of threshold window in output peaks array
