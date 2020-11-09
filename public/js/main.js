@@ -657,7 +657,6 @@ function displayAnimation() { 						// called 100mS to animate audio displays
 		micIn.peak = micIn.peak * rate; 			// drop mic peak level a little for smooth drops
 		setLevelDisplay( micIn );				// Update LED display for mic.peak
 		setSliderPos( micIn );					// Update slider position for mic gain
-		updateUIMute();						// Mute buttons are dynamic depending on thresholds and user commands
 		if (!loopback) setThresholdPos( micIn );		// In loopback the threshold display is not needed
 		venue.peak = venue.peak * rate; 			// drop venue peak level a little for smooth drops
 		setLevelDisplay( venue );				// Update LED display for venue.peak
@@ -1368,7 +1367,7 @@ trace2("OPEN ",mP.toFixed(2)," > ",micIn.threshold.toFixed(2));
 		return;
 	}
 	if ((echoTest.factor == 0) 					// If we have deemed echo risk temporarily zero
-		&& (sumMP > sumOP) && (sumMP > myNoiseFloor)) {		// but the mic is picking up a lot of sound the headphones may be unplugged
+		&& (sumMP > sumOP) && (sumMP > myNoiseFloor)) {		// but the mic is picking up a lot of sound so the headphones may be unplugged
 		micIn.gate = 0;						// Force the mic gate shut imemdiately just in case
 		echoTest.factor = oldFactor;				// Restore the pre-headphone threshold level
 	}
@@ -2015,6 +2014,7 @@ function printReport() {
 	pitch = (pitch < -12)? -12 : pitch;
 if (adjMicPacketSize != micAudioPacketSize + pitch) trace("PITCH CHANGE");
 	adjMicPacketSize = micAudioPacketSize + pitch;			// pitch is adjusted to keep things flowing smoothly
+	updateUIMute();							// Mute buttons are dynamic depending on thresholds and user commands
 	enterState( idleState );					// Back to Idling
 }
 
