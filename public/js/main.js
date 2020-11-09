@@ -1330,6 +1330,7 @@ trace2("OPEN ",mP.toFixed(2)," > ",micIn.threshold.toFixed(2));
 	if (maxL < maxR) maxL = maxR;					// Choose loudest channel
 	if (maxL < maxV) maxL = maxV;				
 	outputPeaks.unshift( maxL );					// add to start of output peak buffer
+trace2(maxL);
 	outputPeaks.pop();						// Remove oldest output peak buffer value
 //	if ((maxL < 0.01) && (micIn.gate == 0)) {			// If output is low and mic gate is closed we are hearing background noise
 //		levelClassifier(mP);					// Classify noise incoming for noise floor analysis
