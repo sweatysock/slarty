@@ -1362,7 +1362,7 @@ trace2("OPEN ",mP.toFixed(2)," > ",micIn.threshold.toFixed(2));
 	else goodCount = 0;
 	if (goodCount > 5) {						// If we have had a run of clear non-echo results in a row
                 micIn.threshold = 0;                                    // echo risk is now low so no threshold needed
-		oldFactor = echoTest.factor;				// Keep current factor because if headphones are unplugged we need to get back on the case
+		if (echoTest.factor > 0) oldFactor = echoTest.factor;	// Keep pre-headphone factor because if they are unplugged we need to get back on the case
 		echoTest.factor = 0;					// Drop the echo factor so that no threshold is set while echoRisk is low
 		enterState( idleState );                                // We are done. Back to Idling
 		return;
