@@ -1367,9 +1367,10 @@ trace2("OPEN ",mP.toFixed(2)," > ",micIn.threshold.toFixed(2));
 		enterState( idleState );                                // We are done. Back to Idling
 		return;
 	}
-	if ((echoTest.factor == 0) && (sumMP > sumOP) && (sumMP > myNoiseFloor)) {
-		trace2("UNPLUGGED???");
-		echoTest.factor = oldFactor;
+	if ((echoTest.factor == 0) 					// If we have deemed echo risk temporarily zero
+		&& (sumMP > sumOP) && (sumMP > myNoiseFloor)) {		// but the mic is picking up a lot of sound the headphones may be unplugged
+		micIn.gate = 0;						// Force the mic gate shut imemdiately just in case
+		echoTest.factor = oldFactor;				// Restore the pre-headphone threshold level
 	}
 	// 2.2.2 There is audio coming in and audio going out so there could be echo feedback. Convolve input and output peaks and then find how correleated they are
 	let tlen = outputPeaks.length;
