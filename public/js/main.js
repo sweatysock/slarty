@@ -353,8 +353,6 @@ socketIO.on('d', function (data) {
 			}						// Mono perf audio ready to upsample
 			mono = reSample(mono, upCachePerfM, adjMicPacketSize);
 accumIn+=mono.length;
-if (accumDiff != (accumIn - accumOut))
-trace2("Jump");
 accumDiff=accumIn - accumOut;
 			let s8 = audio.stereo8;				// Now regenerate the stereo difference signal
 			let s16 = audio.stereo16;
