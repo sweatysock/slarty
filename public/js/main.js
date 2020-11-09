@@ -453,7 +453,7 @@ socketIO.on('d', function (data) {
 //		spkrBufferL.splice(0, excess); 	
 //		spkrBufferR.splice(0, excess); 	
 		overflows++;						// Note for monitoring purposes
-		pitch--;						// Decrease amount of data from each packet to reduce overflows
+		if (pitch > (-1 * pitchLimit)) pitch--;			// Decrease amount of data from each packet to reduce overflows
 		bytesOver += excess;
 	}
 	if (spkrBufferL.length > spkrBuffPeak) 				// Monitoring purposes
@@ -464,7 +464,7 @@ socketIO.on('d', function (data) {
 	if (venueBuffer.length > maxBuffSize) {				// Clip buffer if too full
 		venueBuffer.splice(maxBuffSize/2, maxBuffSize/2); 	
 		overflows++;						// Note for monitoring purposes
-		pitch--;						// Decrease amount of data from each packet to reduce overflows
+		if (pitch > (-1 * pitchLimit)) pitch--;			// Decrease amount of data from each packet to reduce overflows
 	}
 	// 5. Calculate RTT 
 	if (ts > 0) {							// If we have timestamp data calcuate rtt
@@ -1258,7 +1258,7 @@ trace2("OPEN ",mP.toFixed(2)," > ",micIn.threshold.toFixed(2));
 			}
 		} else {						// Not enough audio.
 			shortages++;					// For stats and monitoring
-			pitch++;					// Increase amount of data from each packet to reduce shortages
+			if (pitch < pitchLimit) pitch++;		// Increase amount of data from each packet to reduce shortages
 			let shortfall = ChunkSize-spkrBufferL.length;
 			bytesShort += shortfall;
 			outAudioL = spkrBufferL.splice(0,spkrBufferL.length);	// Take all that remains and complete with 0s
@@ -1298,7 +1298,7 @@ trace2("OPEN ",mP.toFixed(2)," > ",micIn.threshold.toFixed(2));
 			}
 		} else {						// Not enough audio.
 			shortages++;					// For stats and monitoring
-			pitch++;					// Increase amount of data from each packet to reduce shortages
+			if (pitch < pitchLimit) pitch++;		// Increase amount of data from each packet to reduce shortages
 			outAudioV = venueBuffer.splice(0,venueBuffer.length);	// Take all that remains and complete with 0s
 			let t = (venueBuffer.length < 400)? 			// Transition to zero is as long as remaining audio
 				venueBuffer.length : 400;			// up to a maximum of 400 samples
@@ -1955,7 +1955,8 @@ var previous;
 var deltaMax = 0;
 var deltaMin = 10000;
 var pitch = 0;								// Adjustment to stretch/shrink audio data to avoid shortages & overflows
-function printReport() {
+const pitchLimit = 12;							// Limit to pitch adjustment
+function everySecond() {
 	enterState( UIState );						// Measure time spent updating UI even for reporting!
 	let netState = ((((rtt1-rtt5)/rtt5)>0.1) && (rtt5>400)) ? "UNSTABLE":"stable";
 	if (!pauseTracing) {
@@ -2010,15 +2011,15 @@ function printReport() {
 	deltaMax = 0;
 	deltaMin = 10000;
 //	pitch = Math.round((maxBuffSize/2 - spkrBufferL.length)/500);	// pitch error is related inversely to buffer over/under middle
-	pitch = (pitch > 12)? 12 : pitch;
-	pitch = (pitch < -12)? -12 : pitch;
+	pitch = (pitch > pitchLimit)? pitchLimit : pitch;
+	pitch = (pitch < (-1 * pitchLimit))? (-1 * pitchLimit) : pitch;
 if (adjMicPacketSize != micAudioPacketSize + pitch) trace("PITCH CHANGE");
 	adjMicPacketSize = micAudioPacketSize + pitch;			// pitch is adjusted to keep things flowing smoothly
 	updateUIMute();							// Mute buttons are dynamic depending on thresholds and user commands
 	enterState( idleState );					// Back to Idling
 }
 
-setInterval(printReport, 1000);						// Call report generator once a second
+setInterval(everySecond, 1000);						// Call report generator and slow UI updater once a second
 
 
 // Tracing to the traceDiv (a Div with id="Trace" in the DOM)
