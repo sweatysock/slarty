@@ -352,7 +352,6 @@ socketIO.on('d', function (data) {
 				mono[k] = d - m32[j]; j++; k++;
 			}						// Mono perf audio ready to upsample
 			mono = reSample(mono, upCachePerfM, adjMicPacketSize);
-var monoSize = mono.length;
 			let s8 = audio.stereo8;// Now regenerate the stereo difference signal
 			let s16 = audio.stereo16;
 			let s32 = audio.stereo32;
@@ -377,7 +376,6 @@ var monoSize = mono.length;
 					stereo[k] = d - s32[j]; j++; k++;
 				}					// Stereo difference perf audio upsampling now
 				stereo = reSample(stereo, upCachePerfS, adjMicPacketSize);
-var stereoSize = stereo.length;
 				let left = [], right = [];		// Time to reconstruct the original left and right audio
 				for (let i=0; i<mono.length; i++) {	// Note. Doing this after upsampling because mono
 					left[i] = (mono[i] + stereo[i])/2;	// and stereo may not have same sample rate
@@ -417,7 +415,7 @@ var stereoSize = stereo.length;
 			l = (l + shift) % maxGroupSize;			// Move the position to put me at the centre
 			chatMessage(p.name, p.chatText, l);		// Display the perf's chat message
 		}
-	}
+	} else trace2("No perf data");
 	// 4. Adjust gain of final mix containing performer and group audio, and send to the speaker buffer
 	let obj;						
 	if (isStereo) {
@@ -437,7 +435,6 @@ var stereoSize = stereo.length;
 	if (spkrBufferL.length < spkrBuffTrough) 			// Monitoring purposes
 		spkrBuffTrough = spkrBufferL.length;
 	spkrBufferL.push(...mixL);					// put left mix in the left speaker buffer
-if ((monoSize != stereoSize) || (stereoSize != mixL.length)) trace2("ZOIKS ",monoSize," ",stereoSize," ",mixL.length);
 	if (isStereo)
 		spkrBufferR.push(...mixR);				// and the right in the right if stereo
 	else
