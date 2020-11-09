@@ -1273,8 +1273,9 @@ trace2("OPEN ",mP.toFixed(2)," > ",micIn.threshold.toFixed(2));
 			outAudioR.push(...zeros);
 		}
 	}
-	if (((echoRisk) && (micIn.gate > 0) && (echoTest.factor > 0.5)) // If echo is likely and the mic is on and our echo factor is appreciable
-		|| (outAudioL.length == 0)) {				// or out array is empty, output silence
+	if (((echoRisk) && (!performer) && (micIn.gate > 0) 		// If echo is likely and we are not the performer, & the mic is on 
+		&& (echoTest.factor > 0.5)) 				// and our echo factor is appreciable
+		|| (outAudioL.length == 0)) {				// or the output array is empty, output silence
 		outAudioL = new Array(ChunkSize).fill(0); 
 		outAudioR = new Array(ChunkSize).fill(0);
 	}
@@ -1308,7 +1309,8 @@ trace2("OPEN ",mP.toFixed(2)," > ",micIn.threshold.toFixed(2));
 			outAudioV.push(...zeros);
 		}
 	}
-	if (((echoRisk) && (micIn.gate > 0) && (echoTest.factor > 0.5)) // If echo is likely and the mic is on, and the echo factor is appreciable
+	if (((echoRisk) && (!performer) && (micIn.gate > 0) 		// If echo is likely and we are not the performer, & the mic is on 
+		&& (echoTest.factor > 0.5)) 				// and our echo factor is appreciable
 		|| (outAudioV.length == 0)) {				// or our venue array is empty (due to a shortage), output silence
 		outAudioV =  new Array(ChunkSize).fill(0);
 	}
@@ -1330,7 +1332,6 @@ trace2("OPEN ",mP.toFixed(2)," > ",micIn.threshold.toFixed(2));
 	if (maxL < maxR) maxL = maxR;					// Choose loudest channel
 	if (maxL < maxV) maxL = maxV;				
 	outputPeaks.unshift( maxL );					// add to start of output peak buffer
-trace2(maxL);
 	outputPeaks.pop();						// Remove oldest output peak buffer value
 //	if ((maxL < 0.01) && (micIn.gate == 0)) {			// If output is low and mic gate is closed we are hearing background noise
 //		levelClassifier(mP);					// Classify noise incoming for noise floor analysis
@@ -1848,8 +1849,9 @@ function runEchoTest(audio) {						// Test audio system in a series of tests
 					}
 				}
 				// Get average factor value
-				echoTest.factor = avgValue(factors) * 3; // boost factor to give echo margin
-				echoTest.factor = 30;			// Force strong factor always
+				echoTest.factor = avgValue(factors) * 3;// boost factor to give echo margin (IGNORING THIS FOR NOW!)
+				echoTest.factor = 30;			// Force strong factor always. This gets updated in time but best to be cautious.
+				echoRisk = true;			// We detected echo so there is an echo risk for sure
 				trace2("Forced factor is ",echoTest.factor);
 			} else {
 				trace2("No clear result. Echo risk should be low.");		// No agreement, no result
