@@ -1139,7 +1139,7 @@ function processAudio(e) {						// Main processing loop
 		mP = maxValue(inDataL);					// Get peak of raw mic audio (using left channel for now)
 		micPeaks.unshift( mP );					// Keep buffer of mic peaks to understand and analyze
 		micPeaks.pop();						// relationship between output and input for feedback control
-		if (performer) micIn.gate = 1				// Performer's mic has no gate
+		if (performer) micIn.gate = gateDelay			// Performer's mic has no gate
 		else {							// Everyone else has to fight to keep the gate open
 			let adjNoiseFloor = (openCount < 100)?		// The gate gets harder to keep open
 				myNoiseFloor : myNoiseFloor * 1.5;	// after being open a time (roughly 2 seconds)
