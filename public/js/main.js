@@ -1253,7 +1253,7 @@ traceString+=" emit "+len;
 	if ((!smoothingNeeded)||(spkrBufferL.length > maxBuffSize/2)) {	// If no current shortages or buffer now full enough to restart
 		if (spkrBufferL.length > ChunkSize) {			// There is enough audio buffered
 			outAudioL = spkrBufferL.splice(0,ChunkSize);	// Get same amount of audio as came in
-traceString+=" outLR "+outAudio.length;
+traceString+=" outLR "+outAudioL.length;
 			outAudioR = spkrBufferR.splice(0,ChunkSize);	// for each channel
 			if (smoothingNeeded) {				// We had a shortage so now we need to smooth audio re-entry 
 				for (let i=0; i<400; i++) {		// Smoothly ramp up from zero to one
