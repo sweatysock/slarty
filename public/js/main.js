@@ -435,6 +435,7 @@ socketIO.on('d', function (data) {
 	if (spkrBufferL.length < spkrBuffTrough) 			// Monitoring purposes
 		spkrBuffTrough = spkrBufferL.length;
 	spkrBufferL.push(...mixL);					// put left mix in the left speaker buffer
+accumIn+=mixL.length;
 	if (isStereo)
 		spkrBufferR.push(...mixR);				// and the right in the right if stereo
 	else
@@ -1108,6 +1109,8 @@ var gateJustClosed = false;						// Flag to trigger bg noise measurement.
 var initialNoiseMeasure = gateDelay;					// Want to get an inital sample of bg noise right after the echo test
 var extra = 3;								// A multiplier used to increase threshold factor. This grows with every breach
 var oldFactor = 30;							// Factor before conencting headphones. Starts at default high value just in case.
+var accumOut = 0;
+var accumIn = 0;
 
 function processAudio(e) {						// Main processing loop
 	// There are two activities here (if not performing an echo test that is): 
@@ -1176,6 +1179,7 @@ trace2("OPEN ",mP.toFixed(2)," > ",micIn.threshold.toFixed(2));
 		micBufferR.push(...micAudioR);				// Buffer mic audio R
 		if (micBufferL.length > adjMicPacketSize) {		// If enough audio in buffer 
 			let audioL = micBufferL.splice(0, adjMicPacketSize);		// Get a packet of audio
+accumOut+=audioL.length;
 			let audioR = micBufferR.splice(0, adjMicPacketSize);		// for each channel
 			let audio = {mono8:[],mono16:[]};		// default empty audio and perf objects to send
 			let perf = false;				// By default we believe we are not the performer
@@ -1934,7 +1938,7 @@ function everySecond() {
 //		trace("Idle=", idleState.total, " data in=", dataInState.total, " audio in/out=", audioInOutState.total," UI work=",UIState.total);
 		trace(packetsOut,"/",packetsIn," over:",overflows,"(",bytesOver,") short:",shortages,"(",bytesShort,") RTT=",rtt.toFixed(1)," ",rtt1.toFixed(1)," ",rtt5.toFixed(1)," ",netState," a:",audience," sent:",bytesSent.toFixed(1)," rcvd:",bytesRcvd.toFixed(1));
 		trace("Venue buffer:",venueBuffer.length," speaker buff:",spkrBufferL.length,"(",spkrBuffTrough," - ",spkrBuffPeak,") Delta max/min:",deltaMax,"/",deltaMin," pitch:",pitch);
-//		trace2("sent:",bytesSent.toFixed(1)," rcvd:",bytesRcvd.toFixed(1));
+		trace2("out:",accumOut," in:",accumIn);
 	}
 	if (performer == true) {
 		document.getElementById("onair").style.visibility = "visible";
