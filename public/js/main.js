@@ -1144,6 +1144,7 @@ function processAudio(e) {						// Main processing loop
 		else {							// Everyone else has to fight to keep the gate open
 			let adjNoiseFloor = (openCount < 100)?		// The gate gets harder to keep open
 				myNoiseFloor : myNoiseFloor * 1.5;	// after being open a time (roughly 2 seconds)
+if (openCount > 100) trace2("OC ",openCount," myNF ",myNoiseFloor," mp ",mP);
 			if ((micIn.gate > 0) && (mP > noiseThreshold)	// Keep gate open for anything above centrally controlled venue noise floor
 				&& (mP > adjNoiseFloor)) {		// and above my background noise floor that increases after a period
 				micIn.gate = gateDelay;			
