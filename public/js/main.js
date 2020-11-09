@@ -1938,7 +1938,7 @@ function everySecond() {
 //		trace("Idle=", idleState.total, " data in=", dataInState.total, " audio in/out=", audioInOutState.total," UI work=",UIState.total);
 		trace(packetsOut,"/",packetsIn," over:",overflows,"(",bytesOver,") short:",shortages,"(",bytesShort,") RTT=",rtt.toFixed(1)," ",rtt1.toFixed(1)," ",rtt5.toFixed(1)," ",netState," a:",audience," sent:",bytesSent.toFixed(1)," rcvd:",bytesRcvd.toFixed(1));
 		trace("Venue buffer:",venueBuffer.length," speaker buff:",spkrBufferL.length,"(",spkrBuffTrough," - ",spkrBuffPeak,") Delta max/min:",deltaMax,"/",deltaMin," pitch:",pitch);
-		trace2("out:",accumOut," in:",accumIn);
+		trace2("out:",accumOut," in:",accumIn," diff:",(accumOut - accumIn));
 	}
 	if (performer == true) {
 		document.getElementById("onair").style.visibility = "visible";
