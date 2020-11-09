@@ -1369,7 +1369,10 @@ trace2("ECHO risk gone");
 		enterState( idleState );                                // We are done. Back to Idling
 		return;
 	}
-	if (sumMP > sumOP/2) trace("UNPLUGGED???");
+	if ((echoTest.factor == 0) && (sumMP > sumOP) && (sumMP > myNoiseFloor)) {
+		trace2("UNPLUGGED???");
+//		echoTest.factor = oldFactor;
+	}
 	// 2.2.2 There is audio coming in and audio going out so there could be echo feedback. Convolve input and output peaks and then find how correleated they are
 	let tlen = outputPeaks.length;
 	let mlen = micPeaks.length;			
