@@ -1143,7 +1143,6 @@ function processAudio(e) {						// Main processing loop
 		else {							// Everyone else has to fight to keep the gate open
 			let adjNoiseFloor = (openCount < 100)?		// The gate gets harder to keep open
 				myNoiseFloor : myNoiseFloor * 1.5;	// after being open a time (roughly 2 seconds)
-if (openCount > 100) trace2("OC ",openCount," myNF ",myNoiseFloor," mp ",mP);
 			if ((micIn.gate > 0) && (mP > noiseThreshold)	// Keep gate open for anything above centrally controlled venue noise floor
 				&& (mP > adjNoiseFloor)) {		// and above my background noise floor that increases after a period
 				micIn.gate = gateDelay;			
@@ -1154,7 +1153,6 @@ if (openCount > 100) trace2("OC ",openCount," myNF ",myNoiseFloor," mp ",mP);
 				micIn.gate = gateDelay;			
 trace2("OPEN ",mP.toFixed(2)," > ",micIn.threshold.toFixed(2));
 			} else 
-trace2("Closed OC ",openCount," myNF ",myNoiseFloor," mp ",mP);
 		}
 		if (initialNoiseMeasure > 0) {				// Right at the start the user is probably quiet
 			initialNoiseMeasure--;				// so this is a good time to measure their bg noise level
@@ -1338,6 +1336,7 @@ trace2("Closed OC ",openCount," myNF ",myNoiseFloor," mp ",mP);
 //	}
 	if (gateJustClosed) {						// When mic gate has just closed there are 10 chunks of bg noise levels we can use
 		myNoiseFloor = maxValue(micPeaks.slice(0,9)) * 1.2;	// Get max value in last 10 mic peaks. Consider as new bg noise. Boost by 20% for margin.
+trace2("noiseFloor ",myNoiseFloor);
 		gateJustClosed = false;
 	}
 	if (!echoRisk) {						// We are running on a noise cancelling browser that has passed the echo test
