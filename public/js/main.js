@@ -1361,17 +1361,15 @@ trace2("OPEN ",mP.toFixed(2)," > ",micIn.threshold.toFixed(2));
 		goodCount++; 						// this would suggest we are no longer getting feedback (perhaps headphones are connected?)
 	else goodCount = 0;
 	if (goodCount > 5) {						// If we have had a run of clear non-echo results in a row
-trace2("ECHO risk gone");
-//		headphones = true;					// Flag that 
                 micIn.threshold = 0;                                    // echo risk is now low so no threshold needed
 		oldFactor = echoTest.factor;				// Keep current factor because if headphones are unplugged we need to get back on the case
-		echoTest.factor = 0;					// and the echo factor can drop too
+		echoTest.factor = 0;					// Drop the echo factor so that no threshold is set while echoRisk is low
 		enterState( idleState );                                // We are done. Back to Idling
 		return;
 	}
 	if ((echoTest.factor == 0) && (sumMP > sumOP) && (sumMP > myNoiseFloor)) {
 		trace2("UNPLUGGED???");
-//		echoTest.factor = oldFactor;
+		echoTest.factor = oldFactor;
 	}
 	// 2.2.2 There is audio coming in and audio going out so there could be echo feedback. Convolve input and output peaks and then find how correleated they are
 	let tlen = outputPeaks.length;
