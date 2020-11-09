@@ -1985,7 +1985,7 @@ function everySecond() {
 	pitch = (pitch > pitchLimit)? pitchLimit : pitch;
 	pitch = (pitch < (-1 * pitchLimit))? (-1 * pitchLimit) : pitch;
 if (adjMicPacketSize != micAudioPacketSize + pitch) trace("PITCH CHANGE");
-	adjMicPacketSize = micAudioPacketSize + pitch;			// pitch is adjusted to keep things flowing smoothly
+//	adjMicPacketSize = micAudioPacketSize + pitch;			// pitch is adjusted to keep things flowing smoothly
 	updateUIMute();							// Mute buttons are dynamic depending on thresholds and user commands
 	enterState( idleState );					// Back to Idling
 }
