@@ -816,7 +816,8 @@ function generateMix () {
 	packetsOut++;							// Sent data so log it and set time limit for next send
 	packetClassifier[packetCount] = packetClassifier[packetCount] + 1;
 	clearTimeout(mixTimer);						// Mix generated. Clear forceMix timer if it is still pending
-	if ((p.packet != null) || (packetCount > 0)) {			// if we have sent performer audio or other audio data set timer
+	if (((p.packet != null) || (packetCount > 0))			// if we have sent performer audio or other audio data, and we are not in 
+		&& (!loopback)) {					// in loopback mode (where packets enter and exit asynchronously) set timer
 		let now = new Date().getTime();				// Get time as this was when latest mix was sent out
 		if (nextMixTimeLimit == 0) nextMixTimeLimit = now;	// If this is the first send event then start at now
 		let f = 0;						// Timer period is adjusted subtly by f. 
