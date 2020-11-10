@@ -265,7 +265,7 @@ socketIO.on('d', function (data) {
 	// 2. Process venue mix from server 
 	let ts = 0;
 	let vData = data.venue;
-if (tracecount > 0) trace2(JSON.tostring(vData));
+if (tracecount > 0) trace2(JSON.toString(vData));
 tracecount--;
 	if (vData != null) {						// If there is venue data find our seq #, subtract it, & correct venue level
 		ts = vData.timestamps[myChannel];			// Venue data also contains timestamps that allow rtt measurement
