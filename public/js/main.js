@@ -265,6 +265,8 @@ socketIO.on('d', function (data) {
 	// 2. Process venue mix from server 
 	let ts = 0;
 	let vData = data.venue;
+if (tracecount > 0) trace2(JSON.tostring(vData));
+tracecount--;
 	if (vData != null) {						// If there is venue data find our seq #, subtract it, & correct venue level
 		ts = vData.timestamps[myChannel];			// Venue data also contains timestamps that allow rtt measurement
 		audience = vData.liveClients;				// The server sends us the current audience count for level setting
@@ -1974,7 +1976,7 @@ function everySecond() {
 	bytesOver = 0;
 	bytesShort = 0;
 	rtt = 0;
-	tracecount = 15;
+	tracecount = 2;
 	spkrBuffPeak = 0;
 	spkrBuffTrough = maxBuffSize;
 	deltaMax = 0;
