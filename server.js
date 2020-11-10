@@ -935,7 +935,7 @@ function printReport() {
 		connectUpstreamServer(upstreamName);
 	}
 	let now = new Date().getTime();
-	if (now > nextMixTimeLimit) forceMix();				// If the timer has been lost, restart it here.
+	if ((!loopback) && (now > nextMixTimeLimit)) forceMix();	// If the timer has been lost, restart it here.
 }
 setInterval(printReport, updateTimer);
 
