@@ -262,10 +262,6 @@ socketIO.on('d', function (data) {
 	} 
 	let mixL = [], mixR = [];
 	if (gL.length > 0) {mixL = gL; mixR = gR;}			// Put group audio in the mix if any
-	else {								// If no group mix then fill mix with 0's
-		let s = adjMicPacketSize;				// This is the size of the input/output packet size
-		mixL = new Array(s).fill(0), mixR = new Array(s).fill(0);
-	}
 	// 2. Process venue mix from server 
 	let ts = 0;
 	let vData = data.venue;
@@ -415,30 +411,32 @@ socketIO.on('d', function (data) {
 			l = (l + shift) % maxGroupSize;			// Move the position to put me at the centre
 			chatMessage(p.name, p.chatText, l);		// Display the perf's chat message
 		}
-	} else trace2("No perf data ",JSON.stringify(data));
+	} 
 	// 4. Adjust gain of final mix containing performer and group audio, and send to the speaker buffer
 	let obj;						
-	if (isStereo) {
-		let peakL = maxValue(mixL);				// Set gain according to loudest channel
-		let peakR = maxValue(mixR);
-		if (peakL > peakR) {
-			obj = applyAutoGain(mixL, mixOut);		// Left sets the gain
-			applyGain(mixR, obj.finalGain);			// and right follows
-		} else {
-			obj = applyAutoGain(mixR, mixOut);		// Right sets the gain
-			applyGain(mixL, obj.finalGain);			// and left follows
-		}
-	} else obj = applyAutoGain(mixL, mixOut);			// For mono just use left channel
-	mixOut.gain= obj.finalGain;					// Store gain for next loop
-	obj.peak += venue.peak;						// Display the venue level mixed with the main output
-	if (obj.peak > mixOut.peak) mixOut.peak = obj.peak;		// Note peak for display purposes
-	if (spkrBufferL.length < spkrBuffTrough) 			// Monitoring purposes
-		spkrBuffTrough = spkrBufferL.length;
-	spkrBufferL.push(...mixL);					// put left mix in the left speaker buffer
-	if (isStereo)
-		spkrBufferR.push(...mixR);				// and the right in the right if stereo
-	else
-		spkrBufferR.push(...mixL);				// otherwise use the left
+	if (mixL.length > 0) {						// If there's audio from group or performer add to buffer
+		if (isStereo) {
+			let peakL = maxValue(mixL);			// Set gain according to loudest channel
+			let peakR = maxValue(mixR);
+			if (peakL > peakR) {
+				obj = applyAutoGain(mixL, mixOut);	// Left sets the gain
+				applyGain(mixR, obj.finalGain);		// and right follows
+			} else {
+				obj = applyAutoGain(mixR, mixOut);	// Right sets the gain
+				applyGain(mixL, obj.finalGain);		// and left follows
+			}
+		} else obj = applyAutoGain(mixL, mixOut);		// For mono just use left channel
+		mixOut.gain= obj.finalGain;				// Store gain for next loop
+		obj.peak += venue.peak;					// Display the venue level mixed with the main output
+		if (obj.peak > mixOut.peak) mixOut.peak = obj.peak;	// Note peak for display purposes
+		if (spkrBufferL.length < spkrBuffTrough) 		// Monitoring purposes
+			spkrBuffTrough = spkrBufferL.length;
+		spkrBufferL.push(...mixL);				// put left mix in the left speaker buffer
+		if (isStereo)
+			spkrBufferR.push(...mixR);			// and the right in the right if stereo
+		else
+			spkrBufferR.push(...mixL);			// otherwise use the left
+	}
 	if (spkrBufferL.length > maxBuffSize) {				// If too full merge final 400 samples
 //		for (let i=0; i<400; i++) {				// so that we end with the latest waveform
 //			let p = maxBuffSize-i-1;			// Points to end of audio being kept
@@ -459,7 +457,7 @@ socketIO.on('d', function (data) {
 	if (spkrBufferL.length > spkrBuffPeak) 				// Monitoring purposes
 		spkrBuffPeak = spkrBufferL.length;
 	if (v.length > 0) {						// Add the venue audio to its own buffer
-		venueBuffer.push(...v);					// Add any venue audio to the venue buffer
+		venueBuffer.push(...v);					// This is already level adjusted so simply push to buffer
 	}
 	if (venueBuffer.length > maxBuffSize) {				// Clip buffer if too full
 		venueBuffer.splice(maxBuffSize/2, maxBuffSize/2); 	
