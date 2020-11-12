@@ -280,8 +280,8 @@ socketIO.on('d', function (data) {
 			while (packetBuf.length) {			// Scan the packet buffer for the packet with this sequence
 				let p = packetBuf.shift();		// Remove the oldest packet from the buffer until s is found
 				if (p.sequence == s) {			// We have found the right sequence number
-					a8 = p.audio.mono8;		// Get our MSRE blocks from packet buffer
-					a16 = p.audio.mono16;	
+//					a8 = p.audio.mono8;		// Get our MSRE blocks from packet buffer
+//					a16 = p.audio.mono16;	
 					break;				// Packet found so stop scanning the packet buffer. 
 				}
 			}
