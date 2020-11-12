@@ -72,6 +72,7 @@ do
 		heroku git:remote -a $name
 		heroku config:set servername="$name"
 		heroku config:set upstream="$upstreamName"
+		heroku config:set simulating="true"
 		heroku pipelines:add audenceprod -a "$name" -s production
 	fi
 	((number = number + 1))

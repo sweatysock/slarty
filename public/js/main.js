@@ -288,6 +288,8 @@ socketIO.on('d', function (data) {
 		}
 		let audio = zipson.parse(vData.audio);			// Uncompress venue audio
 		let v8 = audio.mono8, v16 = audio.mono16;		// Shortcuts to the venue MSRE data blocks
+console.log(v8);
+console.log(v16);
 		if ((v8.length > 0) && (!venue.muted)) {		// If there is venue audio & not muted, it will need processing
 			let sr = 8000;					// Minimum sample rate of 8kHz
 			let gn = venue.gain / venueSize;		// Gain adjusts for fader setting and venue size most importantly
