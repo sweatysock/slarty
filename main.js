@@ -631,7 +631,7 @@ trace2("FORCE UNmute");
 	});
 		navigator.mediaDevices.enumerateDevices()		// List devices at start to help detect changes
 		.then(devices => {
-			tracef(JSON.stringify(devices));  
+			tracef("foo ",JSON.stringify(devices));  
 		});
 });
 
