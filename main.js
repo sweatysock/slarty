@@ -491,6 +491,7 @@ socketIO.on('disconnect', function () {
 //
 var displayRefresh = 100;						// mS between UI updates. MARK change to animation frame
 document.addEventListener('DOMContentLoaded', function(event){		// Add dynamic behaviour to UI elements
+	tracef("Starting V1.0");
 	let groupBtn = document.getElementById('groupBtn');		// Button that activates group name entry field
 	let groupNameEntry = document.getElementById('groupNameEntry');	// Group name entry field iself
 	let nickEntry = document.getElementById('nickname');		// User's screen name display on their audio channel and chat messages
@@ -2069,4 +2070,3 @@ function enterState( newState ) {
 
 
 enterState( idleState );
-tracef("Starting V1.0");
