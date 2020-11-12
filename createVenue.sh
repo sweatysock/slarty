@@ -13,13 +13,12 @@ echo "heroku git:remote -a "$name
 echo 'heroku config:set servername="'$name'"'
 echo 'heroku config:set group="backstage"'
 echo "heroku pipelines:add audenceprod -a "$name" -s production"
-echo 'git push heroku master'
 if [ $execute == "y" ]; then
 	heroku apps:create $name --region eu
 	heroku git:remote -a $name
 	heroku config:set servername="$name"
 	heroku config:set group="backstage"
-	git push heroku master
+	heroku pipelines:add audenceprod -a "$name" -s production
 fi
 
 number=1
