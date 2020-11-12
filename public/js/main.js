@@ -282,7 +282,6 @@ socketIO.on('d', function (data) {
 				if (p.sequence == s) {			// We have found the right sequence number
 					a8 = p.audio.mono8;		// Get our MSRE blocks from packet buffer
 					a16 = p.audio.mono16;	
-console.log("match ",a8.length," ",a16.length);
 					break;				// Packet found so stop scanning the packet buffer. 
 				}
 			}
@@ -306,6 +305,8 @@ console.log("match ",a8.length," ",a16.length);
 				if ((a16.length == 0) && (c16.length > 0))
 					for (let i = 0; i < c16.length; ++i) v16[i] = (v16[i] - c16[i]);
 v8 = a8; v16 = a16;
+if (tracecount > 0) console.log({v8:v8,v16:v16});
+tracecount--
 				let k = 0;				// reconstruct the original venue audio in v[]
 				for (let i=0;i<v8.length;i++) {	
 					v[k] = v8[i] + v16[i];k++;
@@ -1979,7 +1980,7 @@ function everySecond() {
 	bytesOver = 0;
 	bytesShort = 0;
 	rtt = 0;
-	tracecount = 15;
+	tracecount = 1;
 	spkrBuffPeak = 0;
 	spkrBuffTrough = maxBuffSize;
 	deltaMax = 0;
