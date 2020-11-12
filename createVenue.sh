@@ -33,13 +33,13 @@ do
 	echo "heroku git:remote -a "$name
 	echo 'heroku config:set servername="'$name'"'
 	echo 'heroku config:set upstream="'$upstream'"'
-	echo 'git push heroku master'
+	echo "heroku pipelines:add audenceprod -a "$name" -s production"
 	if [ $execute == "y" ]; then
 		heroku apps:create $name --region eu
 		heroku git:remote -a $name
 		heroku config:set servername="$name"
 		heroku config:set upstream="$upstream"
-		git push heroku master
+		heroku pipelines:add audenceprod -a "$name" -s production
 	fi
 	((number = number + 1))
 done
@@ -66,13 +66,13 @@ do
 	echo 'heroku config:set servername="'$name'"'
 	echo 'heroku config:set upstream="'$upstreamName'"'
 	echo 'heroku config:set simulating="true"'
-	echo 'git push heroku master'
+	echo "heroku pipelines:add audenceprod -a "$name" -s production"
 	if [ $execute == "y" ]; then
 		heroku apps:create "$name" --region eu
 		heroku git:remote -a $name
 		heroku config:set servername="$name"
 		heroku config:set upstream="$upstreamName"
-		git push heroku master
+		heroku pipelines:add audenceprod -a "$name" -s production
 	fi
 	((number = number + 1))
 done
@@ -89,13 +89,13 @@ do
 	echo "heroku git:remote -a "$name
 	echo 'heroku config:set servername="'$name'"'
 	echo 'heroku config:set upstream="'$upstream'"'
-	echo 'git push heroku master'
+	echo "heroku pipelines:add audenceprod -a "$name" -s production"
 	if [ $execute == "y" ]; then
 		echo "heroku apps:create "$name" --region eu"
 		echo "heroku git:remote -a "$name
 		echo 'heroku config:set servername="'$name'"'
 		echo 'heroku config:set upstream="'$upstream'"'
-		echo 'git push heroku master'
+		echo "heroku pipelines:add audenceprod -a "$name" -s production"
 	fi
 	((number = number + 1))
 done
