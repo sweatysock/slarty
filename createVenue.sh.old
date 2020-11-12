@@ -12,7 +12,6 @@ echo "heroku apps:create "$name" --region eu"
 echo "heroku git:remote -a "$name
 echo 'heroku config:set servername="'$name'"'
 echo 'heroku config:set group="backstage"'
-echo "heroku pipelines:add audenceprod -a "$name" -s production"
 echo 'git push heroku master'
 if [ $execute == "y" ]; then
 	heroku apps:create $name --region eu
