@@ -282,13 +282,13 @@ socketIO.on('d', function (data) {
 				if (p.sequence == s) {			// We have found the right sequence number
 					a8 = p.audio.mono8;		// Get our MSRE blocks from packet buffer
 					a16 = p.audio.mono16;	
+console.log("match ",a8.length," ",a16.length);
 					break;				// Packet found so stop scanning the packet buffer. 
 				}
 			}
 		}
 		let audio = zipson.parse(vData.audio);			// Uncompress venue audio
 		let v8 = audio.mono8, v16 = audio.mono16;		// Shortcuts to the venue MSRE data blocks
-v8 = a8; v16 = a16; a8 = []; a16 = [];
 		if ((v8.length > 0) && (!venue.muted)) {		// If there is venue audio & not muted, it will need processing
 			let sr = 8000;					// Minimum sample rate of 8kHz
 			let gn = venue.gain / venueSize;		// Gain adjusts for fader setting and venue size most importantly
