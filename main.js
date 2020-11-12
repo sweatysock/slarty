@@ -2069,4 +2069,4 @@ function enterState( newState ) {
 
 
 enterState( idleState );
-trace("Starting V3.1");
+tracef("Starting V1.0");
