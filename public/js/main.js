@@ -289,6 +289,7 @@ socketIO.on('d', function (data) {
 		let audio = zipson.parse(vData.audio);			// Uncompress venue audio
 		let v8 = audio.mono8, v16 = audio.mono16;		// Shortcuts to the venue MSRE data blocks
 		if ((v8.length > 0) && (!venue.muted)) {		// If there is venue audio & not muted, it will need processing
+			let vTemp = [];					// Temp store of venue audio
 			let sr = 8000;					// Minimum sample rate of 8kHz
 			let gn = venue.gain / venueSize;		// Gain adjusts for fader setting and venue size most importantly
 			if ((a8.length > 0) && (c8.length > 0))		// If we have audio and group has audio remove both and set venue level
@@ -304,20 +305,17 @@ socketIO.on('d', function (data) {
 					for (let i = 0; i < a16.length; ++i) v16[i] = (v16[i] - a16[i]);
 				if ((a16.length == 0) && (c16.length > 0))
 					for (let i = 0; i < c16.length; ++i) v16[i] = (v16[i] - c16[i]);
-v8 = a8; v16 = a16;
-if (tracecount > 0) console.log({v8:v8,v16:v16});
-tracecount--
 				let k = 0;				// reconstruct the original venue audio in v[]
 				for (let i=0;i<v8.length;i++) {	
-					v[k] = v8[i] + v16[i];k++;
-					v[k] = v8[i] - v16[i];k++;
+					vTemp[k] = v8[i] + v16[i];k++;
+					vTemp[k] = v8[i] - v16[i];k++;
 				}
 				sr = 16000;				// This is at the higher sample rate
-			} else v = v8;					// Only low bandwidth venue audio 
-			let obj = applyAutoGain(v, venue);		// Amplify venue with auto limiter
+			} else vTemp = v8;					// Only low bandwidth venue audio 
+			let obj = applyAutoGain(vTemp, venue);		// Amplify venue with auto limiter
 			venue.gain = obj.finalGain;			// Store gain for next time round
 			if (obj.peak > venue.peak) venue.peak = obj.peak;
-			v = reSample(v, vCache, adjMicPacketSize); 
+			v = reSample(vTemp, vCache, adjMicPacketSize); 
 		}
 	} 
 	// 3. Process performer audio if there is any, and add it to the mix. This could be stereo audio
@@ -1238,7 +1236,7 @@ trace2("OPEN ",mP.toFixed(2)," > ",micIn.threshold.toFixed(2));
 			let len=JSON.stringify(packet).length/1024;
 			bytesSent += len;
 			if (!performer) {
-				packetBuf.push(packet);		// If not performer add packet to buffer for echo cancelling 
+				packetBuf.push(packet);			// If not performer add packet to buffer for echo cancelling 
 			}
 			packetsOut++;					// For stats and monitoring
 			packetSequence++;
