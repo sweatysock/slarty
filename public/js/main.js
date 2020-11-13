@@ -1423,6 +1423,7 @@ trace2("noiseFloor ",myNoiseFloor);
 		let step4 = Math.sqrt(step2 * step3);
 		let coef = step1 / step4;				// This correlation coeficient (r) is the key figure. > 0.9 is significant
 		ratio = ratio / num;					// Get average input/output ratio needed to set a safe echo supression threshold
+trace2("R ",ratio.toFixed(1)," c ",coef.toFixed(1)," maxp ",maxp);
 		if ((coef > 0.9) && (isFinite(ratio)) && (ratio < 80)) {// Is there correlation between input & output, and is the ratio sensible?
 			if (ratio > echoTest.factor) 			// Apply ratio to echoTest.factor. Quickly going up. Slowly going down.
 				echoTest.factor = (echoTest.factor*3+ratio*extra)/4;	// extra factor is used to increase factor to stop breaches
@@ -1430,7 +1431,7 @@ trace2("noiseFloor ",myNoiseFloor);
 				echoTest.factor = (echoTest.factor*39+ratio*extra)/40;	// extra factor same as above
 			echoTest.sampleDelay = 				// An accurate estimate of feedback delay is important for setting the correct threshold 
 				(echoTest.sampleDelay*39 + maxp)/40;
-trace2("R ",ratio.toFixed(1)," f ",echoTest.factor.toFixed(1)," d ",echoTest.sampleDelay.toFixed(1)," c ",coef.toFixed(1));
+trace2("OK R ",ratio.toFixed(1)," f ",echoTest.factor.toFixed(1)," d ",echoTest.sampleDelay.toFixed(1)," c ",coef.toFixed(1));
 			if (micIn.gate > 0) {				// Worst case... we have correlated feedback and the mic is open! 
 trace2("Breach detected. ");
 			}
@@ -1784,7 +1785,7 @@ function runEchoTest(audio) {						// Test audio system in a series of tests
 			trace2("Running test ",test);
 			outAudio = echoTest.tones[test]; 		// Get test sound for this test
 			echoTest.results[test] = [];			// Get results buffer ready to store audio
-			echoTest.samplesNeeded = 10;			// Request 10 audio samples for each test
+			echoTest.samplesNeeded = 6;			// Request audio samples for each test
 		} else {						// else samples need to be buffered
 			echoTest.results[test].push(...audio);
 			outAudio = new Array(ChunkSize).fill(0);	// return silence to send to speaker
@@ -1830,7 +1831,7 @@ function runEchoTest(audio) {						// Test audio system in a series of tests
 					trace2("Delay is ",c);
 					winner = true;
 					echoTest.delay = c;		// Store final delay result
-					echoTest.sampleDelay = Math.ceil((echoTest.delay * soundcardSampleRate / 1000)/1024)
+					echoTest.sampleDelay = Math.ceil((echoTest.delay * soundcardSampleRate / 1000)/ChunkSize)
 					trace2("Sample delay is ",echoTest.sampleDelay);
 				}
 			}
@@ -1839,11 +1840,11 @@ function runEchoTest(audio) {						// Test audio system in a series of tests
 				// Convert delay back to samples as start point for averaging level
 				let edge = Math.round(echoTest.delay * soundcardSampleRate / 1000);
 				let factors = [];			// Buffer results here
-				// for each test <= 1 get avg level from edge for 1024 samples and get factor
+				// for each test <= 1 get avg level from edge for ChunkSize samples and get factor
 				for (let i=0; i<(echoTest.steps.length-1); i++) {
 					let t = echoTest.steps[i];
 					if (t <= 1) {			// Level tests are <= 1
-						let data = echoTest.results[t].slice(edge, (edge+1024));
+						let data = echoTest.results[t].slice(edge, (edge+ChunkSize));
 						let avg = avgValue(data);
 						let factor = avg/(t * 0.637);	// Avg mic signal vs avg output signal
 						trace2("Test ",echoTest.steps[i]," Factor: ",factor);
@@ -1986,7 +1987,6 @@ function everySecond() {
 //	pitch = Math.round((maxBuffSize/2 - spkrBufferL.length)/500);	// pitch error is related inversely to buffer over/under middle
 	pitch = (pitch > pitchLimit)? pitchLimit : pitch;
 	pitch = (pitch < (-1 * pitchLimit))? (-1 * pitchLimit) : pitch;
-if (adjMicPacketSize != micAudioPacketSize + pitch) trace("PITCH CHANGE");
 //	adjMicPacketSize = micAudioPacketSize + pitch;			// pitch is adjusted to keep things flowing smoothly
 	updateUIMute();							// Mute buttons are dynamic depending on thresholds and user commands
 	enterState( idleState );					// Back to Idling
