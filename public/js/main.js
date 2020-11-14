@@ -1402,6 +1402,7 @@ trace2("noiseFloor ",myNoiseFloor);
 			min2p = j;
 		}							// Convolution and analysis complete. Do we have a clear maxima (most likely output to input delay)?
 	}								
+if (tracecount > 0) {trace2("MIC ",micPeaks," OUT ",outputPeaks," CONV ",conv," ",min1," ",maxp," ",min2);tracecount--}
 	if (	(min1p < (maxp-3)) 					// If we have the positions in the right order
 		&& (maxp < (min2p-3)) 					// and sufficiently well spaced out
 		&& (((max - min1)/max) > 0.2)				// and both minima are < 80% of highest peak
