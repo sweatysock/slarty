@@ -1363,6 +1363,7 @@ trace2("noiseFloor ",myNoiseFloor);
 		goodCount++; 						// this would suggest we are no longer getting feedback (perhaps headphones are connected?)
 	else goodCount = 0;
 	if (goodCount > 5) {						// If we have had a run of clear non-echo results in a row
+trace2("HEADPHONES");
                 micIn.threshold = 0;                                    // echo risk is now low so no threshold needed
 		if (echoTest.factor > 0) oldFactor = echoTest.factor;	// Keep pre-headphone factor because if they are unplugged we need to get back on the case
 		echoTest.factor = 0;					// Drop the echo factor so that no threshold is set while echoRisk is low
@@ -1370,6 +1371,7 @@ trace2("noiseFloor ",myNoiseFloor);
 		return;
 	}
 	if ((echoTest.factor == 0) 					// If we have deemed echo risk temporarily zero
+trace2("SPEAKER ",oldFactor);
 		&& (sumMP > sumOP) && (sumMP > myNoiseFloor)) {		// but the mic is picking up a lot of sound so the headphones may be unplugged
 		micIn.gate = 0;						// Force the mic gate shut imemdiately just in case
 		echoTest.factor = oldFactor;				// Restore the pre-headphone threshold level
