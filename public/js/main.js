@@ -1555,11 +1555,11 @@ function handleAudio(stream) {						// We have obtained media access
 	createMicUI( micIn );						// Create the microphone channel UI
 	createChannelUI( venue );					// Create the venue channel UI
 
-	if (navigator.userAgent.toLowerCase().indexOf("firefox") != -1) {
-		echoRisk = false;
-	} else {
-		echoRisk = true;
-	}
+//	if (navigator.userAgent.toLowerCase().indexOf("firefox") != -1) {
+//		echoRisk = false;
+//	} else {
+//		echoRisk = true;
+//	}
 tracef("Browser echoRisk is ",echoRisk);
 	let liveSource = context.createMediaStreamSource(stream); 	// Create audio source (mic)
 	let node = undefined;
