@@ -1388,30 +1388,37 @@ trace2("SPEAKER ",oldFactor);
 	let olen = outputPeaks.length;
 	let mlen = micPeaks.length;			
 	let conv = [];					
-	for (let t=0; t<15; t++) {					// The convolution will determine the most likely output to input delay
+	for (let t=0; t<olen; t++) {					// The convolution will determine the most likely output to input delay
 		let sum = 0;
 		for (let x=0; x<mlen; x++) {
 			sum += outputPeaks[(t+x)%olen]*micPeaks[x];
 		}
 		conv.push(sum);						// Convolution results accumulate here. We are looking for a triangular peak ideally
 	}							
-	let min1 = 100; max = 0, min2 = 100;				// Find the first minimum, the maximum, and the final minimum
+	let min1 = conv[0]; max = conv[0], min2 = conv[0];		// Find the first minimum, the maximum, and the final minimum
 	let min1p = 0, maxp = 0, min2p = 0;				// also note the positions where they occur in the conv array 
-	for (let j=0; j<conv.length; j++) {
-		if ((maxp <= min1p) && (conv[j] < min1)) {		// If the max is still with us or behind us and this is a minimum
-			min1 = conv[j];					// this could be a new first minimum
-			min1p = j;
+	for (let j=0; j<conv.length; j++) {				// Scan the convolution
+		if (max < conv[j]) { 					// If this is a new max?
+			max = conv[j]; maxp = j;			// save it
+			min1 = min2; min1p = min2p;			// set the first minimum to the previous minimum
+			min2 = conv[j]; min2p = j;			// and move the previous minimum to this point
+		} else if (min2 > conv[j]) {				// if not a max is this a new minimum?
+			min2 = conv[j]; min2p = j;			// if so save it 
 		}
-		if (conv[j] > max) {					// If this is a maximum
-			max = conv[j];					// this could be a new maximum
-			maxp = j;
-		}
-		if ((maxp < j) && (min1p < maxp) 			// If the max point has been found and it is ahead of the first min
-			&& (conv[j] < min2)) {				// and this is a minimum value
-			min2 = conv[j];					// this could be the final minimum
-			min2p = j;
-		}							// Convolution and analysis complete. Do we have a clear maxima (most likely output to input delay)?
-	}								
+//		if ((maxp <= min1p) && (conv[j] < min1)) {		// If the max is still with us or behind us and this is a minimum
+//			min1 = conv[j];					// this could be a new first minimum
+//			min1p = j;
+//		}
+//		if (conv[j] > max) {					// If this is a maximum
+//			max = conv[j];					// this could be a new maximum
+//			maxp = j;
+//		}
+//		if ((maxp < j) && (min1p < maxp) 			// If the max point has been found and it is ahead of the first min
+//			&& (conv[j] < min2)) {				// and this is a minimum value
+//			min2 = conv[j];					// this could be the final minimum
+//			min2p = j;
+//		}							
+	}								// Convolution and analysis complete. Do we have a clear maxima (most likely output to input delay)?
 if (tracecount > 0) {trace2("MIC ",micPeaks," OUT ",outputPeaks," CONV ",conv," ",min1p," ",maxp," ",min2p);tracecount--}
 	if (	(min1p < (maxp-2)) 					// If we have the positions in the right order
 		&& (maxp < (min2p-2)) 					// and sufficiently well spaced out
