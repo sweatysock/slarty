@@ -1406,7 +1406,6 @@ trace2("SPEAKER ",oldFactor);
 	let min1 = 100; max = 0, min2 = 100;				// Find the first minimum, the maximum, and the final minimum
 	let min1p = 0, maxp = 0, min2p = 0;				// also note the positions where they occur in the conv array 
 	for (let j=0; j<conv.length; j++) {
-		if (max < conv[j]
 		if ((maxp <= min1p) && (conv[j] < min1)) {		// If the max is still with us or behind us and this is a minimum
 			min1 = conv[j];					// this could be a new first minimum
 			min1p = j;
