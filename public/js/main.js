@@ -1113,7 +1113,7 @@ function getPeaks( audio, size ) {
 }
 
 const peakWindow = 1024;						// Samples that enter into each peak reading for echo analysis
-const nPeaks = 20;							// How many peaks to buffer for echo analysis and dynamic thresholds
+const nPeaks = 30;							// How many peaks to buffer for echo analysis and dynamic thresholds
 var outputPeaks = new Array(nPeaks).fill(0);				// Buffer mic peaks here for delayed mic muting using dynamic thresholds
 var micPeaks = new Array(nPeaks).fill(0);				// Buffer mic peaks for correlation analysis
 var gateDelay = 10 * peakWindow/ChunkSize;				// Number of chunks the gate stays open for (corresponds to about 0.25s)
