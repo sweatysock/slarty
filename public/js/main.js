@@ -1396,10 +1396,10 @@ trace2("SPEAKER ",oldFactor);
 	let olen = outputPeaks.length;
 	let mlen = micPeaks.length;			
 	let conv = [];					
-	for (let t=0; t<olen; t++) {					// The convolution will determine the most likely output to input delay
-		let sum = 0;
-		for (let x=0; x<mlen; x++) {
-			sum += outputPeaks[(t+x)%olen]*micPeaks[x];
+	for (let m=0; m<mlen; m++) {					// The convolution will determine the most likely output to input delay
+		let sum = 0;						// by doing the convolution of the output over the input
+		for (let o=0; o<mlen; o++) {
+			sum += outputPeaks[o]*micPeaks[(m+o)%mlen];
 		}
 		conv.push(sum);						// Convolution results accumulate here. We are looking for a triangular peak ideally
 	}							
@@ -1420,43 +1420,43 @@ trace2("SPEAKER ",oldFactor);
 			min2p = j;
 		}							// Convolution and analysis complete. Do we have a clear maxima (most likely output to input delay)?
 	}								
-//if (tracecount > 0) {trace2("MIC ",micPeaks," OUT ",outputPeaks," CONV ",conv," ",min1p," ",maxp," ",min2p);tracecount--}
-	if (	(min1p < (maxp-2)) 					// If we have the positions in the right order
-		&& (maxp < (min2p-2)) 					// and sufficiently well spaced out
-		&& (((max - min1)/max) > 0.2)				// and both minima are < 80% of highest peak
-		&& (((max - min2)/max) > 0.2)) {			// then we have a good convolution	
-		let ratio = 0, num = 0;					// Calculate the average ratio of input to output for this delay
-		let sumM = 0, sumT = 0, sumMT = 0, sumM2 = 0, sumT2 = 0;
-		let d = olen - maxp;					// Delay d for this convolution is the distance from the peak to the end
-		for (let i=0; i<maxp; i++) {				// Find if there is a strong correlation between input and output
-			let mp = micPeaks[i+d], tb = outputPeaks[i];	// as this will indicate if there is echo feedback or not
-			if (tb >0) {ratio += mp/tb; num++;}
-			sumM += mp;
-			sumT += tb;
-			sumMT += mp * tb;
-			sumM2 += mp * mp;
-			sumT2 += tb * tb;
-		}
-		let step1 = ((olen-maxp)*sumMT) - (sumM * sumT);
-		let step2 = ((olen-maxp)*sumM2) - (sumM * sumM);
-		let step3 = ((olen-maxp)*sumT2) - (sumT * sumT);
-		let step4 = Math.sqrt(step2 * step3);
-		let coef = step1 / step4;				// This correlation coeficient (r) is the key figure. > 0.9 is significant
-		ratio = ratio / num;					// Get average input/output ratio needed to set a safe echo supression threshold
-trace2("R ",ratio.toFixed(1)," c ",coef.toFixed(1)," d ",d);
-		if ((coef > 0.9) && (isFinite(ratio)) && (ratio < 80)) {// Is there correlation between input & output, and is the ratio sensible?
-			if (ratio > echoTest.factor) 			// Apply ratio to echoTest.factor. Quickly going up. Slowly going down.
-				echoTest.factor = (echoTest.factor*3+ratio*extra)/4;	// extra factor is used to increase factor to stop breaches
-			else
-				echoTest.factor = (echoTest.factor*39+ratio*extra)/40;	// extra factor same as above
-			echoTest.sampleDelay = 				// An accurate estimate of feedback delay is important for setting the correct threshold 
-				(echoTest.sampleDelay*39 + d)/40;
-trace2("OK R ",ratio.toFixed(1)," f ",echoTest.factor.toFixed(1)," sD ",echoTest.sampleDelay.toFixed(1)," c ",coef.toFixed(1));
-			if (micIn.gate > 0) {				// Worst case... we have correlated feedback and the mic is open! 
-trace2("Breach detected. ");
-			}
-		}
-	} 
+if (tracecount > 0) {trace2("MIC ",micPeaks," OUT ",outputPeaks," CONV ",conv," ",min1p," ",maxp," ",min2p);tracecount--}
+//	if (	(min1p < (maxp-2)) 					// If we have the positions in the right order
+//		&& (maxp < (min2p-2)) 					// and sufficiently well spaced out
+//		&& (((max - min1)/max) > 0.2)				// and both minima are < 80% of highest peak
+//		&& (((max - min2)/max) > 0.2)) {			// then we have a good convolution	
+//		let ratio = 0, num = 0;					// Calculate the average ratio of input to output for this delay
+//		let sumM = 0, sumT = 0, sumMT = 0, sumM2 = 0, sumT2 = 0;
+//		let d = olen - maxp;					// Delay d for this convolution is the distance from the peak to the end
+//		for (let i=0; i<maxp; i++) {				// Find if there is a strong correlation between input and output
+//			let mp = micPeaks[i+d], tb = outputPeaks[i];	// as this will indicate if there is echo feedback or not
+//			if (tb >0) {ratio += mp/tb; num++;}
+//			sumM += mp;
+//			sumT += tb;
+//			sumMT += mp * tb;
+//			sumM2 += mp * mp;
+//			sumT2 += tb * tb;
+//		}
+//		let step1 = ((olen-maxp)*sumMT) - (sumM * sumT);
+//		let step2 = ((olen-maxp)*sumM2) - (sumM * sumM);
+//		let step3 = ((olen-maxp)*sumT2) - (sumT * sumT);
+//		let step4 = Math.sqrt(step2 * step3);
+//		let coef = step1 / step4;				// This correlation coeficient (r) is the key figure. > 0.9 is significant
+//		ratio = ratio / num;					// Get average input/output ratio needed to set a safe echo supression threshold
+//trace2("R ",ratio.toFixed(1)," c ",coef.toFixed(1)," d ",d);
+//		if ((coef > 0.9) && (isFinite(ratio)) && (ratio < 80)) {// Is there correlation between input & output, and is the ratio sensible?
+//			if (ratio > echoTest.factor) 			// Apply ratio to echoTest.factor. Quickly going up. Slowly going down.
+//				echoTest.factor = (echoTest.factor*3+ratio*extra)/4;	// extra factor is used to increase factor to stop breaches
+//			else
+//				echoTest.factor = (echoTest.factor*39+ratio*extra)/40;	// extra factor same as above
+//			echoTest.sampleDelay = 				// An accurate estimate of feedback delay is important for setting the correct threshold 
+//				(echoTest.sampleDelay*39 + d)/40;
+//trace2("OK R ",ratio.toFixed(1)," f ",echoTest.factor.toFixed(1)," sD ",echoTest.sampleDelay.toFixed(1)," c ",coef.toFixed(1));
+//			if (micIn.gate > 0) {				// Worst case... we have correlated feedback and the mic is open! 
+//trace2("Breach detected. ");
+//			}
+//		}
+//	} 
 	// 2.2.3 We now have a new factor that relates output to input plus the delay from output to input. Use these to set a safe input threshold
 	del = Math.round(echoTest.sampleDelay);				// Update latest output to input delay rounded to a whole number of peaks
 	let sta = outputPeaks.length - del - 3;				// Start of threshold window in output peaks array (newest is last element)
