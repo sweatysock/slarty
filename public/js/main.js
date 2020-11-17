@@ -1343,8 +1343,16 @@ trace2("OPEN ",mP.toFixed(2)," > ",micIn.threshold.toFixed(2));
 	let peaksL = getPeaks(outAudioL, peakWindow);			// Get peaks in all the output channels
 	let peaksR = getPeaks(outAudioR, peakWindow);
 	let peaksV = getPeaks(outAudioV, peakWindow);
-	for (let i=0;i<peaksL.length;i++)				// For each peak value in the chunk
-		outputPeaks.push(peaksL[i]+peaksR[i]+(2*peaksV[i]));	// Add the sum of all output peaks to output peaks buffer
+	for (let i=0;i<peaksL.length;i++)				// Put the largest peaks in the outputPeaks array
+		if (peaksL[i] > peaksR[i]) {
+			if (peaksL[i] > peaksV[i])
+				outputPeaks.push(peaksL[i]);
+			else	outputPeaks.push(peaksV[i]);
+		} else {
+			if (peaksR[i] > peaksV[i])
+				outputPeaks.push(peaksR[i]);
+			else	outputPeaks.push(peaksV[i]);
+		}
 	outputPeaks.splice(0,peaksL.length);				// Remove old values to keep buffer to size
 	if (gateJustClosed) {						// When mic gate has just closed there are gateDelay chunks of bg noise levels we can use
 		myNoiseFloor = maxValue(micPeaks.slice(-1*gateDelay)) * 1.2;	// Get max value in last gateDelay mic peaks. Consider as new bg noise. Boost by 20% for margin.
@@ -1388,7 +1396,7 @@ trace2("SPEAKER ",oldFactor);
 	let olen = outputPeaks.length;
 	let mlen = micPeaks.length;			
 	let conv = [];					
-	for (let t=0; t<15; t++) {					// The convolution will determine the most likely output to input delay
+	for (let t=0; t<olen; t++) {					// The convolution will determine the most likely output to input delay
 		let sum = 0;
 		for (let x=0; x<mlen; x++) {
 			sum += outputPeaks[(t+x)%olen]*micPeaks[x];
@@ -1398,6 +1406,7 @@ trace2("SPEAKER ",oldFactor);
 	let min1 = 100; max = 0, min2 = 100;				// Find the first minimum, the maximum, and the final minimum
 	let min1p = 0, maxp = 0, min2p = 0;				// also note the positions where they occur in the conv array 
 	for (let j=0; j<conv.length; j++) {
+		if (max < conv[j]
 		if ((maxp <= min1p) && (conv[j] < min1)) {		// If the max is still with us or behind us and this is a minimum
 			min1 = conv[j];					// this could be a new first minimum
 			min1p = j;
@@ -1412,7 +1421,7 @@ trace2("SPEAKER ",oldFactor);
 			min2p = j;
 		}							// Convolution and analysis complete. Do we have a clear maxima (most likely output to input delay)?
 	}								
-if (tracecount > 0) {trace2("MIC ",micPeaks," OUT ",outputPeaks," CONV ",conv," ",min1p," ",maxp," ",min2p);tracecount--}
+//if (tracecount > 0) {trace2("MIC ",micPeaks," OUT ",outputPeaks," CONV ",conv," ",min1p," ",maxp," ",min2p);tracecount--}
 	if (	(min1p < (maxp-2)) 					// If we have the positions in the right order
 		&& (maxp < (min2p-2)) 					// and sufficiently well spaced out
 		&& (((max - min1)/max) > 0.2)				// and both minima are < 80% of highest peak
