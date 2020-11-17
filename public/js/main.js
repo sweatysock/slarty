@@ -1116,7 +1116,7 @@ const peakWindow = 1024;						// Samples that enter into each peak reading for e
 const nPeaks = 20;							// How many peaks to buffer for echo analysis and dynamic thresholds
 var outputPeaks = new Array(nPeaks).fill(0);				// Buffer mic peaks here for delayed mic muting using dynamic thresholds
 var micPeaks = new Array(nPeaks).fill(0);				// Buffer mic peaks for correlation analysis
-var gateDelay = 10 * peakWindow/ChunkSize;				// Number of chunks the gate stays open for (corresponds to about 0.25s)
+var gateDelay = 10;							// Amount of chunks (time) the gate stays open
 var openCount = 0;							// Count how long the gate is open to deal with steadily higher bg noise
 var gateJustClosed = false;						// Flag to trigger bg noise measurement. 
 var initialNoiseMeasure = gateDelay;					// Want to get an inital sample of bg noise right after the echo test
@@ -1134,6 +1134,7 @@ function processAudio(e) {						// Main processing loop
 	let outDataL = e.outputBuffer.getChannelData(0);		// Audio going to the left speaker
 	let outDataR = e.outputBuffer.getChannelData(1);		// Audio going to the right speaker
 	let outDataV = e.outputBuffer.getChannelData(2);		// Venue audio going to be processed
+	let mP;								// Peak raw mic input for this chunk
 
 	if (echoTest.running == true) {					// The echo test takes over all audio
 		let output = runEchoTest(inDataL);			// Send the mic audio to the tester
@@ -1147,16 +1148,19 @@ function processAudio(e) {						// Main processing loop
 
 	// 1. Get Mic audio, buffer it, and send it to server if enough buffered
 	if (socketConnected) {						// Need connection to send
-		let micAudioL = [];					// Our objective is to fill these with audio
+		let micAudioL = [];					// Our objective is to fill this with audio
 		let micAudioR = [];					
-		let peaks = getPeaks(inDataL, peakWindow);		// Get peaks in raw left audio buffer
-		micPeaks.push(...peaks);				// Keep buffer of mic peaks to analyze relation between input and output
-		micPeaks.splice(0,peaks.length);			// Remove old values to keep buffer to size
-		let mP = maxValue(peaks);				// Get overall peak of raw mic for gate control
+		mP = maxValue(inDataL);					// Get peak of raw mic audio (using left channel for now)
+if (tracecount > 0) {
+	console.log("Peak for chunk is ",mP);
+	console.log("Peaks are ",getPeaks(inDataL, peakWindow));
+}
+		micPeaks.unshift( mP );					// Keep buffer of mic peaks to understand and analyze
+		micPeaks.pop();						// relationship between output and input for feedback control
 		if (performer) micIn.gate = gateDelay			// Performer's mic has no gate
 		else {							// Everyone else has to fight to keep the gate open
 			let adjNoiseFloor = (openCount < 100)?		// The gate gets harder to keep open
-				myNoiseFloor : myNoiseFloor * 1.5;	// after being open a time (100 Chunks)
+				myNoiseFloor : myNoiseFloor * 1.5;	// after being open a time (roughly 2 seconds)
 			if ((micIn.gate > 0) && (mP > noiseThreshold)	// Keep gate open for anything above centrally controlled venue noise floor
 				&& (mP > adjNoiseFloor)) {		// and above my background noise floor that increases after a period
 				micIn.gate = gateDelay;			
@@ -1340,14 +1344,18 @@ trace2("OPEN ",mP.toFixed(2)," > ",micIn.threshold.toFixed(2));
 
 	// 2.2 Handle feedback and echo. 
 	// 2.2.1 First analyze audio out and in to determine background noise level for general mic noise thresholding (all clients need this)
-	let peaksL = getPeaks(outAudioL, peakWindow);			// Get peaks in all the output channels
-	let peaksR = getPeaks(outAudioR, peakWindow);
-	let peaksV = getPeaks(outAudioV, peakWindow);
-	for (let i=0;i<peaksL.length;i++)				// For each peak value in the chunk
-		outputPeaks.push(peaksL[i]+peaksR[i]+(2*peaksV[i]));	// Add the sum of all output peaks to output peaks buffer
-	outputPeaks.splice(0,peaksL.length);				// Remove old values to keep buffer to size
-	if (gateJustClosed) {						// When mic gate has just closed there are gateDelay chunks of bg noise levels we can use
-		myNoiseFloor = maxValue(micPeaks.slice(-1*gateDelay)) * 1.2;	// Get max value in last gateDelay mic peaks. Consider as new bg noise. Boost by 20% for margin.
+	let maxL = maxValue(outAudioL);					// Get peak level of this outgoing audio
+	let maxR = maxValue(outAudioR);					// for each channel
+	let maxV = maxValue(outAudioV);					// and venue audio
+	if (maxL < maxR) maxL = maxR;					// Choose loudest channel
+	if (maxL < maxV) maxL = maxV;				
+	outputPeaks.unshift( maxL );					// add to start of output peak buffer
+	outputPeaks.pop();						// Remove oldest output peak buffer value
+//	if ((maxL < 0.01) && (micIn.gate == 0)) {			// If output is low and mic gate is closed we are hearing background noise
+//		levelClassifier(mP);					// Classify noise incoming for noise floor analysis
+//	}
+	if (gateJustClosed) {						// When mic gate has just closed there are 10 chunks of bg noise levels we can use
+		myNoiseFloor = maxValue(micPeaks.slice(0,9)) * 1.2;	// Get max value in last 10 mic peaks. Consider as new bg noise. Boost by 20% for margin.
 trace2("noiseFloor ",myNoiseFloor);
 		gateJustClosed = false;
 	}
@@ -1358,19 +1366,19 @@ trace2("noiseFloor ",myNoiseFloor);
 	}								// Build a rapid profile of audio output and input to help quick decision making
 	let del = Math.round(echoTest.sampleDelay);			// Get latest output to input delay rounded to a whole number of chunks
 	let sumOP = 0, sumMP = 0;
-	for (let i=0;i<(outputPeaks.length - del);i++)			// Add up all the peaks of output that
+	for (let i=del;i<outputPeaks.length;i++)			// Add up all the peaks of output that
 		sumOP += outputPeaks[i];				// should register on the input channel (given the output to input delay)
-	for (let i=del;i < micPeaks.length;i++)				// Add up all the input channel peaks
+	for (let i=0;i<(micPeaks.length-del);i++)			// Add up all the input channel peaks
 		sumMP += micPeaks[i];					// that may have been influenced by output as a result of audio feedback
 	let nVs = (micPeaks.length-del);				// Number of values that correspond to each other in the mic and output peak buffers
 	sumOP = sumOP/nVs; 
 	sumMP = sumMP/nVs;
 	let aLot = myNoiseFloor * 4;					// Enough output that can't be confused for noise is, say, 4x local bg noise
 	if (aLot > 1) aLot = 1;						// Can't ouput more than 1 however!
-	if ((sumOP >= aLot) && (sumMP < myNoiseFloor)) 			// If our output is significant and our input is less than background noise
+	if ((sumOP > aLot) && (sumMP < myNoiseFloor)) 			// If our output is significant and our input is little more than background noise
 		goodCount++; 						// this would suggest we are no longer getting feedback (perhaps headphones are connected?)
 	else goodCount = 0;
-	if (goodCount > 20) {						// If we have had a run of clear non-echo results in a row
+	if (goodCount > 5) {						// If we have had a run of clear non-echo results in a row
 trace2("HEADPHONES");
                 micIn.threshold = 0;                                    // echo risk is now low so no threshold needed
 		if (echoTest.factor > 0) oldFactor = echoTest.factor;	// Keep pre-headphone factor because if they are unplugged we need to get back on the case
@@ -1378,65 +1386,81 @@ trace2("HEADPHONES");
 		enterState( idleState );                                // We are done. Back to Idling
 		return;
 	}
-	if ((echoTest.factor == 0) 					// If we have deemed echo risk temporarily zero,
-		&& (sumMP > sumOP) && (sumMP > myNoiseFloor)) {		// but the mic is picking up a lot of sound, the headphones may be unplugged
+	if ((echoTest.factor == 0) 					// If we have deemed echo risk temporarily zero
+		&& (sumMP > sumOP) && (sumMP > myNoiseFloor)) {		// but the mic is picking up a lot of sound so the headphones may be unplugged
 trace2("SPEAKER ",oldFactor);
 		micIn.gate = 0;						// Force the mic gate shut imemdiately just in case
 		echoTest.factor = oldFactor;				// Restore the pre-headphone threshold level
 	}
 	// 2.2.2 There is audio coming in and audio going out so there could be echo feedback. Convolve input and output peaks and then find how correleated they are
-	let olen = outputPeaks.length;
+	let tlen = outputPeaks.length;
 	let mlen = micPeaks.length;			
 	let conv = [];					
-	for (let t=0; t<olen; t++) {					// The convolution will determine the most likely output to input delay
+	for (let t=0; t<15; t++) {					// The convolution will determine the most likely output to input delay
 		let sum = 0;
 		for (let x=0; x<mlen; x++) {
-			sum += outputPeaks[(t+x)%olen]*micPeaks[x];
+			sum += outputPeaks[(t+x)%tlen]*micPeaks[x];
 		}
 		conv.push(sum);						// Convolution results accumulate here. We are looking for a triangular peak ideally
 	}							
-	let max = 0, maxp = 0;						// Looking for maximum position in convolution
-	for (let j=0; j<conv.length; j++) {				// Scan the convolution
-		if (max < conv[j]) { 					// If this is a new max?
-			max = conv[j]; maxp = j;			// save it
+	let min1 = 100; max = 0, min2 = 100;				// Find the first minimum, the maximum, and the second minimum
+	let min1p = 0, maxp = 0, min2p = 0;				// also note the positions where they occur in the conv array 
+	for (let j=0; j<conv.length; j++) {
+		if ((maxp <= min1p) && (conv[j] < min1)) {		// If the max is still with us or behind us and this is a minimum
+			min1 = conv[j];					// this could be a new first minimum
+			min1p = j;
 		}
-	}								// Convolution and analysis complete. Do we have a clear maxima (most likely output to input delay)?
-	let ratio = 0, num = 0;						// Calculate the average ratio of input to output for this delay
-	let sumM = 0, sumT = 0, sumMT = 0, sumM2 = 0, sumT2 = 0;
-	let d = olen - maxp;						// Delay d for this convolution is the distance from the peak to the end
-	for (let i=0; i<maxp; i++) {					// Find if there is a strong correlation between input and output
-		let mp = micPeaks[i+d], tb = outputPeaks[i];		// as this will indicate if there is echo feedback or not
-		if (tb >0) {ratio += mp/tb; num++;}
-		sumM += mp;
-		sumT += tb;
-		sumMT += mp * tb;
-		sumM2 += mp * mp;
-		sumT2 += tb * tb;
-	}
-	let step1 = ((olen-maxp)*sumMT) - (sumM * sumT);
-	let step2 = ((olen-maxp)*sumM2) - (sumM * sumM);
-	let step3 = ((olen-maxp)*sumT2) - (sumT * sumT);
-	let step4 = Math.sqrt(step2 * step3);
-	let coef = step1 / step4;					// This correlation coeficient (r) is the key figure. > 0.9 is significant
-	ratio = ratio / num;						// Get average input/output ratio needed to set a safe echo supression threshold
-if (tracecount > 0) {trace2("MIC ",micPeaks," OUT ",outputPeaks," CONV ",conv," d ",d," R ",ratio.toFixed(1)," c ",coef.toFixed(1));tracecount--}
-	if ((coef > 0.9) && (isFinite(ratio)) && (ratio < 80)) {	// Is there correlation between input & output, and is the ratio sensible?
-		if (ratio > echoTest.factor) 				// Apply ratio to echoTest.factor. Quickly going up. Slowly going down.
-			echoTest.factor = (echoTest.factor*3+ratio*extra)/4;	// extra factor is used to increase factor to stop breaches
-		else
-			echoTest.factor = (echoTest.factor*39+ratio*extra)/40;	// extra factor same as above
-		echoTest.sampleDelay = 					// An accurate estimate of feedback delay is important for setting the correct threshold 
-			(echoTest.sampleDelay*39 + d)/40;
-trace2("OK R ",ratio.toFixed(1)," f ",echoTest.factor.toFixed(1)," sD ",echoTest.sampleDelay.toFixed(1)," c ",coef.toFixed(1));
-		if (micIn.gate > 0) {					// Worst case... we have correlated feedback and the mic is open! 
+		if (conv[j] > max) {					// If this is a maximum
+			max = conv[j];					// this could be a new maximum
+			maxp = j;
+		}
+		if ((maxp < j) && (min1p < maxp) 			// If the max point has been found and it is ahead of the first min
+			&& (conv[j] < min2)) {				// and this is a minimum value
+			min2 = conv[j];					// this could be the second minimum
+			min2p = j;
+		}							// Convolution and analysis complete. Do we have a clear maxima (most likely output to input delay)?
+	}								
+if (tracecount > 0) {trace2("MIC ",micPeaks," OUT ",outputPeaks," CONV ",conv," ",min1p," ",maxp," ",min2p);tracecount--}
+	if (	(min1p < (maxp-3)) 					// If we have the positions in the right order
+		&& (maxp < (min2p-3)) 					// and sufficiently well spaced out
+		&& (((max - min1)/max) > 0.2)				// and both minima are < 80% of highest peak
+		&& (((max - min2)/max) > 0.2)) {			// then we have a good convolution	
+		let ratio = 0, num = 0;					// Calculate the average ratio of input to output for this delay
+		let sumM = 0, sumT = 0, sumMT = 0, sumM2 = 0, sumT2 = 0;
+		for (let i=0; i<(tlen-maxp); i++) {			// Find if there is a strong correlation between input and output
+			let mp = micPeaks[i], tb = outputPeaks[i+maxp];	// as this will indicate if there is echo feedback or not
+			if (tb >0) {ratio += mp/tb; num++;}
+			sumM += mp;
+			sumT += tb;
+			sumMT += mp * tb;
+			sumM2 += mp * mp;
+			sumT2 += tb * tb;
+		}
+		let step1 = ((tlen-maxp)*sumMT) - (sumM * sumT);
+		let step2 = ((tlen-maxp)*sumM2) - (sumM * sumM);
+		let step3 = ((tlen-maxp)*sumT2) - (sumT * sumT);
+		let step4 = Math.sqrt(step2 * step3);
+		let coef = step1 / step4;				// This correlation coeficient (r) is the key figure. > 0.9 is significant
+		ratio = ratio / num;					// Get average input/output ratio needed to set a safe echo supression threshold
+trace2("R ",ratio.toFixed(1)," c ",coef.toFixed(1)," maxp ",maxp);
+		if ((coef > 0.9) && (isFinite(ratio)) && (ratio < 80)) {// Is there correlation between input & output, and is the ratio sensible?
+			if (ratio > echoTest.factor) 			// Apply ratio to echoTest.factor. Quickly going up. Slowly going down.
+				echoTest.factor = (echoTest.factor*3+ratio*extra)/4;	// extra factor is used to increase factor to stop breaches
+			else
+				echoTest.factor = (echoTest.factor*39+ratio*extra)/40;	// extra factor same as above
+			echoTest.sampleDelay = 				// An accurate estimate of feedback delay is important for setting the correct threshold 
+				(echoTest.sampleDelay*39 + maxp)/40;
+trace2("OK R ",ratio.toFixed(1)," f ",echoTest.factor.toFixed(1)," d ",echoTest.sampleDelay.toFixed(1)," c ",coef.toFixed(1));
+			if (micIn.gate > 0) {				// Worst case... we have correlated feedback and the mic is open! 
 trace2("Breach detected. ");
+			}
 		}
 	} 
 	// 2.2.3 We now have a new factor that relates output to input plus the delay from output to input. Use these to set a safe input threshold
-	del = Math.round(echoTest.sampleDelay);				// Update latest output to input delay rounded to a whole number of peaks
-	let sta = outputPeaks.length - del - 3;				// Start of threshold window in output peaks array (newest is last element)
+	del = Math.round(echoTest.sampleDelay);				// Update latest ouptut to input delay rounded to a whole number of chunks
+	let sta = del - 3;						// start of threshold window in output peaks array
 	if (sta < 0) sta = 0;						// trim to start of array
-	let end = sta + 6;						// end of threshold window in output peaks array
+	let end = del + 3;						// end of threshold window in output peaks array
 	if (end > outputPeaks.length) end = outputPeaks.length;		// trim to end of array
 	let tempThresh;							// Adjusted threshold level temporary value
 	tempThresh = maxValue( outputPeaks				// Apply most aggressive threshold in window around current delay 
@@ -1826,7 +1850,7 @@ function runEchoTest(audio) {						// Test audio system in a series of tests
 					trace2("Delay is ",c);
 					winner = true;
 					echoTest.delay = c;		// Store final delay result
-					echoTest.sampleDelay = Math.ceil((echoTest.delay * soundcardSampleRate / 1000)/peakWindow);
+					echoTest.sampleDelay = Math.ceil((echoTest.delay * soundcardSampleRate / 1000)/ChunkSize)
 					trace2("Sample delay is ",echoTest.sampleDelay);
 				}
 			}
