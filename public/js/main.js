@@ -108,7 +108,7 @@ var chatHistory;							// div where a full hisory of the group chat is held
 
 function processCommands(newCommands) {					// Apply commands sent from upstream servers
 	if (newCommands.mute != undefined) serverMuted = newCommands.mute; else serverMuted = false;
-	if (newCommands.gateDelay != undefined) gateDelay = newCommands.gateDelay;
+	if (newCommands.gateDelay != undefined) gateDelay = newCommands.gateDelay * peakWindow/ChunkSize;;
 	if (newCommands.venueSize != undefined) venueSizeCmd = newCommands.venueSize;
 	if (newCommands.perfLevel != undefined) if (performer) {micIn.gain = newCommands.perfLevel; micIn.agc = false;}
 	if (newCommands.noiseThreshold != undefined) noiseThreshold = newCommands.noiseThreshold;
@@ -1354,8 +1354,8 @@ trace2("OPEN ",mP.toFixed(2)," > ",micIn.threshold.toFixed(2));
 			else	outputPeaks.push(peaksV[i]);
 		}
 	outputPeaks.splice(0,peaksL.length);				// Remove old values to keep buffer to size
-	if (gateJustClosed) {						// When mic gate has just closed there are gateDelay chunks of bg noise levels we can use
-		myNoiseFloor = maxValue(micPeaks.slice(-1*gateDelay)) * 1.2;	// Get max value in last gateDelay mic peaks. Consider as new bg noise. Boost by 20% for margin.
+	if (gateJustClosed) {						// When mic gate has just closed. Capture las gateDelay of micPeaks as bg noise (+20% margin)
+		myNoiseFloor = maxValue(micPeaks.slice(-1*gateDelay*ChunkSize/peakWindow)) * 1.2;	
 trace2("noiseFloor ",myNoiseFloor);
 		gateJustClosed = false;
 	}
