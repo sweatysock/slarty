@@ -1419,7 +1419,7 @@ trace2("SPEAKER ",oldFactor);
 	let step4 = Math.sqrt(step2 * step3);
 	let coef = step1 / step4;					// This correlation coeficient (r) is the key figure. > 0.9 is significant
 	ratio = ratio / num;						// Get average input/output ratio needed to set a safe echo supression threshold
-if (tracecount > 0) {trace2("MIC ",micPeaks," OUT ",outputPeaks," CONV ",conv," ",maxp,"R ",ratio.toFixed(1)," c ",coef.toFixed(1));tracecount--}
+if (tracecount > 0) {trace2("MIC ",micPeaks," OUT ",outputPeaks," CONV ",conv," d ",d," R ",ratio.toFixed(1)," c ",coef.toFixed(1));tracecount--}
 	if ((coef > 0.9) && (isFinite(ratio)) && (ratio < 80)) {	// Is there correlation between input & output, and is the ratio sensible?
 		if (ratio > echoTest.factor) 				// Apply ratio to echoTest.factor. Quickly going up. Slowly going down.
 			echoTest.factor = (echoTest.factor*3+ratio*extra)/4;	// extra factor is used to increase factor to stop breaches
