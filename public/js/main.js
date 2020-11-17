@@ -1406,21 +1406,45 @@ trace2("SPEAKER ",oldFactor);
 	let min1 = 100; max = 0, min2 = 100;				// Find the first minimum, the maximum, and the final minimum
 	let min1p = 0, maxp = 0, min2p = 0;				// also note the positions where they occur in the conv array 
 	for (let j=0; j<conv.length; j++) {
-		if ((maxp <= min1p) && (conv[j] < min1)) {		// If the max is still with us or behind us and this is a minimum
-			min1 = conv[j];					// this could be a new first minimum
-			min1p = j;
-		}
-		if (conv[j] > max) {					// If this is a maximum
-			max = conv[j];					// this could be a new maximum
+		if (max < conv[j]) {
+			max = conv[j];
 			maxp = j;
 		}
-		if ((maxp < j) && (min1p < maxp) 			// If the max point has been found and it is ahead of the first min
-			&& (conv[j] < min2)) {				// and this is a minimum value
-			min2 = conv[j];					// this could be the final minimum
-			min2p = j;
-		}							// Convolution and analysis complete. Do we have a clear maxima (most likely output to input delay)?
-	}								
+	}
 if (tracecount > 0) {trace2("MIC ",micPeaks.map(a => a.toFixed(2))," OUT ",outputPeaks.map(a => a.toFixed(2))," CONV ",conv.map(a => a.toFixed(2))," ",min1p," ",maxp," ",min2p);tracecount--}
+	let ratio = 0, num = 0;					// Calculate the average ratio of input to output for this delay
+	let sumM = 0, sumT = 0, sumMT = 0, sumM2 = 0, sumT2 = 0;
+	let d = maxp;						// Delay d for this convolution is the distance from the peak to the end
+	for (let i=0; i<(olen-d); i++) {			// Find if there is a strong correlation between input and output
+		let mp = micPeaks[i+d], tb = outputPeaks[i];	// as this will indicate if there is echo feedback or not
+		if (tb >0) {ratio += mp/tb; num++;}
+		sumM += mp;
+		sumT += tb;
+		sumMT += mp * tb;
+		sumM2 += mp * mp;
+		sumT2 += tb * tb;
+	}
+	let step1 = ((olen-maxp)*sumMT) - (sumM * sumT);
+	let step2 = ((olen-maxp)*sumM2) - (sumM * sumM);
+	let step3 = ((olen-maxp)*sumT2) - (sumT * sumT);
+	let step4 = Math.sqrt(step2 * step3);
+	let coef = step1 / step4;				// This correlation coeficient (r) is the key figure. > 0.9 is significant
+	ratio = ratio / num;					// Get average input/output ratio needed to set a safe echo supression threshold
+trace2("R ",ratio.toFixed(1)," c ",coef.toFixed(1)," d ",d);
+//		if ((maxp <= min1p) && (conv[j] < min1)) {		// If the max is still with us or behind us and this is a minimum
+//			min1 = conv[j];					// this could be a new first minimum
+//			min1p = j;
+//		}
+//		if (conv[j] > max) {					// If this is a maximum
+//			max = conv[j];					// this could be a new maximum
+//			maxp = j;
+//		}
+//		if ((maxp < j) && (min1p < maxp) 			// If the max point has been found and it is ahead of the first min
+//			&& (conv[j] < min2)) {				// and this is a minimum value
+//			min2 = conv[j];					// this could be the final minimum
+//			min2p = j;
+//		}							// Convolution and analysis complete. Do we have a clear maxima (most likely output to input delay)?
+//	}								
 //	if (	(min1p < (maxp-2)) 					// If we have the positions in the right order
 //		&& (maxp < (min2p-2)) 					// and sufficiently well spaced out
 //		&& (((max - min1)/max) > 0.2)				// and both minima are < 80% of highest peak
