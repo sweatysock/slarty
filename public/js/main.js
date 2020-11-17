@@ -1427,17 +1427,20 @@ trace2("SPEAKER ",oldFactor);
 	let step4 = Math.sqrt(step2 * step3);
 	let coef = step1 / step4;					// This correlation coeficient (r) is the key figure. > 0.8 is significant
 	ratio = ratio / num;						// Get average input/output ratio needed to set a safe echo supression threshold
-	if ((coef > 0.8) && (isFinite(ratio)) 				// Is there correlation between input & output, with a sensible ratio,
-		&& (ratio < 80) && (d > 3) && (d < 16)) {		// and a reasonable delay
-		if (ratio > echoTest.factor) 				// Apply ratio to echoTest.factor. Quickly going up. Slowly going down.
-			echoTest.factor = (echoTest.factor*3+ratio*extra)/4;	// extra factor is used to increase factor to stop breaches
-		else
-			echoTest.factor = (echoTest.factor*39+ratio*extra)/40;	// extra factor same as above
-		echoTest.sampleDelay = 					// An accurate estimate of feedback delay is important for setting the correct threshold 
-			(echoTest.sampleDelay*39 + d)/40;		// This also changes slowly to filter out mistakes
-if (tracecount > 0) {trace2("MIC ",micPeaks.map(a => a.toFixed(2))," OUT ",outputPeaks.map(a => a.toFixed(2))," CONV ",conv.map(a => a.toFixed(2))," R ",ratio.toFixed(1)," c ",coef.toFixed(1)," d ",d," f ",echoTest.factor.toFixed(1)," sD ",echoTest.sampleDelay.toFixed(1));tracecount--}
-if (micIn.gate > 0) trace2("Breach detected. ");
-	}
+if ((tracecount > 0) && (d > 3) && (d < 16) && (coef > 0.8)) {trace2("MIC ",micPeaks.map(a => a.toFixed(2))," OUT ",outputPeaks.map(a => a.toFixed(2))," CONV ",conv.map(a => a.toFixed(2))," R ",ratio.toFixed(1)," c ",coef.toFixed(1)," d ",d);tracecount--}
+//		if ((coef > 0.9) && (isFinite(ratio)) && (ratio < 80)) {// Is there correlation between input & output, and is the ratio sensible?
+//			if (ratio > echoTest.factor) 			// Apply ratio to echoTest.factor. Quickly going up. Slowly going down.
+//				echoTest.factor = (echoTest.factor*3+ratio*extra)/4;	// extra factor is used to increase factor to stop breaches
+//			else
+//				echoTest.factor = (echoTest.factor*39+ratio*extra)/40;	// extra factor same as above
+//			echoTest.sampleDelay = 				// An accurate estimate of feedback delay is important for setting the correct threshold 
+//				(echoTest.sampleDelay*39 + d)/40;
+//trace2("OK R ",ratio.toFixed(1)," f ",echoTest.factor.toFixed(1)," sD ",echoTest.sampleDelay.toFixed(1)," c ",coef.toFixed(1));
+//			if (micIn.gate > 0) {				// Worst case... we have correlated feedback and the mic is open! 
+//trace2("Breach detected. ");
+//			}
+//		}
+//	} 
 	// 2.2.3 We now have a new factor that relates output to input plus the delay from output to input. Use these to set a safe input threshold
 	del = Math.round(echoTest.sampleDelay);				// Update latest output to input delay rounded to a whole number of peaks
 	let sta = outputPeaks.length - del - 3;				// Start of threshold window in output peaks array (newest is last element)
