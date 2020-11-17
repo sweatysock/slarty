@@ -1429,7 +1429,7 @@ trace2("SPEAKER ",oldFactor);
 	let step4 = Math.sqrt(step2 * step3);
 	let coef = step1 / step4;				// This correlation coeficient (r) is the key figure. > 0.9 is significant
 	ratio = ratio / num;					// Get average input/output ratio needed to set a safe echo supression threshold
-if (tracecount > 0) {trace2("MIC ",micPeaks.map(a => a.toFixed(2))," OUT ",outputPeaks.map(a => a.toFixed(2))," CONV ",conv.map(a => a.toFixed(2))" R ",ratio.toFixed(1)," c ",coef.toFixed(1)," d ",d);tracecount--}
+if (tracecount > 0) {trace2("MIC ",micPeaks.map(a => a.toFixed(2))," OUT ",outputPeaks.map(a => a.toFixed(2))," CONV ",conv.map(a => a.toFixed(2))," R ",ratio.toFixed(1)," c ",coef.toFixed(1)," d ",d);tracecount--}
 //		if ((maxp <= min1p) && (conv[j] < min1)) {		// If the max is still with us or behind us and this is a minimum
 //			min1 = conv[j];					// this could be a new first minimum
 //			min1p = j;
