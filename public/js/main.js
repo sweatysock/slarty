@@ -1411,7 +1411,6 @@ trace2("SPEAKER ",oldFactor);
 			maxp = j;
 		}
 	}
-if (tracecount > 0) {trace2("MIC ",micPeaks.map(a => a.toFixed(2))," OUT ",outputPeaks.map(a => a.toFixed(2))," CONV ",conv.map(a => a.toFixed(2))," ",min1p," ",maxp," ",min2p);tracecount--}
 	let ratio = 0, num = 0;					// Calculate the average ratio of input to output for this delay
 	let sumM = 0, sumT = 0, sumMT = 0, sumM2 = 0, sumT2 = 0;
 	let d = maxp;						// Delay d for this convolution is the distance from the peak to the end
@@ -1430,7 +1429,7 @@ if (tracecount > 0) {trace2("MIC ",micPeaks.map(a => a.toFixed(2))," OUT ",outpu
 	let step4 = Math.sqrt(step2 * step3);
 	let coef = step1 / step4;				// This correlation coeficient (r) is the key figure. > 0.9 is significant
 	ratio = ratio / num;					// Get average input/output ratio needed to set a safe echo supression threshold
-trace2("R ",ratio.toFixed(1)," c ",coef.toFixed(1)," d ",d);
+if (tracecount > 0) {trace2("MIC ",micPeaks.map(a => a.toFixed(2))," OUT ",outputPeaks.map(a => a.toFixed(2))," CONV ",conv.map(a => a.toFixed(2))" R ",ratio.toFixed(1)," c ",coef.toFixed(1)," d ",d);tracecount--}
 //		if ((maxp <= min1p) && (conv[j] < min1)) {		// If the max is still with us or behind us and this is a minimum
 //			min1 = conv[j];					// this could be a new first minimum
 //			min1p = j;
