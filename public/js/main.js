@@ -1395,65 +1395,41 @@ trace2("SPEAKER ",oldFactor);
 		}
 		conv.push(sum);						// Convolution results accumulate here. We are looking for a triangular peak ideally
 	}							
-	let min1 = conv[0]; max = conv[0], min2 = conv[0];		// Find the first minimum, the maximum, and the final minimum
-	let min1p = 0, maxp = 0, min2p = 0;				// also note the positions where they occur in the conv array 
+	let max = 0, maxp = 0;						// Looking for maximum position in convolution
 	for (let j=0; j<conv.length; j++) {				// Scan the convolution
 		if (max < conv[j]) { 					// If this is a new max?
 			max = conv[j]; maxp = j;			// save it
-			min1 = min2; min1p = min2p;			// set the first minimum to the previous minimum
-			min2 = conv[j]; min2p = j;			// and move the previous minimum to this point
-		} else if (min2 > conv[j]) {				// if not a max is this a new minimum?
-			min2 = conv[j]; min2p = j;			// if so save it 
 		}
-//		if ((maxp <= min1p) && (conv[j] < min1)) {		// If the max is still with us or behind us and this is a minimum
-//			min1 = conv[j];					// this could be a new first minimum
-//			min1p = j;
-//		}
-//		if (conv[j] > max) {					// If this is a maximum
-//			max = conv[j];					// this could be a new maximum
-//			maxp = j;
-//		}
-//		if ((maxp < j) && (min1p < maxp) 			// If the max point has been found and it is ahead of the first min
-//			&& (conv[j] < min2)) {				// and this is a minimum value
-//			min2 = conv[j];					// this could be the final minimum
-//			min2p = j;
-//		}							
 	}								// Convolution and analysis complete. Do we have a clear maxima (most likely output to input delay)?
-if (tracecount > 0) {trace2("MIC ",micPeaks," OUT ",outputPeaks," CONV ",conv," ",min1p," ",maxp," ",min2p);tracecount--}
-	if (	(min1p < (maxp-2)) 					// If we have the positions in the right order
-		&& (maxp < (min2p-2)) 					// and sufficiently well spaced out
-		&& (((max - min1)/max) > 0.2)				// and both minima are < 80% of highest peak
-		&& (((max - min2)/max) > 0.2)) {			// then we have a good convolution	
-		let ratio = 0, num = 0;					// Calculate the average ratio of input to output for this delay
-		let sumM = 0, sumT = 0, sumMT = 0, sumM2 = 0, sumT2 = 0;
-		let d = olen - maxp;					// Delay d for this convolution is the distance from the peak to the end
-		for (let i=0; i<maxp; i++) {				// Find if there is a strong correlation between input and output
-			let mp = micPeaks[i+d], tb = outputPeaks[i];	// as this will indicate if there is echo feedback or not
-			if (tb >0) {ratio += mp/tb; num++;}
-			sumM += mp;
-			sumT += tb;
-			sumMT += mp * tb;
-			sumM2 += mp * mp;
-			sumT2 += tb * tb;
-		}
-		let step1 = ((olen-maxp)*sumMT) - (sumM * sumT);
-		let step2 = ((olen-maxp)*sumM2) - (sumM * sumM);
-		let step3 = ((olen-maxp)*sumT2) - (sumT * sumT);
-		let step4 = Math.sqrt(step2 * step3);
-		let coef = step1 / step4;				// This correlation coeficient (r) is the key figure. > 0.9 is significant
-		ratio = ratio / num;					// Get average input/output ratio needed to set a safe echo supression threshold
-trace2("R ",ratio.toFixed(1)," c ",coef.toFixed(1)," d ",d);
-		if ((coef > 0.9) && (isFinite(ratio)) && (ratio < 80)) {// Is there correlation between input & output, and is the ratio sensible?
-			if (ratio > echoTest.factor) 			// Apply ratio to echoTest.factor. Quickly going up. Slowly going down.
-				echoTest.factor = (echoTest.factor*3+ratio*extra)/4;	// extra factor is used to increase factor to stop breaches
-			else
-				echoTest.factor = (echoTest.factor*39+ratio*extra)/40;	// extra factor same as above
-			echoTest.sampleDelay = 				// An accurate estimate of feedback delay is important for setting the correct threshold 
-				(echoTest.sampleDelay*39 + d)/40;
+	let ratio = 0, num = 0;						// Calculate the average ratio of input to output for this delay
+	let sumM = 0, sumT = 0, sumMT = 0, sumM2 = 0, sumT2 = 0;
+	let d = olen - maxp;						// Delay d for this convolution is the distance from the peak to the end
+	for (let i=0; i<maxp; i++) {					// Find if there is a strong correlation between input and output
+		let mp = micPeaks[i+d], tb = outputPeaks[i];		// as this will indicate if there is echo feedback or not
+		if (tb >0) {ratio += mp/tb; num++;}
+		sumM += mp;
+		sumT += tb;
+		sumMT += mp * tb;
+		sumM2 += mp * mp;
+		sumT2 += tb * tb;
+	}
+	let step1 = ((olen-maxp)*sumMT) - (sumM * sumT);
+	let step2 = ((olen-maxp)*sumM2) - (sumM * sumM);
+	let step3 = ((olen-maxp)*sumT2) - (sumT * sumT);
+	let step4 = Math.sqrt(step2 * step3);
+	let coef = step1 / step4;					// This correlation coeficient (r) is the key figure. > 0.9 is significant
+	ratio = ratio / num;						// Get average input/output ratio needed to set a safe echo supression threshold
+if (tracecount > 0) {trace2("MIC ",micPeaks," OUT ",outputPeaks," CONV ",conv," ",maxp,"R ",ratio.toFixed(1)," c ",coef.toFixed(1));tracecount--}
+	if ((coef > 0.9) && (isFinite(ratio)) && (ratio < 80)) {	// Is there correlation between input & output, and is the ratio sensible?
+		if (ratio > echoTest.factor) 				// Apply ratio to echoTest.factor. Quickly going up. Slowly going down.
+			echoTest.factor = (echoTest.factor*3+ratio*extra)/4;	// extra factor is used to increase factor to stop breaches
+		else
+			echoTest.factor = (echoTest.factor*39+ratio*extra)/40;	// extra factor same as above
+		echoTest.sampleDelay = 					// An accurate estimate of feedback delay is important for setting the correct threshold 
+			(echoTest.sampleDelay*39 + d)/40;
 trace2("OK R ",ratio.toFixed(1)," f ",echoTest.factor.toFixed(1)," sD ",echoTest.sampleDelay.toFixed(1)," c ",coef.toFixed(1));
-			if (micIn.gate > 0) {				// Worst case... we have correlated feedback and the mic is open! 
+		if (micIn.gate > 0) {					// Worst case... we have correlated feedback and the mic is open! 
 trace2("Breach detected. ");
-			}
 		}
 	} 
 	// 2.2.3 We now have a new factor that relates output to input plus the delay from output to input. Use these to set a safe input threshold
