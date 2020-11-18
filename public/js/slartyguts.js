@@ -1,6 +1,6 @@
 // Variables that the supervisor can control ofr all clients and their default values:
 globalMute = false;							// Mute all clients
-gateDelay = 30;								// the delay in mS on all clients for mic gate staying open
+gateDelay = 10;								// the delay in mS on all clients for mic gate staying open
 venueSize = 0;								// global venue size which impacts the attenuation applied to audience sound
 perfChannel = 0;							// performer channel on this (venue) server
 perfLevel = 1;								// control performer Mic level directly from console
