@@ -1356,7 +1356,7 @@ trace2("OPEN ",mP.toFixed(2)," > ",micIn.threshold.toFixed(2));
 	outputPeaks.splice(0,peaksL.length);				// Remove old values to keep buffer to size
 	if (gateJustClosed) {						// When mic gate has just closed. Capture las gateDelay of micPeaks as bg noise (+20% margin)
 		myNoiseFloor = maxValue(micPeaks.slice(-1*gateDelay*ChunkSize/peakWindow)) * 1.2;	
-trace2("noiseFloor ",myNoiseFloor);
+trace2("noiseFloor ",myNoiseFloor," MIC ",micPeaks.map(a => a.toFixed(2)));
 		gateJustClosed = false;
 	}
 	if (!echoRisk) {						// We are running on a noise cancelling browser that has passed the echo test
