@@ -610,9 +610,9 @@ document.addEventListener('DOMContentLoaded', function(event){		// Add dynamic b
 		micMuted.style.visibility = "hidden";
 		micOpen.style.visibility = "visible";
 		micOnMixer.style.visibility = "inherit";
-		if (forcedMute) {					// If UI mute state was forced due to high threshold force mic open
+		if (forcedMute) {					// If UI mute state was forced due to high threshold force mic open for 1 second
+			micIn.gate = Math.round(soundcardSampleRate/ChunkSize);				
 trace2("FORCE UNmute");
-			micIn.gate = 40;				// for about 1 second
 			forcedMute = false;				// Not strictly necessary, but as we are clearly unmuted may as well unforce too
 		}
 	});
@@ -1156,17 +1156,22 @@ function processAudio(e) {						// Main processing loop
 		if (performer) micIn.gate = gateDelay			// Performer's mic has no gate
 		else {							// Everyone else has to fight to keep the gate open
 			let adjNoiseFloor = (openCount < 100)?		// The gate gets harder to keep open
-				myNoiseFloor : myNoiseFloor * 1.0;	// after being open a time (100 Chunks)
+				myNoiseFloor : myNoiseFloor * 1.5;	// after being open a time (100 Chunks)
 			if ((micIn.gate > 0) && (mP > noiseThreshold)	// Keep gate open for anything above centrally controlled venue noise floor
 				&& (mP > adjNoiseFloor)) {		// and above my background noise floor that increases after a period
 				micIn.gate = gateDelay;			
 				openCount++;				// Count how long the gate is open to make it harder to stay open
 			} else if ((mP > micIn.threshold) 		// Gate shut. Open if audio is above dynamic threshold
 				&& (mP > noiseThreshold)		// and above centrally controlled venue noise floor
-				&& (mP > myNoiseFloor)) {		// and above my background noise floor
+				&& (mP > adjNoiseFloor)) {		// and above my adjusted background noise floor
 				micIn.gate = gateDelay;			
 trace2("OPEN ",mP.toFixed(2)," > ",micIn.threshold.toFixed(2));
 			} 
+		}
+		if ((gateJustClosed) && (micIn.gate == 0)) {		// If the gate closed in the previous loop capture gateDelay of micPeaks as bg noise (+20% margin)
+			myNoiseFloor = maxValue(micPeaks.slice(-1*gateDelay*ChunkSize/peakWindow)) * 1.2;	
+trace2("noiseFloor ",myNoiseFloor," MIC ",micPeaks.map(a => a.toFixed(2)));
+			gateJustClosed = false;
 		}
 		if (initialNoiseMeasure > 0) {				// Right at the start the user is probably quiet
 			initialNoiseMeasure--;				// so this is a good time to measure their bg noise level
@@ -1354,11 +1359,6 @@ trace2("OPEN ",mP.toFixed(2)," > ",micIn.threshold.toFixed(2));
 			else	outputPeaks.push(peaksV[i]);
 		}
 	outputPeaks.splice(0,peaksL.length);				// Remove old values to keep buffer to size
-	if (gateJustClosed) {						// When mic gate has just closed. Capture las gateDelay of micPeaks as bg noise (+20% margin)
-		myNoiseFloor = maxValue(micPeaks.slice(-1*gateDelay*ChunkSize/peakWindow)) * 1.2;	
-trace2("noiseFloor ",myNoiseFloor," MIC ",micPeaks.map(a => a.toFixed(2)));
-		gateJustClosed = false;
-	}
 	if (!echoRisk) {						// We are running on a noise cancelling browser that has passed the echo test
 		micIn.threshold = 0;					// No echo risk so no threshold needed
 		enterState( idleState );				// We are done here. No need to analyze audio further for this browser
