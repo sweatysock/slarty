@@ -1439,7 +1439,7 @@ trace2("SPEAKER ",oldFactor);
 if (tracecount > 0) {trace2("MIC ",micPeaks.map(a => a.toFixed(2))," OUT ",outputPeaks.map(a => a.toFixed(2))," CONV ",conv.map(a => a.toFixed(2))," R ",ratio.toFixed(1)," c ",coef.toFixed(1)," d ",d," eTf ",echoTest.factor.toFixed(2)," eTsD ",echoTest.sampleDelay.toFixed(2));tracecount--}
 else trace2("R ",ratio.toFixed(1)," c ",coef.toFixed(1)," d ",d," eTf ",echoTest.factor.toFixed(2)," eTsD ",echoTest.sampleDelay.toFixed(2));
 		if (micIn.gate > 0) {					// Worst case... we have correlated feedback and the mic is open! Push factor high
-			echoTest.factor = 30;
+			echoTest.factor = 40;
 trace2("Breach detected. ");
 		}
 	}
@@ -1754,21 +1754,22 @@ var echoTest = {
 	factor		: 4,	// Default value			// Final sensitivity factor stored here
 	sampleDelay	: 6,	// Default value			// Final number of samples to delay dynamic threshold by
 };
-
+const pulseLength = 1024;						// No. of samples per pulse
+const silence = 12 * 1024;						// No. of samples of silence after pulse to be sure to have heard it
 echoTest.steps.forEach(i => {						// Build test tones
 	if (i>1) {							// Create waves of different frequencies
-		let halfWave = ChunkSize/(i*2);
-		let audio = [];
-		for  (let s=0; s < ChunkSize; s++) {
-			audio.push(Math.sin(Math.PI * s / halfWave));
+		let audio = new Array(ChunkSize).fill(0);		// Start with an empty audio chunk
+		let halfWave = pulseLength/(i*2);
+		for  (let s=0; s < pulseLength; s++) {
+			audio[s] = Math.sin(Math.PI * s / halfWave);
 		}
 		echoTest.tones[i] = audio;
 	} else if (i > 0) {						// Create 1411Hz waves at different levels
-		let halfWave = ChunkSize/64;
-		let audio = [];
+		let audio = new Array(ChunkSize).fill(0);
+		let halfWave = pulseLength/64;
 		let gain = i;
-		for  (let s=0; s < ChunkSize; s++) {
-			audio.push(gain * Math.sin(Math.PI * s / halfWave));
+		for  (let s=0; s < pulseLength; s++) {
+			audio[s] = gain * Math.sin(Math.PI * s / halfWave);
 		}
 		echoTest.tones[i] = audio;
 	}
@@ -1789,16 +1790,16 @@ function runEchoTest(audio) {						// Test audio system in a series of tests
 	let outAudio;
 	let test = echoTest.steps[echoTest.currentStep];
 	if (test > 0) {							// 0 means analyze. >0 means emit & record audio
-		if (echoTest.samplesNeeded == 0) {			// If not storing audio must be sending test sound
+		if (echoTest.samplesNeeded <= 0) {			// If not storing audio must be sending test sound
 			trace2("Running test ",test);
 			outAudio = echoTest.tones[test]; 		// Get test sound for this test
 			echoTest.results[test] = [];			// Get results buffer ready to store audio
-			echoTest.samplesNeeded = 6;			// Request audio samples for each test
-		} else {						// else samples need to be buffered
+			echoTest.samplesNeeded = silence;		// Request enough audio samples be recorded for each test
+		} else {						// Not sending test sound so samples need to be stored
 			echoTest.results[test].push(...audio);
 			outAudio = new Array(ChunkSize).fill(0);	// return silence to send to speaker
-			echoTest.samplesNeeded--;			// One sample less needed
-			if (echoTest.samplesNeeded == 0)		// If no more samples needed
+			echoTest.samplesNeeded -= ChunkSize;		// We have captured a Chunk of samples of silence
+			if (echoTest.samplesNeeded <= 0)		// If no more samples needed
 				echoTest.currentStep++;			// move to next step
 		}
 	} else {							// Test completed. "0" indicates analysis phase.
@@ -1819,14 +1820,15 @@ function runEchoTest(audio) {						// Test audio system in a series of tests
 			}
 			let max = 0;
 			let edge = 0;
-			for (let j=0; j<conv.length; j++)			// Find max = edge of pulse
+			for (let j=0; j<conv.length; j++)		// Find max = edge of pulse
 				if (conv[j] > max) {
 					max = conv[j];
 					edge = j;
 				}
+			edge += ChunkSize;				// The edge does not include the first Chunk that included the pulse itself
 			let delay = Math.round((edge*100)/soundcardSampleRate)*10;	// convert result to nearest 10mS
 			trace2("Pulse delay is ",delay,"mS");
-			echoTest.delays.push(delay.toFixed(0));		// Gather results n mS for each step
+			echoTest.delays.push(delay.toFixed(0));		// Gather results in mS for each step
 		} else {						// All tests have been analyzed. Get conclusions.
 			trace2("Reviewing results");
 			let counts = [];				// Collate results on mS values
@@ -1852,7 +1854,7 @@ function runEchoTest(audio) {						// Test audio system in a series of tests
 				for (let i=0; i<(echoTest.steps.length-1); i++) {
 					let t = echoTest.steps[i];
 					if (t <= 1) {			// Level tests are <= 1
-						let data = echoTest.results[t].slice(edge, (edge+ChunkSize));
+						let data = echoTest.results[t].slice(edge, (edge+pulseLength));
 						let avg = avgValue(data);
 						let factor = avg/(t * 0.637);	// Avg mic signal vs avg output signal
 						trace2("Test ",echoTest.steps[i]," Factor: ",factor);
@@ -1866,7 +1868,7 @@ function runEchoTest(audio) {						// Test audio system in a series of tests
 				trace2("Forced factor is ",echoTest.factor);
 			} else {
 				trace2("No clear result. Echo risk should be low.");		// No agreement, no result
-				echoTest.factor = 0;			// A non-permanent result. Headphones can be unplugged!
+				echoTest.factor = 0;			// A non-permanent result. Headphones may be unplugged later!
 			}
 			echoTest.running = false;			// Stop test 
 		}
