@@ -1436,11 +1436,12 @@ trace2("SPEAKER ",oldFactor);
 			echoTest.factor = (echoTest.factor*39+ratio*extra)/40;	// extra factor same as above
 		echoTest.sampleDelay = 					// An accurate estimate of feedback delay is important for setting the correct threshold 
 			(echoTest.sampleDelay*39 + d)/40;
-if (tracecount > 0) {trace2("MIC ",micPeaks.map(a => a.toFixed(2))," OUT ",outputPeaks.map(a => a.toFixed(2))," CONV ",conv.map(a => a.toFixed(2))," R ",ratio.toFixed(1)," c ",coef.toFixed(1)," d ",d," eTf ",echoTest.factor," eTsD ",echoTest.sampleDelay);tracecount--}
-else trace2("R ",ratio.toFixed(1)," c ",coef.toFixed(1)," d ",d," eTf ",echoTest.factor," eTsD ",echoTest.sampleDelay);
-if (micIn.gate > 0) {							// Worst case... we have correlated feedback and the mic is open! 
+if (tracecount > 0) {trace2("MIC ",micPeaks.map(a => a.toFixed(2))," OUT ",outputPeaks.map(a => a.toFixed(2))," CONV ",conv.map(a => a.toFixed(2))," R ",ratio.toFixed(1)," c ",coef.toFixed(1)," d ",d," eTf ",echoTest.factor.toFixed(2)," eTsD ",echoTest.sampleDelay.toFixed(2));tracecount--}
+else trace2("R ",ratio.toFixed(1)," c ",coef.toFixed(1)," d ",d," eTf ",echoTest.factor.toFixed(2)," eTsD ",echoTest.sampleDelay.toFixed(2));
+		if (micIn.gate > 0) {					// Worst case... we have correlated feedback and the mic is open! Push factor high
+			echoTest.factor = 30;
 trace2("Breach detected. ");
-}
+		}
 	}
 	// 2.2.3 We now have a new factor that relates output to input plus the delay from output to input. Use these to set a safe input threshold
 	del = Math.round(echoTest.sampleDelay);				// Update latest output to input delay rounded to a whole number of peaks
