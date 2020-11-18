@@ -1453,6 +1453,7 @@ if ((tracecount > 0) && (d > 3) && (d < 16) && (coef > 0.8)) {trace2("MIC ",micP
 	if (tempThresh > 1.5) tempThresh = 1.5;				// Mic input can be higher than 1 (amaxingly) but never as high as 1.5
 	if (myNoiseFloor > tempThresh) tempThresh = myNoiseFloor;	// The local noise floor is the minimum threshold permitted
 	if (noiseThreshold > tempThresh) tempThresh = noiseThreshold;	// And the system global noise threshold is another minimum that must be respected
+trace2("thresh is ",tempThresh);
 	micIn.threshold = tempThresh;					// Set mic threshold according to output level to allow interruptions but avoid feedback
 	// When output suddenly climbs after silence, on mobiles especially, over-compression can lead to input breaching the threshold. Stop this by blocking temporarily
 	if ((blocked == 0) && (tempThresh > 0)) {			// If blocked flag is reset and there is some risk of echo watch out for rising output
