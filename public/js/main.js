@@ -1156,7 +1156,7 @@ function processAudio(e) {						// Main processing loop
 		if (performer) micIn.gate = gateDelay			// Performer's mic has no gate
 		else {							// Everyone else has to fight to keep the gate open
 			let adjNoiseFloor = (openCount < 100)?		// The gate gets harder to keep open
-				myNoiseFloor : myNoiseFloor * 1.5;	// after being open a time (100 Chunks)
+				myNoiseFloor : myNoiseFloor * 1.0;	// after being open a time (100 Chunks)
 			if ((micIn.gate > 0) && (mP > noiseThreshold)	// Keep gate open for anything above centrally controlled venue noise floor
 				&& (mP > adjNoiseFloor)) {		// and above my background noise floor that increases after a period
 				micIn.gate = gateDelay;			
