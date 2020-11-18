@@ -1392,11 +1392,12 @@ trace2("SPEAKER ",oldFactor);
 		micIn.gate = 0;						// Force the mic gate shut imemdiately just in case
 		echoTest.factor = oldFactor;				// Restore the pre-headphone threshold level
 	}
-	// 2.2.2 There is audio coming in and audio going out so there could be echo feedback. Convolve input and output peaks and then find how correleated they are
+	// 2.2.2 There is audio coming in and audio going out so there could be echo feedback. Convolve output over mic peaks and find delay and correlation coefficient
 	let olen = outputPeaks.length;
 	let mlen = micPeaks.length;			
-	let conv = [];					
-	for (let m=0; m<mlen; m++) {					// The convolution will determine the most likely output to input delay
+	let conv = [];							// The convolution is stored here
+	let convMin = 3, convMax = 16;					// No need to waste CPU working out values outside of this range of probable delay values
+	for (let m = convMin; m < convMax; m++) {			// The convolution will determine the most likely output to input delay
 		let sum = 0;						// by doing the convolution of the output over the input
 		for (let o=0; o<mlen; o++) {
 			sum += outputPeaks[o]*micPeaks[(m+o)%mlen];
@@ -1410,6 +1411,7 @@ trace2("SPEAKER ",oldFactor);
 			d = j;
 		}
 	}
+	d += convMin;							// The delay value is offset by the convolution minimum value
 	let ratio = 0, num = 0;						// Calculate the average ratio of input to output for this delay
 	let sumM = 0, sumT = 0, sumMT = 0, sumM2 = 0, sumT2 = 0;	// Correlation calculation variables
 	for (let i=0; i<(olen-d); i++) {				// Find if there is a strong correlation between input and output
@@ -1427,7 +1429,7 @@ trace2("SPEAKER ",oldFactor);
 	let step4 = Math.sqrt(step2 * step3);
 	let coef = step1 / step4;					// This correlation coeficient (r) is the key figure. > 0.8 is significant
 	ratio = ratio / num;						// Get average input/output ratio needed to set a safe echo supression threshold
-if ((tracecount > 0) && (d > 3) && (d < 16) && (coef > 0.8)) {trace2("MIC ",micPeaks.map(a => a.toFixed(2))," OUT ",outputPeaks.map(a => a.toFixed(2))," CONV ",conv.map(a => a.toFixed(2))," R ",ratio.toFixed(1)," c ",coef.toFixed(1)," d ",d);tracecount--}
+if ((tracecount > 0) && (coef > 0.8)) {trace2("MIC ",micPeaks.map(a => a.toFixed(2))," OUT ",outputPeaks.map(a => a.toFixed(2))," CONV ",conv.map(a => a.toFixed(2))," R ",ratio.toFixed(1)," c ",coef.toFixed(1)," d ",d);tracecount--}
 //		if ((coef > 0.9) && (isFinite(ratio)) && (ratio < 80)) {// Is there correlation between input & output, and is the ratio sensible?
 //			if (ratio > echoTest.factor) 			// Apply ratio to echoTest.factor. Quickly going up. Slowly going down.
 //				echoTest.factor = (echoTest.factor*3+ratio*extra)/4;	// extra factor is used to increase factor to stop breaches
