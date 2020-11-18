@@ -1116,7 +1116,7 @@ const peakWindow = 1024;						// Samples that enter into each peak reading for e
 const nPeaks = 30;							// How many peaks to buffer for echo analysis and dynamic thresholds
 var outputPeaks = new Array(nPeaks).fill(0);				// Buffer mic peaks here for delayed mic muting using dynamic thresholds
 var micPeaks = new Array(nPeaks).fill(0);				// Buffer mic peaks for correlation analysis
-var gateDelay = 10 * peakWindow/ChunkSize;				// Number of chunks the gate stays open for (corresponds to about 0.25s)
+var gateDelay = Math.ceil(10 * peakWindow/ChunkSize);				// Number of chunks the gate stays open for (corresponds to about 0.25s)
 var openCount = 0;							// Count how long the gate is open to deal with steadily higher bg noise
 var gateJustClosed = false;						// Flag to trigger bg noise measurement. 
 var initialNoiseMeasure = gateDelay;					// Want to get an inital sample of bg noise right after the echo test
@@ -1182,7 +1182,7 @@ trace2("noiseFloor ",myNoiseFloor," MIC ",micPeaks.map(a => a.toFixed(3)));
 			micAudioL = inDataL;
 			micAudioR = inDataR;
 			micIn.gate--;					// Gate slowly closes
-trace2("Gate ",mP.toFixed(3));
+trace2("Gate ",mP.toFixed(3)," num ",micIn.gate);
 			if (micIn.gate == 0) {
 				gateJustClosed = true;			// If the gate just closed flag so that bg noise can be measured
 				openCount = 0;				// Reset gate open counter resetting thresholds to initial levels
@@ -1755,7 +1755,7 @@ var echoTest = {
 	sampleDelay	: 6,	// Default value			// Final number of samples to delay dynamic threshold by
 };
 const pulseLength = 1024;						// No. of samples per pulse
-const silence = 12 * 1024;						// No. of samples of silence after pulse to be sure to have heard it
+const silence = 15 * 1024;						// No. of samples of silence after pulse to be sure to have heard it
 echoTest.steps.forEach(i => {						// Build test tones
 	if (i>1) {							// Create waves of different frequencies
 		let audio = new Array(ChunkSize).fill(0);		// Start with an empty audio chunk
@@ -1847,8 +1847,8 @@ function runEchoTest(audio) {						// Test audio system in a series of tests
 			}
 			if (winner) {					// If delay obtained calculate gain factor
 				echoRisk = true;			// We have heard our tones clearly so feedback can happen
-				// Convert delay back to samples as start point for averaging level
-				let edge = Math.round(echoTest.delay * soundcardSampleRate / 1000);
+				// Convert delay back to samples as start point for averaging level (removing pulse chunk length too)
+				let edge = Math.round(echoTest.delay * soundcardSampleRate / 1000) - ChunkSize;
 				let factors = [];			// Buffer results here
 				// for each test <= 1 get avg level from edge for ChunkSize samples and get factor
 				for (let i=0; i<(echoTest.steps.length-1); i++) {
