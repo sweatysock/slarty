@@ -1160,6 +1160,7 @@ function processAudio(e) {						// Main processing loop
 			if ((micIn.gate > 0) && (mP > noiseThreshold)	// Keep gate open for anything above centrally controlled venue noise floor
 				&& (mP > adjNoiseFloor)) {		// and above my background noise floor that increases after a period
 				micIn.gate = gateDelay;			
+trace2("REopen ",mP.toFixed(2));
 				openCount++;				// Count how long the gate is open to make it harder to stay open
 			} else if ((mP > micIn.threshold) 		// Gate shut. Open if audio is above dynamic threshold
 				&& (mP > noiseThreshold)		// and above centrally controlled venue noise floor
@@ -1170,7 +1171,7 @@ trace2("OPEN ",mP.toFixed(2)," > ",micIn.threshold.toFixed(2));
 		}
 		if ((gateJustClosed) && (micIn.gate == 0)) {		// If the gate closed in the previous loop capture gateDelay of micPeaks as bg noise (+20% margin)
 			myNoiseFloor = maxValue(micPeaks.slice(-1*gateDelay*ChunkSize/peakWindow)) * 1.2;	
-trace2("noiseFloor ",myNoiseFloor," MIC ",micPeaks.map(a => a.toFixed(2)));
+trace2("noiseFloor ",myNoiseFloor," MIC ",micPeaks.map(a => a.toFixed(3)));
 			gateJustClosed = false;
 		}
 		if (initialNoiseMeasure > 0) {				// Right at the start the user is probably quiet
