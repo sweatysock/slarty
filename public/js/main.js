@@ -1421,9 +1421,9 @@ trace2("SPEAKER ",oldFactor);
 		sumM2 += mp * mp;
 		sumT2 += tb * tb;
 	}
-	let step1 = ((olen-maxp)*sumMT) - (sumM * sumT);
-	let step2 = ((olen-maxp)*sumM2) - (sumM * sumM);
-	let step3 = ((olen-maxp)*sumT2) - (sumT * sumT);
+	let step1 = ((olen-d)*sumMT) - (sumM * sumT);
+	let step2 = ((olen-d)*sumM2) - (sumM * sumM);
+	let step3 = ((olen-d)*sumT2) - (sumT * sumT);
 	let step4 = Math.sqrt(step2 * step3);
 	let coef = step1 / step4;					// This correlation coeficient (r) is the key figure. > 0.8 is significant
 	ratio = ratio / num;						// Get average input/output ratio needed to set a safe echo supression threshold
@@ -1453,7 +1453,6 @@ if ((tracecount > 0) && (d > 3) && (d < 16) && (coef > 0.8)) {trace2("MIC ",micP
 	if (tempThresh > 1.5) tempThresh = 1.5;				// Mic input can be higher than 1 (amaxingly) but never as high as 1.5
 	if (myNoiseFloor > tempThresh) tempThresh = myNoiseFloor;	// The local noise floor is the minimum threshold permitted
 	if (noiseThreshold > tempThresh) tempThresh = noiseThreshold;	// And the system global noise threshold is another minimum that must be respected
-trace2("thresh is ",tempThresh);
 	micIn.threshold = tempThresh;					// Set mic threshold according to output level to allow interruptions but avoid feedback
 	// When output suddenly climbs after silence, on mobiles especially, over-compression can lead to input breaching the threshold. Stop this by blocking temporarily
 	if ((blocked == 0) && (tempThresh > 0)) {			// If blocked flag is reset and there is some risk of echo watch out for rising output
