@@ -1833,11 +1833,9 @@ function runEchoTest(audio) {						// Test audio system in a series of tests
 			trace2("Reviewing results");
 			let counts = [];				// Collate results on mS values
 			echoTest.delays.forEach(d => {if (counts[d] == null) counts[d] = 1; else counts[d]++});
-			let max = 0;
 			let winner = false;
-			for (let c in counts) {				// Find most agreed on result (mode)
-				if (counts[c] > max) max = counts[c];
-				if ((c > 0) && (counts[c] > 5)) {
+			for (let c in counts) {				// If any result gets more than half the tests agreeing it's the winner
+				if ((c > 0) && (counts[c] > echoTest.steps/2)) {
 					trace2("Delay is ",c);
 					winner = true;
 					echoTest.delay = c;		// Store final delay result
