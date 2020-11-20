@@ -1743,7 +1743,7 @@ function magicKernel( x ) {						// This thing is crazy cool
 var echoRisk = true;							// Flag that indicates if audio feedback is a risk. Firefox and headphones fix this
 var echoTest = {
 	running		: false,
-	steps		: [16,8,128,64,32,1,0.5,0.2,0.1,0.05,0.02,0],	// Test frequencies and levels ended with 0
+	steps		: [16,8,128,64,32,1,0.5,0.2,0],			// Test frequencies and levels ended with 0
 	currentStep	: 0,						// Points to test step being executed
 	analysisStep	: 0,						// Points to test step being analysed
 	tones		: [],						// Tones for each test are held here
