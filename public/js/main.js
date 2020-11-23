@@ -1431,7 +1431,7 @@ trace2("SPEAKER ",oldFactor);
 //		micIn.gate = 0;						// Force the mic gate shut imemdiately just in case
 //		echoTest.factor = oldFactor;				// Restore the pre-headphone threshold level
 	}
-	if ((coef > 0.8) && (isFinite(ratio)) && (ratio < 80)) {	// Is there correlation between input & output, and is the ratio sensible?
+	if ((coef > thresh) && (isFinite(ratio)) && (ratio < 80)) {	// Is there correlation between input & output, and is the ratio sensible?
 		if (ratio > echoTest.factor) 				// Apply ratio to echoTest.factor. Quickly going up. Slowly going down.
 			echoTest.factor = (echoTest.factor*3+ratio*extra)/4;	// extra factor is used to increase factor to stop breaches
 		else
