@@ -1386,12 +1386,6 @@ trace2("HEADPHONES");
 		enterState( idleState );                                // We are done. Back to Idling
 		return;
 	}
-	if ((echoTest.factor == 0) 					// If we have deemed echo risk temporarily zero,
-		&& (sumMP > sumOP) && (sumMP > myNoiseFloor)) {		// but the mic is picking up a lot of sound, the headphones may be unplugged
-trace2("SPEAKER ",oldFactor);
-//		micIn.gate = 0;						// Force the mic gate shut imemdiately just in case
-//		echoTest.factor = oldFactor;				// Restore the pre-headphone threshold level
-	}
 	// 2.2.2 There is audio coming in and audio going out so there could be echo feedback. Convolve output over mic peaks and find delay and correlation coefficient
 	let olen = outputPeaks.length;
 	let mlen = micPeaks.length;			
@@ -1428,7 +1422,15 @@ trace2("SPEAKER ",oldFactor);
 	let step3 = ((olen-d)*sumT2) - (sumT * sumT);
 	let step4 = Math.sqrt(step2 * step3);
 	let coef = step1 / step4;					// This correlation coeficient (r) is the key figure. > 0.8 is significant
+	let thresh = 0.8;						// Standard theshold for accepting a correlation result
 	ratio = ratio / num;						// Get average input/output ratio needed to set a safe echo supression threshold
+	if ((echoTest.factor == 0) 					// If we have deemed echo risk temporarily zero,
+		&& (sumMP > sumOP) && (sumMP > myNoiseFloor)) {		// but the mic is picking up a lot of sound, the headphones may be unplugged
+trace2("SPEAKER ",oldFactor);
+		thresh = 0.6;						// Accept less clear correlations as there is a serious risk of feedback now
+//		micIn.gate = 0;						// Force the mic gate shut imemdiately just in case
+//		echoTest.factor = oldFactor;				// Restore the pre-headphone threshold level
+	}
 	if ((coef > 0.8) && (isFinite(ratio)) && (ratio < 80)) {	// Is there correlation between input & output, and is the ratio sensible?
 		if (ratio > echoTest.factor) 				// Apply ratio to echoTest.factor. Quickly going up. Slowly going down.
 			echoTest.factor = (echoTest.factor*3+ratio*extra)/4;	// extra factor is used to increase factor to stop breaches
