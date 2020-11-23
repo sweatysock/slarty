@@ -1182,7 +1182,6 @@ trace2("noiseFloor ",myNoiseFloor," MIC ",micPeaks.map(a => a.toFixed(3)));
 			micAudioL = inDataL;
 			micAudioR = inDataR;
 			micIn.gate--;					// Gate slowly closes
-trace2("Gate ",mP.toFixed(3)," num ",micIn.gate);
 			if (micIn.gate == 0) {
 				gateJustClosed = true;			// If the gate just closed flag so that bg noise can be measured
 				openCount = 0;				// Reset gate open counter resetting thresholds to initial levels
@@ -1373,6 +1372,7 @@ trace2("Gate ",mP.toFixed(3)," num ",micIn.gate);
 	let nVs = (micPeaks.length-del);				// Number of values that correspond to each other in the mic and output peak buffers
 	sumOP = sumOP/nVs; 
 	sumMP = sumMP/nVs;
+if (tracecount > 0) trace2("avgO:",sumOP.toFixed(2)," avgM:",sumMP.toFixed(2)," NF:",myNoiseFloor);
 	let aLot = myNoiseFloor * 4;					// Enough output that can't be confused for noise is, say, 4x local bg noise
 	if (aLot > 1) aLot = 1;						// Can't ouput more than 1 however!
 	if ((sumOP >= aLot) && (sumMP < myNoiseFloor)) 			// If our output is significant and our input is less than background noise
@@ -1431,20 +1431,22 @@ trace2("SPEAKER ",oldFactor);
 //		micIn.gate = 0;						// Force the mic gate shut imemdiately just in case
 //		echoTest.factor = oldFactor;				// Restore the pre-headphone threshold level
 	}
-	if ((coef > thresh) && (isFinite(ratio)) && (ratio < 80)) {	// Is there correlation between input & output, and is the ratio sensible?
+	if ((coef > thresh) && (isFinite(ratio)) 			// Is there correlation between input & output, is the ratio sensible,
+		&& (ratio < 80) && (ratio > 0.2)) {			// and is the ratio within reasonable limits?
 		if (ratio > echoTest.factor) 				// Apply ratio to echoTest.factor. Quickly going up. Slowly going down.
 			echoTest.factor = (echoTest.factor*3+ratio*extra)/4;	// extra factor is used to increase factor to stop breaches
 		else
 			echoTest.factor = (echoTest.factor*39+ratio*extra)/40;	// extra factor same as above
 		echoTest.sampleDelay = 					// An accurate estimate of feedback delay is important for setting the correct threshold 
 			(echoTest.sampleDelay*39 + d)/40;
-if (tracecount > 0) {trace2("MIC ",micPeaks.map(a => a.toFixed(2))," OUT ",outputPeaks.map(a => a.toFixed(2))," CONV ",conv.map(a => a.toFixed(2))," R ",ratio.toFixed(1)," c ",coef.toFixed(1)," d ",d," eTf ",echoTest.factor.toFixed(2)," eTsD ",echoTest.sampleDelay.toFixed(2));tracecount--}
+if (tracecount > 0) {trace2("MIC ",micPeaks.map(a => a.toFixed(2))," OUT ",outputPeaks.map(a => a.toFixed(2))," CONV ",conv.map(a => a.toFixed(2))," R ",ratio.toFixed(1)," c ",coef.toFixed(1)," d ",d," eTf ",echoTest.factor.toFixed(2)," eTsD ",echoTest.sampleDelay.toFixed(2))}
 else trace2("R ",ratio.toFixed(1)," c ",coef.toFixed(1)," d ",d," eTf ",echoTest.factor.toFixed(2)," eTsD ",echoTest.sampleDelay.toFixed(2));
 		if (micIn.gate > 0) {					// Worst case... we have correlated feedback and the mic is open! Push factor high
 			echoTest.factor = 40;
 trace2("Breach detected. ");
 		}
 	}
+tracecount--;
 	// 2.2.3 We now have a new factor that relates output to input plus the delay from output to input. Use these to set a safe input threshold
 	del = Math.round(echoTest.sampleDelay);				// Update latest output to input delay rounded to a whole number of peaks
 	let sta = outputPeaks.length - del - 3;				// Start of threshold window in output peaks array (newest is last element)
