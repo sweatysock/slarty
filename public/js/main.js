@@ -1427,7 +1427,7 @@ trace2("HEADPHONES");
 	if ((echoTest.factor == 0) 					// If we have deemed echo risk temporarily zero,
 		&& (sumMP > sumOP) && (sumMP > myNoiseFloor)) {		// but the mic is picking up a lot of sound, the headphones may be unplugged
 trace2("SPEAKER ",oldFactor);
-		thresh = 0.6;						// Accept less clear correlations as there is a serious risk of feedback now
+		thresh = 0.4;						// Accept less clear correlations as there is a serious risk of feedback now
 //		micIn.gate = 0;						// Force the mic gate shut imemdiately just in case
 //		echoTest.factor = oldFactor;				// Restore the pre-headphone threshold level
 	}
