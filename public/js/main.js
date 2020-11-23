@@ -1389,8 +1389,8 @@ trace2("HEADPHONES");
 	if ((echoTest.factor == 0) 					// If we have deemed echo risk temporarily zero,
 		&& (sumMP > sumOP) && (sumMP > myNoiseFloor)) {		// but the mic is picking up a lot of sound, the headphones may be unplugged
 trace2("SPEAKER ",oldFactor);
-		micIn.gate = 0;						// Force the mic gate shut imemdiately just in case
-		echoTest.factor = oldFactor;				// Restore the pre-headphone threshold level
+//		micIn.gate = 0;						// Force the mic gate shut imemdiately just in case
+//		echoTest.factor = oldFactor;				// Restore the pre-headphone threshold level
 	}
 	// 2.2.2 There is audio coming in and audio going out so there could be echo feedback. Convolve output over mic peaks and find delay and correlation coefficient
 	let olen = outputPeaks.length;
