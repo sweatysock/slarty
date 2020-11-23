@@ -1372,7 +1372,7 @@ trace2("noiseFloor ",myNoiseFloor," MIC ",micPeaks.map(a => a.toFixed(3)));
 	let nVs = (micPeaks.length-del);				// Number of values that correspond to each other in the mic and output peak buffers
 	sumOP = sumOP/nVs; 
 	sumMP = sumMP/nVs;
-if (tracecount > 0) trace2("avgO:",sumOP.toFixed(2)," avgM:",sumMP.toFixed(2)," NF:",myNoiseFloor);
+if (tracecount > 0) trace2("avgO:",sumOP.toFixed(2)," avgM:",sumMP.toFixed(2)," NF:",myNoiseFloor.toFixed(3)," eTf:",echoTest.factor.toFixed(1));
 	let aLot = myNoiseFloor * 4;					// Enough output that can't be confused for noise is, say, 4x local bg noise
 	if (aLot > 1) aLot = 1;						// Can't ouput more than 1 however!
 	if ((sumOP >= aLot) && (sumMP < myNoiseFloor)) 			// If our output is significant and our input is less than background noise
