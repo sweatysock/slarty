@@ -1223,9 +1223,7 @@ trace2("noiseFloor ",myNoiseFloor," MIC ",micPeaks.map(a => a.toFixed(3)));
 						mono8[j] = s;			// removing high frequencies from audio
 						mono16[j] = d; j++		// just by ignoring data
 					}
-//if (tracecount>0) {console.log("SAMPLE");for (i=0;i<mono8.length;i++) console.log(mono8[i]); tracecount--;if (tracecount==0) console.log("DONE");}
 				}
-//if (tracecount>0) {console.log("-")};
 				audio = {mono8,mono16,mono32,stereo8,stereo16,stereo32};	
 				let a = zipson.stringify(audio);		// Compressing and uncompressing
 				audio = zipson.parse(a);			// Saves 65% of bandwidth on its own!
@@ -1378,7 +1376,7 @@ if (tracecount > 0) trace2("avgO:",sumOP.toFixed(2)," avgM:",sumMP.toFixed(2)," 
 	if ((sumOP >= aLot) && (sumMP < myNoiseFloor)) 			// If our output is significant and our input is less than background noise
 		goodCount += ChunkSize;					// this would suggest we are no longer getting feedback (perhaps headphones are connected?)
 	else goodCount = 0;
-	if (goodCount > SoundCardSampleRate) {				// If we have had a second of clear non-echo results in a row
+	if (goodCount > soundcardSampleRate) {				// If we have had a second of clear non-echo results in a row
 trace2("HEADPHONES");
                 micIn.threshold = (myNoiseFloor > noiseThreshold)?	// Echo risk appears low so set threshold to my local noise threshold
 			myNoiseFloor : noiseThreshold; 			// or the system global noise threshold, whichever is higher
