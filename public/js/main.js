@@ -6,7 +6,7 @@ const PacketSize = 500;							// Server packet size we must conform to
 const PerfPacketSize = PacketSize * PerfSampleRate/SampleRate;		// Figure the Performer packet size now. Handy to have.
 const HighFilterFreq = SampleRate/2.2;					// Mic filter to remove high frequencies before resampling
 const LowFilterFreq = 200;						// Mic filter to remove low frequencies before resampling
-const ChunkSize = 4096;							// Audio chunk size. Fixed by js script processor
+const ChunkSize = 1024;							// Audio chunk size. Fixed by js script processor
 var soundcardSampleRate = null; 					// Get this from context 
 var micAudioPacketSize = 0;						// Calculate this once we have soundcard sample rate
 var adjMicPacketSize = 0;						// We adjust amount of data into and out of packets to optimize flow
@@ -627,12 +627,12 @@ trace2("FORCE UNmute");
 		// MARK CONSIDER REPEATING ECHO TEST HERE IF THIS TRIGGERS WITH HEADPHONES
 		navigator.mediaDevices.enumerateDevices()		// Testing this to see if we can detect headphones reliably
 		.then(devices => {
-			tracef(JSON.stringify(devices));  
+			tracef("device change: ",JSON.stringify(devices));  
 		});
 	});
 		navigator.mediaDevices.enumerateDevices()		// List devices at start to help detect changes
 		.then(devices => {
-			tracef("foo ",JSON.stringify(devices));  
+			tracef("devices: ",JSON.stringify(devices));  
 		});
 });
 
@@ -1116,7 +1116,7 @@ const peakWindow = 1024;						// Samples that enter into each peak reading for e
 const nPeaks = 30;							// How many peaks to buffer for echo analysis and dynamic thresholds
 var outputPeaks = new Array(nPeaks).fill(0);				// Buffer mic peaks here for delayed mic muting using dynamic thresholds
 var micPeaks = new Array(nPeaks).fill(0);				// Buffer mic peaks for correlation analysis
-var gateDelay = Math.ceil(10 * peakWindow/ChunkSize);			// Number of chunks the gate stays open for (corresponds to about 0.25s)
+var gateDelay = Math.ceil(40 * peakWindow/ChunkSize);			// Number of chunks the gate stays open for (corresponds to about 0.25s)
 var openCount = 0;							// Count how long the gate is open to deal with steadily higher bg noise
 var gateJustClosed = false;						// Flag to trigger bg noise measurement. 
 var initialNoiseMeasure = gateDelay;					// Want to get an inital sample of bg noise right after the echo test
