@@ -611,7 +611,7 @@ document.addEventListener('DOMContentLoaded', function(event){		// Add dynamic b
 		micOpen.style.visibility = "visible";
 		micOnMixer.style.visibility = "inherit";
 		if (forcedMute) {					// If UI mute state was forced due to high threshold force mic open for 1 second
-			micIn.gate = Math.round(soundcardSampleRate/ChunkSize);				
+			micIn.gate = 2 * Math.round(soundcardSampleRate/ChunkSize);				
 trace2("FORCE UNmute");
 			forcedMute = false;				// Not strictly necessary, but as we are clearly unmuted may as well unforce too
 		}
