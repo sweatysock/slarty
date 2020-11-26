@@ -1376,11 +1376,12 @@ if (tracecount > 0) trace2("avgO:",sumOP.toFixed(2)," avgM:",sumMP.toFixed(2)," 
 	let aLot = myNoiseFloor * 4;					// Enough output that can't be confused for noise is, say, 4x local bg noise
 	if (aLot > 1) aLot = 1;						// Can't ouput more than 1 however!
 	if ((sumOP >= aLot) && (sumMP < myNoiseFloor)) 			// If our output is significant and our input is less than background noise
-		goodCount++; 						// this would suggest we are no longer getting feedback (perhaps headphones are connected?)
+		goodCount += ChunkSize;					// this would suggest we are no longer getting feedback (perhaps headphones are connected?)
 	else goodCount = 0;
-	if (goodCount > 20) {						// If we have had a run of clear non-echo results in a row
+	if (goodCount > SoundCardSampleRate) {				// If we have had a second of clear non-echo results in a row
 trace2("HEADPHONES");
-                micIn.threshold = 0;                                    // echo risk is now low so no threshold needed
+                micIn.threshold = (myNoiseFloor > noiseThreshold)?	// Echo risk appears low so set threshold to my local noise threshold
+			myNoiseFloor : noiseThreshold; 			// or the system global noise threshold, whichever is higher
 		if (echoTest.factor > 0) oldFactor = echoTest.factor;	// Keep pre-headphone factor because if they are unplugged we need to get back on the case
 		echoTest.factor = 0;					// Drop the echo factor so that no threshold is set while echoRisk is low
 		enterState( idleState );                                // We are done. Back to Idling
@@ -1441,8 +1442,9 @@ trace2("SPEAKER ",oldFactor);
 			(echoTest.sampleDelay*39 + d)/40;
 if (tracecount > 0) {trace2("MIC ",micPeaks.map(a => a.toFixed(2))," OUT ",outputPeaks.map(a => a.toFixed(2))," CONV ",conv.map(a => a.toFixed(2))," R ",ratio.toFixed(1)," c ",coef.toFixed(1)," d ",d," eTf ",echoTest.factor.toFixed(2)," eTsD ",echoTest.sampleDelay.toFixed(2))}
 else trace2("R ",ratio.toFixed(1)," c ",coef.toFixed(1)," d ",d," eTf ",echoTest.factor.toFixed(2)," eTsD ",echoTest.sampleDelay.toFixed(2));
-		if (micIn.gate > 0) {					// Worst case... we have correlated feedback and the mic is open! Push factor high
-			echoTest.factor = 40;
+		if (micIn.gate > 0) {					// Worst case... we have correlated feedback and the mic is open! 
+			echoTest.factor = 40;				// Push feedback factor high 
+			micIn.gate = 0;					// and force mic gate shut immediately
 trace2("Breach detected. ");
 		}
 	}
