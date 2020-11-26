@@ -890,7 +890,7 @@ function unmuteButton(e) {
 		document.getElementById('micOpen').style.visibility = "visible";
 		if (forcedMute) {					// If UI mute state was forced due to high threshold force mic open
 trace2("FORCE UNmute");
-			micIn.gate = 40;				// for about 1 second
+			micIn.gate = 2 * Math.round(soundcardSampleRate/ChunkSize);				
 			forcedMute = false;				// Not strictly necessary, but as we are clearly unmuted may as well unforce too
 		}
 	}
@@ -1159,7 +1159,7 @@ function processAudio(e) {						// Main processing loop
 				myNoiseFloor : myNoiseFloor * 1.5;	// after being open a time (100 Chunks)
 			if ((micIn.gate > 0) && (mP > noiseThreshold)	// Keep gate open for anything above centrally controlled venue noise floor
 				&& (mP > adjNoiseFloor)) {		// and above my background noise floor that increases after a period
-				micIn.gate = gateDelay;			
+				if (micIn.gate < gateDelay) micIn.gate = gateDelay;			
 				openCount++;				// Count how long the gate is open to make it harder to stay open
 			} else if ((mP > micIn.threshold) 		// Gate shut. Open if audio is above dynamic threshold
 				&& (mP > noiseThreshold)		// and above centrally controlled venue noise floor
