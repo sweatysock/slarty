@@ -1799,12 +1799,10 @@ function runEchoTest(audio) {						// Test audio system in a series of tests
 			outAudio = echoTest.tones[test]; 		// Get test sound for this test
 			echoTest.results[test] = [];			// Get results buffer ready to store audio
 			echoTest.samplesNeeded = silence;		// Request enough audio samples be recorded for each test
-trace2("samples needed is ",echoTest.samplesNeeded);
 		} else {						// Not sending test sound so samples need to be stored
 			echoTest.results[test].push(...audio);
 			outAudio = new Array(ChunkSize).fill(0);	// return silence to send to speaker
 			echoTest.samplesNeeded -= ChunkSize;		// We have captured a Chunk of samples of silence
-trace2("samples needed is ",echoTest.samplesNeeded);
 			if (echoTest.samplesNeeded <= 0)		// If no more samples needed
 				echoTest.currentStep++;			// move to next step
 		}
