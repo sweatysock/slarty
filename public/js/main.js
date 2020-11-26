@@ -1759,7 +1759,7 @@ var echoTest = {
 	sampleDelay	: 6,	// Default value			// Final number of samples to delay dynamic threshold by
 };
 const pulseLength = 1024;						// No. of samples per pulse
-const silence = 15 * 1024;						// No. of samples of silence after pulse to be sure to have heard it
+const silence = 10 * 1024;						// No. of samples of silence after pulse to be sure to have heard it
 echoTest.steps.forEach(i => {						// Build test tones
 	if (i>1) {							// Create waves of different frequencies
 		let audio = new Array(ChunkSize).fill(0);		// Start with an empty audio chunk
