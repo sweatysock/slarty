@@ -1461,26 +1461,26 @@ tracecount--;
 	if (noiseThreshold > tempThresh) tempThresh = noiseThreshold;	// And the system global noise threshold is another minimum that must be respected
 	micIn.threshold = tempThresh;					// Set mic threshold according to output level to allow interruptions but avoid feedback
 	// When output suddenly climbs after silence, on mobiles especially, over-compression can lead to input breaching the threshold. Stop this by blocking temporarily
-	let newPeak = maxValue(outputPeaks.slice(0,(peaksL.length-1)));	// Get the highest peak in this new Chunk of peaks
-	let oldPeak = outputPeaks[peaksL.length];			// Get the previous Chunk's ending peak value
-	if (blocked == 0) {						// If blocked flag is reset we can check for new reasons to block
-		if ((newPeak > oldPeak)	&& (newPeak > tempThresh)) {	// If our output is climbing there's a risk of feedback due to mic over amplification after silence
-trace2("BLOCKING");
-			blocked = Math.round(soundcardSampleRate/ChunkSize);	// block the threshold for 1 second of chunks to stop mic input
-			micIn.threshold = 1.5;				// Override the mic threshold with a forced blocking value while we are blocked
-		} 
-	}
-	if (blocked > 0) {
-		blocked--;						// Threshold is blocked at max to completely stop feedback. Count back until unblocked.
-		if (blocked == 0) {
-			blocked = -1*Math.round(soundcardSampleRate/ChunkSize);	// After the blocked period we have to look for the same amunt of silence
-trace2("LOOKING");
-		}
-	}
-	if (blocked < 0) {						// Searching for prolonged quiet in output
-		if (newPeak < tempThresh) blocked++;			// Our output is low enough that mic may increase in sensitivity
-		else blocked = -1*Math.round(soundcardSampleRate/ChunkSize);	// otherwise start counting silence again because mic will have reset too
-	}
+//	let newPeak = maxValue(outputPeaks.slice(0,(peaksL.length-1)));	// Get the highest peak in this new Chunk of peaks
+//	let oldPeak = outputPeaks[peaksL.length];			// Get the previous Chunk's ending peak value
+//	if (blocked == 0) {						// If blocked flag is reset we can check for new reasons to block
+//		if ((newPeak > oldPeak)	&& (newPeak > tempThresh)) {	// If our output is climbing there's a risk of feedback due to mic over amplification after silence
+//trace2("BLOCKING");
+//			blocked = Math.round(soundcardSampleRate/ChunkSize);	// block the threshold for 1 second of chunks to stop mic input
+//			micIn.threshold = 1.5;				// Override the mic threshold with a forced blocking value while we are blocked
+//		} 
+//	}
+//	if (blocked > 0) {
+//		blocked--;						// Threshold is blocked at max to completely stop feedback. Count back until unblocked.
+//		if (blocked == 0) {
+//			blocked = -1*Math.round(soundcardSampleRate/ChunkSize);	// After the blocked period we have to look for the same amunt of silence
+//trace2("LOOKING");
+//		}
+//	}
+//	if (blocked < 0) {						// Searching for prolonged quiet in output
+//		if (newPeak < tempThresh) blocked++;			// Our output is low enough that mic may increase in sensitivity
+//		else blocked = -1*Math.round(soundcardSampleRate/ChunkSize);	// otherwise start counting silence again because mic will have reset too
+//	}
 	enterState( idleState );					// We are done. Back to Idling
 }
 
